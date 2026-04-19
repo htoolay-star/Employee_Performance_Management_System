@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="EPMS.Api/EPMS.Api.csproj" />
+  <Project Path="EPMS.Client/EPMS.Client.csproj" />
+  <Project Path="EPMS.Domain/EPMS.Domain.csproj" />
+  <Project Path="EPMS.Shared/EPMS.Shared.csproj" />
+</Solution>
