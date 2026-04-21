@@ -1,4 +1,6 @@
 ﻿using EPMS.Domain.Contracts;
+using EPMS.Shared.Enums;
+using EPMS.Shared.Enums.EPMS.Shared.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +13,7 @@ namespace EPMS.Domain.Entities.Auth
     {
         private User() { }
 
-        public User(string email, string passwordHash)
+        public User(string email, string passwordHash, UserRole role = UserRole.User)
         {
 
             ArgumentException.ThrowIfNullOrWhiteSpace(email);
@@ -19,6 +21,7 @@ namespace EPMS.Domain.Entities.Auth
 
             Email = email;
             PasswordHash = passwordHash;
+            RoleId = (int)role;
             SecurityStamp = Guid.NewGuid().ToString();
             IsFirstLogin = true;
             IsActive = true;
@@ -41,6 +44,9 @@ namespace EPMS.Domain.Entities.Auth
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
         public byte[] Version { get; private set; } = Array.Empty<byte>();
+
+        public int RoleId { get; private set; }
+        public virtual Role Role { get; private set; } = null!;
 
         public void RecordFailedLogin(TimeProvider timeProvider, int maxAttempts, TimeSpan lockoutDuration)
         {
@@ -70,6 +76,11 @@ namespace EPMS.Domain.Entities.Auth
         public void Deactivate()
         {
             IsActive = false;
+        }
+
+        public void ChangeRole(UserRole newRole)
+        {
+            RoleId = (int)newRole;
         }
     }
 }
