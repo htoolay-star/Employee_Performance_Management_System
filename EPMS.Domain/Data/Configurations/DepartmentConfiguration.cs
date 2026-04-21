@@ -9,20 +9,20 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Data.Configurations
 {
-    public class LevelConfiguration : IEntityTypeConfiguration<Level>
+    public class DepartmentConfiguration : IEntityTypeConfiguration<Department>
     {
-        public void Configure(EntityTypeBuilder<Level> entity)
+        public void Configure(EntityTypeBuilder<Department> entity)
         {
-            entity.ToTable("Levels", "hr");
+            entity.ToTable("Departments", "hr");
 
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).UseIdentityColumn();
 
             entity.HasIndex(e => e.Code).IsUnique();
-            entity.Property(e => e.Code).HasMaxLength(10).IsRequired();
+            entity.Property(e => e.Code).HasMaxLength(20).IsRequired();
 
+            entity.HasIndex(e => e.Name).IsUnique();
             entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
-            entity.Property(e => e.Description).HasMaxLength(250);
 
             entity.Property(e => e.IsActive).HasDefaultValue(true);
 
