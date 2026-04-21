@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EPMS.Domain.Data.Configurations
+namespace EPMS.Domain.Data.Configurations.Auth
 {
     public class RoleConfiguration : IEntityTypeConfiguration<Role>
     {

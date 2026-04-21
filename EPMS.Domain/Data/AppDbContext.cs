@@ -1,4 +1,5 @@
 ﻿using EPMS.Domain.Entities.Auth;
+using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Domain.Entities.Hr;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -24,6 +25,11 @@ namespace EPMS.Domain.Data
         public DbSet<Department> Departments => Set<Department>();
         public DbSet<Position> Positions => Set<Position>();
         public DbSet<Team> Teams => Set<Team>();
+
+        // Employee Info Schema
+        public DbSet<EmployeeProfile> EmployeeProfiles => Set<EmployeeProfile>();
+        public DbSet<EmployeeEmployment> EmployeeEmployments => Set<EmployeeEmployment>();
+        public DbSet<EmployeePayrollInfo> EmployeePayrollInfos => Set<EmployeePayrollInfo>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

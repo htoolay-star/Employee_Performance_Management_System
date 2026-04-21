@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EPMS.Domain.Data.Configurations
+namespace EPMS.Domain.Data.Configurations.Hr
 {
     public class PositionConfiguration : IEntityTypeConfiguration<Position>
     {
