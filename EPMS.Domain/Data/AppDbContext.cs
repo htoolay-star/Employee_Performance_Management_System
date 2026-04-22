@@ -1,6 +1,8 @@
 ﻿using EPMS.Domain.Entities.Auth;
 using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Domain.Entities.Hr;
+using EPMS.Domain.Entities.Performance;
+using EPMS.Domain.Entities.Shared;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -25,11 +27,26 @@ namespace EPMS.Domain.Data
         public DbSet<Department> Departments => Set<Department>();
         public DbSet<Position> Positions => Set<Position>();
         public DbSet<Team> Teams => Set<Team>();
+        public DbSet<Permission> Permissions => Set<Permission>();
+        public DbSet<PositionPermission> PositionPermissions => Set<PositionPermission>();
+        public DbSet<RatingScale> RatingScales => Set<RatingScale>();
 
         // Employee Info Schema
         public DbSet<EmployeeProfile> EmployeeProfiles => Set<EmployeeProfile>();
         public DbSet<EmployeeEmployment> EmployeeEmployments => Set<EmployeeEmployment>();
         public DbSet<EmployeePayrollInfo> EmployeePayrollInfos => Set<EmployeePayrollInfo>();
+
+        // Shared Schema
+        public DbSet<Category> Categories => Set<Category>();
+        public DbSet<Tag> Tags => Set<Tag>();
+
+        // Performance Schema
+        public DbSet<KPIMaster> KPIMasters => Set<KPIMaster>();
+        public DbSet<PositionKPI> PositionKPIs => Set<PositionKPI>();
+        public DbSet<KPIWeightPriority> KPIWeightPriorities => Set<KPIWeightPriority>();
+        public DbSet<AppraisalCycle> AppraisalCycles => Set<AppraisalCycle>();
+        public DbSet<Appraisal> Appraisals => Set<Appraisal>();
+        public DbSet<AppraisalDetail> AppraisalDetails => Set<AppraisalDetail>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
