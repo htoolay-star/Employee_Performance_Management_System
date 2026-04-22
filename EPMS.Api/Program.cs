@@ -13,7 +13,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<AppDbContext>((sp, options) =>
 {
     var auditInterceptor = sp.GetRequiredService<AuditInterceptor>();
-    options.UseSqlServer(connectionString)
+    options.UseSqlServer(connectionString, x => x.MigrationsAssembly("EPMS.Api"))
            .AddInterceptors(auditInterceptor);
 });
 

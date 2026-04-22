@@ -38,5 +38,15 @@ namespace EPMS.Domain.Entities.Hr
         }
         public void Deactivate() => IsActive = false;
         public void Reactivate() => IsActive = true;
+        public virtual ICollection<Team> Teams { get; set; } = new List<Team>();
+        public void AddTeam(string teamName)
+        {
+            if (Teams.Any(t => t.Name.Equals(teamName.Trim(), StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new InvalidOperationException($"Team with name '{teamName}' already exists in this department.");
+            }
+
+            Teams.Add(new Team(teamName, this.Id));
+        }
     }
 }

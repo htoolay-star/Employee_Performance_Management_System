@@ -35,6 +35,18 @@ namespace EPMS.Domain.Data
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+
+            
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                var properties = entityType.GetProperties()
+                    .Where(p => p.ClrType == typeof(DateTimeOffset) || p.ClrType == typeof(DateTimeOffset?));
+
+                foreach (var property in properties)
+                {
+                    property.SetColumnType("datetimeoffset");
+                }
+            }
         }
     }
 }
