@@ -45,6 +45,8 @@ namespace EPMS.Domain.Data
         public DbSet<PositionKPI> PositionKPIs => Set<PositionKPI>();
         public DbSet<KPIWeightPriority> KPIWeightPriorities => Set<KPIWeightPriority>();
         public DbSet<AppraisalCycle> AppraisalCycles => Set<AppraisalCycle>();
+        public DbSet<Appraisal> Appraisals => Set<Appraisal>();
+        public DbSet<AppraisalDetail> AppraisalDetails => Set<AppraisalDetail>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
