@@ -76,4 +76,5 @@ namespace EPMS.Domain.Entities.EmployeeInfo
         {
             DateOfIncrement = incrementDate;
         }
+    }
 }

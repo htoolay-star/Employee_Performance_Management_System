@@ -1,4 +1,5 @@
 ﻿using EPMS.Domain.Contracts;
+using EPMS.Domain.Entities.Auth;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,5 +35,16 @@ namespace EPMS.Domain.Entities.Hr
 
         public void Deactivate() => IsActive = false;
         public void Reactivate() => IsActive = true;
+
+        private readonly List<PositionPermission> _positionPermissions = new();
+        public virtual IReadOnlyCollection<PositionPermission> PositionPermissions => _positionPermissions.AsReadOnly();
+
+        public void AssignPermission(int permissionId)
+        {
+            if (!_positionPermissions.Any(p => p.PermissionId == permissionId))
+            {
+                _positionPermissions.Add(new PositionPermission(this.Id, permissionId));
+            }
+        }
     }
 }
