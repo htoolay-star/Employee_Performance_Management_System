@@ -26,6 +26,14 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.HasOne(e => e.Cycle).WithMany().HasForeignKey(e => e.CycleId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne(e => e.Appraiser).WithMany().HasForeignKey(e => e.AppraiserId).OnDelete(DeleteBehavior.Restrict);
 
+            entity.HasOne(e => e.FinalRating)
+                  .WithMany()
+                  .HasForeignKey(e => e.FinalRatingId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.Metadata.FindNavigation(nameof(Appraisal.Details))?
+                  .SetPropertyAccessMode(PropertyAccessMode.Field);
+
             entity.Property(e => e.CreatedAt).HasColumnType("datetimeoffset").IsRequired();
             entity.Property(e => e.UpdatedAt).HasColumnType("datetimeoffset").IsRequired();
             entity.Property(e => e.Version).IsRowVersion();

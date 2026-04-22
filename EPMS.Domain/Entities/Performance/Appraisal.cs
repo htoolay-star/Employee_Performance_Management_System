@@ -27,7 +27,6 @@ namespace EPMS.Domain.Entities.Performance
         public long AppraiserId { get; private set; }
 
         public string Status { get; private set; } = string.Empty;
-        public decimal? TotalScore { get; private set; }
         public string? RatingLabel { get; private set; }
 
         public string? EmployeeComment { get; private set; }
@@ -42,13 +41,20 @@ namespace EPMS.Domain.Entities.Performance
         public virtual AppraisalCycle Cycle { get; private set; } = null!;
         public virtual EmployeeProfile Appraiser { get; private set; } = null!;
 
-        public virtual ICollection<AppraisalDetail> Details { get; private set; } = new List<AppraisalDetail>();
+        public int? FinalRatingId { get; private set; }
+        public virtual RatingScale? FinalRating { get; private set; }
+
+        private readonly List<AppraisalDetail> _details = new();
+        public virtual IReadOnlyCollection<AppraisalDetail> Details => _details.AsReadOnly();
+
+        public decimal? TotalScore { get; private set; }
 
         public void CalculateTotalScore(RatingScale matchingScale)
         {
             if (Details.Any())
             {
                 TotalScore = Details.Sum(d => d.WeightedScore);
+                FinalRatingId = matchingScale.Id;
                 RatingLabel = matchingScale.Label;
             }
         }
@@ -58,6 +64,19 @@ namespace EPMS.Domain.Entities.Performance
             ManagerComment = comment?.Trim();
             Status = "Completed";
             ReviewDate = DateTimeOffset.UtcNow;
+        }
+
+        private void RecalculateTotalScore()
+        {
+            TotalScore = _details.Sum(d => d.WeightedScore);
+        }
+
+        public void AddDetail(AppraisalDetail detail)
+        {
+            ArgumentNullException.ThrowIfNull(detail);
+
+            _details.Add(detail);
+            RecalculateTotalScore();
         }
     }
 }
