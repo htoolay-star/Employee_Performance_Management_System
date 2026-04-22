@@ -43,7 +43,8 @@ namespace EPMS.Domain.Data
         // Performance Schema
         public DbSet<KPIMaster> KPIMasters => Set<KPIMaster>();
         public DbSet<PositionKPI> PositionKPIs => Set<PositionKPI>();
-        public DbSet<KPIWeightPriority> PerformanceReviews => Set<KPIWeightPriority>();
+        public DbSet<KPIWeightPriority> KPIWeightPriorities => Set<KPIWeightPriority>();
+        public DbSet<AppraisalCycle> AppraisalCycles => Set<AppraisalCycle>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
