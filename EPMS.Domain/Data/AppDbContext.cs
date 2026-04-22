@@ -25,6 +25,9 @@ namespace EPMS.Domain.Data
         public DbSet<Department> Departments => Set<Department>();
         public DbSet<Position> Positions => Set<Position>();
         public DbSet<Team> Teams => Set<Team>();
+        public DbSet<Permission> Permissions => Set<Permission>();
+        public DbSet<PositionPermission> PositionPermissions => Set<PositionPermission>();
+        public DbSet<RatingScale> RatingScales => Set<RatingScale>();
 
         // Employee Info Schema
         public DbSet<EmployeeProfile> EmployeeProfiles => Set<EmployeeProfile>();
