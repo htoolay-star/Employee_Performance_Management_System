@@ -1,6 +1,7 @@
 ﻿using EPMS.Domain.Entities.Auth;
 using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Domain.Entities.Hr;
+using EPMS.Domain.Entities.Performance;
 using EPMS.Domain.Entities.Shared;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -38,6 +39,11 @@ namespace EPMS.Domain.Data
         // Shared Schema
         public DbSet<Category> Categories => Set<Category>();
         public DbSet<Tag> Tags => Set<Tag>();
+
+        // Performance Schema
+        public DbSet<KPIMaster> KPIMasters => Set<KPIMaster>();
+        public DbSet<PositionKPI> PositionKPIs => Set<PositionKPI>();
+        public DbSet<KPIWeightPriority> PerformanceReviews => Set<KPIWeightPriority>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

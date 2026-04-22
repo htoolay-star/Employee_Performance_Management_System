@@ -1,5 +1,6 @@
 ﻿using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Auth;
+using EPMS.Domain.Entities.Performance;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,6 +39,9 @@ namespace EPMS.Domain.Entities.Hr
 
         private readonly List<PositionPermission> _positionPermissions = new();
         public virtual IReadOnlyCollection<PositionPermission> PositionPermissions => _positionPermissions.AsReadOnly();
+
+        private readonly List<PositionKPI> _positionKPIs = new();
+        public virtual IReadOnlyCollection<PositionKPI> PositionKPIs => _positionKPIs.AsReadOnly();
 
         public void AssignPermission(int permissionId)
         {
