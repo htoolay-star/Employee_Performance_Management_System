@@ -3,16 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
 
 namespace EPMS.Shared.DTOs.HR
 {
-    public class TeamDto
+    public class CreateDepartmentDto
     {
-        public long Id { get; set; }
         public string Name { get; set; } = string.Empty;
-        public long DepartmentId { get; set; }
-        public bool IsActive { get; set; }
-        public List<TeamDto> Teams { get; set; } = new();
-       
     }
 }

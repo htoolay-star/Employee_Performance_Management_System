@@ -1,8 +1,6 @@
-﻿using EPMS.Domain.Data;
-using EPMS.Domain.Entities.Hr;
+﻿using EPMS.Domain.Interfaces;
 using EPMS.Shared.DTOs.HR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace EPMS.Api.Controllers;
 
@@ -10,38 +8,46 @@ namespace EPMS.Api.Controllers;
 [Route("api/[controller]")]
 public class DepartmentsController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly IDepartmentService _service;
 
-    public DepartmentsController(AppDbContext context)
+    public DepartmentsController(IDepartmentService service)
     {
-        _context = context;
+        _service = service;
     }
 
- 
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var result = await _service.GetAllAsync();
+        return Ok(result);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(long id)
+    {
+        var result = await _service.GetByIdAsync(id);
+        if (result == null) return NotFound();
+        return Ok(result);
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create(DepartmentDto dto)
     {
-        var department = new Department(dto.Name, dto.Code);
-        
-        _context.Departments.Add(department);
-        await _context.SaveChangesAsync();
-
-        return Ok(new { Id = department.Id, Message = "Department created successfully!" });
+        var id = await _service.CreateAsync(dto);
+        return Ok(new { Id = id, Message = "Created Successfully" });
     }
 
-    
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<DepartmentDto>>> GetAll()
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(long id, DepartmentDto dto)
     {
-        var departments = await _context.Departments
-            .Select(d => new DepartmentDto
-            { 
-                Id = d.Id, 
-                Name = d.Name, 
-                Code = d.Code 
-            })
-            .ToListAsync();
+        await _service.UpdateAsync(id, dto);
+        return Ok(new { Message = "Updated Successfully" });
+    }
 
-        return Ok(departments);
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(long id)
+    {
+        await _service.DeleteAsync(id);
+        return Ok(new { Message = "Deleted Successfully" });
     }
 }

@@ -35,7 +35,7 @@ namespace EPMS.Domain.Entities.Hr
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
 
-
+        public virtual ICollection<Team> Teams { get; private set; } = new List<Team>();
 
         public void Rename(string newName)
         {

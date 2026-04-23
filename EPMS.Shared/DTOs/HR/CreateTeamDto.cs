@@ -6,13 +6,9 @@ using System.Threading.Tasks;
 
 namespace EPMS.Shared.DTOs.HR
 {
-    public class TeamDto
+    public class CreateTeamDto
     {
-        public long Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public long DepartmentId { get; set; }
-        public bool IsActive { get; set; }
-        public List<TeamDto> Teams { get; set; } = new();
-       
     }
 }
