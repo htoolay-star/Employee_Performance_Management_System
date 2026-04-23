@@ -44,6 +44,9 @@ namespace EPMS.Domain.Entities.Performance
         public DateTimeOffset UpdatedAt { get; set; }
         public byte[] Version { get; private set; } = Array.Empty<byte>();
 
+        private readonly List<Shared.Tag> _tags = new();
+        public virtual IReadOnlyCollection<Shared.Tag> Tags => _tags.AsReadOnly();
+
         public virtual FormTemplate Template { get; private set; } = null!;
         public virtual Category? Category { get; private set; }
         public virtual QuestionRatingScale? RatingScale { get; private set; }
@@ -67,6 +70,26 @@ namespace EPMS.Domain.Entities.Performance
         {
             HasYesNo = hasYesNo;
             HasComment = hasComment;
+        }
+
+        public void AddTag(Shared.Tag tag)
+        {
+            ArgumentNullException.ThrowIfNull(tag);
+
+            if (!_tags.Contains(tag))
+            {
+                _tags.Add(tag);
+            }
+        }
+
+        public void RemoveTag(Shared.Tag tag)
+        {
+            ArgumentNullException.ThrowIfNull(tag);
+
+            if (_tags.Contains(tag))
+            {
+                _tags.Remove(tag);
+            }
         }
     }
 }

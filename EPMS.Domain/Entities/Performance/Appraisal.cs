@@ -36,6 +36,14 @@ namespace EPMS.Domain.Entities.Performance
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
         public byte[] Version { get; private set; } = Array.Empty<byte>();
+        public bool IsLocked { get; private set; }
+        public DateTimeOffset? LockedAt { get; private set; }
+        public DateTimeOffset? FinalizedDate { get; private set; }
+
+        public long? UnLockedById { get; private set; }
+        public DateTimeOffset? UnLockedAt { get; private set; }
+        public string? UnLockReason { get; private set; }
+        public virtual EmployeeProfile? UnLockedBy { get; private set; }
 
         public virtual EmployeeProfile Employee { get; private set; } = null!;
         public virtual AppraisalCycle Cycle { get; private set; } = null!;
@@ -77,6 +85,28 @@ namespace EPMS.Domain.Entities.Performance
 
             _details.Add(detail);
             RecalculateTotalScore();
+        }
+        public void FinalizeAppraisal()
+        {
+            if (IsLocked) throw new InvalidOperationException("Appraisal is already locked.");
+
+            Status = "Completed";
+            FinalizedDate = DateTimeOffset.UtcNow;
+            IsLocked = true;
+            LockedAt = DateTimeOffset.UtcNow;
+        }
+
+        public void UnlockAppraisal(long adminId, string reason)
+        {
+            if (!IsLocked) throw new InvalidOperationException("Appraisal is not locked.");
+            if (string.IsNullOrWhiteSpace(reason)) throw new ArgumentException("An unlock reason is strictly required by compliance.");
+
+            IsLocked = false;
+            Status = "In Progress";
+            UnLockedById = adminId;
+            UnLockedAt = DateTimeOffset.UtcNow;
+
+            UnLockReason = reason.Trim();
         }
     }
 }

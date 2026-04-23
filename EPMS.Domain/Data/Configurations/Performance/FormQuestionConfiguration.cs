@@ -1,4 +1,5 @@
 ﻿using EPMS.Domain.Entities.Performance;
+using EPMS.Domain.Entities.Shared;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -38,6 +39,28 @@ namespace EPMS.Domain.Data.Configurations.Performance
             builder.Property(e => e.CreatedAt).HasColumnType("datetimeoffset").IsRequired();
             builder.Property(e => e.UpdatedAt).HasColumnType("datetimeoffset").IsRequired();
             builder.Property(e => e.Version).IsRowVersion();
+
+            builder.HasMany(e => e.Tags)
+                   .WithMany()
+                   .UsingEntity<Dictionary<string, object>>(
+                       "FormQuestionTag",
+
+                       right => right.HasOne<Tag>()
+                                     .WithMany()
+                                     .HasForeignKey("TagId")
+                                     .OnDelete(DeleteBehavior.Cascade),
+
+                       left => left.HasOne<FormQuestion>()
+                                   .WithMany()
+                                   .HasForeignKey("QuestionId")
+                                   .OnDelete(DeleteBehavior.Cascade),
+
+                       join =>
+                       {
+                           join.ToTable("FormQuestionTags", "perf");
+                           join.HasKey("QuestionId", "TagId");
+                       }
+                   );
         }
     }
 }

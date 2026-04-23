@@ -34,6 +34,16 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.Property(e => e.CreatedAt).HasColumnType("datetimeoffset").IsRequired();
             entity.Property(e => e.UpdatedAt).HasColumnType("datetimeoffset").IsRequired();
             entity.Property(e => e.Version).IsRowVersion();
+
+            entity.Property(e => e.PeerReviewStartDate).HasColumnType("date");
+            entity.Property(e => e.PeerReviewDeadline).HasColumnType("date");
+
+            entity.Property(e => e.SelfReviewStartDate).HasColumnType("date");
+            entity.Property(e => e.SelfReviewDeadline).HasColumnType("date");
+            entity.Property(e => e.ManagerReviewStartDate).HasColumnType("date");
+            entity.Property(e => e.ManagerReviewDeadline).HasColumnType("date");
+
+            entity.Property(e => e.FinalClosureDate).HasColumnType("datetimeoffset");
         }
     }
 }

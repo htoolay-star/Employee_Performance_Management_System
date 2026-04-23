@@ -37,6 +37,14 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.Property(e => e.CreatedAt).HasColumnType("datetimeoffset").IsRequired();
             entity.Property(e => e.UpdatedAt).HasColumnType("datetimeoffset").IsRequired();
             entity.Property(e => e.Version).IsRowVersion();
+
+            entity.Property(e => e.IsLocked).HasDefaultValue(false);
+            entity.Property(e => e.UnLockReason).HasMaxLength(500);
+
+            entity.HasOne(e => e.UnLockedBy)
+                   .WithMany()
+                   .HasForeignKey(e => e.UnLockedById)
+                   .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
