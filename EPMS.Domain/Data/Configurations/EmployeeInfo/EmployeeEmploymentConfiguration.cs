@@ -37,19 +37,19 @@ namespace EPMS.Domain.Data.Configurations.EmployeeInfo
             entity.Property(e => e.Shift).HasMaxLength(50);
             entity.Property(e => e.FingerPrintId).HasMaxLength(50);
 
-            entity.Property(e => e.DateOfAppointment).HasColumnType("date");
-            entity.Property(e => e.DateOfConfirmation).HasColumnType("date");
-            entity.Property(e => e.DateOfPromotion).HasColumnType("date");
-            entity.Property(e => e.DateOfTermination).HasColumnType("date");
-            entity.Property(e => e.DateOfTransfer).HasColumnType("date");
-            entity.Property(e => e.DateOfDemotion).HasColumnType("date");
-            entity.Property(e => e.DateOfTitleChange).HasColumnType("date");
+            entity.Property(e => e.DateOfAppointment);
+            entity.Property(e => e.DateOfConfirmation);
+            entity.Property(e => e.DateOfPromotion);
+            entity.Property(e => e.DateOfTermination);
+            entity.Property(e => e.DateOfTransfer);
+            entity.Property(e => e.DateOfDemotion);
+            entity.Property(e => e.DateOfTitleChange);
 
-            entity.Property(e => e.DateOfIncrement).HasColumnType("date");
+            entity.Property(e => e.DateOfIncrement);
             entity.Property(e => e.ProductProject).HasMaxLength(200);
 
-            entity.Property(e => e.CreatedAt).HasColumnType("datetimeoffset").IsRequired();
-            entity.Property(e => e.UpdatedAt).HasColumnType("datetimeoffset").IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.UpdatedAt).IsRequired();
             entity.Property(e => e.Version).IsRowVersion();
         }
     }

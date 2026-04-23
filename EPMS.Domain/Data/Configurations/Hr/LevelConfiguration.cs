@@ -13,7 +13,7 @@ namespace EPMS.Domain.Data.Configurations.Hr
     {
         public void Configure(EntityTypeBuilder<Level> entity)
         {
-            entity.ToTable("Levels");
+            entity.ToTable("Levels", "hr");
 
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).UseIdentityColumn();
@@ -26,8 +26,8 @@ namespace EPMS.Domain.Data.Configurations.Hr
 
             entity.Property(e => e.IsActive).HasDefaultValue(true);
 
-            entity.Property(e => e.CreatedAt).HasColumnType("datetimeoffset").IsRequired();
-            entity.Property(e => e.UpdatedAt).HasColumnType("datetimeoffset").IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.UpdatedAt).IsRequired();
         }
     }
 }

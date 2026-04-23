@@ -20,7 +20,7 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.Property(e => e.TargetValue).HasMaxLength(100);
             entity.Property(e => e.TargetUnit).HasMaxLength(100);
 
-            entity.Property(e => e.Weightage).HasColumnType("decimal(5,2)").IsRequired();
+            entity.Property(e => e.Weightage).IsRequired();
 
             entity.HasOne(e => e.Position)
                   .WithMany(p => p.PositionKPIs)
@@ -37,8 +37,8 @@ namespace EPMS.Domain.Data.Configurations.Performance
                   .HasForeignKey(e => e.PriorityId)
                   .OnDelete(DeleteBehavior.Restrict);
 
-            entity.Property(e => e.CreatedAt).HasColumnType("datetimeoffset").IsRequired();
-            entity.Property(e => e.UpdatedAt).HasColumnType("datetimeoffset").IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.UpdatedAt).IsRequired();
             entity.Property(e => e.Version).IsRowVersion();
         }
     }

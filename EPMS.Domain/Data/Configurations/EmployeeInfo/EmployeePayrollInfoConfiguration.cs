@@ -21,9 +21,9 @@ namespace EPMS.Domain.Data.Configurations.EmployeeInfo
                   .HasForeignKey<EmployeePayrollInfo>(e => e.EmployeeId)
                   .OnDelete(DeleteBehavior.Restrict);
 
-            entity.Property(e => e.Salary).HasColumnType("decimal(18,2)").IsRequired();
+            entity.Property(e => e.Salary).IsRequired();
 
-            entity.Property(e => e.DateOfPayTypeChanged).HasColumnType("date");
+            entity.Property(e => e.DateOfPayTypeChanged);
 
             entity.Property(e => e.CostAllocate).HasMaxLength(100);
             entity.Property(e => e.PayByBacklog).HasMaxLength(100);
@@ -35,11 +35,11 @@ namespace EPMS.Domain.Data.Configurations.EmployeeInfo
             entity.Property(e => e.Currency).HasMaxLength(10);
             entity.Property(e => e.PayType).HasMaxLength(50);
 
-            entity.Property(e => e.DateOfSalaryChanged).HasColumnType("date");
-            entity.Property(e => e.DateOfCurrencyChange).HasColumnType("date");
+            entity.Property(e => e.DateOfSalaryChanged);
+            entity.Property(e => e.DateOfCurrencyChange);
 
-            entity.Property(e => e.CreatedAt).HasColumnType("datetimeoffset").IsRequired();
-            entity.Property(e => e.UpdatedAt).HasColumnType("datetimeoffset").IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.UpdatedAt).IsRequired();
             entity.Property(e => e.Version).IsRowVersion();
         }
     }

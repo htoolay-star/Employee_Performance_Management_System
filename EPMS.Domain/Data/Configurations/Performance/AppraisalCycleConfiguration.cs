@@ -22,28 +22,27 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
             entity.Property(e => e.AppraisalType).HasMaxLength(20).IsRequired();
 
-            entity.Property(e => e.StartDate).HasColumnType("date").IsRequired();
-            entity.Property(e => e.EndDate).HasColumnType("date").IsRequired();
+            entity.Property(e => e.StartDate).IsRequired();
+            entity.Property(e => e.EndDate).IsRequired();
 
-            entity.Property(e => e.SelfReviewDeadline).HasColumnType("date");
-            entity.Property(e => e.ManagerReviewDeadline).HasColumnType("date");
+            entity.Property(e => e.SelfReviewDeadline);
+            entity.Property(e => e.ManagerReviewDeadline);
 
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.IsLocked).HasDefaultValue(false);
 
-            entity.Property(e => e.CreatedAt).HasColumnType("datetimeoffset").IsRequired();
-            entity.Property(e => e.UpdatedAt).HasColumnType("datetimeoffset").IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.UpdatedAt).IsRequired();
             entity.Property(e => e.Version).IsRowVersion();
 
-            entity.Property(e => e.PeerReviewStartDate).HasColumnType("date");
-            entity.Property(e => e.PeerReviewDeadline).HasColumnType("date");
+            entity.Property(e => e.PeerReviewStartDate);
+            entity.Property(e => e.PeerReviewDeadline);
+            entity.Property(e => e.SelfReviewStartDate);
+            entity.Property(e => e.SelfReviewDeadline);
+            entity.Property(e => e.ManagerReviewStartDate);
+            entity.Property(e => e.ManagerReviewDeadline);
 
-            entity.Property(e => e.SelfReviewStartDate).HasColumnType("date");
-            entity.Property(e => e.SelfReviewDeadline).HasColumnType("date");
-            entity.Property(e => e.ManagerReviewStartDate).HasColumnType("date");
-            entity.Property(e => e.ManagerReviewDeadline).HasColumnType("date");
-
-            entity.Property(e => e.FinalClosureDate).HasColumnType("datetimeoffset");
+            entity.Property(e => e.FinalClosureDate);
         }
     }
 }

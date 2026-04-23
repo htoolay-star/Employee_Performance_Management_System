@@ -24,8 +24,8 @@ namespace EPMS.Domain.Data.Configurations.Performance
             builder.Property(e => e.FormType).HasMaxLength(50).IsRequired();
             builder.Property(e => e.IsActive).HasDefaultValue(true);
 
-            builder.Property(e => e.CreatedAt).HasColumnType("datetimeoffset").IsRequired();
-            builder.Property(e => e.UpdatedAt).HasColumnType("datetimeoffset").IsRequired();
+            builder.Property(e => e.CreatedAt).IsRequired();
+            builder.Property(e => e.UpdatedAt).IsRequired();
             builder.Property(e => e.Version).IsRowVersion();
 
             builder.HasMany(e => e.Questions)

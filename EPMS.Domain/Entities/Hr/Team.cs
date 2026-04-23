@@ -25,8 +25,6 @@ namespace EPMS.Domain.Entities.Hr
 
 
         public long DepartmentId { get; private set; }
-
-        [ForeignKey("DepartmentId")]
         public virtual Department Department { get; private set; } = null!;
 
         public bool IsActive { get; private set; }

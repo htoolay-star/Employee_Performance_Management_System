@@ -22,17 +22,17 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.Property(e => e.ActualValue).HasMaxLength(100);
             entity.Property(e => e.Remarks).HasMaxLength(500);
 
-            entity.Property(e => e.Weightage).HasColumnType("decimal(5,2)").IsRequired();
-            entity.Property(e => e.Score).HasColumnType("decimal(5,2)").IsRequired();
-            entity.Property(e => e.WeightedScore).HasColumnType("decimal(5,2)").IsRequired();
+            entity.Property(e => e.Weightage).IsRequired();
+            entity.Property(e => e.Score).IsRequired();
+            entity.Property(e => e.WeightedScore).IsRequired();
 
             entity.HasOne(e => e.Appraisal)
                   .WithMany(a => a.Details)
                   .HasForeignKey(e => e.AppraisalId)
                   .OnDelete(DeleteBehavior.Cascade);
 
-            entity.Property(e => e.CreatedAt).HasColumnType("datetimeoffset").IsRequired();
-            entity.Property(e => e.UpdatedAt).HasColumnType("datetimeoffset").IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.UpdatedAt).IsRequired();
             entity.Property(e => e.Version).IsRowVersion();
         }
     }

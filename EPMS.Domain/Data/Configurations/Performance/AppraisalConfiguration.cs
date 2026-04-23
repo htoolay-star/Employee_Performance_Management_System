@@ -19,7 +19,7 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.HasIndex(e => new { e.EmployeeId, e.CycleId }).IsUnique();
 
             entity.Property(e => e.Status).HasMaxLength(20).IsRequired();
-            entity.Property(e => e.TotalScore).HasColumnType("decimal(5,2)");
+            entity.Property(e => e.TotalScore);
             entity.Property(e => e.RatingLabel).HasMaxLength(50);
 
             entity.HasOne(e => e.Employee).WithMany().HasForeignKey(e => e.EmployeeId).OnDelete(DeleteBehavior.Restrict);
@@ -34,8 +34,8 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.Metadata.FindNavigation(nameof(Appraisal.Details))?
                   .SetPropertyAccessMode(PropertyAccessMode.Field);
 
-            entity.Property(e => e.CreatedAt).HasColumnType("datetimeoffset").IsRequired();
-            entity.Property(e => e.UpdatedAt).HasColumnType("datetimeoffset").IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.UpdatedAt).IsRequired();
             entity.Property(e => e.Version).IsRowVersion();
 
             entity.Property(e => e.IsLocked).HasDefaultValue(false);

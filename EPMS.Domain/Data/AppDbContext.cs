@@ -47,24 +47,20 @@ namespace EPMS.Domain.Data
         public DbSet<FormQuestion> FormQuestions => Set<FormQuestion>();
         public DbSet<EvaluationResponse> EvaluationResponses => Set<EvaluationResponse>();
 
+        protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+        {
+            base.ConfigureConventions(configurationBuilder);
+
+            configurationBuilder.Properties<DateTimeOffset>().HaveColumnType("datetimeoffset");
+            configurationBuilder.Properties<DateOnly>().HaveColumnType("date");
+            configurationBuilder.Properties<decimal>().HaveColumnType("decimal(18,2)"); 
+        }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Apply all configurations from the current assembly
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
-
-            // Global configuration for DateTimeOffset properties
-            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
-            {
-                var properties = entityType.GetProperties()
-                    .Where(p => p.ClrType == typeof(DateTimeOffset) || p.ClrType == typeof(DateTimeOffset?));
-
-                foreach (var property in properties)
-                {
-                    property.SetColumnType("datetimeoffset");
-                }
-            }
         }
     }
 }

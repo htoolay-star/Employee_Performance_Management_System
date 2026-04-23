@@ -32,8 +32,8 @@ namespace EPMS.Domain.Data.Configurations.EmployeeInfo
             entity.Property(e => e.EmergencyMobileNo).HasMaxLength(50);
             entity.Property(e => e.RelationWithEmergencyContact).HasMaxLength(50);
 
-            entity.Property(e => e.CreatedAt).HasColumnType("datetimeoffset").IsRequired();
-            entity.Property(e => e.UpdatedAt).HasColumnType("datetimeoffset").IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.UpdatedAt).IsRequired();
             entity.Property(e => e.Version).IsRowVersion();
         }
     }

@@ -35,11 +35,11 @@ namespace EPMS.Domain.Data.Configurations.Auth
                   .HasMaxLength(36)
                   .IsRequired();
 
-            entity.Property(e => e.LockoutEndDate).HasColumnType("datetimeoffset");
-            entity.Property(e => e.LastLoginDate).HasColumnType("datetimeoffset");
+            entity.Property(e => e.LockoutEndDate);
+            entity.Property(e => e.LastLoginDate);
 
-            entity.Property(e => e.CreatedAt).HasColumnType("datetimeoffset").HasDefaultValueSql("SYSUTCDATETIME()");
-            entity.Property(e => e.UpdatedAt).HasColumnType("datetimeoffset").HasDefaultValueSql("SYSUTCDATETIME()");
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
+            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
 
             entity.Property(e => e.Version).IsRowVersion();
         }

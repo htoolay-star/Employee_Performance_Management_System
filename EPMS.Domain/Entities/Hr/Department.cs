@@ -38,15 +38,21 @@ namespace EPMS.Domain.Entities.Hr
         }
         public void Deactivate() => IsActive = false;
         public void Reactivate() => IsActive = true;
-        public virtual ICollection<Team> Teams { get; set; } = new List<Team>();
+        private readonly List<Team> _teams = new();
+        public virtual IReadOnlyCollection<Team> Teams => _teams.AsReadOnly();
+
         public void AddTeam(string teamName)
         {
-            if (Teams.Any(t => t.Name.Equals(teamName.Trim(), StringComparison.OrdinalIgnoreCase)))
+            ArgumentException.ThrowIfNullOrWhiteSpace(teamName);
+            var sanitizedName = teamName.Trim();
+
+            if (_teams.Any(t => t.Name.Equals(sanitizedName, StringComparison.OrdinalIgnoreCase)))
             {
-                throw new InvalidOperationException($"Team with name '{teamName}' already exists in this department.");
+                throw new InvalidOperationException($"Team with name '{sanitizedName}' already exists in this department.");
             }
 
-            Teams.Add(new Team(teamName, this.Id == 0 ? throw new InvalidOperationException("Department must be saved before adding teams via this method or use Team constructor.") : this.Id));
+            var newTeam = new Team(sanitizedName, this.Id);
+            _teams.Add(newTeam);
         }
     }
 }

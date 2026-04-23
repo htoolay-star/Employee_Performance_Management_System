@@ -27,8 +27,8 @@ namespace EPMS.Domain.Data.Configurations.Auth
                   .IsRequired()
                   .IsUnicode(false);
 
-            entity.Property(e => e.CreatedAt).HasColumnType("datetimeoffset").IsRequired();
-            entity.Property(e => e.ExpiresAt).HasColumnType("datetimeoffset").IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.ExpiresAt).IsRequired();
 
             entity.Property(e => e.Version).IsRowVersion();
 

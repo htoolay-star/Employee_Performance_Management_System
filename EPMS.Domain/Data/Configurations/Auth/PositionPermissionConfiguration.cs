@@ -18,7 +18,6 @@ namespace EPMS.Domain.Data.Configurations.Auth
             entity.HasKey(e => new { e.PositionId, e.PermissionId });
 
             entity.Property(e => e.CreatedAt)
-                  .HasColumnType("datetimeoffset")
                   .HasDefaultValueSql("SYSDATETIMEOFFSET()")
                   .ValueGeneratedOnAdd();
 

@@ -13,7 +13,7 @@ namespace EPMS.Domain.Data.Configurations.Hr
     {
         public void Configure(EntityTypeBuilder<Department> entity)
         {
-            entity.ToTable("Departments");
+            entity.ToTable("Departments", "hr");
 
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).UseIdentityColumn();
@@ -26,8 +26,16 @@ namespace EPMS.Domain.Data.Configurations.Hr
 
             entity.Property(e => e.IsActive).HasDefaultValue(true);
 
-            entity.Property(e => e.CreatedAt).HasColumnType("datetimeoffset").IsRequired();
-            entity.Property(e => e.UpdatedAt).HasColumnType("datetimeoffset").IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.UpdatedAt).IsRequired();
+
+            entity.HasMany(e => e.Teams)
+                  .WithOne(t => t.Department)
+                  .HasForeignKey(t => t.DepartmentId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.Metadata.FindNavigation(nameof(Department.Teams))?
+                  .SetPropertyAccessMode(PropertyAccessMode.Field);
         }
     }
 }

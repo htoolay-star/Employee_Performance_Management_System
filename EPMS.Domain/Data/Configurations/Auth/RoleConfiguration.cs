@@ -21,8 +21,8 @@ namespace EPMS.Domain.Data.Configurations.Auth
             entity.Property(e => e.Name).HasMaxLength(50).IsRequired();
             entity.Property(e => e.Description).HasMaxLength(250);
 
-            entity.Property(e => e.CreatedAt).HasColumnType("datetimeoffset").IsRequired().IsRequired();
-            entity.Property(e => e.UpdatedAt).HasColumnType("datetimeoffset").IsRequired().IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.UpdatedAt).IsRequired();
         }
     }
 }

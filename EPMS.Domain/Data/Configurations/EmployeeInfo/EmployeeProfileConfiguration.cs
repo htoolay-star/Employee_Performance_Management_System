@@ -36,15 +36,14 @@ namespace EPMS.Domain.Data.Configurations.EmployeeInfo
             entity.Property(e => e.PassportNo).HasMaxLength(50);
             entity.Property(e => e.LabourRegistrationNo).HasMaxLength(50);
 
-            entity.Property(e => e.DateOfBirth).HasColumnType("date");
-            entity.Property(e => e.PassportExpireDate).HasColumnType("date");
+            entity.Property(e => e.DateOfBirth);
+            entity.Property(e => e.PassportExpireDate);
 
             entity.Property(e => e.WorkPermitNo).HasMaxLength(50);
-            entity.Property(e => e.WorkPermitValidDate).HasColumnType("date");
-            entity.Property(e => e.WorkPermitExpireDate).HasColumnType("date");
-
-            entity.Property(e => e.CreatedAt).HasColumnType("datetimeoffset").IsRequired();
-            entity.Property(e => e.UpdatedAt).HasColumnType("datetimeoffset").IsRequired();
+            entity.Property(e => e.WorkPermitValidDate);
+            entity.Property(e => e.WorkPermitExpireDate);
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.UpdatedAt).IsRequired();
 
             entity.Property(e => e.Version).IsRowVersion();
         }

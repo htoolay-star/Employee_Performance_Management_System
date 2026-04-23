@@ -14,7 +14,7 @@ namespace EPMS.Domain.Data.Configurations.Hr
         public void Configure(EntityTypeBuilder<Position> entity)
         {
             
-            entity.ToTable("Positions");
+            entity.ToTable("Positions", "hr");
 
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).UseIdentityColumn();
@@ -24,8 +24,8 @@ namespace EPMS.Domain.Data.Configurations.Hr
 
             entity.Property(e => e.IsActive).HasDefaultValue(true);
 
-            entity.Property(e => e.CreatedAt).HasColumnType("datetime2");
-            entity.Property(e => e.UpdatedAt).HasColumnType("datetime2");
+            entity.Property(e => e.CreatedAt);
+            entity.Property(e => e.UpdatedAt);
 
             entity.HasOne(e => e.Level)
                   .WithMany()

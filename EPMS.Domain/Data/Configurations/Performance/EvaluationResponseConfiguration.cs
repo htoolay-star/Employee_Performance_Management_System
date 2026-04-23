@@ -42,8 +42,8 @@ namespace EPMS.Domain.Data.Configurations.Performance
                    .HasForeignKey(e => e.EvaluatorId)
                    .OnDelete(DeleteBehavior.Restrict);
 
-            builder.Property(e => e.CreatedAt).HasColumnType("datetimeoffset").IsRequired();
-            builder.Property(e => e.UpdatedAt).HasColumnType("datetimeoffset").IsRequired();
+            builder.Property(e => e.CreatedAt).IsRequired();
+            builder.Property(e => e.UpdatedAt).IsRequired();
             builder.Property(e => e.Version).IsRowVersion();
         }
     }
