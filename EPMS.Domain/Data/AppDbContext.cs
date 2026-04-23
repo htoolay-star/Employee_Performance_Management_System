@@ -55,6 +55,8 @@ namespace EPMS.Domain.Data
         public DbSet<PIP> PIPs => Set<PIP>();
         public DbSet<PIPObjective> PIPObjectives => Set<PIPObjective>();
         public DbSet<AppraisalRecommendation> AppraisalRecommendations => Set<AppraisalRecommendation>();
+        public DbSet<PositionFormTemplate> PositionFormTemplates => Set<PositionFormTemplate>();
+        public DbSet<PositionPIPTemplate> PositionPIPTemplates => Set<PositionPIPTemplate>();
 
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
         {
