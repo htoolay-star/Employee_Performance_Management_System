@@ -47,6 +47,7 @@ namespace EPMS.Domain.Data
         public DbSet<AppraisalCycle> AppraisalCycles => Set<AppraisalCycle>();
         public DbSet<Appraisal> Appraisals => Set<Appraisal>();
         public DbSet<AppraisalDetail> AppraisalDetails => Set<AppraisalDetail>();
+        public DbSet<QuestionRatingScale> QuestionRatingScales => Set<QuestionRatingScale>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
