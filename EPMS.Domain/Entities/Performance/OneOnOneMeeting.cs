@@ -46,6 +46,9 @@ namespace EPMS.Domain.Entities.Performance
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
         public byte[] Version { get; private set; } = Array.Empty<byte>();
+        public long? RelatedPIPId { get; private set; }
+        public string MeetingType { get; private set; } = "Regular";
+        public virtual PIP? RelatedPIP { get; private set; }
 
         public virtual EmployeeProfile Employee { get; private set; } = null!;
         public virtual EmployeeProfile Manager { get; private set; } = null!;
@@ -70,5 +73,11 @@ namespace EPMS.Domain.Entities.Performance
         }
 
         public void Cancel() => Status = "Cancelled";
+
+        public void LinkToPIP(long pipId)
+        {
+            RelatedPIPId = pipId;
+            MeetingType = "PIP-Review";
+        }
     }
 }

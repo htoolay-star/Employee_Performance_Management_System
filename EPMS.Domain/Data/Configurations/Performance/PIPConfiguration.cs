@@ -9,19 +9,16 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Data.Configurations.Performance
 {
-    public class OneOnOneMeetingConfiguration : IEntityTypeConfiguration<OneOnOneMeeting>
+    public class PIPConfiguration : IEntityTypeConfiguration<PIP>
     {
-        public void Configure(EntityTypeBuilder<OneOnOneMeeting> builder)
+        public void Configure(EntityTypeBuilder<PIP> builder)
         {
-            builder.ToTable("OneOnOneMeetings", "perf");
+            builder.ToTable("PIPs", "perf");
             builder.HasKey(e => e.Id);
             builder.Property(e => e.Id).UseIdentityColumn();
 
-            builder.Property(e => e.Title).HasMaxLength(200).IsRequired();
-            builder.Property(e => e.Summary).HasMaxLength(500);
-            builder.Property(e => e.Status).HasMaxLength(20).HasDefaultValue("Scheduled");
-
-            builder.Property(e => e.IsAcknowledgedByEmployee).HasDefaultValue(false);
+            builder.Property(e => e.Status).HasMaxLength(20).HasDefaultValue("Open");
+            builder.Property(e => e.Reason).IsRequired();
 
             builder.HasOne(e => e.Employee)
                    .WithMany()
@@ -33,16 +30,19 @@ namespace EPMS.Domain.Data.Configurations.Performance
                    .HasForeignKey(e => e.ManagerId)
                    .OnDelete(DeleteBehavior.Restrict);
 
+            builder.HasOne(e => e.OriginAppraisal)
+                   .WithMany()
+                   .HasForeignKey(e => e.AppraisalId)
+                   .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasMany(e => e.Objectives)
+                   .WithOne(o => o.PIP)
+                   .HasForeignKey(o => o.PIPId)
+                   .OnDelete(DeleteBehavior.Cascade);
+
             builder.Property(e => e.CreatedAt).IsRequired();
             builder.Property(e => e.UpdatedAt).IsRequired();
             builder.Property(e => e.Version).IsRowVersion();
-
-            builder.Property(e => e.MeetingType).HasMaxLength(50).HasDefaultValue("Regular");
-
-            builder.HasOne(e => e.RelatedPIP)
-                   .WithMany()
-                   .HasForeignKey(e => e.RelatedPIPId)
-                   .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

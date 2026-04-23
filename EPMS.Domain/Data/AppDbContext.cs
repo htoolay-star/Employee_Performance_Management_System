@@ -48,6 +48,8 @@ namespace EPMS.Domain.Data
         public DbSet<EvaluationResponse> EvaluationResponses => Set<EvaluationResponse>();
         public DbSet<ContinuousFeedback> ContinuousFeedbacks => Set<ContinuousFeedback>();
         public DbSet<OneOnOneMeeting> OneOnOneMeetings => Set<OneOnOneMeeting>();
+        public DbSet<PIP> PIPs => Set<PIP>();
+        public DbSet<PIPObjective> PIPObjectives => Set<PIPObjective>();
 
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
         {
