@@ -1,61 +1,78 @@
-﻿using AutoMapper;
-using EPMS.Domain.Data;
+using AutoMapper;
 using EPMS.Domain.Entities.Hr;
+using EPMS.Domain.Interface.Irepo;
 using EPMS.Domain.Interfaces;
 using EPMS.Shared.DTOs.HR;
-using Microsoft.EntityFrameworkCore;
 
 namespace EPMS.Domain.Services;
 
 public class DepartmentService : IDepartmentService
 {
-    private readonly AppDbContext _context;
+    private readonly IDepartmentRepository _repo;
     private readonly IMapper _mapper;
 
-    public DepartmentService(AppDbContext context, IMapper mapper)
+    public DepartmentService(IDepartmentRepository repo, IMapper mapper)
     {
-        _context = context;
+        _repo = repo;
         _mapper = mapper;
     }
 
     public async Task<IEnumerable<DepartmentDto>> GetAllAsync()
     {
-        var departments = await _context.Departments.ToListAsync();
+        var departments = await _repo.GetAllAsync();
         return _mapper.Map<IEnumerable<DepartmentDto>>(departments);
     }
 
     public async Task<DepartmentDto?> GetByIdAsync(long id)
     {
-        var department = await _context.Departments.FindAsync(id);
+        var department = await _repo.GetByIdAsync(id);
         return _mapper.Map<DepartmentDto>(department);
     }
 
-    public async Task<long> CreateAsync(DepartmentDto dto)
+    public async Task<long> CreateAsync(CreateDepartmentDto dto)
     {
-        var entity = _mapper.Map<Department>(dto);
-        _context.Departments.Add(entity);
-        await _context.SaveChangesAsync();
+        if (await _repo.ExistsByCodeAsync(dto.Code))
+        {
+            throw new InvalidOperationException($"Department with code '{dto.Code}' already exists.");
+        }
+
+        if (await _repo.ExistsByNameAsync(dto.Name))
+        {
+            throw new InvalidOperationException($"Department with name '{dto.Name}' already exists.");
+        }
+
+        var entity = new Department(dto.Code, dto.Name);
+        await _repo.AddAsync(entity);
+        await _repo.SaveChangesAsync();
         return entity.Id;
     }
 
     public async Task UpdateAsync(long id, DepartmentDto dto)
     {
-        var department = await _context.Departments.FindAsync(id);
-        if (department != null)
+        var department = await _repo.GetByIdAsync(id);
+        if (department == null) return;
+
+        if (department.Name != dto.Name && await _repo.ExistsByNameAsync(dto.Name))
         {
-        
-            _mapper.Map(dto, department);
-            await _context.SaveChangesAsync();
+            throw new InvalidOperationException($"Another department with name '{dto.Name}' already exists.");
         }
+
+        department.Rename(dto.Name);
+        
+        if (dto.IsActive) department.Reactivate();
+        else department.Deactivate();
+
+        _repo.Update(department);
+        await _repo.SaveChangesAsync();
     }
 
     public async Task DeleteAsync(long id)
     {
-        var department = await _context.Departments.FindAsync(id);
+        var department = await _repo.GetByIdAsync(id);
         if (department != null)
         {
-            _context.Departments.Remove(department);
-            await _context.SaveChangesAsync();
+            _repo.Delete(department);
+            await _repo.SaveChangesAsync();
         }
     }
 }

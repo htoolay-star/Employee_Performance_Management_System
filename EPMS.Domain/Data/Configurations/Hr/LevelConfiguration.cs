@@ -1,4 +1,4 @@
-﻿using EPMS.Domain.Entities.Hr;
+using EPMS.Domain.Entities.Hr;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -13,7 +13,7 @@ namespace EPMS.Domain.Data.Configurations.Hr
     {
         public void Configure(EntityTypeBuilder<Level> entity)
         {
-            entity.ToTable("Levels", "hr");
+            entity.ToTable("Levels");
 
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).UseIdentityColumn();

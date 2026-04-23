@@ -1,15 +1,10 @@
-﻿// Interface
 using EPMS.Domain.Data;
 using EPMS.Domain.Entities.Hr;
 using EPMS.Domain.Interface.Irepo;
 using Microsoft.EntityFrameworkCore;
 
-public interface ITeamRepository : IGenericRepository<Team>
-{
-    Task<IEnumerable<Team>> GetTeamsByDepartmentAsync(long departmentId);
-}
+namespace EPMS.Domain.Repository;
 
-// Implementation
 public class TeamRepository : GenericRepository<Team>, ITeamRepository
 {
     public TeamRepository(AppDbContext context) : base(context) { }
@@ -19,5 +14,10 @@ public class TeamRepository : GenericRepository<Team>, ITeamRepository
         return await _context.Teams
             .Where(t => t.DepartmentId == departmentId && t.IsActive)
             .ToListAsync();
+    }
+
+    public async Task<bool> ExistsByNameInDepartmentAsync(string name, long departmentId)
+    {
+        return await _context.Teams.AnyAsync(t => t.DepartmentId == departmentId && t.Name == name);
     }
 }

@@ -1,4 +1,4 @@
-﻿using EPMS.Domain.Interfaces;
+using EPMS.Domain.Interfaces;
 using EPMS.Shared.DTOs.HR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -31,17 +31,31 @@ public class DepartmentsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(DepartmentDto dto)
+    public async Task<IActionResult> Create(CreateDepartmentDto dto)
     {
-        var id = await _service.CreateAsync(dto);
-        return Ok(new { Id = id, Message = "Created Successfully" });
+        try
+        {
+            var id = await _service.CreateAsync(dto);
+            return Ok(new { Id = id, Message = "Created Successfully" });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { Message = ex.Message });
+        }
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(long id, DepartmentDto dto)
     {
-        await _service.UpdateAsync(id, dto);
-        return Ok(new { Message = "Updated Successfully" });
+        try
+        {
+            await _service.UpdateAsync(id, dto);
+            return Ok(new { Message = "Updated Successfully" });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { Message = ex.Message });
+        }
     }
 
     [HttpDelete("{id}")]

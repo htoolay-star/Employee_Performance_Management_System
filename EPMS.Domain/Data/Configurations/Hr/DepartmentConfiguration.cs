@@ -13,7 +13,7 @@ namespace EPMS.Domain.Data.Configurations.Hr
     {
         public void Configure(EntityTypeBuilder<Department> entity)
         {
-            entity.ToTable("Departments", "hr");
+            entity.ToTable("Departments");
 
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).UseIdentityColumn();

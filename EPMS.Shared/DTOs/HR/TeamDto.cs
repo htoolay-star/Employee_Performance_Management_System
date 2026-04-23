@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,7 +12,6 @@ namespace EPMS.Shared.DTOs.HR
         public string Name { get; set; } = string.Empty;
         public long DepartmentId { get; set; }
         public bool IsActive { get; set; }
-        public List<TeamDto> Teams { get; set; } = new();
        
     }
 }

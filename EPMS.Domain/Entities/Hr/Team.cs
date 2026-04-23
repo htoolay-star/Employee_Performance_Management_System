@@ -1,4 +1,4 @@
-﻿using EPMS.Domain.Contracts;
+using EPMS.Domain.Contracts;
 using System;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -34,8 +34,6 @@ namespace EPMS.Domain.Entities.Hr
   
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
-
-        public virtual ICollection<Team> Teams { get; private set; } = new List<Team>();
 
         public void Rename(string newName)
         {

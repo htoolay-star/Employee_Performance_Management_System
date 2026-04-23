@@ -1,4 +1,4 @@
-﻿using EPMS.Domain.Contracts;
+using EPMS.Domain.Contracts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -46,7 +46,7 @@ namespace EPMS.Domain.Entities.Hr
                 throw new InvalidOperationException($"Team with name '{teamName}' already exists in this department.");
             }
 
-            Teams.Add(new Team(teamName, this.Id));
+            Teams.Add(new Team(teamName, this.Id == 0 ? throw new InvalidOperationException("Department must be saved before adding teams via this method or use Team constructor.") : this.Id));
         }
     }
 }

@@ -1,11 +1,10 @@
-﻿using EPMS.Domain.Entities.Hr;
+using EPMS.Domain.Entities.Hr;
 
 namespace EPMS.Domain.Interface.Irepo;
 
-public interface IDepartmentRepository
+public interface IDepartmentRepository : IGenericRepository<Department>
 {
-    Task<IEnumerable<Department>> GetAllAsync();
-    Task AddAsync(Department department);
-    Task SaveChangesAsync();
-
+    Task<Department?> GetDepartmentWithTeamsAsync(long id);
+    Task<bool> ExistsByCodeAsync(string code);
+    Task<bool> ExistsByNameAsync(string name);
 }

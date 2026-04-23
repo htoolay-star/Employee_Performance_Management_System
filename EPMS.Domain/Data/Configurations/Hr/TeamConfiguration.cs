@@ -1,4 +1,4 @@
-﻿using EPMS.Domain.Entities.Hr;
+using EPMS.Domain.Entities.Hr;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -13,7 +13,7 @@ namespace EPMS.Domain.Data.Configurations.Hr
     {
         public void Configure(EntityTypeBuilder<Team> entity)
         {
-            entity.ToTable("Teams", "hr");
+            entity.ToTable("Teams");
 
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).UseIdentityColumn();
@@ -28,7 +28,7 @@ namespace EPMS.Domain.Data.Configurations.Hr
             entity.Property(e => e.UpdatedAt).HasColumnType("datetimeoffset").IsRequired();
 
             entity.HasOne(e => e.Department)
-                  .WithMany()
+                  .WithMany(d => d.Teams)
                   .HasForeignKey(e => e.DepartmentId)
                   .OnDelete(DeleteBehavior.Restrict);
         }

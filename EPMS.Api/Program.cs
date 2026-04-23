@@ -3,6 +3,7 @@ using EPMS.Domain.Data.Interceptors;
 using EPMS.Domain.Interface.Irepo;
 using EPMS.Domain.Interfaces;
 using EPMS.Domain.Services;
+using EPMS.Domain.Repository;
 using Microsoft.EntityFrameworkCore;
 using MediatR;
 using AutoMapper;
@@ -41,14 +42,15 @@ builder.Services.AddScoped<IDepartmentRepository, DepartmentRepository>();
 builder.Services.AddScoped<ITeamRepository, TeamRepository>();
 builder.Services.AddScoped<ITeamService, TeamService>();
 builder.Services.AddControllers();
-builder.Services.AddOpenApi();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();

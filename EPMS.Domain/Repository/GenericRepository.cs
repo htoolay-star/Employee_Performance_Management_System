@@ -1,22 +1,29 @@
-﻿using EPMS.Domain.Data;
-using EPMS.Domain.Entities.Hr;
+using EPMS.Domain.Data;
 using EPMS.Domain.Interface.Irepo;
 using Microsoft.EntityFrameworkCore;
 
-public interface IDepartmentRepository : IGenericRepository<Department>
-{
-    
-    Task<Department?> GetDepartmentWithTeamsAsync(long id);
-}
+namespace EPMS.Domain.Repository;
 
-public class DepartmentRepository : GenericRepository<Department>, IDepartmentRepository
+public class GenericRepository<T> : IGenericRepository<T> where T : class
 {
-    public DepartmentRepository(AppDbContext context) : base(context) { }
+    protected readonly AppDbContext _context;
+    private readonly DbSet<T> _dbSet;
 
-    public async Task<Department?> GetDepartmentWithTeamsAsync(long id)
+    public GenericRepository(AppDbContext context)
     {
-        return await _context.Departments
-            .Include(d => d.Teams)
-            .FirstOrDefaultAsync(d => d.Id == id);
+        _context = context;
+        _dbSet = _context.Set<T>();
     }
+
+    public async Task<T?> GetByIdAsync(long id) => await _dbSet.FindAsync(id);
+
+    public async Task<IEnumerable<T>> GetAllAsync() => await _dbSet.ToListAsync();
+
+    public async Task AddAsync(T entity) => await _dbSet.AddAsync(entity);
+
+    public void Update(T entity) => _dbSet.Update(entity);
+
+    public void Delete(T entity) => _dbSet.Remove(entity);
+
+    public async Task<bool> SaveChangesAsync() => await _context.SaveChangesAsync() > 0;
 }
