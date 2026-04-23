@@ -50,6 +50,7 @@ namespace EPMS.Domain.Data
         public DbSet<OneOnOneMeeting> OneOnOneMeetings => Set<OneOnOneMeeting>();
         public DbSet<PIP> PIPs => Set<PIP>();
         public DbSet<PIPObjective> PIPObjectives => Set<PIPObjective>();
+        public DbSet<AppraisalRecommendation> AppraisalRecommendations => Set<AppraisalRecommendation>();
 
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
         {

@@ -55,6 +55,9 @@ namespace EPMS.Domain.Entities.Performance
         private readonly List<AppraisalDetail> _details = new();
         public virtual IReadOnlyCollection<AppraisalDetail> Details => _details.AsReadOnly();
 
+        private readonly List<AppraisalRecommendation> _recommendations = new();
+        public virtual IReadOnlyCollection<AppraisalRecommendation> Recommendations => _recommendations.AsReadOnly();
+
         public decimal? TotalScore { get; private set; }
 
         public void CalculateTotalScore(RatingScale matchingScale)
@@ -107,6 +110,16 @@ namespace EPMS.Domain.Entities.Performance
             UnLockedAt = DateTimeOffset.UtcNow;
 
             UnLockReason = reason.Trim();
+        }
+
+        public void AddRecommendation(AppraisalRecommendation recommendation)
+        {
+            ArgumentNullException.ThrowIfNull(recommendation);
+
+            if (IsLocked)
+                throw new InvalidOperationException("Cannot add recommendations to a locked appraisal.");
+
+            _recommendations.Add(recommendation);
         }
     }
 }
