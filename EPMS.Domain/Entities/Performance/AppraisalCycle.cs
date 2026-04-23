@@ -37,8 +37,16 @@ namespace EPMS.Domain.Entities.Performance
         public DateOnly StartDate { get; private set; }
         public DateOnly EndDate { get; private set; }
 
+        public DateOnly? PeerReviewStartDate { get; private set; }
+        public DateOnly? PeerReviewDeadline { get; private set; }
+
+        public DateOnly? SelfReviewStartDate { get; private set; }
         public DateOnly? SelfReviewDeadline { get; private set; }
+
+        public DateOnly? ManagerReviewStartDate { get; private set; }
         public DateOnly? ManagerReviewDeadline { get; private set; }
+
+        public DateTimeOffset? FinalClosureDate { get; private set; }
 
         public bool IsActive { get; private set; }
         public bool IsLocked { get; private set; }
@@ -69,6 +77,42 @@ namespace EPMS.Domain.Entities.Performance
 
             SelfReviewDeadline = selfReview;
             ManagerReviewDeadline = managerReview;
+        }
+
+        public void ConfigureSelfReviewWindow(DateOnly start, DateOnly deadline)
+        {
+            if (start > deadline)
+                throw new ArgumentException("Start date cannot be after the deadline.");
+
+            if (start < StartDate || deadline > EndDate)
+                throw new ArgumentException("The self-review window strictly must fall within the overall cycle Start and End dates.");
+
+            SelfReviewStartDate = start;
+            SelfReviewDeadline = deadline;
+        }
+
+        public void ConfigureManagerReviewWindow(DateOnly start, DateOnly deadline)
+        {
+            if (start > deadline)
+                throw new ArgumentException("Start date cannot be after the deadline.");
+
+            if (start < StartDate || deadline > EndDate)
+                throw new ArgumentException("The manager review window strictly must fall within the overall cycle Start and End dates.");
+
+            ManagerReviewStartDate = start;
+            ManagerReviewDeadline = deadline;
+        }
+
+        public void ConfigurePeerReviewWindow(DateOnly start, DateOnly deadline)
+        {
+            if (start > deadline)
+                throw new ArgumentException("Start date cannot be after the deadline.");
+
+            if (start < StartDate || deadline > EndDate)
+                throw new ArgumentException("The peer review window strictly must fall within the overall cycle Start and End dates.");
+
+            PeerReviewStartDate = start;
+            PeerReviewDeadline = deadline;
         }
 
         public void LockCycle() => IsLocked = true;
