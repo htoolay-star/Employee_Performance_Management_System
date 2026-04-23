@@ -46,6 +46,8 @@ namespace EPMS.Domain.Data
         public DbSet<FormTemplate> FormTemplates => Set<FormTemplate>();
         public DbSet<FormQuestion> FormQuestions => Set<FormQuestion>();
         public DbSet<EvaluationResponse> EvaluationResponses => Set<EvaluationResponse>();
+        public DbSet<ContinuousFeedback> ContinuousFeedbacks => Set<ContinuousFeedback>();
+        public DbSet<OneOnOneMeeting> OneOnOneMeetings => Set<OneOnOneMeeting>();
 
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
         {
