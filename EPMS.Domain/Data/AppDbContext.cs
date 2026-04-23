@@ -1,3 +1,4 @@
+using EPMS.Domain.Entities.Audit;
 using EPMS.Domain.Entities.Auth;
 using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Domain.Entities.Hr;
@@ -11,6 +12,9 @@ namespace EPMS.Domain.Data
     public class AppDbContext : DbContext
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+
+        // --- Audit Schema ---
+        public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
         // --- Auth Schema ---
         public DbSet<User> Users => Set<User>();
