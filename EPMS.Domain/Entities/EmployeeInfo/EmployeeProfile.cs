@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.EmployeeInfo
@@ -48,6 +49,11 @@ namespace EPMS.Domain.Entities.EmployeeInfo
         public DateOnly? WorkPermitValidDate { get; private set; }
         public DateOnly? WorkPermitExpireDate { get; private set; }
 
+        public string? ProfilePictureUrl { get; private set; }
+        public string? ProfileThumbnailUrl { get; private set; }
+
+        public string? AdditionalData { get; private set; }
+
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
 
@@ -70,6 +76,32 @@ namespace EPMS.Domain.Entities.EmployeeInfo
             WorkPermitNo = permitNo?.Trim().ToUpperInvariant();
             WorkPermitValidDate = validDate;
             WorkPermitExpireDate = expireDate;
+        }
+
+        public void UpdateProfilePicture(string? url, string? thumbnailUrl)
+        {
+            ProfilePictureUrl = url?.Trim();
+            ProfileThumbnailUrl = thumbnailUrl?.Trim();
+        }
+
+        public void UpdateAdditionalData(string? json)
+        {
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                AdditionalData = null;
+                return;
+            }
+
+            try
+            {
+                using var document = JsonDocument.Parse(json);
+
+                AdditionalData = json.Trim();
+            }
+            catch (JsonException)
+            {
+                throw new ArgumentException("AdditionalData must be a valid, structurally sound JSON string.");
+            }
         }
     }
 }

@@ -46,6 +46,11 @@ namespace EPMS.Domain.Data.Configurations.EmployeeInfo
             entity.Property(e => e.UpdatedAt).IsRequired();
 
             entity.Property(e => e.Version).IsRowVersion();
+
+            entity.Property(e => e.ProfilePictureUrl).HasMaxLength(500);
+            entity.Property(e => e.ProfileThumbnailUrl).HasMaxLength(500);
+
+            entity.Property(e => e.AdditionalData);
         }
     }
 }
