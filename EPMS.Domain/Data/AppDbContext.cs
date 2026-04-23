@@ -50,6 +50,7 @@ namespace EPMS.Domain.Data
         public DbSet<QuestionRatingScale> QuestionRatingScales => Set<QuestionRatingScale>();
         public DbSet<FormTemplate> FormTemplates => Set<FormTemplate>();
         public DbSet<FormQuestion> FormQuestions => Set<FormQuestion>();
+        public DbSet<EvaluationResponse> EvaluationResponses => Set<EvaluationResponse>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
