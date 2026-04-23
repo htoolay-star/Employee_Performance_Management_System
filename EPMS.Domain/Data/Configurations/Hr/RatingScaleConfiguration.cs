@@ -22,8 +22,8 @@ namespace EPMS.Domain.Data.Configurations.Hr
 
             entity.Property(e => e.Label).HasMaxLength(50).IsRequired();
 
-            entity.Property(e => e.MinScore).IsRequired();
-            entity.Property(e => e.MaxScore).IsRequired();
+            entity.Property(e => e.MinScore).HasColumnType("decimal(5,2)").IsRequired();
+            entity.Property(e => e.MaxScore).HasColumnType("decimal(5,2)").IsRequired();
 
             entity.Property(e => e.PerformanceLevel).HasMaxLength(50);
             entity.Property(e => e.PromotionEligibility).HasMaxLength(100);

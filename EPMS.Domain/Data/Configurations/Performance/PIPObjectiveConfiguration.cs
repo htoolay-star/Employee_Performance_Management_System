@@ -9,26 +9,20 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Data.Configurations.Performance
 {
-    public class QuestionRatingScaleConfiguration : IEntityTypeConfiguration<QuestionRatingScale>
+    public class PIPObjectiveConfiguration : IEntityTypeConfiguration<PIPObjective>
     {
-        public void Configure(EntityTypeBuilder<QuestionRatingScale> builder)
+        public void Configure(EntityTypeBuilder<PIPObjective> builder)
         {
-            builder.ToTable("QuestionRatingScales", "perf");
-
+            builder.ToTable("PIPObjectives", "perf");
             builder.HasKey(e => e.Id);
             builder.Property(e => e.Id).UseIdentityColumn();
 
-            builder.HasIndex(e => e.Name).IsUnique();
-
-            builder.Property(e => e.Name).HasMaxLength(100).IsRequired();
-            builder.Property(e => e.MinScore).HasColumnType("decimal(5,2)").IsRequired();
-            builder.Property(e => e.MaxScore).HasColumnType("decimal(5,2)").IsRequired();
-
-            builder.Property(e => e.IsActive).HasDefaultValue(true);
+            builder.Property(e => e.Title).HasMaxLength(200).IsRequired();
+            builder.Property(e => e.SuccessCriteria).IsRequired();
+            builder.Property(e => e.Status).HasMaxLength(20).HasDefaultValue("In-Progress");
 
             builder.Property(e => e.CreatedAt).IsRequired();
             builder.Property(e => e.UpdatedAt).IsRequired();
-
             builder.Property(e => e.Version).IsRowVersion();
         }
     }

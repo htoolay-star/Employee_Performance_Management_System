@@ -1,3 +1,4 @@
+using EPMS.Domain.Entities.Audit;
 using EPMS.Domain.Entities.Auth;
 using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Domain.Entities.Hr;
@@ -11,6 +12,9 @@ namespace EPMS.Domain.Data
     public class AppDbContext : DbContext
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
+
+        // --- Audit Schema ---
+        public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
         // --- Auth Schema ---
         public DbSet<User> Users => Set<User>();
@@ -46,6 +50,13 @@ namespace EPMS.Domain.Data
         public DbSet<FormTemplate> FormTemplates => Set<FormTemplate>();
         public DbSet<FormQuestion> FormQuestions => Set<FormQuestion>();
         public DbSet<EvaluationResponse> EvaluationResponses => Set<EvaluationResponse>();
+        public DbSet<ContinuousFeedback> ContinuousFeedbacks => Set<ContinuousFeedback>();
+        public DbSet<OneOnOneMeeting> OneOnOneMeetings => Set<OneOnOneMeeting>();
+        public DbSet<PIP> PIPs => Set<PIP>();
+        public DbSet<PIPObjective> PIPObjectives => Set<PIPObjective>();
+        public DbSet<AppraisalRecommendation> AppraisalRecommendations => Set<AppraisalRecommendation>();
+        public DbSet<PositionFormTemplate> PositionFormTemplates => Set<PositionFormTemplate>();
+        public DbSet<PositionPIPTemplate> PositionPIPTemplates => Set<PositionPIPTemplate>();
 
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
         {

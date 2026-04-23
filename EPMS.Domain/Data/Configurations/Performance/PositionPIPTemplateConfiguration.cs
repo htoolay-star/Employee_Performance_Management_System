@@ -9,26 +9,25 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Data.Configurations.Performance
 {
-    public class QuestionRatingScaleConfiguration : IEntityTypeConfiguration<QuestionRatingScale>
+    public class PositionPIPTemplateConfiguration : IEntityTypeConfiguration<PositionPIPTemplate>
     {
-        public void Configure(EntityTypeBuilder<QuestionRatingScale> builder)
+        public void Configure(EntityTypeBuilder<PositionPIPTemplate> builder)
         {
-            builder.ToTable("QuestionRatingScales", "perf");
-
+            builder.ToTable("PositionPIPTemplates", "perf");
             builder.HasKey(e => e.Id);
             builder.Property(e => e.Id).UseIdentityColumn();
 
-            builder.HasIndex(e => e.Name).IsUnique();
-
-            builder.Property(e => e.Name).HasMaxLength(100).IsRequired();
-            builder.Property(e => e.MinScore).HasColumnType("decimal(5,2)").IsRequired();
-            builder.Property(e => e.MaxScore).HasColumnType("decimal(5,2)").IsRequired();
-
+            builder.Property(e => e.Title).HasMaxLength(200).IsRequired();
+            builder.Property(e => e.SuccessCriteria).IsRequired();
             builder.Property(e => e.IsActive).HasDefaultValue(true);
+
+            builder.HasOne(e => e.Position)
+                   .WithMany(p => p.PositionPIPTemplates)
+                   .HasForeignKey(e => e.PositionId)
+                   .OnDelete(DeleteBehavior.Cascade);
 
             builder.Property(e => e.CreatedAt).IsRequired();
             builder.Property(e => e.UpdatedAt).IsRequired();
-
             builder.Property(e => e.Version).IsRowVersion();
         }
     }

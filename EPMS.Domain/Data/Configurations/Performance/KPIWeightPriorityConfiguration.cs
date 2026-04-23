@@ -21,8 +21,8 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.HasIndex(e => e.LevelName).IsUnique();
             entity.Property(e => e.LevelName).HasMaxLength(50).IsRequired();
 
-            entity.Property(e => e.MinWeight).IsRequired();
-            entity.Property(e => e.MaxWeight).IsRequired();
+            entity.Property(e => e.MinWeight).HasColumnType("decimal(5,2)").IsRequired();
+            entity.Property(e => e.MaxWeight).HasColumnType("decimal(5,2)").IsRequired();
 
             entity.Property(e => e.ColorCode).HasMaxLength(20);
             entity.Property(e => e.IsActive).HasDefaultValue(true);

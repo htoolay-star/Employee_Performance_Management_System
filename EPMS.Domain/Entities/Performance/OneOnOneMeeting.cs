@@ -1,0 +1,83 @@
+﻿using EPMS.Domain.Contracts;
+using EPMS.Domain.Entities.EmployeeInfo;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace EPMS.Domain.Entities.Performance
+{
+    public class OneOnOneMeeting : IAuditableEntity
+    {
+        private OneOnOneMeeting() { }
+
+        public OneOnOneMeeting(long employeeId, long managerId, string title, DateTimeOffset scheduledDate)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(title);
+
+            EmployeeId = employeeId;
+            ManagerId = managerId;
+
+            Title = title.Trim();
+
+            ScheduledDate = scheduledDate;
+            Status = "Scheduled";
+        }
+
+        public long Id { get; private set; }
+        public long EmployeeId { get; private set; }
+        public long ManagerId { get; private set; }
+
+        public DateTimeOffset ScheduledDate { get; private set; }
+        public DateTimeOffset? ActualDate { get; private set; }
+
+        public string Title { get; private set; } = string.Empty;
+        public string? Summary { get; private set; }
+        public string? DiscussionNotes { get; private set; }
+        public string? PrivateNotes { get; private set; }
+        public string? ActionItems { get; private set; }
+
+        public string Status { get; private set; } = string.Empty;
+
+        public bool IsAcknowledgedByEmployee { get; private set; }
+        public DateTimeOffset? AcknowledgedAt { get; private set; }
+
+        public DateTimeOffset CreatedAt { get; set; }
+        public DateTimeOffset UpdatedAt { get; set; }
+        public byte[] Version { get; private set; } = Array.Empty<byte>();
+        public long? RelatedPIPId { get; private set; }
+        public string MeetingType { get; private set; } = "Regular";
+        public virtual PIP? RelatedPIP { get; private set; }
+
+        public virtual EmployeeProfile Employee { get; private set; } = null!;
+        public virtual EmployeeProfile Manager { get; private set; } = null!;
+
+        public void CompleteMeeting(string? summary, string? sharedNotes, string? privateNotes, string? actionItems)
+        {
+            Status = "Completed";
+            ActualDate = DateTimeOffset.UtcNow;
+
+            Summary = summary?.Trim();
+            DiscussionNotes = sharedNotes?.Trim();
+            PrivateNotes = privateNotes?.Trim();
+            ActionItems = actionItems?.Trim();
+        }
+
+        public void AcknowledgeByEmployee()
+        {
+            if (Status != "Completed") throw new InvalidOperationException("Only completed meetings can be acknowledged.");
+
+            IsAcknowledgedByEmployee = true;
+            AcknowledgedAt = DateTimeOffset.UtcNow;
+        }
+
+        public void Cancel() => Status = "Cancelled";
+
+        public void LinkToPIP(long pipId)
+        {
+            RelatedPIPId = pipId;
+            MeetingType = "PIP-Review";
+        }
+    }
+}
