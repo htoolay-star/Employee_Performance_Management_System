@@ -7,6 +7,7 @@ using EPMS.Domain.Repository;
 using Microsoft.EntityFrameworkCore;
 using MediatR;
 using AutoMapper;
+using EPMS.Domain.Contracts;
 
 var builder = WebApplication.CreateBuilder(args);
 

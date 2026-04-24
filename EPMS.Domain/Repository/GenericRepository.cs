@@ -1,5 +1,5 @@
+using EPMS.Domain.Contracts;
 using EPMS.Domain.Data;
-using EPMS.Domain.Interface.Irepo;
 using Microsoft.EntityFrameworkCore;
 
 namespace EPMS.Domain.Repository;
