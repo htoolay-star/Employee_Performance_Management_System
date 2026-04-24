@@ -24,12 +24,6 @@ namespace EPMS.Domain.Data.Configurations.Auth
 
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.Property(e => e.UpdatedAt).IsRequired();
-
-            entity.HasData(
-                new { Id = AppRoles.Ids.SystemAdmin, Name = AppRoles.SystemAdmin, Description = "Full system access and security management.", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow },
-                new { Id = AppRoles.Ids.Admin, Name = AppRoles.Admin, Description = "HR management and performance administration.", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow },
-                new { Id = AppRoles.Ids.User, Name = AppRoles.User, Description = "Standard employee access for self-evaluations.", CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow }
-            );
         }
     }
 }
