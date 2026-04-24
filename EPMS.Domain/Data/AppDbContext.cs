@@ -2,6 +2,7 @@
 using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Domain.Entities.Hr;
 using EPMS.Domain.Entities.Performance;
+using EPMS.Domain.Entities.PerformanceReview;
 using EPMS.Domain.Entities.Shared;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -52,6 +53,31 @@ namespace EPMS.Domain.Data
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+
+            // PerformanceReview Configuration
+            modelBuilder.Entity<PerformanceReview>(entity =>
+            {
+                entity.HasKey(x => x.Id);
+
+                entity.Property(x => x.Rating)
+                      .IsRequired();
+
+                entity.Property(x => x.PerformanceLevel)
+                      .IsRequired()
+                      .HasMaxLength(50);
+
+                entity.Property(x => x.PromotionEligibility)
+                      .IsRequired()
+                      .HasMaxLength(100);
+
+                entity.Property(x => x.ReviewDate)
+                      .IsRequired();
+            });
         }
-    }
+
+        // PerformanceReview
+        public DbSet<PerformanceReview> PerformanceReviews { get; set; }
+
+        
+        }
 }
