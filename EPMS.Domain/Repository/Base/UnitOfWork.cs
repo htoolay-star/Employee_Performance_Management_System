@@ -12,7 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EPMS.Domain.Repository.Shared
+namespace EPMS.Domain.Repository.Base
 {
     public class UnitOfWork : IUnitOfWork
     {

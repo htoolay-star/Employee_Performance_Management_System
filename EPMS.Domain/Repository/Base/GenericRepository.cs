@@ -3,7 +3,7 @@ using EPMS.Domain.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 
-namespace EPMS.Domain.Repository;
+namespace EPMS.Domain.Repository.Base;
 
 public class GenericRepository<T> : IGenericRepository<T> where T : class
 {
