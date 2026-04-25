@@ -1,6 +1,7 @@
 using EPMS.Domain.Data;
 using EPMS.Domain.Entities.Hr;
 using EPMS.Domain.Interface.Irepo.Hr;
+using EPMS.Domain.Repository.Base;
 using Microsoft.EntityFrameworkCore;
 
 namespace EPMS.Domain.Repository.Hr;

@@ -1,6 +1,7 @@
 ﻿using EPMS.Domain.Data;
 using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Domain.Interface.Irepo.Info;
+using EPMS.Domain.Repository.Base;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
