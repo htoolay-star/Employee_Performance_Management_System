@@ -1,9 +1,9 @@
 using EPMS.Domain.Data;
 using EPMS.Domain.Entities.Hr;
-using EPMS.Domain.Interface.Irepo;
+using EPMS.Domain.Interface.Irepo.Hr;
 using Microsoft.EntityFrameworkCore;
 
-namespace EPMS.Domain.Repository;
+namespace EPMS.Domain.Repository.Hr;
 
 public class DepartmentRepository : GenericRepository<Department>, IDepartmentRepository
 {
@@ -18,11 +18,11 @@ public class DepartmentRepository : GenericRepository<Department>, IDepartmentRe
 
     public async Task<bool> ExistsByCodeAsync(string code)
     {
-        return await _context.Departments.AnyAsync(d => d.Code == code);
+        return await _dbSet.AnyAsync(d => d.Code == code);
     }
 
     public async Task<bool> ExistsByNameAsync(string name)
     {
-        return await _context.Departments.AnyAsync(d => d.Name == name);
+        return await _dbSet.AnyAsync(d => d.Name == name);
     }
 }

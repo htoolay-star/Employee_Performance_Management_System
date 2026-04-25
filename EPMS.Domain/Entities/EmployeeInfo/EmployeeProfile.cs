@@ -25,7 +25,7 @@ namespace EPMS.Domain.Entities.EmployeeInfo
 
         public long Id { get; private set; }
 
-        public long UserId { get; private set; }
+        public long? UserId { get; private set; }
 
         public string StaffNo { get; private set; } = string.Empty;
         public string FirstName { get; private set; } = string.Empty;

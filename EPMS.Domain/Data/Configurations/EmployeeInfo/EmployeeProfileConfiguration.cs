@@ -18,7 +18,12 @@ namespace EPMS.Domain.Data.Configurations.EmployeeInfo
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).UseIdentityColumn();
 
-            entity.HasIndex(e => e.UserId).IsUnique();
+            entity.HasIndex(e => e.UserId)
+                  .IsUnique()
+                  .HasFilter($"{nameof(EmployeeProfile.UserId)} IS NOT NULL");
+
+            entity.Property(e => e.UserId)
+                  .IsRequired(false);
 
             entity.HasIndex(e => e.StaffNo).IsUnique();
             entity.Property(e => e.StaffNo).HasMaxLength(50).IsRequired();
