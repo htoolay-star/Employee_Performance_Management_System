@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EPMS.Domain.Interface.Irepo
+namespace EPMS.Domain.Contracts
 {
     public interface IGenericRepository<T> where T : class
     {
-        Task<T?> GetByIdAsync(long id);
+        Task<T?> GetByIdAsync(object id);
         Task<IEnumerable<T>> GetAllAsync();
         Task AddAsync(T entity);
         void Update(T entity);
         void Delete(T entity);
-        Task<bool> SaveChangesAsync();
+        Task<bool> AnyAsync(Expression<Func<T, bool>> predicate);
     }
 }

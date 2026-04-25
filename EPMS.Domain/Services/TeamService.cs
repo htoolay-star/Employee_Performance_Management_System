@@ -1,6 +1,7 @@
 using AutoMapper;
+using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Hr;
-using EPMS.Domain.Interface.Irepo;
+using EPMS.Domain.Interface.Irepo.Hr;
 using EPMS.Domain.Interfaces;
 using EPMS.Shared.DTOs.HR;
 
@@ -8,46 +9,46 @@ namespace EPMS.Domain.Services;
 
 public class TeamService : ITeamService
 {
-    private readonly ITeamRepository _repo;
     private readonly IMapper _mapper;
+    private readonly IUnitOfWork _uow;
 
-    public TeamService(ITeamRepository repo, IMapper mapper)
+    public TeamService(IMapper mapper, IUnitOfWork uow)
     {
-        _repo = repo;
         _mapper = mapper;
+        _uow = uow;
     }
 
     public async Task<IEnumerable<TeamDto>> GetAllAsync()
     {
-        var teams = await _repo.GetAllAsync();
+        var teams = await _uow.HR.Teams.GetAllAsync();
         return _mapper.Map<IEnumerable<TeamDto>>(teams);
     }
 
     public async Task<TeamDto?> GetByIdAsync(long id)
     {
-        var team = await _repo.GetByIdAsync(id);
+        var team = await _uow.HR.Teams.GetByIdAsync(id);
         return _mapper.Map<TeamDto>(team);
     }
 
     public async Task<long> CreateAsync(CreateTeamDto dto)
     {
-        if (await _repo.ExistsByNameInDepartmentAsync(dto.Name, dto.DepartmentId))
+        if (await _uow.HR.Teams.ExistsByNameInDepartmentAsync(dto.Name, dto.DepartmentId))
         {
             throw new InvalidOperationException($"Team with name '{dto.Name}' already exists in this department.");
         }
 
         var entity = new Team(dto.Name, dto.DepartmentId);
-        await _repo.AddAsync(entity);
-        await _repo.SaveChangesAsync();
+        await _uow.HR.Teams.AddAsync(entity);
+        await _uow.CompleteAsync();
         return entity.Id;
     }
 
     public async Task UpdateAsync(long id, TeamDto dto)
     {
-        var team = await _repo.GetByIdAsync(id);
+        var team = await _uow.HR.Teams.GetByIdAsync(id);
         if (team == null) return;
 
-        if (team.Name != dto.Name && await _repo.ExistsByNameInDepartmentAsync(dto.Name, team.DepartmentId))
+        if (team.Name != dto.Name && await _uow.HR.Teams.ExistsByNameInDepartmentAsync(dto.Name, team.DepartmentId))
         {
             throw new InvalidOperationException($"Another team with name '{dto.Name}' already exists in this department.");
         }
@@ -57,17 +58,17 @@ public class TeamService : ITeamService
         if (dto.IsActive) team.Reactivate();
         else team.Deactivate();
 
-        _repo.Update(team);
-        await _repo.SaveChangesAsync();
+        _uow.HR.Teams.Update(team);
+        await _uow.CompleteAsync();
     }
 
     public async Task DeleteAsync(long id)
     {
-        var team = await _repo.GetByIdAsync(id);
+        var team = await _uow.HR.Teams.GetByIdAsync(id);
         if (team != null)
         {
-            _repo.Delete(team);
-            await _repo.SaveChangesAsync();
+            _uow.HR.Teams.Delete(team);
+            await _uow.CompleteAsync();
         }
     }
 }

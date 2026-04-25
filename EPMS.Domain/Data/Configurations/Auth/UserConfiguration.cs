@@ -42,6 +42,11 @@ namespace EPMS.Domain.Data.Configurations.Auth
             entity.Property(e => e.UpdatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
 
             entity.Property(e => e.Version).IsRowVersion();
+
+            entity.HasOne(e => e.Role)
+                   .WithMany()
+                   .HasForeignKey(e => e.RoleId)
+                   .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

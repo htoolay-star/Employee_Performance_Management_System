@@ -3,6 +3,7 @@ using EPMS.Shared.Enums;
 using EPMS.Shared.Enums.EPMS.Shared.Enums;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,6 +20,7 @@ namespace EPMS.Domain.Entities.Auth
             ArgumentException.ThrowIfNullOrWhiteSpace(email);
             ArgumentException.ThrowIfNullOrWhiteSpace(passwordHash);
 
+            UserGuid = Guid.NewGuid();
             Email = email;
             PasswordHash = passwordHash;
             RoleId = (int)role;
