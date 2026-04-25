@@ -1,4 +1,5 @@
 using AutoMapper;
+using EPMS.Api.Behaviors;
 using EPMS.Api.MappingProfiles;
 using EPMS.Api.Middlewares;
 using EPMS.Domain.Contracts;
@@ -14,9 +15,12 @@ using EPMS.Domain.Repository.Base;
 using EPMS.Domain.Repository.Hr;
 using EPMS.Domain.Repository.Info;
 using EPMS.Domain.Services;
+using EPMS.Shared.Enums.EPMS.Shared.Enums;
 using EPMS.Shared.Models;
+using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +30,7 @@ builder.Services.AddSingleton<AuditInterceptor>();
 
 builder.Services.AddMediatR(cfg => {
     cfg.RegisterServicesFromAssemblies(typeof(AppDbContext).Assembly);
+    cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
 });
 
 
@@ -37,6 +42,7 @@ builder.Services.AddDbContext<AppDbContext>((sp, options) =>
            .AddInterceptors(auditInterceptor);
 });
 
+builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
 builder.Services.AddAutoMapper(cfg => cfg.AddMaps(typeof(MappingProfile).Assembly));
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));

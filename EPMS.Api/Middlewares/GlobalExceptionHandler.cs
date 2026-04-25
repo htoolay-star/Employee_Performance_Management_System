@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
+﻿using EPMS.Shared.Constants.EPMS.Shared.Constants;
+using FluentValidation;
+using FluentValidation.Results; 
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
-using FluentValidation;
-using FluentValidation.Results; 
 
 namespace EPMS.Api.Middlewares
 {
@@ -50,18 +51,53 @@ namespace EPMS.Api.Middlewares
 
         private (int StatusCode, string Title, string Detail) MapException(Exception ex) => ex switch
         {
-            FluentValidation.ValidationException => ((int)HttpStatusCode.UnprocessableEntity, "Validation Error", "One or more validation failures have occurred."),
-            InvalidOperationException => ((int)HttpStatusCode.UnprocessableEntity, "Business Rule Violation", ex.Message),
-            ArgumentException => ((int)HttpStatusCode.UnprocessableEntity, "Invalid Argument", ex.Message),
+            FluentValidation.ValidationException => (
+                (int)HttpStatusCode.UnprocessableEntity,
+                ErrorMessages.Titles.ValidationError,
+                ErrorMessages.Descriptions.ValidationFailure
+            ),
 
-            DbUpdateConcurrencyException => ((int)HttpStatusCode.Conflict, "Concurrency Error", "The data has been modified by another user. Please refresh and try again."),
+            InvalidOperationException => (
+                (int)HttpStatusCode.UnprocessableEntity,
+                ErrorMessages.Titles.BusinessRuleViolation,
+                ex.Message
+            ),
 
-            KeyNotFoundException => ((int)HttpStatusCode.NotFound, "Not Found", ex.Message),
-            UnauthorizedAccessException => ((int)HttpStatusCode.Unauthorized, "Unauthorized", "You do not have permission to access this resource."),
+            ArgumentException => (
+                (int)HttpStatusCode.UnprocessableEntity,
+                ErrorMessages.Titles.InvalidArgument,
+                ex.Message
+            ),
 
-            DbUpdateException => ((int)HttpStatusCode.BadRequest, "Database Error", env.IsDevelopment() ? ex.InnerException?.Message ?? ex.Message : "A database error occurred."),
+            DbUpdateConcurrencyException => (
+                (int)HttpStatusCode.Conflict,
+                ErrorMessages.Titles.ConcurrencyError,
+                ErrorMessages.Descriptions.ConcurrencyConflict
+            ),
 
-            _ => ((int)HttpStatusCode.InternalServerError, "Server Error", "An unexpected error occurred on the server.")
+            KeyNotFoundException => (
+                (int)HttpStatusCode.NotFound,
+                ErrorMessages.Titles.NotFound,
+                ex.Message
+            ),
+
+            UnauthorizedAccessException => (
+                (int)HttpStatusCode.Unauthorized,
+                ErrorMessages.Titles.Unauthorized,
+                ErrorMessages.Descriptions.UnauthorizedAccess
+            ),
+
+            DbUpdateException => (
+                (int)HttpStatusCode.BadRequest,
+                ErrorMessages.Titles.DatabaseError,
+                env.IsDevelopment() ? ex.InnerException?.Message ?? ex.Message : ErrorMessages.Descriptions.DatabaseErrorGeneric
+            ),
+
+            _ => (
+                (int)HttpStatusCode.InternalServerError,
+                ErrorMessages.Titles.ServerError,
+                ErrorMessages.Descriptions.InternalServerError
+            )
         };
     }
 }
