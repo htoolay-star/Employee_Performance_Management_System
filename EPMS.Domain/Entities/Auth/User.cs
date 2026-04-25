@@ -66,13 +66,13 @@ namespace EPMS.Domain.Entities.Auth
             LastLoginDate = timeProvider.GetUtcNow();
         }
 
-        public void ChangePassword(string newPasswordHash)
+        public void ResetPasswordByAdmin(string newPasswordHash)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(newPasswordHash);
 
             PasswordHash = newPasswordHash;
             SecurityStamp = Guid.NewGuid().ToString();
-            IsFirstLogin = false;
+            IsFirstLogin = true;
         }
 
         public void Deactivate()
