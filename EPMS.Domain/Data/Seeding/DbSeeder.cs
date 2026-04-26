@@ -40,7 +40,7 @@ namespace EPMS.Domain.Data.Seeding
 
                 var adminUser = new User(_settings.SAEmail, passwordHash, UserRole.SystemAdmin);
 
-                await _uow.Auth.Users.AddAsync(adminUser);
+                _uow.Auth.Users.Add(adminUser);
                 await _uow.CompleteAsync();
 
                 var adminProfile = new EmployeeProfile(
@@ -50,7 +50,7 @@ namespace EPMS.Domain.Data.Seeding
                     lastName: "Administrator"
                     );
 
-                await _uow.Info.EmployeeProfiles.AddAsync(adminProfile);
+                _uow.Info.EmployeeProfiles.Add(adminProfile);
 
                 await _uow.CompleteAsync();
                 await _uow.CommitAsync();

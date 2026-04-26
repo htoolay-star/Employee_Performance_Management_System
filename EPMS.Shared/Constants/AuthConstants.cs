@@ -14,6 +14,9 @@ namespace EPMS.Shared.Constants
             public const string Admin = "Admin";
             public const string User = "User";
 
+            public static readonly IReadOnlyList<string> AssignableRoles =
+                    new[] { Admin, User };
+
             public static class Ids
             {
                 public const int SystemAdmin = 1;

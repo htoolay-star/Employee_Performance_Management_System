@@ -1,4 +1,4 @@
-﻿using EPMS.Domain.Entities.EmployeeInfo;
+﻿using EPMS.Domain.Entities.Auth;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,6 +42,6 @@ namespace EPMS.Domain.Entities.Audit
         public DateTimeOffset Timestamp { get; private set; }
         public string? IpAddress { get; private set; }
 
-        public virtual EmployeeProfile? User { get; private set; }
+        public virtual User? User { get; private set; }
     }
 }
