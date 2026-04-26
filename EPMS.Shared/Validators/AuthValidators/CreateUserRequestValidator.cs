@@ -1,4 +1,5 @@
-﻿using EPMS.Shared.Constants.ValidationMessages;
+﻿using EPMS.Shared.Constants;
+using EPMS.Shared.Constants.ValidationMessages;
 using EPMS.Shared.DTOs.Auth;
 using EPMS.Shared.Enums.EPMS.Shared.Enums;
 using FluentValidation;
@@ -18,7 +19,7 @@ namespace EPMS.Shared.Validators.AuthValidators
 
             RuleFor(x => x.Role)
                 .IsInEnum().WithMessage(AuthValidationMessages.User.RoleInvalid)
-                .Must(role => role != UserRole.SystemAdmin)
+                .Must(role => AuthConstants.AppRoles.AssignableRoles.Contains(role.ToString()))
                 .WithMessage(AuthValidationMessages.User.SystemAdminNotAllowed);
         }
     }

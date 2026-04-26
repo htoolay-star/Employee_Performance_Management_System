@@ -26,6 +26,7 @@ using System.Text.Json.Serialization;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Configure<SeedSettings>(builder.Configuration.GetSection("SeedSettings"));
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<AuditInterceptor>();
 
