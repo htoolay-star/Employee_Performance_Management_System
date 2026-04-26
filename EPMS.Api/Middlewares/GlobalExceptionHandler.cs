@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
+using System.Text.Json;
 
 namespace EPMS.Api.Middlewares
 {
@@ -33,7 +34,7 @@ namespace EPMS.Api.Middlewares
                 problemDetails.Extensions["errors"] = valEx.Errors
                     .GroupBy(e => e.PropertyName)
                     .ToDictionary(
-                        g => char.ToLowerInvariant(g.Key[0]) + g.Key.Substring(1),
+                        g => string.IsNullOrEmpty(g.Key) ? "general" : JsonNamingPolicy.CamelCase.ConvertName(g.Key),
                         g => g.Select(x => x.ErrorMessage).ToArray()
                     );
             }

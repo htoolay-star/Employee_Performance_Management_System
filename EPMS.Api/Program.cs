@@ -19,6 +19,7 @@ using EPMS.Shared.Models;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,7 +51,12 @@ builder.Services.AddTransient<IDbSeeder, DbSeeder>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<ITeamService, TeamService>();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
+
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
