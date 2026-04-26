@@ -1,5 +1,4 @@
 using AutoMapper;
-using EPMS.Api.Behaviors;
 using EPMS.Api.MappingProfiles;
 using EPMS.Api.Middlewares;
 using EPMS.Domain.Contracts;
@@ -18,7 +17,6 @@ using EPMS.Domain.Services;
 using EPMS.Shared.Enums.EPMS.Shared.Enums;
 using EPMS.Shared.Models;
 using FluentValidation;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 
@@ -27,12 +25,6 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<SeedSettings>(builder.Configuration.GetSection("SeedSettings"));
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<AuditInterceptor>();
-
-builder.Services.AddMediatR(cfg => {
-    cfg.RegisterServicesFromAssemblies(typeof(AppDbContext).Assembly);
-    cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
-});
-
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>((sp, options) =>

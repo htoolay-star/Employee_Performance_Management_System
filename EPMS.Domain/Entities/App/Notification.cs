@@ -1,4 +1,4 @@
-﻿using EPMS.Domain.Entities.EmployeeInfo;
+﻿using EPMS.Domain.Entities.Auth;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,7 +41,7 @@ namespace EPMS.Domain.Entities.App
 
         public byte[] Version { get; private set; } = Array.Empty<byte>();
 
-        public virtual EmployeeProfile User { get; private set; } = null!;
+        public virtual User User { get; private set; } = null!;
 
         public void MarkAsRead()
         {
