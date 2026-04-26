@@ -26,42 +26,27 @@ public class TeamsController : ControllerBase
     public async Task<IActionResult> GetById(long id)
     {
         var result = await _teamService.GetByIdAsync(id);
-        if (result == null) return NotFound();
         return Ok(result);
     }
 
     [HttpPost]
     public async Task<IActionResult> Create(CreateTeamDto dto)
     {
-        try
-        {
-            var id = await _teamService.CreateAsync(dto);
-            return Ok(new { Id = id, Message = "Created Successfully" });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { Message = ex.Message });
-        }
+        var id = await _teamService.CreateAsync(dto);
+        return Ok(new { Id = id, Message = "Created Successfully" });
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(long id, TeamDto dto)
     {
-        try
-        {
-            await _teamService.UpdateAsync(id, dto);
-            return Ok(new { Message = "Updated Successfully" });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { Message = ex.Message });
-        }
+        await _teamService.UpdateAsync(id, dto);
+        return Ok(new { Message = "Updated Successfully" });
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(long id)
     {
         await _teamService.DeleteAsync(id);
-        return Ok(new { Message = "Deleted Successfully" });
+        return NoContent();
     }
 }
