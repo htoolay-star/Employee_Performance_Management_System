@@ -38,7 +38,7 @@ public class TeamService : ITeamService
         }
 
         var entity = new Team(dto.Name, dto.DepartmentId);
-        await _uow.HR.Teams.AddAsync(entity);
+        _uow.HR.Teams.Add(entity);
         await _uow.CompleteAsync();
         return entity.Id;
     }

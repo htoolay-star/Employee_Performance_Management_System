@@ -11,10 +11,8 @@ public class MappingProfile : Profile
     public MappingProfile()
     {
         
-        CreateMap<Department, DepartmentDto>().ReverseMap();
-        CreateMap<Team, TeamDto>().ReverseMap();
-        CreateMap<CreateDepartmentDto, Department>();
-        CreateMap<CreateTeamDto, Team>();
+        CreateMap<Department, DepartmentDto>();
+        CreateMap<Team, TeamDto>();
     }
 
 }

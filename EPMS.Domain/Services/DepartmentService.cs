@@ -43,7 +43,7 @@ public class DepartmentService : IDepartmentService
         }
 
         var entity = new Department(dto.Code, dto.Name);
-        await _uow.HR.Departments.AddAsync(entity);
+        _uow.HR.Departments.Add(entity);
         await _uow.CompleteAsync();
         return entity.Id;
     }

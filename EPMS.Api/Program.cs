@@ -47,11 +47,6 @@ builder.Services.AddProblemDetails();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddTransient<IDbSeeder, DbSeeder>();
 
-// Auth
-builder.Services.AddScoped<IAuthModule, AuthModule>();
-builder.Services.AddScoped<IInfoModule, InfoModule>();
-builder.Services.AddScoped<IHRModule, HRModule>();
-
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<ITeamService, TeamService>();
 
