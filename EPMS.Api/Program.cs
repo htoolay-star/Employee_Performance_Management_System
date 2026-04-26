@@ -8,12 +8,14 @@ using EPMS.Domain.Data.Seeding;
 using EPMS.Domain.Interface.Irepo.Auth;
 using EPMS.Domain.Interface.Irepo.Hr;
 using EPMS.Domain.Interface.Irepo.Info;
+using EPMS.Domain.Interface.IService.Auth;
 using EPMS.Domain.Interfaces;
 using EPMS.Domain.Repository.Auth;
 using EPMS.Domain.Repository.Base;
 using EPMS.Domain.Repository.Hr;
 using EPMS.Domain.Repository.Info;
 using EPMS.Domain.Services;
+using EPMS.Domain.Services.Auth;
 using EPMS.Shared.Enums.EPMS.Shared.Enums;
 using EPMS.Shared.Models;
 using FluentValidation;
@@ -48,8 +50,17 @@ builder.Services.AddProblemDetails();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddTransient<IDbSeeder, DbSeeder>();
 
-builder.Services.AddScoped<IDepartmentService, DepartmentService>();
-builder.Services.AddScoped<ITeamService, TeamService>();
+builder.Services.Scan(scan => scan
+    .FromAssembliesOf(typeof(IPasswordHasher))
+
+    .AddClasses(classes => classes.Where(t => t.Name.EndsWith("Service")))
+        .AsImplementedInterfaces()
+        .WithScopedLifetime()
+
+    .AddClasses(classes => classes.Where(t => t.Name.EndsWith("Hasher")))
+        .AsImplementedInterfaces()
+        .WithSingletonLifetime()
+);
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
