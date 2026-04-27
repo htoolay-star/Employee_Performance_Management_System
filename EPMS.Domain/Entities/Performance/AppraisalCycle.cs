@@ -32,6 +32,7 @@ namespace EPMS.Domain.Entities.Performance
         public int Id { get; private set; }
         public string Name { get; private set; } = string.Empty;
         public int Year { get; private set; }
+
         public string AppraisalType { get; private set; } = string.Empty;
 
         public DateOnly StartDate { get; private set; }
