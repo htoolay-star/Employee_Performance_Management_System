@@ -1,3 +1,4 @@
+using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.App;
 using EPMS.Domain.Entities.Audit;
 using EPMS.Domain.Entities.Auth;
@@ -6,6 +7,7 @@ using EPMS.Domain.Entities.Hr;
 using EPMS.Domain.Entities.Performance;
 using EPMS.Domain.Entities.Shared;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace EPMS.Domain.Data
@@ -16,11 +18,14 @@ namespace EPMS.Domain.Data
 
         // --- App Schema ---
         public DbSet<Notification> Notifications => Set<Notification>();
+        public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
 
         // --- Audit Schema ---
         public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
         // --- Auth Schema ---
+        public DbSet<Permission> Permissions => Set<Permission>();
+        public DbSet<PositionPermission> PositionPermissions => Set<PositionPermission>();
         public DbSet<User> Users => Set<User>();
         public DbSet<Role> Roles => Set<Role>();
         public DbSet<UserRefreshToken> UserRefreshTokens => Set<UserRefreshToken>();
@@ -30,14 +35,14 @@ namespace EPMS.Domain.Data
         public DbSet<Department> Departments => Set<Department>();
         public DbSet<Position> Positions => Set<Position>();
         public DbSet<Team> Teams => Set<Team>();
-        public DbSet<Permission> Permissions => Set<Permission>();
-        public DbSet<PositionPermission> PositionPermissions => Set<PositionPermission>();
         public DbSet<RatingScale> RatingScales => Set<RatingScale>();
 
         // --- Employee Info Schema ---
-        public DbSet<EmployeeProfile> EmployeeProfiles => Set<EmployeeProfile>();
+        public DbSet<EmployeeContact> EmployeeContact => Set<EmployeeContact>();
         public DbSet<EmployeeEmployment> EmployeeEmployments => Set<EmployeeEmployment>();
+        public DbSet<EmployeeFamilyInfo> EmployeeFamilyInfos => Set<EmployeeFamilyInfo>();
         public DbSet<EmployeePayrollInfo> EmployeePayrollInfos => Set<EmployeePayrollInfo>();
+        public DbSet<EmployeeProfile> EmployeeProfiles => Set<EmployeeProfile>();
 
         // Shared Schema
         public DbSet<Category> Categories => Set<Category>();
@@ -68,14 +73,80 @@ namespace EPMS.Domain.Data
 
             configurationBuilder.Properties<DateTimeOffset>().HaveColumnType("datetimeoffset");
             configurationBuilder.Properties<DateOnly>().HaveColumnType("date");
-            configurationBuilder.Properties<decimal>().HaveColumnType("decimal(18,2)"); 
+            configurationBuilder.Properties<decimal>().HaveColumnType("decimal(18,2)");
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+            {
+                if (typeof(ISoftDeletable).IsAssignableFrom(entityType.ClrType))
+                {
+                    modelBuilder.Entity(entityType.ClrType).HasQueryFilter(
+                        ConvertFilterExpression(entityType.ClrType)
+                    );
+                }
+            }
+
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+        }
+
+        public override int SaveChanges()
+        {
+            var entries = ChangeTracker.Entries<ISoftDeletable>();
+
+            foreach (var entry in entries)
+            {
+                if (entry.State == EntityState.Deleted)
+                {
+                    entry.State = EntityState.Modified;
+
+                    entry.Entity.IsDeleted = true;
+                    entry.Entity.DeletedAt = DateTimeOffset.UtcNow;
+
+                    if (entry.Entity is IAuditableEntity auditable)
+                    {
+                        auditable.UpdatedAt = DateTimeOffset.UtcNow;
+                    }
+                }
+            }
+
+            return base.SaveChanges();
+        }
+
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            var entries = ChangeTracker.Entries<ISoftDeletable>();
+
+            foreach (var entry in entries)
+            {
+                if (entry.State == EntityState.Deleted)
+                {
+                    entry.State = EntityState.Modified;
+
+                    entry.Entity.IsDeleted = true;
+                    entry.Entity.DeletedAt = DateTimeOffset.UtcNow;
+
+                    if (entry.Entity is IAuditableEntity auditable)
+                    {
+                        auditable.UpdatedAt = DateTimeOffset.UtcNow;
+                    }
+                }
+            }
+
+            return await base.SaveChangesAsync(cancellationToken);
+        }
+
+        private static LambdaExpression ConvertFilterExpression(Type entityType)
+        {
+            var parameter = Expression.Parameter(entityType, "e");
+            var property = Expression.Property(parameter, nameof(ISoftDeletable.IsDeleted));
+            var falseConstant = Expression.Constant(false);
+            var comparison = Expression.Equal(property, falseConstant);
+
+            return Expression.Lambda(comparison, parameter);
         }
     }
 }

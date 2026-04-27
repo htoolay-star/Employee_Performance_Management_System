@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class FormQuestion : IAuditableEntity
+    public class FormQuestion : IAuditableEntity , ISoftDeletable
     {
         private FormQuestion() { }
 
@@ -42,6 +42,10 @@ namespace EPMS.Domain.Entities.Performance
 
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
+
+        public bool IsDeleted { get; set; }
+        public DateTimeOffset? DeletedAt { get; set; }
+
         public byte[] Version { get; private set; } = Array.Empty<byte>();
 
         private readonly List<Shared.Tag> _tags = new();

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Hr
 {
-    public class Department : IAuditableEntity
+    public class Department : IAuditableEntity , ISoftDeletable
     {
         private Department() { }
 
@@ -30,6 +30,9 @@ namespace EPMS.Domain.Entities.Hr
 
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
+
+        public bool IsDeleted { get; set; }
+        public DateTimeOffset? DeletedAt { get; set; }
 
         public void Rename(string newName)
         {

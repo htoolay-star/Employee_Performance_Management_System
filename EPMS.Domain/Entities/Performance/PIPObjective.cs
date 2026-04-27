@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class PIPObjective : IAuditableEntity
+    public class PIPObjective : IAuditableEntity , ISoftDeletable
     {
         private PIPObjective() { }
 
@@ -35,6 +35,10 @@ namespace EPMS.Domain.Entities.Performance
 
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
+
+        public bool IsDeleted { get; set; }
+        public DateTimeOffset? DeletedAt { get; set; }
+
         public byte[] Version { get; private set; } = Array.Empty<byte>();
 
         public virtual PIP PIP { get; private set; } = null!;

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.EmployeeInfo
 {
-    public class EmployeeEmployment : IAuditableEntity
+    public class EmployeeEmployment : IAuditableEntity , ISoftDeletable
     {
         private EmployeeEmployment() { }
 
@@ -52,6 +52,10 @@ namespace EPMS.Domain.Entities.EmployeeInfo
 
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
+
+        public bool IsDeleted { get; set; }
+        public DateTimeOffset? DeletedAt { get; set; }
+
         public byte[] Version { get; private set; } = Array.Empty<byte>();
 
         public virtual EmployeeProfile Profile { get; private set; } = null!;

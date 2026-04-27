@@ -33,7 +33,10 @@ namespace EPMS.Domain.Services
         public async Task<PermissionDto?> GetPermissionByIdAsync(int id)
         {
             var permission = await _permissionRepo.GetByIdAsync(id);
-            return permission == null ? null : _mapper.Map<PermissionDto>(permission);
+
+            if (permission == null) throw new Exception("Permission not found");
+
+            return _mapper.Map<PermissionDto>(permission);
         }
 
  
@@ -44,7 +47,6 @@ namespace EPMS.Domain.Services
             {
                 throw new Exception("Permission Code already have");
             }
-
             
             var permission = new Permission(dto.Code, dto.Name, dto.Description);
 
@@ -56,9 +58,9 @@ namespace EPMS.Domain.Services
         public async Task UpdatePermissionAsync(int id, UpdatePermissionDto dto)
         {
             var permission = await _permissionRepo.GetByIdAsync(id);
-            if (permission == null) throw new Exception("not found");
 
-            
+            if (permission == null) throw new Exception("Permission not found");
+
             permission.UpdateDetails(dto.Name, dto.Description);
 
             _permissionRepo.Update(permission);
@@ -68,6 +70,9 @@ namespace EPMS.Domain.Services
         public async Task DeletePermissionAsync(int id)
         {
             var permission = await _permissionRepo.GetByIdAsync(id);
+
+            if (permission == null) throw new Exception("Permission not found");
+
             if (permission != null)
             {
                 

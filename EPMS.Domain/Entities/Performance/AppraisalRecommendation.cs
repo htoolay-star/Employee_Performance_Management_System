@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class AppraisalRecommendation : IAuditableEntity
+    public class AppraisalRecommendation : IAuditableEntity , ISoftDeletable
     {
         private AppraisalRecommendation() { }
 
@@ -44,6 +44,10 @@ namespace EPMS.Domain.Entities.Performance
 
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
+
+        public bool IsDeleted { get; set; }
+        public DateTimeOffset? DeletedAt { get; set; }
+
         public byte[] Version { get; private set; } = Array.Empty<byte>();
 
         public virtual Appraisal Appraisal { get; private set; } = null!;
