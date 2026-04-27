@@ -18,7 +18,18 @@ namespace EPMS.Domain.Repository.Auth
         public async Task<bool> ExistsAsync(string email) =>
             await _dbSet.AnyAsync(u => u.Email == email);
 
-        public async Task<User?> GetByEmailAsync(string email) =>
-            await _dbSet.Include(u => u.Role).FirstOrDefaultAsync(u => u.Email == email);
+        public async Task<User?> GetByEmailAsync(string email, bool trackChanges = false)
+        {
+            var query = _dbSet
+                .Include(u => u.Role)
+                .Where(u => u.Email == email && u.IsActive);
+
+            if (!trackChanges)
+            {
+                query = query.AsNoTracking();
+            }
+
+            return await query.FirstOrDefaultAsync();
+        }
     }
 }

@@ -3,7 +3,7 @@ using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Auth;
 using EPMS.Domain.Interface.Irepo.Auth;
 using EPMS.Domain.Interface.IService;
-using EPMS.Shared.DTOs.Auth;
+using EPMS.Shared.DTOs.PermissionDTOS;
 using System;
 using System.Collections.Generic;
 using System.Linq;

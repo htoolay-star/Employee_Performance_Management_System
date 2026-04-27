@@ -43,8 +43,8 @@ namespace EPMS.Domain.Entities.Performance
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
 
-        public bool IsDeleted { get; private set; }
-        public DateTimeOffset? DeletedAt { get; private set; }
+        public bool IsDeleted { get; set; }
+        public DateTimeOffset? DeletedAt { get; set; }
 
         public byte[] Version { get; private set; } = Array.Empty<byte>();
 

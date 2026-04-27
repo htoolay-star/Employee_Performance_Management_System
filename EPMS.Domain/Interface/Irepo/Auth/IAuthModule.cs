@@ -1,3 +1,4 @@
+using EPMS.Domain.Interface.Irepo.App;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +9,9 @@ namespace EPMS.Domain.Interface.Irepo.Auth
 {
     public interface IAuthModule
     {
+        ISystemSettingsRepository SystemSettings { get; }
         IUserRepository Users { get; }
+        IUserRefreshTokenRepository UsersRefreshToken { get; }
         IRoleRepository Roles { get; }
         IPermissionRepository Permissions { get; }
     }

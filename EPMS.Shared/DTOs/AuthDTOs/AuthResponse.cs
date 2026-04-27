@@ -8,9 +8,10 @@ namespace EPMS.Shared.DTOs.Auth
 {
     public record AuthResponse
     {
+        public bool Success { get; init; }
+        public string Message { get; init; } = string.Empty;
         public TokenResponse Tokens { get; init; } = new();
-        public string Email { get; init; } = string.Empty;
-        public bool IsFirstLogin { get; init; }
-        public string Role { get; init; } = string.Empty;
+
+        public UserDto User { get; init; } = new();
     }
 }

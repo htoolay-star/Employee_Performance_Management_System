@@ -1,4 +1,4 @@
-using EPMS.Shared.DTOs.Auth;
+using EPMS.Shared.DTOs.PermissionDTOS;
 
 namespace EPMS.Domain.Interface.IService
 {
