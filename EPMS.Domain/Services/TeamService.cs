@@ -47,7 +47,7 @@ public class TeamService : ITeamService
         return entity.Id;
     }
 
-    public async Task UpdateAsync(long id, TeamDto dto)
+    public async Task UpdateAsync(long id, UpdateTeamDto dto)
     {
         var team = await _uow.HR.Teams.GetByIdAsync(id);
 

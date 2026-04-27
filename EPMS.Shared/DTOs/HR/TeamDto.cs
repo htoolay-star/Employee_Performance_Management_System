@@ -1,17 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace EPMS.Shared.DTOs.HR
 {
-    public class TeamDto
+    public record TeamDto
     {
-        public long Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public long DepartmentId { get; set; }
-        public bool IsActive { get; set; }
-       
+        public long Id { get; init; }
+        public string Name { get; init; } = string.Empty;
+        public long DepartmentId { get; init; }
+        public bool IsActive { get; init; }
     }
 }

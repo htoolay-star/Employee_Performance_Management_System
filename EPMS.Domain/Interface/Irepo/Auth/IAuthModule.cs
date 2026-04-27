@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +10,6 @@ namespace EPMS.Domain.Interface.Irepo.Auth
     {
         IUserRepository Users { get; }
         IRoleRepository Roles { get; }
-        IPermissionRepository Permission{ get; }
+        IPermissionRepository Permissions { get; }
     }
 }

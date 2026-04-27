@@ -7,6 +7,6 @@ public interface ITeamService
     Task<IEnumerable<TeamDto>> GetAllAsync();
     Task<TeamDto?> GetByIdAsync(long id);
     Task<long> CreateAsync(CreateTeamDto dto);
-    Task UpdateAsync(long id, TeamDto dto);
+    Task UpdateAsync(long id, UpdateTeamDto dto);
     Task DeleteAsync(long id);
 }

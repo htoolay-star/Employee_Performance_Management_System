@@ -37,7 +37,7 @@ public class TeamsController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(long id, TeamDto dto)
+    public async Task<IActionResult> Update(long id, UpdateTeamDto dto)
     {
         await _teamService.UpdateAsync(id, dto);
         return Ok(new { Message = "Updated Successfully" });

@@ -1,9 +1,9 @@
-﻿using AutoMapper;
+using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Auth;
 using EPMS.Domain.Interface.Irepo.Auth;
 using EPMS.Domain.Interface.IService;
-using EPMS.Shared.PermissionDTOs;
+using EPMS.Shared.DTOs.Auth;
 using System;
 using System.Collections.Generic;
 using System.Linq;

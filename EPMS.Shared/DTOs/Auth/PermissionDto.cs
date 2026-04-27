@@ -1,12 +1,11 @@
-namespace EPMS.Shared.DTOs.HR
+namespace EPMS.Shared.DTOs.Auth
 {
-    public record DepartmentDto
+    public record PermissionDto
     {
-        public long Id { get; init; }
+        public int Id { get; init; }
         public string Code { get; init; } = string.Empty;
         public string Name { get; init; } = string.Empty;
+        public string? Description { get; init; }
         public bool IsActive { get; init; }
-
-        public List<TeamDto> Teams { get; init; } = new();
     }
 }
