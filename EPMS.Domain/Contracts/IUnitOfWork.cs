@@ -19,6 +19,5 @@ namespace EPMS.Domain.Contracts
         Task BeginTransactionAsync();
         Task CommitAsync();
         Task RollbackAsync();
-        Task SaveChangesAsync(CancellationToken ct);
     }
 }
