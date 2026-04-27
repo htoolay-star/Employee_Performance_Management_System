@@ -34,6 +34,7 @@ namespace EPMS.Domain.Entities.Auth
         public DateTimeOffset ExpiresAt { get; private set; }
 
         public byte[] Version { get; private set; } = Array.Empty<byte>();
+        public virtual User User { get; private set; } = null!;
 
         public bool IsExpired(TimeProvider timeProvider) => timeProvider.GetUtcNow() >= ExpiresAt;
 

@@ -54,6 +54,22 @@ namespace EPMS.Domain.Entities.Auth
         public int RoleId { get; private set; }
         public virtual Role Role { get; private set; } = null!;
 
+        private readonly List<UserRefreshToken> _refreshTokens = new();
+        public virtual IReadOnlyCollection<UserRefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
+
+        public void AddRefreshToken(string token, string jwtId, TimeProvider timeProvider, DateTimeOffset expiresAt)
+        {
+            _refreshTokens.Add(new UserRefreshToken(this.Id, token, jwtId, timeProvider.GetUtcNow(), expiresAt));
+        }
+
+        public void RevokeAllTokens()
+        {
+            foreach (var token in _refreshTokens.Where(t => !t.IsRevoked))
+            {
+                token.Revoke();
+            }
+        }
+
         public void RecordFailedLogin(TimeProvider timeProvider, int maxAttempts, TimeSpan lockoutDuration)
         {
             FailedLoginAttempts++;
@@ -77,16 +93,24 @@ namespace EPMS.Domain.Entities.Auth
             PasswordHash = newPasswordHash;
             SecurityStamp = Guid.NewGuid().ToString();
             IsFirstLogin = true;
+
+            RevokeAllTokens();
         }
 
         public void Deactivate()
         {
             IsActive = false;
+            RevokeAllTokens();
         }
 
         public void ChangeRole(UserRole newRole)
         {
             RoleId = (int)newRole;
+        }
+
+        public void UpdateLastLogin(TimeProvider timeProvider)
+        {
+            LastLoginDate = timeProvider.GetUtcNow();
         }
     }
 }

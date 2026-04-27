@@ -8,9 +8,8 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Interface.Irepo.Auth
 {
-    public interface IUserRepository : IGenericRepository<User>
+    public interface IUserRefreshTokenRepository : IGenericRepository<UserRefreshToken>
     {
-        Task<bool> ExistsAsync(string email);
-        Task<User?> GetByEmailAsync(string email, bool trackChanges = false);
+        Task<UserRefreshToken?> GetByTokenWithUserAsync(string token, CancellationToken cancellationToken = default);
     }
 }
