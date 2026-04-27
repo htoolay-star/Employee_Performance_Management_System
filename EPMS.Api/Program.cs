@@ -9,11 +9,13 @@ using EPMS.Domain.Data.Seeding;
 using EPMS.Domain.Interface.Irepo.Auth;
 using EPMS.Domain.Interface.Irepo.Hr;
 using EPMS.Domain.Interface.Irepo.Info;
+using EPMS.Domain.Interface.Irepo.IPositionRepository;
 using EPMS.Domain.Interfaces;
 using EPMS.Domain.Repository.Auth;
 using EPMS.Domain.Repository.Base;
 using EPMS.Domain.Repository.Hr;
 using EPMS.Domain.Repository.Info;
+using EPMS.Domain.Repository.PositionRepo;
 using EPMS.Domain.Services;
 using EPMS.Shared.Enums.EPMS.Shared.Enums;
 using EPMS.Shared.Models;
@@ -62,6 +64,8 @@ builder.Services.AddScoped<IHRModule, HRModule>();
 
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<ITeamService, TeamService>();
+builder.Services.AddScoped<IPositionRepository, PositionRepository>();
+
 
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
