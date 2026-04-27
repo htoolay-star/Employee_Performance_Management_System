@@ -13,10 +13,12 @@ namespace EPMS.Domain.Repository.Auth
         private readonly AppDbContext _context;
         private IUserRepository? _users;
         private IRoleRepository? _roles;
+        private IPermissionRepository? _permissions;
 
         public AuthModule(AppDbContext context) => _context = context;
 
         public IUserRepository Users => _users ??= new UserRepository(_context);
         public IRoleRepository Roles => _roles ??= new RoleRepository(_context);
+        public IPermissionRepository Permissions => _permissions ??= new PermissionRepository(_context);
     }
 }

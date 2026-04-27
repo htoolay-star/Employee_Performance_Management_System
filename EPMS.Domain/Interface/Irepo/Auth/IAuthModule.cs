@@ -10,5 +10,6 @@ namespace EPMS.Domain.Interface.Irepo.Auth
     {
         IUserRepository Users { get; }
         IRoleRepository Roles { get; }
+        IPermissionRepository Permission{ get; }
     }
 }
