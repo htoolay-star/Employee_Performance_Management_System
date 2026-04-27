@@ -14,25 +14,23 @@ namespace EPMS.Domain.Services
 {
     public class PermissionService : IPermissionService
     {
-        private readonly IPermissionRepository _permissionRepo;
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IUnitOfWork _uow;
         private readonly IMapper _mapper;
 
-        public PermissionService(IPermissionRepository permissionRepo, IUnitOfWork unitOfWork, IMapper mapper)
+        public PermissionService(IUnitOfWork uow, IMapper mapper)
         {
-            _permissionRepo = permissionRepo;
-            _unitOfWork = unitOfWork;
+            _uow = uow;
             _mapper = mapper;
         }
         public async Task<IEnumerable<PermissionDto>> GetAllPermissionsAsync()
         {
-            var permissions = await _permissionRepo.GetAllAsync();
+            var permissions = await _uow.Auth.Permissions.GetAllAsync();
             return _mapper.Map<IEnumerable<PermissionDto>>(permissions);
         }
 
         public async Task<PermissionDto?> GetPermissionByIdAsync(int id)
         {
-            var permission = await _permissionRepo.GetByIdAsync(id);
+            var permission = await _uow.Auth.Permissions.GetByIdAsync(id);
 
             if (permission == null) throw new Exception("Permission not found");
 
@@ -43,42 +41,39 @@ namespace EPMS.Domain.Services
         public async Task CreatePermissionAsync(CreatePermissionDto dto)
         {
             
-            if (!await _permissionRepo.IsCodeUniqueAsync(dto.Code))
+            if (!await _uow.Auth.Permissions.IsCodeUniqueAsync(dto.Code))
             {
                 throw new Exception("Permission Code already have");
             }
             
             var permission = new Permission(dto.Code, dto.Name, dto.Description);
 
-            _permissionRepo.Add(permission);
-            await _unitOfWork.CompleteAsync();
+            _uow.Auth.Permissions.Add(permission);
+            await _uow.CompleteAsync();
         }
 
         
         public async Task UpdatePermissionAsync(int id, UpdatePermissionDto dto)
         {
-            var permission = await _permissionRepo.GetByIdAsync(id);
+            var permission = await _uow.Auth.Permissions.GetByIdAsync(id);
 
             if (permission == null) throw new Exception("Permission not found");
 
             permission.UpdateDetails(dto.Name, dto.Description);
 
-            _permissionRepo.Update(permission);
-            await _unitOfWork.CompleteAsync();
+            await _uow.CompleteAsync();
         }
 
         public async Task DeletePermissionAsync(int id)
         {
-            var permission = await _permissionRepo.GetByIdAsync(id);
+            var permission = await _uow.Auth.Permissions.GetByIdAsync(id);
 
             if (permission == null) throw new Exception("Permission not found");
 
             if (permission != null)
             {
-                
-                permission.Deactivate();
-                _permissionRepo.Update(permission);
-                await _unitOfWork.CompleteAsync();
+                _uow.Auth.Permissions.Delete(permission);
+                await _uow.CompleteAsync();
             }
         }
     }

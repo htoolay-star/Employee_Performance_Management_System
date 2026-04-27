@@ -81,7 +81,7 @@ public class DepartmentService : IDepartmentService
 
         if (department != null)
         {
-            _uow.HR.Departments.Deactivate(department);
+            _uow.HR.Departments.Delete(department);
             await _uow.CompleteAsync();
         }
     }
