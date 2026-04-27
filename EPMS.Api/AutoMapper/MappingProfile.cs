@@ -1,8 +1,8 @@
-﻿using AutoMapper;
+using AutoMapper;
 using EPMS.Domain.Entities.Auth;
 using EPMS.Domain.Entities.Hr;
 using EPMS.Shared.DTOs.HR;
-using EPMS.Shared.PermissionDTOs;
+using EPMS.Shared.DTOs.Auth;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace EPMS.Api.MappingProfiles;

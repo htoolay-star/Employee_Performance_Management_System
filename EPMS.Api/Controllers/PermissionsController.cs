@@ -1,5 +1,5 @@
-﻿using EPMS.Domain.Interface.IService;
-using EPMS.Shared.PermissionDTOs;
+using EPMS.Domain.Interface.IService;
+using EPMS.Shared.DTOs.Auth;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 

@@ -52,7 +52,7 @@ public class DepartmentService : IDepartmentService
         return entity.Id;
     }
 
-    public async Task UpdateAsync(long id, DepartmentDto dto)
+    public async Task UpdateAsync(long id, UpdateDepartmentDto dto)
     {
         var department = await _uow.HR.Departments.GetByIdAsync(id);
 

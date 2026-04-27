@@ -37,7 +37,7 @@ public class DepartmentsController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(long id, DepartmentDto dto)
+    public async Task<IActionResult> Update(long id, UpdateDepartmentDto dto)
     {
         await _service.UpdateAsync(id, dto);
         return Ok(new { Message = "Updated Successfully" });

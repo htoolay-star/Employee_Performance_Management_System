@@ -1,9 +1,4 @@
-﻿using EPMS.Shared.PermissionDTOs;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using EPMS.Shared.DTOs.Auth;
 
 namespace EPMS.Domain.Interface.IService
 {
