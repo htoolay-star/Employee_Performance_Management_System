@@ -10,6 +10,5 @@ namespace EPMS.Shared.DTOs.Auth
     public record CreateUserRequest
     {
         public string Email { get; init; } = string.Empty;
-        public UserRole Role { get; init; } = UserRole.User;
     }
 }

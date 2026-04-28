@@ -1,5 +1,7 @@
 ﻿using EPMS.Domain.Interface.IService.Auth;
+using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Auth;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,6 +13,7 @@ namespace EPMS.Api.Controllers.Auth
     {
         private readonly IAuthService _authService;
 
+        [AllowAnonymous]
         public AuthController(IAuthService authService)
         {
             _authService = authService;
@@ -23,6 +26,7 @@ namespace EPMS.Api.Controllers.Auth
             return Ok(response);
         }
 
+        [Authorize(Roles = RoleConstants.SystemAdmin)]
         [HttpPost("register")]
         public async Task<ActionResult<AuthResponse>> Register([FromBody] CreateUserRequest request)
         {
@@ -30,6 +34,7 @@ namespace EPMS.Api.Controllers.Auth
             return Ok(response);
         }
 
+        [AllowAnonymous]
         [HttpPost("refresh-token")]
         public async Task<ActionResult<AuthResponse>> RefreshToken([FromBody] RefreshTokenRequest request)
         {

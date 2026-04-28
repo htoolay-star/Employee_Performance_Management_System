@@ -1,7 +1,9 @@
 ﻿using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Auth;
 using EPMS.Domain.Interface.IService.Auth;
+using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Auth;
+using EPMS.Shared.Enums.EPMS.Shared.Enums;
 using EPMS.Shared.Models;
 using Microsoft.Extensions.Options;
 using System;
@@ -79,30 +81,33 @@ namespace EPMS.Domain.Services.Auth
                 },
                 User = new UserDto
                 {
-                    Id = user.Id,
+                    UserGuid = user.UserGuid,
                     Email = user.Email,
-                    RoleName = user.Role.Name
+                    RoleName = user.Role.Name,
+                    IsActive = user.IsActive,
+                    IsFirstLogin = user.IsFirstLogin,
+                    LastLoginDate = user.LastLoginDate
                 }
             };
         }
 
         public async Task<AuthResponse> RegisterAsync(CreateUserRequest request)
         {
-            var existingUser = await _unitOfWork.Auth.Users.GetByEmailAsync(request.Email);
-            if (existingUser != null)
+            var userAlreadyExists = await _unitOfWork.Auth.Users.ExistsAsync(request.Email);
+            if (userAlreadyExists)
             {
                 throw new InvalidOperationException("Email is already registered.");
             }
 
-            var setting = await _unitOfWork.Auth.SystemSettings.GetByKeyAsync("DefaultUserPassword");
+            var setting = await _unitOfWork.Auth.SystemSettings.GetByKeyAsync(SettingKeys.DefaultUserPassword);
             var rawPassword = setting?.Value;
             if (string.IsNullOrWhiteSpace(rawPassword))
             {
-                throw new InvalidOperationException("Default user password is not configured. Set 'DefaultUserPassword' in system settings before registering users.");
+                throw new InvalidOperationException($"Default user password is not configured. Set '{SettingKeys.DefaultUserPassword}' in system settings before registering users.");
             }
 
             var hashedPassword = _passwordHasher.Hash(rawPassword);
-            var newUser = new User(request.Email, hashedPassword, request.Role);
+            var newUser = new User(request.Email, hashedPassword, UserRole.Admin);
 
             _unitOfWork.Auth.Users.Add(newUser);
             await _unitOfWork.CompleteAsync();
@@ -111,7 +116,7 @@ namespace EPMS.Domain.Services.Auth
             var userInfo = new ITokenService.TokenUserInfo(
                 newUser.Id,
                 newUser.Email,
-                new List<string> { request.Role.ToString() },
+                new List<string> { UserRole.Admin.ToString() },
                 jwtId
             );
 
@@ -132,9 +137,12 @@ namespace EPMS.Domain.Services.Auth
                 },
                 User = new UserDto
                 {
-                    Id = newUser.Id,
+                    UserGuid = newUser.UserGuid,
                     Email = newUser.Email,
-                    RoleName = newUser.Role.Name
+                    RoleName = UserRole.Admin.ToString(),
+                    IsActive = newUser.IsActive,
+                    IsFirstLogin = newUser.IsFirstLogin,
+                    LastLoginDate = newUser.LastLoginDate
                 }
             };
         }
@@ -182,7 +190,15 @@ namespace EPMS.Domain.Services.Auth
                     AccessToken = newAccessToken,
                     RefreshToken = newRefreshToken
                 },
-                User = new UserDto { Id = user.Id, Email = user.Email, RoleName = user.Role.Name }
+                User = new UserDto 
+                {
+                    UserGuid = user.UserGuid,
+                    Email = user.Email, 
+                    RoleName = user.Role.Name,
+                    IsActive = user.IsActive,
+                    IsFirstLogin = user.IsFirstLogin,
+                    LastLoginDate = user.LastLoginDate
+                }
             };
         }
     }

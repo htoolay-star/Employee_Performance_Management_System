@@ -1,9 +1,10 @@
 using AutoMapper;
 using EPMS.Domain.Entities.Auth;
 using EPMS.Domain.Entities.Hr;
+using EPMS.Shared.DTOs.Auth;
 using EPMS.Shared.DTOs.HR;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 using EPMS.Shared.DTOs.PermissionDTOS;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace EPMS.Api.MappingProfiles;
 
@@ -16,6 +17,8 @@ public class MappingProfile : Profile
         CreateMap<Department, DepartmentDto>();
         CreateMap<Team, TeamDto>();
         CreateMap<Permission, PermissionDto>();
+        CreateMap<User, UserDto>()
+            .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.Name));
 
         CreateMap<CreatePermissionDto, Permission>()
                 .ConstructUsing(src => new Permission(src.Code, src.Name, src.Description));
