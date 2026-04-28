@@ -10,5 +10,6 @@ namespace EPMS.Domain.Interface.Irepo.Hr
     {
         IDepartmentRepository Departments { get; }
         ITeamRepository Teams { get; }
+        IRatingScaleRepository RatingScales { get; }
     }
 }

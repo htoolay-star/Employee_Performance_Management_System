@@ -15,6 +15,8 @@ using EPMS.Domain.Repository.Base;
 using EPMS.Domain.Repository.Hr;
 using EPMS.Domain.Repository.Info;
 using EPMS.Domain.Services;
+using EPMS.Domain.Interface.IService;
+using EPMS.Application.Services.Performance;
 using EPMS.Shared.Enums.EPMS.Shared.Enums;
 using EPMS.Shared.Models;
 using FluentValidation;
@@ -28,7 +30,8 @@ builder.Services.Configure<SeedSettings>(builder.Configuration.GetSection("SeedS
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<AuditInterceptor>();
 
-builder.Services.AddMediatR(cfg => {
+builder.Services.AddMediatR(cfg =>
+{
     cfg.RegisterServicesFromAssemblies(typeof(AppDbContext).Assembly);
     cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
 });
@@ -62,6 +65,7 @@ builder.Services.AddScoped<IHRModule, HRModule>();
 
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<ITeamService, TeamService>();
+builder.Services.AddScoped<IAppraisalService, AppraisalService>();
 
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();

@@ -76,6 +76,20 @@ namespace EPMS.Domain.Data
             base.OnModelCreating(modelBuilder);
 
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+
+            modelBuilder.Entity<Appraisal>(entity =>
+            {
+                entity.HasOne(a => a.Employee)
+                      .WithMany()
+                      .HasForeignKey(a => a.EmployeeId)
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(a => a.Appraiser)
+                      .WithMany()
+                      .HasForeignKey(a => a.AppraiserId)
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
         }
+
     }
 }
