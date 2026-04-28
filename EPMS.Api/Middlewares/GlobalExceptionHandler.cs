@@ -85,7 +85,7 @@ namespace EPMS.Api.Middlewares
             UnauthorizedAccessException => (
                 (int)HttpStatusCode.Unauthorized,
                 ErrorMessages.Titles.Unauthorized,
-                ErrorMessages.Descriptions.UnauthorizedAccess
+                ex.Message
             ),
 
             DbUpdateException => (

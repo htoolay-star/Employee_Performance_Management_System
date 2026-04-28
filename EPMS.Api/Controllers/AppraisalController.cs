@@ -8,12 +8,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace EPMS.WebAPI.Controllers
 {
     [Route("api/[controller]")]
-    public class AppraisalController : ApiBaseController
+    public class AppraisalController : ControllerBase
     {
         private readonly IAppraisalService _appraisalService;
 
-        public AppraisalController(IUnitOfWork unitOfWork, IAppraisalService appraisalService)
-            : base(unitOfWork)
+        public AppraisalController(IAppraisalService appraisalService)
         {
             _appraisalService = appraisalService;
         }
