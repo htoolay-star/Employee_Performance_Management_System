@@ -1,4 +1,4 @@
-﻿using EPMS.Domain.Entities.Performance;
+using EPMS.Domain.Entities.Performance;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -16,9 +16,10 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.ToTable("Appraisals", "perf");
             entity.HasKey(e => e.Id);
 
-            entity.HasIndex(e => new { e.EmployeeId, e.CycleId }).IsUnique();
+            entity.HasIndex(e => new { e.EmployeeId, e.CycleId, e.EvaluatorRole }).IsUnique();
 
             entity.Property(e => e.Status).HasMaxLength(20).IsRequired();
+            entity.Property(e => e.EvaluatorRole).HasMaxLength(20).IsRequired();
             entity.Property(e => e.TotalScore);
             entity.Property(e => e.RatingLabel).HasMaxLength(50);
 

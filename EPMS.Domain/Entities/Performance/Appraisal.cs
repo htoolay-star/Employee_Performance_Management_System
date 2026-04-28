@@ -13,11 +13,12 @@ namespace EPMS.Domain.Entities.Performance
     {
         private Appraisal() { }
 
-        public Appraisal(long employeeId, int cycleId, long appraiserId)
+        public Appraisal(long employeeId, int cycleId, long appraiserId, string evaluatorRole)
         {
             EmployeeId = employeeId;
             CycleId = cycleId;
             AppraiserId = appraiserId;
+            EvaluatorRole = evaluatorRole;
             Status = "Draft";
         }
 
@@ -25,6 +26,7 @@ namespace EPMS.Domain.Entities.Performance
         public long EmployeeId { get; private set; }
         public int CycleId { get; private set; }
         public long AppraiserId { get; private set; }
+        public string EvaluatorRole { get; private set; } = string.Empty;
 
         public string Status { get; private set; } = string.Empty;
         public string? RatingLabel { get; private set; }

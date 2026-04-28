@@ -1,4 +1,4 @@
-﻿using EPMS.Domain.Contracts;
+using EPMS.Domain.Contracts;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,13 +11,14 @@ namespace EPMS.Domain.Entities.Performance
     {
         private AppraisalDetail() { }
 
-        public AppraisalDetail(long appraisalId, long? kpiId, string kpiName, string? categoryName, decimal weightage, string? targetValue)
+        public AppraisalDetail(long appraisalId, long? kpiId, string kpiName, string? categoryName, decimal weightage, string? targetValue, int? questionId = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(kpiName);
             ArgumentOutOfRangeException.ThrowIfNegative(weightage);
 
             AppraisalId = appraisalId;
             KPIId = kpiId;
+            QuestionId = questionId;
 
             KPIName = kpiName.Trim();
             CategoryName = categoryName?.Trim();
@@ -31,6 +32,7 @@ namespace EPMS.Domain.Entities.Performance
         public long Id { get; private set; }
         public long AppraisalId { get; private set; }
         public long? KPIId { get; private set; }
+        public int? QuestionId { get; private set; }
 
         public string KPIName { get; private set; } = string.Empty;
         public string? CategoryName { get; private set; }
@@ -51,6 +53,7 @@ namespace EPMS.Domain.Entities.Performance
         public byte[] Version { get; private set; } = Array.Empty<byte>();
 
         public virtual Appraisal Appraisal { get; private set; } = null!;
+        public virtual FormQuestion? Question { get; private set; }
 
         public void Evaluate(string? actualValue, decimal rawScore, string? remarks)
         {
