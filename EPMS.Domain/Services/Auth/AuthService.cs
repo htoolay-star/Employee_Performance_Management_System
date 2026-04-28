@@ -95,7 +95,11 @@ namespace EPMS.Domain.Services.Auth
             }
 
             var setting = await _unitOfWork.Auth.SystemSettings.GetByKeyAsync("DefaultUserPassword");
-            string rawPassword = setting?.Value ?? "EPMS@2026!";
+            var rawPassword = setting?.Value;
+            if (string.IsNullOrWhiteSpace(rawPassword))
+            {
+                throw new InvalidOperationException("Default user password is not configured. Set 'DefaultUserPassword' in system settings before registering users.");
+            }
 
             var hashedPassword = _passwordHasher.Hash(rawPassword);
             var newUser = new User(request.Email, hashedPassword, request.Role);
