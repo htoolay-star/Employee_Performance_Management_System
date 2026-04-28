@@ -65,7 +65,6 @@ builder.Services.AddScoped<IHRModule, HRModule>();
 
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<ITeamService, TeamService>();
-
 builder.Services.AddScoped<IPositionService, PositionService>();
 
 

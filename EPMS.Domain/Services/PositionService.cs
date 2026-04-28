@@ -1,10 +1,11 @@
 ﻿using AutoMapper;
+using EPMS.Application.Services.PositionService;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities;
 using EPMS.Domain.Entities.Hr;
 using EPMS.Shared.PositionDTOs;
 
-public class PositionService
+public class PositionService : IPositionService
 {
     private readonly IGenericRepository<Position> _repo;
     private readonly IMapper _mapper;
