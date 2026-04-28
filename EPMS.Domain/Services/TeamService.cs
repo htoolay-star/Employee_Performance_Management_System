@@ -27,6 +27,10 @@ public class TeamService : ITeamService
     public async Task<TeamDto?> GetByIdAsync(long id)
     {
         var team = await _uow.HR.Teams.GetByIdAsync(id);
+
+        if (team == null)
+            throw new KeyNotFoundException($"Team with ID '{id}' was not found.");
+
         return _mapper.Map<TeamDto>(team);
     }
 
@@ -38,15 +42,17 @@ public class TeamService : ITeamService
         }
 
         var entity = new Team(dto.Name, dto.DepartmentId);
-        await _uow.HR.Teams.AddAsync(entity);
+        _uow.HR.Teams.Add(entity);
         await _uow.CompleteAsync();
         return entity.Id;
     }
 
-    public async Task UpdateAsync(long id, TeamDto dto)
+    public async Task UpdateAsync(long id, UpdateTeamDto dto)
     {
         var team = await _uow.HR.Teams.GetByIdAsync(id);
-        if (team == null) return;
+
+        if (team == null)
+            throw new KeyNotFoundException($"Team with ID '{id}' was not found.");
 
         if (team.Name != dto.Name && await _uow.HR.Teams.ExistsByNameInDepartmentAsync(dto.Name, team.DepartmentId))
         {
@@ -58,13 +64,16 @@ public class TeamService : ITeamService
         if (dto.IsActive) team.Reactivate();
         else team.Deactivate();
 
-        _uow.HR.Teams.Update(team);
         await _uow.CompleteAsync();
     }
 
     public async Task DeleteAsync(long id)
     {
         var team = await _uow.HR.Teams.GetByIdAsync(id);
+
+        if (team == null)
+            throw new KeyNotFoundException($"Team with ID '{id}' was not found.");
+
         if (team != null)
         {
             _uow.HR.Teams.Delete(team);

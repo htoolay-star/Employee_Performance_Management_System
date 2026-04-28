@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class PositionFormTemplate : IAuditableEntity
+    public class PositionFormTemplate : IAuditableEntity , ISoftDeletable
     {
         private PositionFormTemplate() { }
 
@@ -25,6 +25,10 @@ namespace EPMS.Domain.Entities.Performance
 
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
+
+        public bool IsDeleted { get; set; }
+        public DateTimeOffset? DeletedAt { get; set; }
+
         public byte[] Version { get; private set; } = Array.Empty<byte>();
 
         public virtual Position Position { get; private set; } = null!;

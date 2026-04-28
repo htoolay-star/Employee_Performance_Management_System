@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EPMS.Domain.Entities.Hr
 {
-    public class Team : IAuditableEntity
+    public class Team : IAuditableEntity , ISoftDeletable
     {
 
         private Team() { }
@@ -32,6 +32,9 @@ namespace EPMS.Domain.Entities.Hr
   
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
+
+        public bool IsDeleted { get; set; }
+        public DateTimeOffset? DeletedAt { get; set; }
 
         public void Rename(string newName)
         {

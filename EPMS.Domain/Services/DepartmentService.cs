@@ -27,6 +27,10 @@ public class DepartmentService : IDepartmentService
     public async Task<DepartmentDto?> GetByIdAsync(long id)
     {
         var department = await _uow.HR.Departments.GetByIdAsync(id);
+
+        if (department is null)
+            throw new KeyNotFoundException($"Department with ID '{id}' was not found.");
+
         return _mapper.Map<DepartmentDto>(department);
     }
 
@@ -43,15 +47,17 @@ public class DepartmentService : IDepartmentService
         }
 
         var entity = new Department(dto.Code, dto.Name);
-        await _uow.HR.Departments.AddAsync(entity);
+        _uow.HR.Departments.Add(entity);
         await _uow.CompleteAsync();
         return entity.Id;
     }
 
-    public async Task UpdateAsync(long id, DepartmentDto dto)
+    public async Task UpdateAsync(long id, UpdateDepartmentDto dto)
     {
         var department = await _uow.HR.Departments.GetByIdAsync(id);
-        if (department == null) return;
+
+        if (department == null)
+            throw new KeyNotFoundException($"Department with ID '{id}' was not found.");
 
         if (department.Name != dto.Name && await _uow.HR.Departments.ExistsByNameAsync(dto.Name))
         {
@@ -63,13 +69,16 @@ public class DepartmentService : IDepartmentService
         if (dto.IsActive) department.Reactivate();
         else department.Deactivate();
 
-        _uow.HR.Departments.Update(department);
         await _uow.CompleteAsync();
     }
 
     public async Task DeleteAsync(long id)
     {
         var department = await _uow.HR.Departments.GetByIdAsync(id);
+
+        if (department == null)
+            throw new KeyNotFoundException($"Department with ID '{id}' was not found.");
+
         if (department != null)
         {
             _uow.HR.Departments.Delete(department);

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class KPIMaster : IAuditableEntity
+    public class KPIMaster : IAuditableEntity , ISoftDeletable
     {
         private KPIMaster() { }
 
@@ -33,6 +33,10 @@ namespace EPMS.Domain.Entities.Performance
 
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
+
+        public bool IsDeleted { get; set; }
+        public DateTimeOffset? DeletedAt { get; set; }
+
         public byte[] Version { get; private set; } = Array.Empty<byte>();
 
         public virtual Category Category { get; private set; } = null!;

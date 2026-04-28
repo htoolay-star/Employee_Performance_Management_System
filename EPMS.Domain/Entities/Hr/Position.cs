@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Hr
 {
-    public class Position : IAuditableEntity
+    public class Position : IAuditableEntity , ISoftDeletable
     {
         private Position() { }
 
@@ -33,6 +33,9 @@ namespace EPMS.Domain.Entities.Hr
 
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
+
+        public bool IsDeleted { get; set; }
+        public DateTimeOffset? DeletedAt { get; set; }
 
         public void Deactivate() => IsActive = false;
         public void Reactivate() => IsActive = true;

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class AppraisalCycle : IAuditableEntity
+    public class AppraisalCycle : IAuditableEntity , ISoftDeletable
     {
         private AppraisalCycle() { }
 
@@ -53,6 +53,10 @@ namespace EPMS.Domain.Entities.Performance
 
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
+
+        public bool IsDeleted { get; set; }
+        public DateTimeOffset? DeletedAt { get; set; }
+
         public byte[] Version { get; private set; } = Array.Empty<byte>();
 
         public void UpdatePeriod(DateOnly start, DateOnly end)

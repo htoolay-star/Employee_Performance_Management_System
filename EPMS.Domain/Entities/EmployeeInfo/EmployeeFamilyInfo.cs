@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.EmployeeInfo
 {
-    public class EmployeeFamilyInfo : IAuditableEntity
+    public class EmployeeFamilyInfo : IAuditableEntity , ISoftDeletable
     {
         private EmployeeFamilyInfo() { }
 
@@ -29,6 +29,9 @@ namespace EPMS.Domain.Entities.EmployeeInfo
 
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
+
+        public bool IsDeleted { get; set; }
+        public DateTimeOffset? DeletedAt { get; set; }
 
         public byte[] Version { get; private set; } = Array.Empty<byte>();
 

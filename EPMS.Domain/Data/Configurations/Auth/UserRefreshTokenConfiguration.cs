@@ -32,11 +32,6 @@ namespace EPMS.Domain.Data.Configurations.Auth
 
             entity.Property(e => e.Version).IsRowVersion();
 
-            entity.HasOne<User>()
-                  .WithMany()
-                  .HasForeignKey(e => e.UserId)
-                  .OnDelete(DeleteBehavior.Cascade);
-
             entity.HasIndex(e => e.Token)
                   .HasDatabaseName("IX_auth_UserRefreshTokens_Token");
 

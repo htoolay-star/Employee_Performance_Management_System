@@ -26,42 +26,27 @@ public class DepartmentsController : ControllerBase
     public async Task<IActionResult> GetById(long id)
     {
         var result = await _service.GetByIdAsync(id);
-        if (result == null) return NotFound();
         return Ok(result);
     }
 
     [HttpPost]
     public async Task<IActionResult> Create(CreateDepartmentDto dto)
     {
-        try
-        {
-            var id = await _service.CreateAsync(dto);
-            return Ok(new { Id = id, Message = "Created Successfully" });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { Message = ex.Message });
-        }
+        var id = await _service.CreateAsync(dto);
+        return CreatedAtAction(nameof(GetById), new { id }, new { id, message = "Created successfully." });
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(long id, DepartmentDto dto)
+    public async Task<IActionResult> Update(long id, UpdateDepartmentDto dto)
     {
-        try
-        {
-            await _service.UpdateAsync(id, dto);
-            return Ok(new { Message = "Updated Successfully" });
-        }
-        catch (InvalidOperationException ex)
-        {
-            return Conflict(new { Message = ex.Message });
-        }
+        await _service.UpdateAsync(id, dto);
+        return Ok(new { Message = "Updated Successfully" });
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(long id)
     {
         await _service.DeleteAsync(id);
-        return Ok(new { Message = "Deleted Successfully" });
+        return NoContent();
     }
 }

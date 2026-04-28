@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Auth
 {
-    public class Role : IAuditableEntity
+    public class Role : IAuditableEntity , ISoftDeletable
     {
         private Role() { }
 
@@ -18,5 +18,8 @@ namespace EPMS.Domain.Entities.Auth
 
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
+
+        public bool IsDeleted { get; set; }
+        public DateTimeOffset? DeletedAt { get; set; }
     }
 }

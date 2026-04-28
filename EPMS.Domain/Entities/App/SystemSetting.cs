@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.App
 {
-    public class SystemSetting : IAuditableEntity
+    public class SystemSetting : IAuditableEntity , ISoftDeletable
     {
         private SystemSetting() { }
 
@@ -28,6 +28,10 @@ namespace EPMS.Domain.Entities.App
 
         public DateTimeOffset CreatedAt { get; set; }
         public DateTimeOffset UpdatedAt { get; set; }
+
+        public bool IsDeleted { get; set; }
+        public DateTimeOffset? DeletedAt { get; set; }
+
         public byte[] Version { get; private set; } = Array.Empty<byte>();
 
         public void UpdateValue(string newValue)
