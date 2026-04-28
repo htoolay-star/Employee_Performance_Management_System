@@ -61,7 +61,7 @@ builder.Services.Scan(scan => scan
         .AsImplementedInterfaces()
         .WithScopedLifetime()
 
-    .AddClasses(classes => classes.Where(t => t.Name.EndsWith("Hasher")))
+    .AddClasses(classes => classes.Where(t => t.Name.EndsWith("Hasher") || t.Name.EndsWith("TokenService")))
         .AsImplementedInterfaces()
         .WithSingletonLifetime()
 );
