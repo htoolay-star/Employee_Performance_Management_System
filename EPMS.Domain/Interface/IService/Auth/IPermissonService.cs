@@ -1,6 +1,6 @@
-using EPMS.Shared.DTOs.PermissionDTOS;
+using EPMS.Shared.DTOs.AuthDTOs.PermissionDTOS;
 
-namespace EPMS.Domain.Interface.IService
+namespace EPMS.Domain.Interface.IService.Auth
 {
     public interface IPermissionService
     {

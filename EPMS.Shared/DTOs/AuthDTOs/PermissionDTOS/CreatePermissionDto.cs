@@ -1,4 +1,4 @@
-namespace EPMS.Shared.DTOs.PermissionDTOS
+namespace EPMS.Shared.DTOs.AuthDTOs.PermissionDTOS
 {
     public record CreatePermissionDto
     {
