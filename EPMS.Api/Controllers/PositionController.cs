@@ -1,49 +1,50 @@
-﻿using EPMS.Domain.Interface.Irepo.IPositionRepository;
+﻿using EPMS.Application.Services.PositionService;
 using EPMS.Shared.PositionDTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HRApi.Controllers
 {
-   
     [ApiController]
     [Route("api/[controller]")]
     public class PositionController : ControllerBase
     {
-        private readonly IPositionRepository _repo;
-        public PositionController(IPositionRepository repo) => _repo = repo;
+        private readonly IPositionService _service;
+
+        public PositionController(IPositionService service)
+        {
+            _service = service;
+        }
 
         [HttpGet]
         public async Task<IActionResult> GetAll()
-            => Ok(await _repo.GetAllAsync());
+            => Ok(await _service.GetAllAsync());
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var data = await _repo.GetByIdAsync(id);
-            return data == null ? NotFound() : Ok(data);
+            var result = await _service.GetByIdAsync(id);
+            return result == null ? NotFound() : Ok(result);
         }
 
         [HttpPost]
         public async Task<IActionResult> Create(CreatePositionDto dto)
         {
-            var (ok, msg, newId) = await _repo.CreateAsync(dto);
-            return ok
-                ? Ok(new { Message = msg, Position_ID = newId })
-                : BadRequest(new { Message = msg });
+            var id = await _service.CreateAsync(dto);
+            return Ok(new { Message = "Created Successfully", Id = id });
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, UpdatePositionDto dto)
+        [HttpPut]
+        public async Task<IActionResult> Update(UpdatePositionDto dto)
         {
-            var (ok, msg) = await _repo.UpdateAsync(id, dto);
-            return ok ? Ok(new { Message = msg }) : BadRequest(new { Message = msg });
+            var ok = await _service.UpdateAsync(dto);
+            return ok ? Ok("Updated Successfully") : NotFound();
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var (ok, msg) = await _repo.DeleteAsync(id);
-            return ok ? Ok(new { Message = msg }) : BadRequest(new { Message = msg });
+            var ok = await _service.DeleteAsync(id);
+            return ok ? Ok("Deleted Successfully") : NotFound();
         }
     }
 }
