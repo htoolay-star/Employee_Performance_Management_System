@@ -1,14 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
+using System.ComponentModel.DataAnnotations;
 
 namespace EPMS.Shared.PositionDTOs
 {
-    internal class UpdatePositionDto : CreatePositionDto
+    public class UpdatePositionDto
     {
-        public bool Is_Active { get; set; } = true;
+        [Required]
+        public int PositionId { get; set; }
+
+        [Required, StringLength(100)]
+        public string PositionName { get; set; } = string.Empty;
+
+        [Range(1, int.MaxValue)]
+        public int LevelId { get; set; }
+
+        [Range(1, int.MaxValue)]
+        public int DepartmentId { get; set; }
+
+        public int? TeamId { get; set; }
+
+        public bool IsActive { get; set; }
     }
-    
 }

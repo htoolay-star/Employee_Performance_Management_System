@@ -5,19 +5,21 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using System.ComponentModel.DataAnnotations;
+
 namespace EPMS.Shared.PositionDTOs
 {
     public class CreatePositionDto
     {
-        [Required(ErrorMessage = "Position name is required")]
-        public string Position_Name { get; set; } = "";
+        [Required, StringLength(100)]
+        public string PositionName { get; set; } = string.Empty;
 
-        [Required]
-        public int Level_ID { get; set; }
+        [Range(1, int.MaxValue)]
+        public int LevelId { get; set; }
 
-        [Required]
-        public int Department_ID { get; set; }
+        [Range(1, int.MaxValue)]
+        public int DepartmentId { get; set; }
 
-        public int? Team_ID { get; set; }
+        public int? TeamId { get; set; }
     }
 }
