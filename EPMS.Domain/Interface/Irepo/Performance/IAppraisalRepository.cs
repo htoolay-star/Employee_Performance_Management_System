@@ -1,7 +1,7 @@
 ﻿using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Performance;
 
-namespace EPMS.Application.Interfaces.Performance
+namespace EPMS.Domain.Interface.Irepo.Performance
 {
     public interface IAppraisalRepository : IGenericRepository<Appraisal>
     {

@@ -3,7 +3,7 @@ using EPMS.Shared.DTOs.AuthDTOs.PermissionDTOS;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace EPMS.Api.Controllers
+namespace EPMS.Api.Controllers.Auth
 {
     [Route("api/[controller]")]
     [ApiController]

@@ -3,7 +3,7 @@ using EPMS.Shared.DTOs.SharedDTOs.TagDTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace EPMS.Api.Controllers
+namespace EPMS.Api.Controllers.Shared
 {
     [Route("api/[controller]")]
     [ApiController]

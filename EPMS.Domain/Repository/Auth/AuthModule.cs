@@ -14,7 +14,7 @@ namespace EPMS.Domain.Repository.Auth
     {
         private readonly AppDbContext _context;
 
-        private ISystemSettingsRepository? _systemSettingsRepository;
+        private ISystemSettingsRepository? _systemSettings;
         private IUserRepository? _users;
         private IUserRefreshTokenRepository? _usersRefreshToken;
         private IRoleRepository? _roles;
@@ -22,7 +22,7 @@ namespace EPMS.Domain.Repository.Auth
 
         public AuthModule(AppDbContext context) => _context = context;
 
-        public ISystemSettingsRepository SystemSettings => _systemSettingsRepository ??= new SystemSettingsRepository(_context);
+        public ISystemSettingsRepository SystemSettings => _systemSettings ??= new SystemSettingsRepository(_context);
         public IUserRepository Users => _users ??= new UserRepository(_context);
         public IUserRefreshTokenRepository UsersRefreshToken => _usersRefreshToken ??= new UserRefreshTokenRepository(_context);
         public IRoleRepository Roles => _roles ??= new RoleRepository(_context);
