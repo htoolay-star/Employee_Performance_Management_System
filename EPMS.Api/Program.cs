@@ -58,6 +58,10 @@ builder.Services.Scan(scan => scan
         .AsImplementedInterfaces()
         .WithScopedLifetime()
 
+    .AddClasses(classes => classes.Where(t => t.Name.EndsWith("Repository")))
+        .AsImplementedInterfaces()
+        .WithScopedLifetime()
+
     .AddClasses(classes => classes.Where(t => t.Name.EndsWith("Hasher")))
         .AsImplementedInterfaces()
         .WithSingletonLifetime()

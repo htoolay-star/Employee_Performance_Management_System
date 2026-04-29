@@ -29,10 +29,20 @@ namespace EPMS.Domain.Services.Shared
         {
             var tags = await _tagRepo.GetAllAsync();
             return _mapper.Map<IEnumerable<TagDto>>(tags);
+
+
         }
 
         public async Task CreateTagAsync(CreateTagDto dto)
         {
+            var normalizedName = dto.Name.Trim().ToLowerInvariant();
+            var isExist = await _tagRepo.AnyAsync(x => x.Name == normalizedName && x.Module == dto.Module);
+
+            if (isExist)
+            {
+                throw new Exception("Tag name already exists in this module.");
+            }
+
             var tag = new Tag(dto.Name, dto.Module);
             _tagRepo.Add(tag);
             await _unitOfWork.CompleteAsync();

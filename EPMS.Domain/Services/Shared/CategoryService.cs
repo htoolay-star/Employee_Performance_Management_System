@@ -4,11 +4,6 @@ using EPMS.Domain.Entities.Shared;
 using EPMS.Domain.Interface.Irepo.Shared;
 using EPMS.Domain.Interface.IService.Shared;
 using EPMS.Shared.DTOs.SharedDTOs.CategoryDTOs;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EPMS.Domain.Services.Shared
 {
@@ -36,9 +31,14 @@ namespace EPMS.Domain.Services.Shared
             var category = await _categoryRepo.GetByIdAsync(id);
             return category == null ? null : _mapper.Map<CategoryDto>(category);
         }
-
         public async Task CreateCategoryAsync(CreateCategoryDto dto)
         {
+            var isExist = await _categoryRepo.AnyAsync(x => x.Code == dto.Code.ToUpper());
+            if (isExist)
+            {
+                throw new Exception("Category Code already exists.");
+            }
+
             var category = new Category(dto.Module, dto.Code, dto.Name, dto.Description, dto.ParentId);
             _categoryRepo.Add(category);
             await _unitOfWork.CompleteAsync();
@@ -47,10 +47,14 @@ namespace EPMS.Domain.Services.Shared
         public async Task UpdateCategoryAsync(int id, UpdateCategoryDto dto)
         {
             var category = await _categoryRepo.GetByIdAsync(id);
-            if (category == null) throw new Exception("Not Found Category");
+            if (category == null) throw new Exception("NotFound Category");
+
+            if (dto.ParentId.HasValue && dto.ParentId.Value == id)
+            {
+                throw new Exception("A category cannot be its own parent.");
+            }
 
             category.UpdateDetails(dto.Name, dto.Description);
-
 
             if (category.ParentId != dto.ParentId)
             {
@@ -61,15 +65,15 @@ namespace EPMS.Domain.Services.Shared
             await _unitOfWork.CompleteAsync();
         }
 
+        // Task<string> အစား Task လို့ ပြင်လိုက်ပါတယ်
         public async Task DeleteCategoryAsync(int id)
         {
             var category = await _categoryRepo.GetByIdAsync(id);
-            if (category != null)
-            {
-                category.Deactivate();
-                _categoryRepo.Update(category);
-                await _unitOfWork.CompleteAsync();
-            }
+            if (category == null) throw new Exception("NotFound Category");
+
+            category.Deactivate(); // Soft Delete
+            _categoryRepo.Update(category);
+            await _unitOfWork.CompleteAsync();
         }
     }
 }
