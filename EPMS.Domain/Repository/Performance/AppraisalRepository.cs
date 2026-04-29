@@ -1,10 +1,10 @@
-﻿using EPMS.Application.Interfaces.Performance;
-using EPMS.Domain.Data;
+﻿using EPMS.Domain.Data;
 using EPMS.Domain.Entities.Performance;
+using EPMS.Domain.Interface.Irepo.Performance;
 using EPMS.Domain.Repository.Base;
 using Microsoft.EntityFrameworkCore;
 
-namespace EPMS.Infrastructure.Repositories.Performance
+namespace EPMS.Domain.Repository.Performance
 {
     public class AppraisalRepository : GenericRepository<Appraisal>, IAppraisalRepository
     {

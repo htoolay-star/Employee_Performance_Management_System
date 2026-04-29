@@ -1,7 +1,7 @@
-﻿using EPMS.Application.Interfaces.Performance;
-using EPMS.Domain.Interface.Irepo.Auth;
+﻿using EPMS.Domain.Interface.Irepo.Auth;
 using EPMS.Domain.Interface.Irepo.Hr;
 using EPMS.Domain.Interface.Irepo.Info;
+using EPMS.Domain.Interface.Irepo.Performance;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,7 +15,7 @@ namespace EPMS.Domain.Contracts
         IAuthModule Auth { get; }
         IInfoModule Info { get; }
         IHRModule HR { get; }
-        IAppraisalRepository Appraisals { get; }
+        IPerfModule Performance { get; }
 
         Task<int> CompleteAsync();
         Task BeginTransactionAsync();

@@ -1,13 +1,13 @@
-using EPMS.Application.Interfaces.Performance;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Data;
 using EPMS.Domain.Interface.Irepo.Auth;
 using EPMS.Domain.Interface.Irepo.Hr;
 using EPMS.Domain.Interface.Irepo.Info;
+using EPMS.Domain.Interface.Irepo.Performance;
 using EPMS.Domain.Repository.Auth;
 using EPMS.Domain.Repository.Hr;
 using EPMS.Domain.Repository.Info;
-using EPMS.Infrastructure.Repositories.Performance;
+using EPMS.Domain.Repository.Performance;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace EPMS.Domain.Repository.Base
@@ -21,16 +21,17 @@ namespace EPMS.Domain.Repository.Base
         private IAuthModule? _auth;
         private IInfoModule? _info;
         private IHRModule? _hr;
+        private IPerfModule? _perf;
 
         public UnitOfWork(AppDbContext context)
         {
             _context = context;
         }
 
-        public IAppraisalRepository Appraisals => _appraisals ??= new AppraisalRepository(_context);
         public IAuthModule Auth => _auth ??= new AuthModule(_context);
         public IInfoModule Info => _info ??= new InfoModule(_context);
         public IHRModule HR => _hr ??= new HRModule(_context);
+        public IPerfModule Performance => _perf ??= new PerfModule(_context);
 
         public async Task<int> CompleteAsync() => await _context.SaveChangesAsync();
 
