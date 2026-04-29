@@ -97,6 +97,18 @@ namespace EPMS.Domain.Entities.Auth
             RevokeAllTokens();
         }
 
+        public void ChangePassword(string newPasswordHash)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(newPasswordHash);
+
+            PasswordHash = newPasswordHash;
+            SecurityStamp = Guid.NewGuid().ToString();
+
+            IsFirstLogin = false;
+
+            RevokeAllTokens();
+        }
+
         public void Deactivate()
         {
             IsActive = false;

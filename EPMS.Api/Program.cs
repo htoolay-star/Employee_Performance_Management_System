@@ -1,4 +1,5 @@
 using AutoMapper;
+using EPMS.Api.Filters;
 using EPMS.Api.MappingProfiles;
 using EPMS.Api.Middlewares;
 using EPMS.Domain.Contracts;
@@ -66,11 +67,14 @@ builder.Services.Scan(scan => scan
         .WithSingletonLifetime()
 );
 
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    });
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<MustChangePasswordFilter>();
+})
+.AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>()
     ?? throw new InvalidOperationException("JwtSettings configuration is missing.");
@@ -100,6 +104,9 @@ builder.Services
 builder.Services.AddAuthorization();
 
 builder.Services.AddSwaggerGen();
+
+var hash = BCrypt.Net.BCrypt.EnhancedHashPassword("Admin@123", 12);
+Console.WriteLine($"[HASH_OUTPUT]: {hash}");
 
 var app = builder.Build();
 

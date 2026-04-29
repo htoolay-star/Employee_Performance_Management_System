@@ -3,6 +3,7 @@ using EPMS.Domain.Entities.Auth;
 using EPMS.Domain.Interface.IService.Auth;
 using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Auth;
+using EPMS.Shared.DTOs.AuthDTOs;
 using EPMS.Shared.Enums.EPMS.Shared.Enums;
 using EPMS.Shared.Models;
 using Microsoft.Extensions.Options;
@@ -11,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static EPMS.Shared.Constants.ValidationMessages.AuthValidationMessages;
 
 namespace EPMS.Domain.Services.Auth
 {
@@ -57,7 +59,8 @@ namespace EPMS.Domain.Services.Auth
                 user.Id,
                 user.Email,
                 new List<string> { user.Role.Name },
-                jwtId
+                jwtId,
+                user.IsFirstLogin
             );
 
             var accessToken = _tokenService.GenerateAccessToken(userInfo);
@@ -117,7 +120,8 @@ namespace EPMS.Domain.Services.Auth
                 newUser.Id,
                 newUser.Email,
                 new List<string> { UserRole.Admin.ToString() },
-                jwtId
+                jwtId,
+                newUser.IsFirstLogin
             );
 
             var accessToken = _tokenService.GenerateAccessToken(userInfo);
@@ -170,7 +174,8 @@ namespace EPMS.Domain.Services.Auth
                 user.Id,
                 user.Email,
                 new List<string> { user.Role.Name },
-                newJwtId
+                newJwtId,
+                user.IsFirstLogin
             );
 
             var newAccessToken = _tokenService.GenerateAccessToken(userInfo);
@@ -200,6 +205,33 @@ namespace EPMS.Domain.Services.Auth
                     LastLoginDate = user.LastLoginDate
                 }
             };
+        }
+
+        public async Task<bool> ChangePasswordAsync(Guid userGuid, ChangePasswordRequest request)
+        {
+            var user = await _unitOfWork.Auth.Users.GetByIdAsync(userGuid);
+            if (user == null) throw new KeyNotFoundException("User not found.");
+
+            if (!_passwordHasher.Verify(request.CurrentPassword, user.PasswordHash))
+            {
+                throw new UnauthorizedAccessException("Current password is incorrect.");
+            }
+
+            var hashedNewPassword = _passwordHasher.Hash(request.NewPassword);
+
+            user.ChangePassword(hashedNewPassword);
+
+            return await _unitOfWork.CompleteAsync() > 0;
+        }
+
+        public async Task LogoutAsync(string refreshToken)
+        {
+            var storedToken = await _unitOfWork.Auth.UsersRefreshToken.GetByTokenWithUserAsync(refreshToken);
+            if (storedToken != null)
+            {
+                _unitOfWork.Auth.UsersRefreshToken.Delete(storedToken);
+                await _unitOfWork.CompleteAsync();
+            }
         }
     }
 }
