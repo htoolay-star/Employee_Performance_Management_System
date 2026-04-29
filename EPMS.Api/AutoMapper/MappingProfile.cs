@@ -2,6 +2,7 @@ using AutoMapper;
 using EPMS.Domain.Entities.Auth;
 using EPMS.Domain.Entities.Hr;
 using EPMS.Domain.Entities.Shared;
+using EPMS.Shared.DTOs.Auth;
 using EPMS.Shared.DTOs.AuthDTOs.PermissionDTOS;
 using EPMS.Shared.DTOs.HR;
 using EPMS.Shared.DTOs.SharedDTOs.CategoryDTOs;

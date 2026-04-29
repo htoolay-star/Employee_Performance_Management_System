@@ -2,7 +2,7 @@ using EPMS.Shared.DTOs.HR;
 using Microsoft.AspNetCore.Mvc;
 using EPMS.Domain.Interfaces;
 
-namespace EPMS.Api.Controllers;
+namespace EPMS.Api.Controllers.Hr;
 
 [ApiController]
 [Route("api/[controller]")]

@@ -1,10 +1,9 @@
-using EPMS.Application.Interfaces.Performance;
 using EPMS.Domain.Interface.IService;
 using EPMS.Shared.DTOs.Form;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
-namespace EPMS.WebAPI.Controllers
+namespace EPMS.Api.Controllers.Performance
 {
     [ApiController]
     [Route("api/[controller]")]
