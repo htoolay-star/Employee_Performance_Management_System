@@ -1,5 +1,5 @@
 using EPMS.Shared.Constants.ValidationMessages;
-using EPMS.Shared.DTOs.PermissionDTOS;
+using EPMS.Shared.DTOs.AuthDTOs.PermissionDTOS;
 using FluentValidation;
 
 namespace EPMS.Shared.Validators.AuthValidators

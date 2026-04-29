@@ -91,6 +91,7 @@ namespace EPMS.Domain.Data
             }
 
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+            });
         }
 
         public override int SaveChanges()

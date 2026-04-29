@@ -1,10 +1,8 @@
-﻿using EPMS.Shared.Constants.EPMS.Shared.Constants;
+﻿using EPMS.Shared.Constants; // Ensure this matches your project structure
 using FluentValidation;
-using FluentValidation.Results; 
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Text.Json;
 
@@ -29,6 +27,7 @@ namespace EPMS.Api.Middlewares
                 Instance = httpContext.Request.Path
             };
 
+            // Handle FluentValidation Specific Errors
             if (exception is FluentValidation.ValidationException valEx)
             {
                 problemDetails.Extensions["errors"] = valEx.Errors
@@ -39,6 +38,7 @@ namespace EPMS.Api.Middlewares
                     );
             }
 
+            // Add StackTrace only in Development Environment for Security
             if (env.IsDevelopment())
             {
                 problemDetails.Extensions["stackTrace"] = exception.StackTrace;
@@ -54,50 +54,50 @@ namespace EPMS.Api.Middlewares
         {
             FluentValidation.ValidationException => (
                 (int)HttpStatusCode.UnprocessableEntity,
-                ErrorMessages.Titles.ValidationError,
-                ErrorMessages.Descriptions.ValidationFailure
+                "Validation Error",
+                "One or more validation failures have occurred."
             ),
 
             InvalidOperationException => (
                 (int)HttpStatusCode.UnprocessableEntity,
-                ErrorMessages.Titles.BusinessRuleViolation,
+                "Business Rule Violation",
                 ex.Message
             ),
 
             ArgumentException => (
                 (int)HttpStatusCode.UnprocessableEntity,
-                ErrorMessages.Titles.InvalidArgument,
+                "Invalid Argument",
                 ex.Message
             ),
 
             DbUpdateConcurrencyException => (
                 (int)HttpStatusCode.Conflict,
-                ErrorMessages.Titles.ConcurrencyError,
-                ErrorMessages.Descriptions.ConcurrencyConflict
+                "Concurrency Error",
+                "The record you attempted to edit was modified by another user."
             ),
 
             KeyNotFoundException => (
                 (int)HttpStatusCode.NotFound,
-                ErrorMessages.Titles.NotFound,
+                "Not Found",
                 ex.Message
             ),
 
             UnauthorizedAccessException => (
                 (int)HttpStatusCode.Unauthorized,
-                ErrorMessages.Titles.Unauthorized,
-                ErrorMessages.Descriptions.UnauthorizedAccess
+                "Unauthorized",
+                ex.Message
             ),
 
             DbUpdateException => (
                 (int)HttpStatusCode.BadRequest,
-                ErrorMessages.Titles.DatabaseError,
-                env.IsDevelopment() ? ex.InnerException?.Message ?? ex.Message : ErrorMessages.Descriptions.DatabaseErrorGeneric
+                "Database Error",
+                env.IsDevelopment() ? ex.InnerException?.Message ?? ex.Message : "A database error occurred."
             ),
 
             _ => (
                 (int)HttpStatusCode.InternalServerError,
-                ErrorMessages.Titles.ServerError,
-                ErrorMessages.Descriptions.InternalServerError
+                "Server Error",
+                "An unexpected error occurred on the server."
             )
         };
     }
