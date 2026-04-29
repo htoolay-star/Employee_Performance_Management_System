@@ -5,7 +5,7 @@ using EPMS.Domain.Interface.Irepo.Hr;
 using EPMS.Domain.Interfaces;
 using EPMS.Shared.DTOs.HR;
 
-namespace EPMS.Domain.Services;
+namespace EPMS.Domain.Services.Hr;
 
 public class TeamService : ITeamService
 {
