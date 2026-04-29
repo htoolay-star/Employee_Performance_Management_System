@@ -16,11 +16,6 @@ namespace EPMS.Shared.Validators.AuthValidators
         public CreateUserRequestValidator()
         {
             RuleFor(x => x.Email).ApplyEmailRules();
-
-            RuleFor(x => x.Role)
-                .IsInEnum().WithMessage(AuthValidationMessages.User.RoleInvalid)
-                .Must(role => AuthConstants.AppRoles.AssignableRoles.Contains(role.ToString()))
-                .WithMessage(AuthValidationMessages.User.SystemAdminNotAllowed);
         }
     }
 }

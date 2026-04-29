@@ -27,7 +27,7 @@ namespace EPMS.Shared.Constants.ValidationMessages
             public const string ConfirmRequired = "Confirm password is required.";
         }
 
-        public static class User
+        public static class Users
         {
             public const string RoleInvalid = "Please select a valid user role.";
             public const string TargetUserRequired = "Target user identification is required.";

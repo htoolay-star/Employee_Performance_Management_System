@@ -19,6 +19,8 @@ public class MappingProfile : Profile
         CreateMap<Department, DepartmentDto>();
         CreateMap<Team, TeamDto>();
         CreateMap<Permission, PermissionDto>();
+        CreateMap<User, UserDto>()
+            .ForMember(dest => dest.RoleName, opt => opt.MapFrom(src => src.Role.Name));
 
         CreateMap<CreatePermissionDto, Permission>()
                 .ConstructUsing(src => new Permission(src.Code, src.Name, src.Description));

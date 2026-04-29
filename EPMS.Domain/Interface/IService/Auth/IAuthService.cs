@@ -1,4 +1,5 @@
 ﻿using EPMS.Shared.DTOs.Auth;
+using EPMS.Shared.DTOs.AuthDTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,5 +13,7 @@ namespace EPMS.Domain.Interface.IService.Auth
         Task<AuthResponse> LoginAsync(LoginRequest request);
         Task<AuthResponse> RegisterAsync(CreateUserRequest request);
         Task<AuthResponse> RefreshTokenAsync(RefreshTokenRequest request);
+        Task<bool> ChangePasswordAsync(Guid userGuid, ChangePasswordRequest request);
+        Task LogoutAsync(string refreshToken);
     }
 }

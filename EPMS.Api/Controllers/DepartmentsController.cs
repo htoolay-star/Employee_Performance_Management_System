@@ -1,5 +1,6 @@
 using EPMS.Domain.Interfaces;
 using EPMS.Shared.DTOs.HR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EPMS.Api.Controllers;
@@ -29,7 +30,8 @@ public class DepartmentsController : ControllerBase
         return Ok(result);
     }
 
-    [HttpPost]
+    [Authorize]
+    [HttpPost("create")]
     public async Task<IActionResult> Create(CreateDepartmentDto dto)
     {
         var id = await _service.CreateAsync(dto);

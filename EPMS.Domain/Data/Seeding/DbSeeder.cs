@@ -36,7 +36,7 @@ namespace EPMS.Domain.Data.Seeding
 
             try
             {
-                var passwordHash = BCrypt.Net.BCrypt.HashPassword(_settings.SAPassword);
+                var passwordHash = BCrypt.Net.BCrypt.EnhancedHashPassword(_settings.SAPassword, 12);
 
                 var adminUser = new User(_settings.SAEmail, passwordHash, UserRole.SystemAdmin);
 

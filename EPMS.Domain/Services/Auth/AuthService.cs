@@ -1,7 +1,10 @@
 ﻿using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Auth;
 using EPMS.Domain.Interface.IService.Auth;
+using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Auth;
+using EPMS.Shared.DTOs.AuthDTOs;
+using EPMS.Shared.Enums.EPMS.Shared.Enums;
 using EPMS.Shared.Models;
 using Microsoft.Extensions.Options;
 using System;
@@ -9,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static EPMS.Shared.Constants.ValidationMessages.AuthValidationMessages;
 
 namespace EPMS.Domain.Services.Auth
 {
@@ -55,7 +59,8 @@ namespace EPMS.Domain.Services.Auth
                 user.Id,
                 user.Email,
                 new List<string> { user.Role.Name },
-                jwtId
+                jwtId,
+                user.IsFirstLogin
             );
 
             var accessToken = _tokenService.GenerateAccessToken(userInfo);
@@ -79,26 +84,33 @@ namespace EPMS.Domain.Services.Auth
                 },
                 User = new UserDto
                 {
-                    Id = user.Id,
+                    UserGuid = user.UserGuid,
                     Email = user.Email,
-                    RoleName = user.Role.Name
+                    RoleName = user.Role.Name,
+                    IsActive = user.IsActive,
+                    IsFirstLogin = user.IsFirstLogin,
+                    LastLoginDate = user.LastLoginDate
                 }
             };
         }
 
         public async Task<AuthResponse> RegisterAsync(CreateUserRequest request)
         {
-            var existingUser = await _unitOfWork.Auth.Users.GetByEmailAsync(request.Email);
-            if (existingUser != null)
+            var userAlreadyExists = await _unitOfWork.Auth.Users.ExistsAsync(request.Email);
+            if (userAlreadyExists)
             {
                 throw new InvalidOperationException("Email is already registered.");
             }
 
-            var setting = await _unitOfWork.Auth.SystemSettings.GetByKeyAsync("DefaultUserPassword");
-            string rawPassword = setting?.Value ?? "EPMS@2026!";
+            var setting = await _unitOfWork.Auth.SystemSettings.GetByKeyAsync(SettingKeys.DefaultUserPassword);
+            var rawPassword = setting?.Value;
+            if (string.IsNullOrWhiteSpace(rawPassword))
+            {
+                throw new InvalidOperationException($"Default user password is not configured. Set '{SettingKeys.DefaultUserPassword}' in system settings before registering users.");
+            }
 
             var hashedPassword = _passwordHasher.Hash(rawPassword);
-            var newUser = new User(request.Email, hashedPassword, request.Role);
+            var newUser = new User(request.Email, hashedPassword, UserRole.Admin);
 
             _unitOfWork.Auth.Users.Add(newUser);
             await _unitOfWork.CompleteAsync();
@@ -107,8 +119,9 @@ namespace EPMS.Domain.Services.Auth
             var userInfo = new ITokenService.TokenUserInfo(
                 newUser.Id,
                 newUser.Email,
-                new List<string> { request.Role.ToString() },
-                jwtId
+                new List<string> { UserRole.Admin.ToString() },
+                jwtId,
+                newUser.IsFirstLogin
             );
 
             var accessToken = _tokenService.GenerateAccessToken(userInfo);
@@ -128,9 +141,12 @@ namespace EPMS.Domain.Services.Auth
                 },
                 User = new UserDto
                 {
-                    Id = newUser.Id,
+                    UserGuid = newUser.UserGuid,
                     Email = newUser.Email,
-                    RoleName = newUser.Role.Name
+                    RoleName = UserRole.Admin.ToString(),
+                    IsActive = newUser.IsActive,
+                    IsFirstLogin = newUser.IsFirstLogin,
+                    LastLoginDate = newUser.LastLoginDate
                 }
             };
         }
@@ -158,7 +174,8 @@ namespace EPMS.Domain.Services.Auth
                 user.Id,
                 user.Email,
                 new List<string> { user.Role.Name },
-                newJwtId
+                newJwtId,
+                user.IsFirstLogin
             );
 
             var newAccessToken = _tokenService.GenerateAccessToken(userInfo);
@@ -178,8 +195,43 @@ namespace EPMS.Domain.Services.Auth
                     AccessToken = newAccessToken,
                     RefreshToken = newRefreshToken
                 },
-                User = new UserDto { Id = user.Id, Email = user.Email, RoleName = user.Role.Name }
+                User = new UserDto 
+                {
+                    UserGuid = user.UserGuid,
+                    Email = user.Email, 
+                    RoleName = user.Role.Name,
+                    IsActive = user.IsActive,
+                    IsFirstLogin = user.IsFirstLogin,
+                    LastLoginDate = user.LastLoginDate
+                }
             };
+        }
+
+        public async Task<bool> ChangePasswordAsync(Guid userGuid, ChangePasswordRequest request)
+        {
+            var user = await _unitOfWork.Auth.Users.GetByIdAsync(userGuid);
+            if (user == null) throw new KeyNotFoundException("User not found.");
+
+            if (!_passwordHasher.Verify(request.CurrentPassword, user.PasswordHash))
+            {
+                throw new UnauthorizedAccessException("Current password is incorrect.");
+            }
+
+            var hashedNewPassword = _passwordHasher.Hash(request.NewPassword);
+
+            user.ChangePassword(hashedNewPassword);
+
+            return await _unitOfWork.CompleteAsync() > 0;
+        }
+
+        public async Task LogoutAsync(string refreshToken)
+        {
+            var storedToken = await _unitOfWork.Auth.UsersRefreshToken.GetByTokenWithUserAsync(refreshToken);
+            if (storedToken != null)
+            {
+                _unitOfWork.Auth.UsersRefreshToken.Delete(storedToken);
+                await _unitOfWork.CompleteAsync();
+            }
         }
     }
 }

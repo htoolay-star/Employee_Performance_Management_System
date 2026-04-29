@@ -1,4 +1,5 @@
 using AutoMapper;
+using EPMS.Api.Filters;
 using EPMS.Api.MappingProfiles;
 using EPMS.Api.Middlewares;
 using EPMS.Domain.Contracts;
@@ -19,8 +20,11 @@ using EPMS.Domain.Services.Auth;
 using EPMS.Shared.Enums.EPMS.Shared.Enums;
 using EPMS.Shared.Models;
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using System.Reflection;
+using System.Text;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -58,18 +62,51 @@ builder.Services.Scan(scan => scan
         .AsImplementedInterfaces()
         .WithScopedLifetime()
 
-    .AddClasses(classes => classes.Where(t => t.Name.EndsWith("Hasher")))
+    .AddClasses(classes => classes.Where(t => t.Name.EndsWith("Hasher") || t.Name.EndsWith("TokenService")))
         .AsImplementedInterfaces()
         .WithSingletonLifetime()
 );
 
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<MustChangePasswordFilter>();
+})
+.AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
+
+var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>()
+    ?? throw new InvalidOperationException("JwtSettings configuration is missing.");
+
+if (string.IsNullOrWhiteSpace(jwtSettings.Secret))
+{
+    throw new InvalidOperationException("JwtSettings:Secret is required.");
+}
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
     {
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret)),
+            ValidateIssuer = true,
+            ValidIssuer = jwtSettings.Issuer,
+            ValidateAudience = true,
+            ValidAudience = jwtSettings.Audience,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
     });
 
+builder.Services.AddAuthorization();
+
 builder.Services.AddSwaggerGen();
+
+var hash = BCrypt.Net.BCrypt.EnhancedHashPassword("Admin@123", 12);
+Console.WriteLine($"[HASH_OUTPUT]: {hash}");
 
 var app = builder.Build();
 
@@ -83,6 +120,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 

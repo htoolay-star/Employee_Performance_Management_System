@@ -1,4 +1,5 @@
 ﻿using EPMS.Domain.Interface.IService.Auth;
+using EPMS.Shared.Constants;
 using EPMS.Shared.Models;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -28,7 +29,8 @@ namespace EPMS.Domain.Services.Auth
             {
                 new(ClaimTypes.NameIdentifier, userInfo.Id.ToString()),
                 new(ClaimTypes.Email, userInfo.Email),
-                new(JwtRegisteredClaimNames.Jti, userInfo.JwtId)
+                new(JwtRegisteredClaimNames.Jti, userInfo.JwtId),
+                new Claim(AppClaims.IsFirstLogin, userInfo.IsFirstLogin.ToString())
             };
 
             foreach (var role in userInfo.Roles)
