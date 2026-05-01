@@ -1,5 +1,7 @@
 ﻿using EPMS.Domain.Contracts;
+using EPMS.Domain.Entities.App;
 using EPMS.Domain.Interface.IService.App;
+using EPMS.Domain.Repository.Base;
 using EPMS.Shared.Constants;
 using System;
 using System.Collections.Generic;
@@ -59,6 +61,25 @@ namespace EPMS.Domain.Services.App
             }
 
             setting.UpdateValue(newValue);
+            await _uow.CompleteAsync();
+        }
+
+        public async Task UpdateDefaultPasswordAsync(string newPlainPassword)
+        {
+            var encryptedValue = _cryptoService.Encrypt(newPlainPassword);
+
+            var setting = await _uow.Auth.SystemSettings.GetByKeyAsync(SettingKeys.DefaultUserPassword, trackChanges: true);
+
+            if (setting == null)
+            {
+                setting = new SystemSetting(SettingKeys.DefaultUserPassword, encryptedValue, "Default password for new users.");
+                _uow.Auth.SystemSettings.Add(setting);
+            }
+            else
+            {
+                setting.UpdateValue(encryptedValue);
+            }
+
             await _uow.CompleteAsync();
         }
     }

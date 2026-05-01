@@ -13,5 +13,7 @@ namespace EPMS.Domain.Interface.IService.App
         Task<string> GetDefaultPasswordAsync();
 
         Task UpdateSettingAsync(string key, string newValue);
+
+        Task UpdateDefaultPasswordAsync(string newPlainPassword);
     }
 }
