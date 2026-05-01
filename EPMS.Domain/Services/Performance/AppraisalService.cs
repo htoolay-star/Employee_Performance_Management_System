@@ -72,7 +72,7 @@ namespace EPMS.Application.Services.Performance
             };
         }
 
-        public async Task<Appraisal?> GetAppraisalDetailsAsync(long id)
+        public async Task<Appraisal> GetAppraisalDetailsAsync(long id)
         {
             var result = await _unitOfWork.Performance.Appraisals.GetAppraisalWithDetailsAsync(id);
 

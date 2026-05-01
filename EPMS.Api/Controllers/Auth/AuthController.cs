@@ -1,4 +1,5 @@
-﻿using EPMS.Domain.Interface.IService.Auth;
+﻿using EPMS.Domain.Interface.IService.App;
+using EPMS.Domain.Interface.IService.Auth;
 using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Auth;
 using EPMS.Shared.DTOs.AuthDTOs;
@@ -14,10 +15,12 @@ namespace EPMS.Api.Controllers.Auth
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
-        
-        public AuthController(IAuthService authService)
+        private readonly ISystemSettingsService _settingsService;
+
+        public AuthController(IAuthService authService, ISystemSettingsService settingsService)
         {
             _authService = authService;
+            _settingsService = settingsService;
         }
 
         [AllowAnonymous]
@@ -67,6 +70,14 @@ namespace EPMS.Api.Controllers.Auth
             await _authService.LogoutAsync(request.RefreshToken);
 
             return Ok(new { message = "Logged out successfully. Session revoked." });
+        }
+
+        [Authorize(Roles = RoleConstants.Admin)]
+        [HttpPut("default-password")]
+        public async Task<IActionResult> UpdateDefaultPassword([FromBody] UpdateDefaultPasswordRequest request)
+        {
+            await _settingsService.UpdateDefaultPasswordAsync(request.NewDefaultPassword);
+            return Ok(new { message = "Default password updated successfully." });
         }
     }
 }

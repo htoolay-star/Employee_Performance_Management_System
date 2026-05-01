@@ -1,6 +1,8 @@
 ﻿using EPMS.Domain.Contracts;
+using EPMS.Domain.Entities.App;
 using EPMS.Domain.Entities.Auth;
 using EPMS.Domain.Entities.EmployeeInfo;
+using EPMS.Domain.Interface.IService.App;
 using EPMS.Shared.Enums.EPMS.Shared.Enums;
 using EPMS.Shared.Models;
 using Microsoft.Extensions.Options;
@@ -16,16 +18,38 @@ namespace EPMS.Domain.Data.Seeding
     {
         private readonly IUnitOfWork _uow;
         private readonly SeedSettings _settings;
+        private readonly ICryptoService _cryptoService;
 
-        public DbSeeder(IUnitOfWork uow, IOptions<SeedSettings> options)
+        public DbSeeder(IUnitOfWork uow, IOptions<SeedSettings> options, ICryptoService cryptoService)
         {
             _uow = uow;
             _settings = options.Value;
+            _cryptoService = cryptoService;
         }
 
         public async Task SeedAsync()
         {
+            await SeedSystemSettingsAsync();
             await SeedSystemAdminAsync();
+        }
+
+        private async Task SeedSystemSettingsAsync()
+        {
+            var setting = await _uow.Auth.SystemSettings.GetByKeyAsync("DefaultUserPassword");
+
+            if (setting == null)
+            {
+                var encryptedPw = _cryptoService.Encrypt(_settings.DefaultUserPassword);
+
+                var defaultPwSetting = new SystemSetting(
+                    "DefaultUserPassword",
+                    encryptedPw,
+                    "Initial default password assigned to newly created users (AES Encrypted)."
+                );
+
+                _uow.Auth.SystemSettings.Add(defaultPwSetting);
+                await _uow.CompleteAsync();
+            }
         }
 
         private async Task SeedSystemAdminAsync()

@@ -10,5 +10,6 @@ namespace EPMS.Shared.Models
     {
         public string SAEmail { get; set; } = string.Empty;
         public string SAPassword { get; set; } = string.Empty;
+        public string DefaultUserPassword { get; set; } = string.Empty;
     }
 }

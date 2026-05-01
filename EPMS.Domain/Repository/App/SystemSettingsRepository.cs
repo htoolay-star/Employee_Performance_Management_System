@@ -15,11 +15,16 @@ namespace EPMS.Domain.Repository.App
     {
         public SystemSettingsRepository(AppDbContext context) : base(context) { }
 
-        public async Task<SystemSetting?> GetByKeyAsync(string key)
+        public async Task<SystemSetting?> GetByKeyAsync(string key, bool trackChanges = false)
         {
-            return await _dbSet
-                .AsNoTracking()
-                .FirstOrDefaultAsync(s => s.Key == key);
+            var query = _dbSet.AsQueryable();
+
+            if (!trackChanges)
+            {
+                query = query.AsNoTracking();
+            }
+
+            return await query.FirstOrDefaultAsync(s => s.Key == key);
         }
     }
 }

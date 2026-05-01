@@ -31,6 +31,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Configure<SeedSettings>(builder.Configuration.GetSection("SeedSettings"));
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+builder.Services.Configure<CryptoSettings>(builder.Configuration.GetSection("CryptoSettings"));
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<AuditInterceptor>();
 
@@ -104,9 +105,6 @@ builder.Services
 builder.Services.AddAuthorization();
 
 builder.Services.AddSwaggerGen();
-
-var hash = BCrypt.Net.BCrypt.EnhancedHashPassword("Admin@123", 12);
-Console.WriteLine($"[HASH_OUTPUT]: {hash}");
 
 var app = builder.Build();
 
