@@ -105,9 +105,6 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddSwaggerGen();
 
-var hash = BCrypt.Net.BCrypt.EnhancedHashPassword("Admin@123", 12);
-Console.WriteLine($"[HASH_OUTPUT]: {hash}");
-
 var app = builder.Build();
 
 app.UseExceptionHandler();

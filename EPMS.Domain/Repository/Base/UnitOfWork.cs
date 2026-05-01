@@ -17,7 +17,6 @@ namespace EPMS.Domain.Repository.Base
         private readonly AppDbContext _context;
         private IDbContextTransaction? _transaction;
        
-        private IAppraisalRepository? _appraisals;
         private IAuthModule? _auth;
         private IInfoModule? _info;
         private IHRModule? _hr;

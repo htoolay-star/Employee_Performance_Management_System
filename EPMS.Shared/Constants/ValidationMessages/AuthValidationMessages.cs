@@ -33,5 +33,10 @@ namespace EPMS.Shared.Constants.ValidationMessages
             public const string TargetUserRequired = "Target user identification is required.";
             public const string SystemAdminNotAllowed = "SystemAdmin role cannot be assigned through this endpoint.";
         }
+
+        public static class Tokens
+        {
+            public const string RefreshTokenRequired = "Refresh token is required to generate a new session.";
+        }
     }
 }
