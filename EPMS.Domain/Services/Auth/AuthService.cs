@@ -1,5 +1,6 @@
 ﻿using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Auth;
+using EPMS.Domain.Interface.IService.App;
 using EPMS.Domain.Interface.IService.Auth;
 using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Auth;
@@ -21,6 +22,7 @@ namespace EPMS.Domain.Services.Auth
         private readonly IUnitOfWork _unitOfWork;
         private readonly IPasswordHasher _passwordHasher;
         private readonly ITokenService _tokenService;
+        private readonly ISystemSettingsService _settingsService;
         private readonly TimeProvider _timeProvider;
         private readonly JwtSettings _jwtSettings;
 
@@ -28,12 +30,14 @@ namespace EPMS.Domain.Services.Auth
             IUnitOfWork unitOfWork,
             IPasswordHasher passwordHasher,
             ITokenService tokenService,
+            ISystemSettingsService settingsService,
             IOptions<JwtSettings> jwtOptions,
             TimeProvider timeProvider)
         {
             _unitOfWork = unitOfWork;
             _passwordHasher = passwordHasher;
             _tokenService = tokenService;
+            _settingsService = settingsService;
             _timeProvider = timeProvider;
             _jwtSettings = jwtOptions.Value;
         }
@@ -102,14 +106,9 @@ namespace EPMS.Domain.Services.Auth
                 throw new InvalidOperationException("Email is already registered.");
             }
 
-            var setting = await _unitOfWork.Auth.SystemSettings.GetByKeyAsync(SettingKeys.DefaultUserPassword);
-            var rawPassword = setting?.Value;
-            if (string.IsNullOrWhiteSpace(rawPassword))
-            {
-                throw new InvalidOperationException($"Default user password is not configured. Set '{SettingKeys.DefaultUserPassword}' in system settings before registering users.");
-            }
+            var plainDefaultPassword = await _settingsService.GetDefaultPasswordAsync();
+            var hashedPassword = _passwordHasher.Hash(plainDefaultPassword);
 
-            var hashedPassword = _passwordHasher.Hash(rawPassword);
             var newUser = new User(request.Email, hashedPassword, UserRole.Admin);
 
             _unitOfWork.Auth.Users.Add(newUser);

@@ -4,10 +4,12 @@ using EPMS.Domain.Interface.Irepo.Auth;
 using EPMS.Domain.Interface.Irepo.Hr;
 using EPMS.Domain.Interface.Irepo.Info;
 using EPMS.Domain.Interface.Irepo.Performance;
+using EPMS.Domain.Interface.Irepo.Shared;
 using EPMS.Domain.Repository.Auth;
 using EPMS.Domain.Repository.Hr;
 using EPMS.Domain.Repository.Info;
 using EPMS.Domain.Repository.Performance;
+using EPMS.Domain.Repository.Shared;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace EPMS.Domain.Repository.Base
@@ -21,6 +23,7 @@ namespace EPMS.Domain.Repository.Base
         private IInfoModule? _info;
         private IHRModule? _hr;
         private IPerfModule? _perf;
+        private ISharedModule? _shared;
 
         public UnitOfWork(AppDbContext context)
         {
@@ -31,6 +34,7 @@ namespace EPMS.Domain.Repository.Base
         public IInfoModule Info => _info ??= new InfoModule(_context);
         public IHRModule HR => _hr ??= new HRModule(_context);
         public IPerfModule Performance => _perf ??= new PerfModule(_context);
+        public ISharedModule Shared => _shared ??= new SharedModule(_context);
 
         public async Task<int> CompleteAsync() => await _context.SaveChangesAsync();
 
