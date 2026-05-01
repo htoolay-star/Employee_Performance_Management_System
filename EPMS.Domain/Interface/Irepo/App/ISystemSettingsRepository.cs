@@ -10,6 +10,6 @@ namespace EPMS.Domain.Interface.Irepo.App
 {
     public interface ISystemSettingsRepository : IGenericRepository<SystemSetting>
     {
-        Task<SystemSetting?> GetByKeyAsync(string key, bool trackChanges = false)း;
+        Task<SystemSetting?> GetByKeyAsync(string key, bool trackChanges = false);
     }
 }
