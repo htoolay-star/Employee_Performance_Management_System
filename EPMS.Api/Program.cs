@@ -54,10 +54,17 @@ builder.Services.AddTransient<IDbSeeder, DbSeeder>();
 builder.Services.Scan(scan => scan
     .FromAssembliesOf(typeof(IPasswordHasher))
 
+    // 1. Services registration
     .AddClasses(classes => classes.Where(t => t.Name.EndsWith("Service")))
         .AsImplementedInterfaces()
         .WithScopedLifetime()
 
+    // 2. Repositories registration
+    .AddClasses(classes => classes.Where(t => t.Name.EndsWith("Repository")))
+        .AsImplementedInterfaces()
+        .WithScopedLifetime()
+
+    // 3. Hasher registration
     .AddClasses(classes => classes.Where(t => t.Name.EndsWith("Hasher")))
         .AsImplementedInterfaces()
         .WithSingletonLifetime()
