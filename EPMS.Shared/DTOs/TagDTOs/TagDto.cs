@@ -1,16 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace EPMS.Shared.DTOs.TagDTOs;
 
-namespace EPMS.Shared.DTOs.TagDTOs
+public record TagDto
 {
-    public class TagDto
-    {
-        public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string? Module { get; set; }
-        public DateTimeOffset CreatedAt { get; set; }
-    }
+    public int Id { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public string? Module { get; init; }
+    public DateTimeOffset CreatedAt { get; init; }
 }
