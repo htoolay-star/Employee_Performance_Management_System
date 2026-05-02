@@ -6,9 +6,11 @@ using EPMS.Domain.Contracts;
 using EPMS.Domain.Data;
 using EPMS.Domain.Data.Interceptors;
 using EPMS.Domain.Data.Seeding;
+using EPMS.Domain.Factories;
 using EPMS.Domain.Interface.Irepo.Auth;
 using EPMS.Domain.Interface.Irepo.Hr;
 using EPMS.Domain.Interface.Irepo.Info;
+using EPMS.Domain.Interface.IService.App;
 using EPMS.Domain.Interface.IService.Auth;
 using EPMS.Domain.Interfaces;
 using EPMS.Domain.Repository.Auth;
@@ -39,12 +41,14 @@ builder.Services.AddSingleton<AuditInterceptor>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddDistributedMemoryCache();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>((sp, options) =>
 {
-    var auditInterceptor = sp.GetRequiredService<AuditInterceptor>();
-    options.UseSqlServer(connectionString, x => x.MigrationsAssembly("EPMS.Api"))
-           .AddInterceptors(auditInterceptor);
+    var timeProvider = sp.GetRequiredService<TimeProvider>();
+    var currentUserService = sp.GetRequiredService<ICurrentUserService>();
+    var auditFactory = sp.GetRequiredService<IAuditLogFactory>();
+
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+           .AddInterceptors(new AuditInterceptor(timeProvider, currentUserService, auditFactory));
 });
 
 builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
@@ -60,9 +64,22 @@ builder.Services.AddProblemDetails();
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddTransient<IDbSeeder, DbSeeder>();
+builder.Services.AddSingleton<IAuditLogFactory, AuditLogFactory>();
 
 builder.Services.Scan(scan => scan
-    .FromAssembliesOf(typeof(IPasswordHasher))
+    .FromAssembliesOf(typeof(UnitOfWork))
+
+    .AddClasses(classes => classes.Where(t => t.Name.EndsWith("Repository")))
+        .AsImplementedInterfaces()
+        .WithScopedLifetime()
+
+    .AddClasses(classes => classes.Where(t => t.Name.EndsWith("Module")))
+        .AsImplementedInterfaces()
+        .WithScopedLifetime()
+);
+
+builder.Services.Scan(scan => scan
+    .FromAssembliesOf(typeof(UnitOfWork))
 
     .AddClasses(classes => classes.Where(t => t.Name.EndsWith("Service")))
         .AsImplementedInterfaces()
