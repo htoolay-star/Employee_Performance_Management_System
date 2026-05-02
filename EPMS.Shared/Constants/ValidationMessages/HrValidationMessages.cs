@@ -25,5 +25,14 @@ namespace EPMS.Shared.Constants.ValidationMessages
             public const string LevelIdRequired = "Level is required.";
             public const string LevelIdInvalid = "Level ID must be greater than 0.";
         }
+
+        public static class Level
+        {
+            public const string CodeRequired = "Level code is required.";
+            public const string CodeMaxLength = "Level code cannot exceed 10 characters.";
+            public const string NameRequired = "Level name is required.";
+            public const string NameMaxLength = "Level name cannot exceed 100 characters.";
+            public const string DescriptionMaxLength = "Level description cannot exceed 250 characters.";
+        }
     }
 }

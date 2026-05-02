@@ -40,6 +40,13 @@ namespace EPMS.Domain.Entities.Hr
         public void Deactivate() => IsActive = false;
         public void Reactivate() => IsActive = true;
 
+        public void Update(string title, int levelId)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(title);
+            Title = title.Trim();
+            LevelId = levelId;
+        }
+
         private readonly List<PositionPermission> _positionPermissions = new();
         public virtual IReadOnlyCollection<PositionPermission> PositionPermissions => _positionPermissions.AsReadOnly();
 
