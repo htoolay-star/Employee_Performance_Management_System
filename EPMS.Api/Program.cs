@@ -36,19 +36,15 @@ builder.Services.Configure<SeedSettings>(builder.Configuration.GetSection("SeedS
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.Configure<CryptoSettings>(builder.Configuration.GetSection("CryptoSettings"));
 builder.Services.AddSingleton(TimeProvider.System);
-builder.Services.AddSingleton<AuditInterceptor>();
+builder.Services.AddScoped<AuditInterceptor>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddDistributedMemoryCache();
 
 builder.Services.AddDbContext<AppDbContext>((sp, options) =>
 {
-    var timeProvider = sp.GetRequiredService<TimeProvider>();
-    var currentUserService = sp.GetRequiredService<ICurrentUserService>();
-    var auditFactory = sp.GetRequiredService<IAuditLogFactory>();
-
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
-           .AddInterceptors(new AuditInterceptor(timeProvider, currentUserService, auditFactory));
+           .AddInterceptors(sp.GetRequiredService<AuditInterceptor>());
 });
 
 builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
@@ -61,6 +57,8 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
 // Dependency Injection (DI)
+
+builder.Services.AddTransient(typeof(Lazy<>), typeof(LazyResolution<>));
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddTransient<IDbSeeder, DbSeeder>();
