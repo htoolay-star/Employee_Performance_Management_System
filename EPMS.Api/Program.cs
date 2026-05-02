@@ -17,6 +17,7 @@ using EPMS.Domain.Repository.Hr;
 using EPMS.Domain.Repository.Info;
 using EPMS.Domain.Services;
 using EPMS.Domain.Services.Auth;
+using EPMS.Shared.DTOs.PositionDTOs;
 using EPMS.Shared.Enums.EPMS.Shared.Enums;
 using EPMS.Shared.Models;
 using FluentValidation;
@@ -44,6 +45,7 @@ builder.Services.AddDbContext<AppDbContext>((sp, options) =>
 });
 
 builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+builder.Services.AddValidatorsFromAssembly(typeof(CreatePositionDto).Assembly);
 
 builder.Services.AddAutoMapper(cfg => cfg.AddMaps(typeof(MappingProfile).Assembly));
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));

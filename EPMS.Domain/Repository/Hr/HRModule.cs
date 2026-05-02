@@ -14,12 +14,16 @@ namespace EPMS.Domain.Repository.Hr
 
         private IDepartmentRepository? _departments;
         private ITeamRepository? _teams;
+        private ILevelRepository? _levels;
+        private IPositionRepository? _positions;
         private IRatingScaleRepository? _ratingScales;
 
         public HRModule(AppDbContext context) => _context = context;
 
         public IDepartmentRepository Departments => _departments ??= new DepartmentRepository(_context);
         public ITeamRepository Teams => _teams ??= new TeamRepository(_context);
+        public ILevelRepository Levels => _levels ??= new LevelRepository(_context);
+        public IPositionRepository Positions => _positions ??= new PositionRepository(_context);
         public IRatingScaleRepository RatingScales => _ratingScales ??= new RatingScaleRepository(_context);
     }
 }

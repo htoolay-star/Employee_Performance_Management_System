@@ -38,5 +38,12 @@ namespace EPMS.Domain.Entities.Hr
 
         public void Deactivate() => IsActive = false;
         public void Reactivate() => IsActive = true;
+
+        public void Update(string name, string? description)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(name);
+            Name = name.Trim();
+            Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
+        }
     }
 }

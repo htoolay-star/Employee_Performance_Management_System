@@ -3,7 +3,7 @@ using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Hr;
 using EPMS.Domain.Interface.Irepo.Hr;
 using EPMS.Domain.Interfaces;
-using EPMS.Shared.DTOs.HR;
+using EPMS.Shared.DTOs.TeamDTOs;
 
 namespace EPMS.Domain.Services.Hr;
 

@@ -1,6 +1,6 @@
 using AutoMapper;
 using EPMS.Domain.Entities.Performance;
-using EPMS.Shared.DTOs.Form;
+using EPMS.Shared.DTOs.FormDTOs;
 
 namespace EPMS.Application.Mappings
 {

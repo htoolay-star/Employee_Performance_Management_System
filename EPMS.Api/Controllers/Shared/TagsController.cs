@@ -1,5 +1,5 @@
 ﻿using EPMS.Domain.Interface.IService.Shared;
-using EPMS.Shared.DTOs.SharedDTOs.TagDTOs;
+using EPMS.Shared.DTOs.TagDTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -26,29 +26,15 @@ namespace EPMS.Api.Controllers.Shared
         [HttpPost]
         public async Task<IActionResult> Create(CreateTagDto dto)
         {
-            try
-            {
-                await _tagService.CreateTagAsync(dto);
-                return Ok(new { message = "Successful create new Tag" });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            await _tagService.CreateTagAsync(dto);
+            return Ok(new { message = "Successful create new Tag" });
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            try
-            {
-                await _tagService.DeleteTagAsync(id);
-                return Ok(new { message = "Successful Delelted Tag" });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            await _tagService.DeleteTagAsync(id);
+            return Ok(new { message = "Successful Delelted Tag" });
         }
     }
 }

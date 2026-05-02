@@ -3,7 +3,7 @@ using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Shared;
 using EPMS.Domain.Interface.Irepo.Shared;
 using EPMS.Domain.Interface.IService.Shared;
-using EPMS.Shared.DTOs.SharedDTOs.TagDTOs;
+using EPMS.Shared.DTOs.TagDTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;

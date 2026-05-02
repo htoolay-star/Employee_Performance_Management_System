@@ -1,5 +1,5 @@
 ﻿using EPMS.Domain.Interface.IService.Shared;
-using EPMS.Shared.DTOs.SharedDTOs.CategoryDTOs;
+using EPMS.Shared.DTOs.CategoryDTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -34,43 +34,22 @@ namespace EPMS.Api.Controllers.Shared
         [HttpPost]
         public async Task<IActionResult> Create(CreateCategoryDto dto)
         {
-            try
-            {
-                await _categoryService.CreateCategoryAsync(dto);
-                return Ok(new { message = "Successful create new Category" });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            await _categoryService.CreateCategoryAsync(dto);
+            return Ok(new { message = "Successful create new Category" });
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, UpdateCategoryDto dto)
         {
-            try
-            {
-                await _categoryService.UpdateCategoryAsync(id, dto);
-                return Ok(new { message = "Successful updated Category" });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            await _categoryService.UpdateCategoryAsync(id, dto);
+            return Ok(new { message = "Successful updated Category" });
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            try
-            {
-                await _categoryService.DeleteCategoryAsync(id);
-                return Ok(new { message = "Successful Deleted Category" });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            await _categoryService.DeleteCategoryAsync(id);
+            return Ok(new { message = "Successful Deleted Category" });
         }
     }
 }
