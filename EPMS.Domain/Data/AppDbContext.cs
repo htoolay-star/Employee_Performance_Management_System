@@ -95,28 +95,17 @@ namespace EPMS.Domain.Data
 
         public override int SaveChanges()
         {
-            var entries = ChangeTracker.Entries<ISoftDeletable>();
-
-            foreach (var entry in entries)
-            {
-                if (entry.State == EntityState.Deleted)
-                {
-                    entry.State = EntityState.Modified;
-
-                    entry.Entity.IsDeleted = true;
-                    entry.Entity.DeletedAt = DateTimeOffset.UtcNow;
-
-                    if (entry.Entity is IAuditableEntity auditable)
-                    {
-                        auditable.UpdatedAt = DateTimeOffset.UtcNow;
-                    }
-                }
-            }
-
+            ApplySoftDeleteLogic();
             return base.SaveChanges();
         }
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            ApplySoftDeleteLogic();
+            return await base.SaveChangesAsync(cancellationToken);
+        }
+
+        private void ApplySoftDeleteLogic()
         {
             var entries = ChangeTracker.Entries<ISoftDeletable>();
 
@@ -125,18 +114,10 @@ namespace EPMS.Domain.Data
                 if (entry.State == EntityState.Deleted)
                 {
                     entry.State = EntityState.Modified;
-
                     entry.Entity.IsDeleted = true;
                     entry.Entity.DeletedAt = DateTimeOffset.UtcNow;
-
-                    if (entry.Entity is IAuditableEntity auditable)
-                    {
-                        auditable.UpdatedAt = DateTimeOffset.UtcNow;
-                    }
                 }
             }
-
-            return await base.SaveChangesAsync(cancellationToken);
         }
 
         private static LambdaExpression ConvertFilterExpression(Type entityType)

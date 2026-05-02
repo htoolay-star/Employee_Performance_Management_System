@@ -36,6 +36,9 @@ builder.Services.Configure<CryptoSettings>(builder.Configuration.GetSection("Cry
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<AuditInterceptor>();
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddDistributedMemoryCache();
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>((sp, options) =>
 {

@@ -1,4 +1,7 @@
 ﻿using EPMS.Domain.Contracts;
+using EPMS.Domain.Entities.Audit;
+using EPMS.Domain.Factories;
+using EPMS.Domain.Interface.IService.App;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using System;
@@ -9,20 +12,20 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Data.Interceptors
 {
-    public sealed class AuditInterceptor : SaveChangesInterceptor
+    public sealed class AuditInterceptor(
+    TimeProvider timeProvider,
+    ICurrentUserService currentUserService,
+    IAuditLogFactory auditLogFactory) : SaveChangesInterceptor
     {
-        private readonly TimeProvider _timeProvider;
-
-        public AuditInterceptor(TimeProvider timeProvider)
-        {
-            _timeProvider = timeProvider;
-        }
-
         public override InterceptionResult<int> SavingChanges(
             DbContextEventData eventData,
             InterceptionResult<int> result)
         {
-            UpdateTimestamps(eventData.Context);
+            if (eventData.Context is not null)
+            {
+                UpdateTimestamps(eventData.Context);
+                AddAuditLogs(eventData.Context);
+            }
             return base.SavingChanges(eventData, result);
         }
 
@@ -31,16 +34,18 @@ namespace EPMS.Domain.Data.Interceptors
             InterceptionResult<int> result,
             CancellationToken cancellationToken = default)
         {
-            UpdateTimestamps(eventData.Context);
+            if (eventData.Context is not null)
+            {
+                UpdateTimestamps(eventData.Context);
+                AddAuditLogs(eventData.Context);
+            }
             return base.SavingChangesAsync(eventData, result, cancellationToken);
         }
 
-        private void UpdateTimestamps(DbContext? context)
+        private void UpdateTimestamps(DbContext context)
         {
-            if (context == null) return;
-
             var entries = context.ChangeTracker.Entries<IAuditableEntity>();
-            var utcNow = _timeProvider.GetUtcNow();
+            var utcNow = timeProvider.GetUtcNow();
 
             foreach (var entry in entries)
             {
@@ -54,6 +59,23 @@ namespace EPMS.Domain.Data.Interceptors
                     entry.Entity.UpdatedAt = utcNow;
                 }
             }
+        }
+
+        private void AddAuditLogs(DbContext context)
+        {
+            var auditableEntries = context.ChangeTracker
+                .Entries<IAuditableEntity>()
+                .Where(e => e.Entity is not AuditLog &&
+                            (e.State == EntityState.Added ||
+                             e.State == EntityState.Modified ||
+                             e.State == EntityState.Deleted))
+                .ToList();
+
+            if (auditableEntries.Count == 0) return;
+
+            var auditLogs = auditLogFactory.CreateAuditLogs(auditableEntries, currentUserService.UserId);
+
+            context.Set<AuditLog>().AddRange(auditLogs);
         }
     }
 }

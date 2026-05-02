@@ -11,7 +11,7 @@ namespace EPMS.Domain.Entities.Audit
     {
         private AuditLog() { }
 
-        public AuditLog(long userId, string entityName, string entityId, string action, string? oldValues, string? newValues, string? ipAddress = null)
+        public AuditLog(long? userId, string entityName, string entityId, string action, string? oldValues, string? newValues, DateTimeOffset timestamp, string? ipAddress = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(entityName);
             ArgumentException.ThrowIfNullOrWhiteSpace(entityId);
@@ -27,11 +27,11 @@ namespace EPMS.Domain.Entities.Audit
             NewValues = newValues;
             IpAddress = ipAddress?.Trim();
 
-            Timestamp = DateTimeOffset.UtcNow;
+            Timestamp = timestamp;
         }
 
         public long Id { get; private set; }
-        public long UserId { get; private set; }
+        public long? UserId { get; private set; }
         public string EntityName { get; private set; } = string.Empty;
         public string EntityId { get; private set; } = string.Empty;
         public string Action { get; private set; } = string.Empty;
