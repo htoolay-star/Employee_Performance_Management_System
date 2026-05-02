@@ -1,6 +1,6 @@
-namespace EPMS.Shared.DTOs.HR
+namespace EPMS.Shared.DTOs.DepartmentDTOs
 {
-    public record UpdateTeamDto
+    public record UpdateDepartmentDto
     {
         public string Name { get; init; } = string.Empty;
         public bool IsActive { get; init; } = true;

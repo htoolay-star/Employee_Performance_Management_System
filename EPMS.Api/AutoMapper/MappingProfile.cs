@@ -4,9 +4,10 @@ using EPMS.Domain.Entities.Hr;
 using EPMS.Domain.Entities.Shared;
 using EPMS.Shared.DTOs.Auth;
 using EPMS.Shared.DTOs.AuthDTOs.PermissionDTOS;
-using EPMS.Shared.DTOs.HR;
-using EPMS.Shared.DTOs.SharedDTOs.CategoryDTOs;
-using EPMS.Shared.DTOs.SharedDTOs.TagDTOs;
+using EPMS.Shared.DTOs.CategoryDTOs;
+using EPMS.Shared.DTOs.DepartmentDTOs;
+using EPMS.Shared.DTOs.TagDTOs;
+using EPMS.Shared.DTOs.TeamDTOs;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace EPMS.Api.MappingProfiles;

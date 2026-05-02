@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EPMS.Shared.DTOs.Form
+namespace EPMS.Shared.DTOs.FormDTOs
 {
     public class AppraisalDetailDto
     {

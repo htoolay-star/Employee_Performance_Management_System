@@ -1,4 +1,4 @@
-namespace EPMS.Shared.DTOs.HR
+namespace EPMS.Shared.DTOs.DepartmentDTOs
 {
     public record CreateDepartmentDto
     {

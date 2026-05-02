@@ -1,5 +1,5 @@
 using EPMS.Shared.Constants.ValidationMessages;
-using EPMS.Shared.DTOs.HR;
+using EPMS.Shared.DTOs.PositionDTOs;
 using FluentValidation;
 
 namespace EPMS.Shared.Validators.HrValidators

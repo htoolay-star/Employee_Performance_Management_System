@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EPMS.Shared.DTOs.SharedDTOs.TagDTOs
+namespace EPMS.Shared.DTOs.TagDTOs
 {
     public class CreateTagDto
     {

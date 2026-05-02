@@ -1,4 +1,4 @@
-using EPMS.Shared.DTOs.HR;
+using EPMS.Shared.DTOs.DepartmentDTOs;
 
 namespace EPMS.Domain.Interfaces;
 

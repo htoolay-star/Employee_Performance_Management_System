@@ -1,6 +1,6 @@
-using EPMS.Shared.DTOs.HR;
 using Microsoft.AspNetCore.Mvc;
 using EPMS.Domain.Interfaces;
+using EPMS.Shared.DTOs.TeamDTOs;
 
 namespace EPMS.Api.Controllers.Hr;
 

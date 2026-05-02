@@ -1,4 +1,6 @@
-namespace EPMS.Shared.DTOs.HR
+using EPMS.Shared.DTOs.TeamDTOs;
+
+namespace EPMS.Shared.DTOs.DepartmentDTOs
 {
     public record DepartmentDto
     {

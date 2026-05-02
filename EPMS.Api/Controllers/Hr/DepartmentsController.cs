@@ -1,5 +1,5 @@
 using EPMS.Domain.Interfaces;
-using EPMS.Shared.DTOs.HR;
+using EPMS.Shared.DTOs.DepartmentDTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

@@ -1,4 +1,4 @@
-﻿using EPMS.Shared.DTOs.SharedDTOs.CategoryDTOs;
+﻿using EPMS.Shared.DTOs.CategoryDTOs;
 using System;
 using System.Collections.Generic;
 using System.Linq;

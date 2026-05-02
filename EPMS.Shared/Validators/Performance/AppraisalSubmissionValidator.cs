@@ -1,6 +1,6 @@
 ﻿using FluentValidation;
 using EPMS.Shared.Constants.ValidationMessages;
-using EPMS.Shared.DTOs.Form;
+using EPMS.Shared.DTOs.FormDTOs;
 
 namespace EPMS.Application.Validations.Performance
 {
