@@ -20,7 +20,7 @@ using EPMS.Domain.Repository.Info;
 using EPMS.Domain.Services;
 using EPMS.Domain.Services.Auth;
 using EPMS.Shared.DTOs.PositionDTOs;
-using EPMS.Shared.Enums.EPMS.Shared.Enums;
+using EPMS.Shared.Enums;
 using EPMS.Shared.Models;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;

@@ -5,7 +5,7 @@ using EPMS.Domain.Interface.IService.Auth;
 using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Auth;
 using EPMS.Shared.DTOs.AuthDTOs;
-using EPMS.Shared.Enums.EPMS.Shared.Enums;
+using EPMS.Shared.Enums;
 using EPMS.Shared.Models;
 using Microsoft.Extensions.Options;
 using System;
@@ -88,7 +88,7 @@ namespace EPMS.Domain.Services.Auth
                 },
                 User = new UserDto
                 {
-                    UserGuid = user.UserGuid,
+                    UserGuid = user.PublicId,
                     Email = user.Email,
                     RoleName = user.Role.Name,
                     IsActive = user.IsActive,
@@ -140,7 +140,7 @@ namespace EPMS.Domain.Services.Auth
                 },
                 User = new UserDto
                 {
-                    UserGuid = newUser.UserGuid,
+                    UserGuid = newUser.PublicId,
                     Email = newUser.Email,
                     RoleName = UserRole.Admin.ToString(),
                     IsActive = newUser.IsActive,
@@ -196,7 +196,7 @@ namespace EPMS.Domain.Services.Auth
                 },
                 User = new UserDto 
                 {
-                    UserGuid = user.UserGuid,
+                    UserGuid = user.PublicId,
                     Email = user.Email, 
                     RoleName = user.Role.Name,
                     IsActive = user.IsActive,

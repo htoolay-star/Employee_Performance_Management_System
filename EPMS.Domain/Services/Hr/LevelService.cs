@@ -41,7 +41,7 @@ public class LevelService : ILevelService
         var entity = new Level(dto.Code, dto.Name, dto.Description);
         _uow.HR.Levels.Add(entity);
         await _uow.CompleteAsync();
-        return entity.Id;
+        return checked((int)entity.Id);
     }
 
     public async Task UpdateAsync(int id, UpdateLevelDto dto)

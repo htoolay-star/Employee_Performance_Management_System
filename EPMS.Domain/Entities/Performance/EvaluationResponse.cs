@@ -12,7 +12,7 @@ namespace EPMS.Domain.Entities.Performance
     {
         private EvaluationResponse() { }
 
-        public EvaluationResponse(long appraisalId, int templateId, int questionId, long evaluatorId, string evaluatorRole, bool isAnonymous = false)
+        public EvaluationResponse(long appraisalId, long templateId, long questionId, long evaluatorId, string evaluatorRole, bool isAnonymous = false)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(evaluatorRole);
 
@@ -27,8 +27,8 @@ namespace EPMS.Domain.Entities.Performance
         }
 
         public long AppraisalId { get; private set; }
-        public int TemplateId { get; private set; }
-        public int QuestionId { get; private set; }
+        public long TemplateId { get; private set; }
+        public long QuestionId { get; private set; }
 
         public long EvaluatorId { get; private set; }
         public string EvaluatorRole { get; private set; } = string.Empty;

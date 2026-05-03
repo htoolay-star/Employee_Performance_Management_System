@@ -14,7 +14,7 @@ namespace EPMS.Domain.Entities.Hr
     {
         private Position() { }
 
-        public Position(string title, int levelId)
+        public Position(string title, long levelId)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(title);
 
@@ -31,9 +31,6 @@ namespace EPMS.Domain.Entities.Hr
 
         public bool IsActive { get; private set; }
 
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
-
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }
 
@@ -42,7 +39,7 @@ namespace EPMS.Domain.Entities.Hr
         public void Deactivate() => IsActive = false;
         public void Reactivate() => IsActive = true;
 
-        public void Update(string title, int levelId)
+        public void Update(string title, long levelId)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(title);
             Title = title.Trim();
@@ -61,11 +58,11 @@ namespace EPMS.Domain.Entities.Hr
         private readonly List<PositionPIPTemplate> _positionPIPTemplates = new();
         public virtual IReadOnlyCollection<PositionPIPTemplate> PositionPIPTemplates => _positionPIPTemplates.AsReadOnly();
 
-        public void AssignPermission(int permissionId)
+        public void AssignPermission(long permissionId)
         {
             if (!_positionPermissions.Any(p => p.PermissionId == permissionId))
             {
-                _positionPermissions.Add(new PositionPermission(this.Id, permissionId));
+                _positionPermissions.Add(new PositionPermission(Id, permissionId, DateTimeOffset.UtcNow));
             }
         }
 

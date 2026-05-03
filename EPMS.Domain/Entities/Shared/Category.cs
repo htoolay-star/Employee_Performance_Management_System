@@ -11,7 +11,7 @@ namespace EPMS.Domain.Entities.Shared
     {
         private Category() { }
 
-        public Category(string module, string code, string name, string? description = null, int? parentId = null)
+        public Category(string module, string code, string name, string? description = null, long? parentId = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(module);
             ArgumentException.ThrowIfNullOrWhiteSpace(code);
@@ -31,7 +31,7 @@ namespace EPMS.Domain.Entities.Shared
         public string Name { get; private set; } = string.Empty;
         public string? Description { get; private set; }
 
-        public int? ParentId { get; private set; }
+        public long? ParentId { get; private set; }
         public virtual Category? Parent { get; private set; }
         public virtual ICollection<Category> SubCategories { get; private set; } = new List<Category>();
 
@@ -50,7 +50,7 @@ namespace EPMS.Domain.Entities.Shared
             Description = description?.Trim();
         }
 
-        public void MoveToParent(int? newParentId)
+        public void MoveToParent(long? newParentId)
         {
             if (newParentId.HasValue && newParentId.Value == this.Id)
             {

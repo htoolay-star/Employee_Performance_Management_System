@@ -12,7 +12,7 @@ namespace EPMS.Domain.Entities.Performance
     {
         private PositionFormTemplate() { }
 
-        public PositionFormTemplate(long positionId, int formTemplateId, bool isMandatory = true)
+        public PositionFormTemplate(long positionId, long formTemplateId, bool isMandatory = true)
         {
             PositionId = positionId;
             FormTemplateId = formTemplateId;
@@ -20,7 +20,7 @@ namespace EPMS.Domain.Entities.Performance
         }
 
         public long PositionId { get; private set; }
-        public int FormTemplateId { get; private set; }
+        public long FormTemplateId { get; private set; }
         public bool IsMandatory { get; private set; }
 
         public DateTimeOffset CreatedAt { get; set; }

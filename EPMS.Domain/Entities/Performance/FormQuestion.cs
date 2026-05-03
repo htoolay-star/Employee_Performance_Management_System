@@ -12,7 +12,7 @@ namespace EPMS.Domain.Entities.Performance
     {
         private FormQuestion() { }
 
-        public FormQuestion(int templateId, string text, int sequence, bool hasYesNo = false, bool hasComment = false, int? categoryId = null, int? ratingScaleId = null)
+        public FormQuestion(long templateId, string text, int sequence, bool hasYesNo = false, bool hasComment = false, long? categoryId = null, long? ratingScaleId = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(text);
 
@@ -29,9 +29,9 @@ namespace EPMS.Domain.Entities.Performance
             QuestionRatingScaleId = ratingScaleId;
         }
 
-        public int TemplateId { get; private set; }
-        public int? CategoryId { get; private set; }
-        public int? QuestionRatingScaleId { get; private set; }
+        public long TemplateId { get; private set; }
+        public long? CategoryId { get; private set; }
+        public long? QuestionRatingScaleId { get; private set; }
 
         public string QuestionText { get; private set; } = string.Empty;
         public int Sequence { get; private set; }
@@ -51,7 +51,7 @@ namespace EPMS.Domain.Entities.Performance
         public virtual Category? Category { get; private set; }
         public virtual QuestionRatingScale? RatingScale { get; private set; }
 
-        public void UpdateDetails(string text, int? categoryId, int? ratingScaleId)
+        public void UpdateDetails(string text, long? categoryId, long? ratingScaleId)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(text);
 

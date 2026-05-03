@@ -13,7 +13,7 @@ namespace EPMS.Domain.Entities.Performance
     {
         private Appraisal() { }
 
-        public Appraisal(long employeeId, int cycleId, long appraiserId, string evaluatorRole)
+        public Appraisal(long employeeId, long cycleId, long appraiserId, string evaluatorRole)
         {
             EmployeeId = employeeId;
             CycleId = cycleId;
@@ -23,7 +23,7 @@ namespace EPMS.Domain.Entities.Performance
         }
 
         public long EmployeeId { get; private set; }
-        public int CycleId { get; private set; }
+        public long CycleId { get; private set; }
         public long AppraiserId { get; private set; }
         public string EvaluatorRole { get; private set; } = string.Empty;
 
@@ -51,7 +51,7 @@ namespace EPMS.Domain.Entities.Performance
         public virtual AppraisalCycle Cycle { get; private set; } = null!;
         public virtual EmployeeProfile Appraiser { get; private set; } = null!;
 
-        public int? FinalRatingId { get; private set; }
+        public long? FinalRatingId { get; private set; }
         public virtual RatingScale? FinalRating { get; private set; }
 
         private readonly List<AppraisalDetail> _details = new();

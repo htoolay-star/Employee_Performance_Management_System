@@ -11,7 +11,7 @@ namespace EPMS.Domain.Entities.Performance
     {
         private AppraisalDetail() { }
 
-        public AppraisalDetail(long appraisalId, long? kpiId, string kpiName, string? categoryName, decimal weightage, string? targetValue, int? questionId = null)
+        public AppraisalDetail(long appraisalId, long? kpiId, string kpiName, string? categoryName, decimal weightage, string? targetValue, long? questionId = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(kpiName);
             ArgumentOutOfRangeException.ThrowIfNegative(weightage);
@@ -31,7 +31,7 @@ namespace EPMS.Domain.Entities.Performance
 
         public long AppraisalId { get; private set; }
         public long? KPIId { get; private set; }
-        public int? QuestionId { get; private set; }
+        public long? QuestionId { get; private set; }
 
         public string KPIName { get; private set; } = string.Empty;
         public string? CategoryName { get; private set; }

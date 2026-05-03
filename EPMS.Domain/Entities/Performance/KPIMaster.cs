@@ -12,7 +12,7 @@ namespace EPMS.Domain.Entities.Performance
     {
         private KPIMaster() { }
 
-        public KPIMaster(int categoryId, string code, string name, string? description = null)
+        public KPIMaster(long categoryId, string code, string name, string? description = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(code);
             ArgumentException.ThrowIfNullOrWhiteSpace(name);
@@ -24,7 +24,7 @@ namespace EPMS.Domain.Entities.Performance
             IsActive = true;
         }
 
-        public int CategoryId { get; private set; }
+        public long CategoryId { get; private set; }
         public string Code { get; private set; } = string.Empty;
         public string Name { get; private set; } = string.Empty;
         public string? Description { get; private set; }

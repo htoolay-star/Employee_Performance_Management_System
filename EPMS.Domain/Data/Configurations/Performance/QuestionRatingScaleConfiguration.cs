@@ -26,8 +26,8 @@ namespace EPMS.Domain.Data.Configurations.Performance
             builder.HasIndex(e => e.Name).IsUnique();
 
             builder.Property(e => e.Name).HasMaxLength(100).IsRequired();
-            builder.Property(e => e.MinScore).HasColumnType("decimal(5,2)").IsRequired();
-            builder.Property(e => e.MaxScore).HasColumnType("decimal(5,2)").IsRequired();
+            builder.Property(e => e.MinScore).IsRequired();
+            builder.Property(e => e.MaxScore).IsRequired();
 
             builder.Property(e => e.IsActive).HasDefaultValue(true);
 
