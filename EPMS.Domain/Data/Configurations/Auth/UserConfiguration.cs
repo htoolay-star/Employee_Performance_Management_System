@@ -17,10 +17,10 @@ namespace EPMS.Domain.Data.Configurations.Auth
 
             entity.HasKey(e => e.Id);
 
-            entity.HasIndex(e => e.UserGuid).IsUnique();
-            entity.Property(e => e.UserGuid)
-                  .HasDefaultValueSql("NEWSEQUENTIALID()")
-                  .ValueGeneratedOnAdd();
+            entity.HasQueryFilter(e => !e.IsDeleted);
+
+            entity.Property(e => e.PublicId).IsRequired();
+            entity.HasIndex(e => e.PublicId).IsUnique();
 
             entity.HasIndex(e => e.NormalizedEmail).IsUnique();
             entity.Property(e => e.Email).HasMaxLength(256).IsRequired();
@@ -38,8 +38,8 @@ namespace EPMS.Domain.Data.Configurations.Auth
             entity.Property(e => e.LockoutEndDate);
             entity.Property(e => e.LastLoginDate);
 
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
-            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.UpdatedAt).IsRequired();
 
             entity.HasMany(e => e.RefreshTokens)
                   .WithOne(t => t.User)

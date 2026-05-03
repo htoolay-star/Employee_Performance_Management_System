@@ -33,6 +33,7 @@ namespace EPMS.Domain.Data.Configurations.Auth
             entity.Property(e => e.Version).IsRowVersion();
 
             entity.HasIndex(e => e.Token)
+                  .IsUnique()
                   .HasDatabaseName("IX_auth_UserRefreshTokens_Token");
 
             entity.HasIndex(e => e.UserId)

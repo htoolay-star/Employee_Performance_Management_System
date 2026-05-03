@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class KPIWeightPriority : IAuditableEntity , ISoftDeletable
+    public class KPIWeightPriority : AuditableEntity , ISoftDeletable
     {
         private KPIWeightPriority() { }
 
@@ -27,15 +27,11 @@ namespace EPMS.Domain.Entities.Performance
             IsActive = true;
         }
 
-        public int Id { get; private set; }
         public string LevelName { get; private set; } = string.Empty;
         public decimal MinWeight { get; private set; }
         public decimal MaxWeight { get; private set; }
         public string? ColorCode { get; private set; }
         public bool IsActive { get; private set; }
-
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }

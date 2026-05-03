@@ -1,4 +1,5 @@
-﻿using EPMS.Domain.Entities.Auth;
+﻿using EPMS.Domain.Contracts;
+using EPMS.Domain.Entities.Auth;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Audit
 {
-    public class AuditLog
+    public class AuditLog : BaseEntity
     {
         private AuditLog() { }
 
@@ -30,7 +31,6 @@ namespace EPMS.Domain.Entities.Audit
             Timestamp = timestamp;
         }
 
-        public long Id { get; private set; }
         public long? UserId { get; private set; }
         public string EntityName { get; private set; } = string.Empty;
         public string EntityId { get; private set; } = string.Empty;

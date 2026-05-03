@@ -18,6 +18,11 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).UseIdentityColumn();
 
+            entity.HasQueryFilter(e => !e.IsDeleted);
+
+            entity.Property(e => e.PublicId).IsRequired();
+            entity.HasIndex(e => e.PublicId).IsUnique();
+
             entity.HasIndex(e => e.Code).IsUnique();
             entity.Property(e => e.Code).HasMaxLength(50).IsRequired();
             entity.Property(e => e.Name).HasMaxLength(250).IsRequired();

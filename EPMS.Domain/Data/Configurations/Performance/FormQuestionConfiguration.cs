@@ -18,6 +18,11 @@ namespace EPMS.Domain.Data.Configurations.Performance
             builder.HasKey(e => e.Id);
             builder.Property(e => e.Id).UseIdentityColumn();
 
+            builder.HasQueryFilter(e => !e.IsDeleted);
+
+            builder.Property(e => e.PublicId).IsRequired();
+            builder.HasIndex(e => e.PublicId).IsUnique();
+
             builder.HasIndex(e => new { e.TemplateId, e.Sequence }).IsUnique();
 
             builder.Property(e => e.QuestionText).IsRequired();
@@ -61,6 +66,8 @@ namespace EPMS.Domain.Data.Configurations.Performance
                            join.HasKey("QuestionId", "TagId");
                        }
                    );
+
+            builder.Metadata.FindNavigation(nameof(FormQuestion.Tags))?.SetPropertyAccessMode(PropertyAccessMode.Field);
         }
     }
 }

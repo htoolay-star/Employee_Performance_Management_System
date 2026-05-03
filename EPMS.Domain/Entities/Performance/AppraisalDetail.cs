@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class AppraisalDetail : IAuditableEntity , ISoftDeletable
+    public class AppraisalDetail : AuditableEntity , ISoftDeletable
     {
         private AppraisalDetail() { }
 
@@ -29,7 +29,6 @@ namespace EPMS.Domain.Entities.Performance
             WeightedScore = 0;
         }
 
-        public long Id { get; private set; }
         public long AppraisalId { get; private set; }
         public long? KPIId { get; private set; }
         public int? QuestionId { get; private set; }
@@ -43,9 +42,6 @@ namespace EPMS.Domain.Entities.Performance
         public decimal Score { get; private set; }
         public decimal WeightedScore { get; private set; }
         public string? Remarks { get; private set; }
-
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }
@@ -62,7 +58,6 @@ namespace EPMS.Domain.Entities.Performance
             ActualValue = actualValue?.Trim();
             Score = rawScore;
 
-            // E.g., if weightage is 20%, and they scored 80/100, weighted score is 16.
             WeightedScore = (rawScore * Weightage) / 100m;
             Remarks = remarks?.Trim();
         }

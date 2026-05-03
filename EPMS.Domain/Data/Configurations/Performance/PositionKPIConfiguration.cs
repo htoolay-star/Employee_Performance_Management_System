@@ -38,7 +38,6 @@ namespace EPMS.Domain.Data.Configurations.Performance
                   .OnDelete(DeleteBehavior.Restrict);
 
             entity.Property(e => e.CreatedAt).IsRequired();
-            entity.Property(e => e.UpdatedAt).IsRequired();
             entity.Property(e => e.Version).IsRowVersion();
         }
     }

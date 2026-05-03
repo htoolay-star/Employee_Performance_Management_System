@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Auth
 {
-    public class User : IAuditableEntity , ISoftDeletable
+    public class User : AuditableEntity , ISoftDeletable
     {
         private User() { }
 
@@ -20,7 +20,6 @@ namespace EPMS.Domain.Entities.Auth
             ArgumentException.ThrowIfNullOrWhiteSpace(email);
             ArgumentException.ThrowIfNullOrWhiteSpace(passwordHash);
 
-            UserGuid = Guid.NewGuid();
             Email = email;
             PasswordHash = passwordHash;
             RoleId = (int)role;
@@ -30,8 +29,6 @@ namespace EPMS.Domain.Entities.Auth
             FailedLoginAttempts = 0;
         }
 
-        public long Id { get; private set; }
-        public Guid UserGuid { get; private set; }
         public string Email { get; private set; } = string.Empty;
         public string NormalizedEmail { get; private set; } = string.Empty;
         public string PasswordHash { get; private set; } = string.Empty;
@@ -42,9 +39,6 @@ namespace EPMS.Domain.Entities.Auth
         public int FailedLoginAttempts { get; private set; }
         public DateTimeOffset? LockoutEndDate { get; private set; }
         public DateTimeOffset? LastLoginDate { get; private set; }
-
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class PIP : IAuditableEntity , ISoftDeletable
+    public class PIP : AuditableEntity , ISoftDeletable
     {
         private PIP() { }
 
@@ -27,7 +27,6 @@ namespace EPMS.Domain.Entities.Performance
             Status = "Open";
         }
 
-        public long Id { get; private set; }
         public long EmployeeId { get; private set; }
         public long ManagerId { get; private set; }
         public long? AppraisalId { get; private set; }
@@ -38,9 +37,6 @@ namespace EPMS.Domain.Entities.Performance
         public string Reason { get; private set; } = string.Empty;
         public string Status { get; private set; } = string.Empty;
         public string? FinalOutcomeNotes { get; private set; }
-
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }

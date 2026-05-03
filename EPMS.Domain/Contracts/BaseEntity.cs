@@ -6,10 +6,8 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Contracts
 {
-    public interface IAuditableEntity
+    public abstract class BaseEntity
     {
-        Guid PublicId { get; }
-        DateTimeOffset CreatedAt { get; set; }
-        DateTimeOffset UpdatedAt { get; set; }
+        public long Id { get; set; }
     }
 }

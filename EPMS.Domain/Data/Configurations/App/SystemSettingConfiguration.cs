@@ -17,6 +17,9 @@ namespace EPMS.Domain.Data.Configurations.App
             builder.HasKey(e => e.Id);
             builder.Property(e => e.Id).UseIdentityColumn();
 
+            builder.Property(e => e.PublicId).IsRequired();
+            builder.HasIndex(e => e.PublicId).IsUnique();
+
             builder.Property(e => e.Key).HasMaxLength(100).IsRequired();
             builder.Property(e => e.Value).IsRequired();
             builder.Property(e => e.Description).HasMaxLength(500);

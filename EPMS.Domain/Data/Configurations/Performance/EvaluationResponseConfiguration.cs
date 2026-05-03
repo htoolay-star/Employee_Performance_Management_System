@@ -17,6 +17,11 @@ namespace EPMS.Domain.Data.Configurations.Performance
             builder.HasKey(e => e.Id);
             builder.Property(e => e.Id).UseIdentityColumn();
 
+            builder.HasQueryFilter(e => !e.IsDeleted);
+
+            builder.Property(e => e.PublicId).IsRequired();
+            builder.HasIndex(e => e.PublicId).IsUnique();
+
             builder.HasIndex(e => new { e.AppraisalId, e.QuestionId, e.EvaluatorId }).IsUnique();
 
             builder.Property(e => e.EvaluatorRole).HasMaxLength(50).IsRequired();

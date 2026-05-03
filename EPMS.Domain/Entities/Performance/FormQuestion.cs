@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class FormQuestion : IAuditableEntity , ISoftDeletable
+    public class FormQuestion : AuditableEntity , ISoftDeletable
     {
         private FormQuestion() { }
 
@@ -29,7 +29,6 @@ namespace EPMS.Domain.Entities.Performance
             QuestionRatingScaleId = ratingScaleId;
         }
 
-        public int Id { get; private set; }
         public int TemplateId { get; private set; }
         public int? CategoryId { get; private set; }
         public int? QuestionRatingScaleId { get; private set; }
@@ -40,16 +39,13 @@ namespace EPMS.Domain.Entities.Performance
         public bool HasYesNo { get; private set; }
         public bool HasComment { get; private set; }
 
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
-
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }
 
         public byte[] Version { get; private set; } = Array.Empty<byte>();
 
-        private readonly List<Shared.Tag> _tags = new();
-        public virtual IReadOnlyCollection<Shared.Tag> Tags => _tags.AsReadOnly();
+        private readonly List<Tag> _tags = new();
+        public virtual IReadOnlyCollection<Tag> Tags => _tags.AsReadOnly();
 
         public virtual FormTemplate Template { get; private set; } = null!;
         public virtual Category? Category { get; private set; }

@@ -30,7 +30,6 @@ namespace EPMS.Domain.Data.Configurations.Performance
                    .OnDelete(DeleteBehavior.Cascade);
 
             builder.Property(e => e.CreatedAt).IsRequired();
-            builder.Property(e => e.UpdatedAt).IsRequired();
             builder.Property(e => e.Version).IsRowVersion();
         }
     }

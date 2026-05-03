@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.EmployeeInfo
 {
-    public class EmployeeContact : IAuditableEntity , ISoftDeletable
+    public class EmployeeContact : AuditableEntity , ISoftDeletable
     {
         private EmployeeContact() { }
 
@@ -28,9 +28,6 @@ namespace EPMS.Domain.Entities.EmployeeInfo
         public string? InternalPhoneNo { get; private set; }
         public string? EmergencyMobileNo { get; private set; }
         public string? RelationWithEmergencyContact { get; private set; }
-
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class PIPObjective : IAuditableEntity , ISoftDeletable
+    public class PIPObjective : AuditableEntity , ISoftDeletable
     {
         private PIPObjective() { }
 
@@ -23,7 +23,6 @@ namespace EPMS.Domain.Entities.Performance
             Status = "In-Progress";
         }
 
-        public long Id { get; private set; }
         public long PIPId { get; private set; }
 
         public string Title { get; private set; } = string.Empty;
@@ -32,9 +31,6 @@ namespace EPMS.Domain.Entities.Performance
 
         public string Status { get; private set; } = string.Empty;
         public string? ManagerComment { get; private set; }
-
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }

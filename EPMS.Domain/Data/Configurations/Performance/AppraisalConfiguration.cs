@@ -11,10 +11,13 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.ToTable("Appraisals", "perf");
             entity.HasKey(e => e.Id);
 
-            // 1. Business Rules & Constraints
+            entity.HasQueryFilter(e => !e.IsDeleted);
+
+            entity.Property(e => e.PublicId).IsRequired();
+            entity.HasIndex(e => e.PublicId).IsUnique();
+
             entity.HasIndex(e => new { e.EmployeeId, e.CycleId, e.EvaluatorRole }).IsUnique();
 
-            // 2. Enums (Chained with String Conversion and MaxLength)
             entity.Property(e => e.Status)
                   .HasConversion<string>()
                   .HasMaxLength(20)
@@ -25,7 +28,6 @@ namespace EPMS.Domain.Data.Configurations.Performance
                   .HasMaxLength(50)
                   .IsRequired();
 
-            // 3. Properties
             entity.Property(e => e.TotalScore)
                   .HasPrecision(5, 2);
 
@@ -33,12 +35,10 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.Property(e => e.UnLockReason).HasMaxLength(500);
             entity.Property(e => e.IsLocked).HasDefaultValue(false);
 
-            // 4. Audit & Soft Delete
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.Property(e => e.UpdatedAt).IsRequired();
             entity.Property(e => e.Version).IsRowVersion();
 
-            // 5. Navigation Properties (Foreign Keys)
             entity.HasOne(e => e.Employee).WithMany().HasForeignKey(e => e.EmployeeId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne(e => e.Cycle).WithMany().HasForeignKey(e => e.CycleId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne(e => e.Appraiser).WithMany().HasForeignKey(e => e.AppraiserId).OnDelete(DeleteBehavior.Restrict);
@@ -53,11 +53,10 @@ namespace EPMS.Domain.Data.Configurations.Performance
                   .HasForeignKey(e => e.UnLockedById)
                   .OnDelete(DeleteBehavior.Restrict);
 
-            // 6. Private Collection Backing Fields (CRITICAL FOR DDD)
             entity.Metadata.FindNavigation(nameof(Appraisal.Details))?
                   .SetPropertyAccessMode(PropertyAccessMode.Field);
 
-            entity.Metadata.FindNavigation(nameof(Appraisal.Recommendations))? // Added this one!
+            entity.Metadata.FindNavigation(nameof(Appraisal.Recommendations))?
                   .SetPropertyAccessMode(PropertyAccessMode.Field);
         }
     }

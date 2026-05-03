@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class Appraisal : IAuditableEntity , ISoftDeletable
+    public class Appraisal : AuditableEntity , ISoftDeletable
     {
         private Appraisal() { }
 
@@ -22,7 +22,6 @@ namespace EPMS.Domain.Entities.Performance
             Status = "Draft";
         }
 
-        public long Id { get; private set; }
         public long EmployeeId { get; private set; }
         public int CycleId { get; private set; }
         public long AppraiserId { get; private set; }
@@ -34,9 +33,6 @@ namespace EPMS.Domain.Entities.Performance
         public string? EmployeeComment { get; private set; }
         public string? ManagerComment { get; private set; }
         public DateTimeOffset? ReviewDate { get; private set; }
-
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }

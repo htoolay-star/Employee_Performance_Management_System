@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class EvaluationResponse : IAuditableEntity , ISoftDeletable
+    public class EvaluationResponse : AuditableEntity , ISoftDeletable
     {
         private EvaluationResponse() { }
 
@@ -26,7 +26,6 @@ namespace EPMS.Domain.Entities.Performance
             IsAnonymous = isAnonymous;
         }
 
-        public long Id { get; private set; }
         public long AppraisalId { get; private set; }
         public int TemplateId { get; private set; }
         public int QuestionId { get; private set; }
@@ -38,9 +37,6 @@ namespace EPMS.Domain.Entities.Performance
         public bool? YesNoAnswer { get; private set; }
         public int? RatingValue { get; private set; }
         public string? QuestionComment { get; private set; }
-
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }

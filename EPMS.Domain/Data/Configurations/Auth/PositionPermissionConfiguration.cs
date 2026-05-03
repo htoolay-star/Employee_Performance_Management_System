@@ -17,10 +17,6 @@ namespace EPMS.Domain.Data.Configurations.Auth
 
             entity.HasKey(e => new { e.PositionId, e.PermissionId });
 
-            entity.Property(e => e.CreatedAt)
-                  .HasDefaultValueSql("SYSDATETIMEOFFSET()")
-                  .ValueGeneratedOnAdd();
-
             entity.HasOne(e => e.Permission)
                   .WithMany()
                   .HasForeignKey(e => e.PermissionId)
@@ -30,6 +26,9 @@ namespace EPMS.Domain.Data.Configurations.Auth
                   .WithMany(p => p.PositionPermissions)
                   .HasForeignKey(e => e.PositionId)
                   .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.Version).IsRowVersion();
         }
     }
 }

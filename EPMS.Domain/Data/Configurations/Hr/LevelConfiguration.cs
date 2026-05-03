@@ -18,6 +18,11 @@ namespace EPMS.Domain.Data.Configurations.Hr
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).UseIdentityColumn();
 
+            entity.HasQueryFilter(e => !e.IsDeleted);
+
+            entity.Property(e => e.PublicId).IsRequired();
+            entity.HasIndex(e => e.PublicId).IsUnique();
+
             entity.HasIndex(e => e.Code).IsUnique();
             entity.Property(e => e.Code).HasMaxLength(10).IsRequired();
 
@@ -28,6 +33,8 @@ namespace EPMS.Domain.Data.Configurations.Hr
 
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.Property(e => e.UpdatedAt).IsRequired();
+
+            entity.Property(e => e.Version).IsRowVersion();
         }
     }
 }

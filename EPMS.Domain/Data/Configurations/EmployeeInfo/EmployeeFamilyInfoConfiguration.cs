@@ -17,6 +17,13 @@ namespace EPMS.Domain.Data.Configurations.EmployeeInfo
 
             entity.HasKey(e => e.EmployeeId);
 
+            entity.Ignore(e => e.Id);
+
+            entity.HasQueryFilter(e => !e.IsDeleted);
+
+            entity.Property(e => e.PublicId).IsRequired();
+            entity.HasIndex(e => e.PublicId).IsUnique();
+
             entity.HasOne(e => e.Profile)
                   .WithOne(p => p.FamilyInfo)
                   .HasForeignKey<EmployeeFamilyInfo>(e => e.EmployeeId)

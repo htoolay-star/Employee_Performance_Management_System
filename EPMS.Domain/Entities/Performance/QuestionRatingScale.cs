@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class QuestionRatingScale : IAuditableEntity , ISoftDeletable
+    public class QuestionRatingScale : AuditableEntity , ISoftDeletable
     {
         private QuestionRatingScale() { }
 
@@ -24,14 +24,10 @@ namespace EPMS.Domain.Entities.Performance
             IsActive = true;
         }
 
-        public int Id { get; private set; }
         public string Name { get; private set; } = string.Empty;
         public int MinScore { get; private set; }
         public int MaxScore { get; private set; }
         public bool IsActive { get; private set; }
-
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }

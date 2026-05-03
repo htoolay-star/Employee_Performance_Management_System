@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.EmployeeInfo
 {
-    public class EmployeeFamilyInfo : IAuditableEntity , ISoftDeletable
+    public class EmployeeFamilyInfo : AuditableEntity , ISoftDeletable
     {
         private EmployeeFamilyInfo() { }
 
@@ -26,9 +26,6 @@ namespace EPMS.Domain.Entities.EmployeeInfo
         public string? FatherName { get; private set; }
         public string? FatherNRCNo { get; private set; }
         public string? FatherOccupation { get; private set; }
-
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }

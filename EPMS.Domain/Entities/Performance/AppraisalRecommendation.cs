@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class AppraisalRecommendation : IAuditableEntity , ISoftDeletable
+    public class AppraisalRecommendation : AuditableEntity , ISoftDeletable
     {
         private AppraisalRecommendation() { }
 
@@ -28,7 +28,6 @@ namespace EPMS.Domain.Entities.Performance
             Status = "Pending";
         }
 
-        public long Id { get; private set; }
         public long AppraisalId { get; private set; }
 
         public string RecommendationType { get; private set; } = string.Empty;
@@ -41,9 +40,6 @@ namespace EPMS.Domain.Entities.Performance
 
         public long? ProcessedById { get; private set; }
         public DateTimeOffset? ActionDate { get; private set; }
-
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }

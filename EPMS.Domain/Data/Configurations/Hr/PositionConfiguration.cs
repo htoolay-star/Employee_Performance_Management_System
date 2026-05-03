@@ -19,6 +19,11 @@ namespace EPMS.Domain.Data.Configurations.Hr
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).UseIdentityColumn();
 
+            entity.HasQueryFilter(e => !e.IsDeleted);
+
+            entity.Property(e => e.PublicId).IsRequired();
+            entity.HasIndex(e => e.PublicId).IsUnique();
+
             entity.HasIndex(e => e.Title).IsUnique();
             entity.Property(e => e.Title).HasMaxLength(100).IsRequired();
 
@@ -27,10 +32,24 @@ namespace EPMS.Domain.Data.Configurations.Hr
             entity.Property(e => e.CreatedAt);
             entity.Property(e => e.UpdatedAt);
 
+            entity.Property(e => e.Version).IsRowVersion();
+
             entity.HasOne(e => e.Level)
                   .WithMany()
                   .HasForeignKey(e => e.LevelId)
                   .OnDelete(DeleteBehavior.Restrict);
+
+            entity.Metadata.FindNavigation(nameof(Position.PositionKPIs))?
+                  .SetPropertyAccessMode(PropertyAccessMode.Field);
+
+            entity.Metadata.FindNavigation(nameof(Position.PositionPermissions))?
+                  .SetPropertyAccessMode(PropertyAccessMode.Field);
+
+            entity.Metadata.FindNavigation(nameof(Position.PositionFormTemplates))?
+                  .SetPropertyAccessMode(PropertyAccessMode.Field);
+
+            entity.Metadata.FindNavigation(nameof(Position.PositionPIPTemplates))?
+                  .SetPropertyAccessMode(PropertyAccessMode.Field);
         }
     }
 }

@@ -17,6 +17,11 @@ namespace EPMS.Domain.Data.Configurations.Performance
             builder.HasKey(e => e.Id);
             builder.Property(e => e.Id).UseIdentityColumn();
 
+            builder.HasQueryFilter(e => !e.IsDeleted);
+
+            builder.Property(e => e.PublicId).IsRequired();
+            builder.HasIndex(e => e.PublicId).IsUnique();
+
             builder.Property(e => e.Status).HasMaxLength(20).HasDefaultValue("Open");
             builder.Property(e => e.Reason).IsRequired();
 
@@ -43,6 +48,8 @@ namespace EPMS.Domain.Data.Configurations.Performance
             builder.Property(e => e.CreatedAt).IsRequired();
             builder.Property(e => e.UpdatedAt).IsRequired();
             builder.Property(e => e.Version).IsRowVersion();
+
+            builder.Metadata.FindNavigation(nameof(PIP.Objectives))?.SetPropertyAccessMode(PropertyAccessMode.Field);
         }
     }
 }

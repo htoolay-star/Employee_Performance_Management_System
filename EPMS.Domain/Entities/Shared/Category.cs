@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Shared
 {
-    public class Category : IAuditableEntity , ISoftDeletable
+    public class Category : AuditableEntity , ISoftDeletable
     {
         private Category() { }
 
@@ -26,7 +26,6 @@ namespace EPMS.Domain.Entities.Shared
             IsActive = true;
         }
 
-        public int Id { get; private set; }
         public string Module { get; private set; } = string.Empty;
         public string Code { get; private set; } = string.Empty;
         public string Name { get; private set; } = string.Empty;
@@ -37,9 +36,6 @@ namespace EPMS.Domain.Entities.Shared
         public virtual ICollection<Category> SubCategories { get; private set; } = new List<Category>();
 
         public bool IsActive { get; private set; }
-
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }

@@ -17,6 +17,11 @@ namespace EPMS.Domain.Data.Configurations.Performance
             builder.HasKey(e => e.Id);
             builder.Property(e => e.Id).UseIdentityColumn();
 
+            builder.HasQueryFilter(e => !e.IsDeleted);
+
+            builder.Property(e => e.PublicId).IsRequired();
+            builder.HasIndex(e => e.PublicId).IsUnique();
+
             builder.Property(e => e.FeedbackType).HasMaxLength(50).IsRequired();
             builder.Property(e => e.Content).IsRequired();
             builder.Property(e => e.Visibility).HasMaxLength(20).HasDefaultValue("Public");

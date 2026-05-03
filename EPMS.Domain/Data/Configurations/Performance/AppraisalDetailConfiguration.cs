@@ -16,6 +16,11 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.ToTable("AppraisalDetails", "perf");
             entity.HasKey(e => e.Id);
 
+            entity.HasQueryFilter(e => !e.IsDeleted);
+
+            entity.Property(e => e.PublicId).IsRequired();
+            entity.HasIndex(e => e.PublicId).IsUnique();
+
             entity.Property(e => e.KPIName).HasMaxLength(250).IsRequired();
             entity.Property(e => e.CategoryName).HasMaxLength(100);
             entity.Property(e => e.TargetValue).HasMaxLength(100);

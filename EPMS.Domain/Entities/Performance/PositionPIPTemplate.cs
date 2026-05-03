@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class PositionPIPTemplate : IAuditableEntity , ISoftDeletable
+    public class PositionPIPTemplate : AuditableEntity , ISoftDeletable
     {
         private PositionPIPTemplate() { }
 
@@ -26,15 +26,11 @@ namespace EPMS.Domain.Entities.Performance
             IsActive = true;
         }
 
-        public int Id { get; private set; }
         public long PositionId { get; private set; }
         public string Title { get; private set; } = string.Empty;
         public string? Description { get; private set; }
         public string SuccessCriteria { get; private set; } = string.Empty;
         public bool IsActive { get; private set; }
-
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }

@@ -4,12 +4,13 @@ using EPMS.Domain.Entities.Performance;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Hr
 {
-    public class Position : IAuditableEntity , ISoftDeletable
+    public class Position : AuditableEntity , ISoftDeletable
     {
         private Position() { }
 
@@ -23,10 +24,9 @@ namespace EPMS.Domain.Entities.Hr
             IsActive = true;
         }
 
-        public long Id { get; private set; }
         public string Title { get; private set; } = string.Empty;
 
-        public int LevelId { get; private set; }
+        public long LevelId { get; private set; }
         public virtual Level Level { get; private set; } = null!;
 
         public bool IsActive { get; private set; }
@@ -36,6 +36,8 @@ namespace EPMS.Domain.Entities.Hr
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }
+
+        public byte[] Version { get; private set; } = Array.Empty<byte>();
 
         public void Deactivate() => IsActive = false;
         public void Reactivate() => IsActive = true;

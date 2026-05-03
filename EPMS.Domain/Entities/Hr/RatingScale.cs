@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Hr
 {
-    public class RatingScale : IAuditableEntity , ISoftDeletable
+    public class RatingScale : AuditableEntity , ISoftDeletable
     {
         private RatingScale() { }
 
@@ -27,7 +27,6 @@ namespace EPMS.Domain.Entities.Hr
             IsActive = true;
         }
 
-        public int Id { get; private set; }
         public int Rating { get; private set; }
         public string Label { get; private set; } = string.Empty;
 
@@ -39,9 +38,6 @@ namespace EPMS.Domain.Entities.Hr
         public string? Description { get; private set; }
 
         public bool IsActive { get; private set; }
-
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }

@@ -18,6 +18,11 @@ namespace EPMS.Domain.Data.Configurations.Hr
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).UseIdentityColumn();
 
+            entity.HasQueryFilter(e => !e.IsDeleted);
+
+            entity.Property(e => e.PublicId).IsRequired();
+            entity.HasIndex(e => e.PublicId).IsUnique();
+
             entity.HasIndex(e => e.Rating).IsUnique();
 
             entity.Property(e => e.Label).HasMaxLength(50).IsRequired();

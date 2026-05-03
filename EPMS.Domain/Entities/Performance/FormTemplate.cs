@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class FormTemplate : IAuditableEntity , ISoftDeletable
+    public class FormTemplate : AuditableEntity , ISoftDeletable
     {
         private FormTemplate() { }
 
@@ -21,13 +21,9 @@ namespace EPMS.Domain.Entities.Performance
             IsActive = true;
         }
 
-        public int Id { get; private set; }
         public string Name { get; private set; } = string.Empty;
         public string FormType { get; private set; } = string.Empty;
         public bool IsActive { get; private set; }
-
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }

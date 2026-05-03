@@ -15,12 +15,15 @@ namespace EPMS.Domain.Entities.Auth
         {
             PositionId = positionId;
             PermissionId = permissionId;
+            CreatedAt = DateTimeOffset.UtcNow;
         }
 
         public long PositionId { get; private set; }
         public int PermissionId { get; private set; }
 
         public DateTimeOffset CreatedAt { get; private set; }
+
+        public byte[] Version { get; private set; } = Array.Empty<byte>();
 
         public virtual Permission Permission { get; private set; } = null!;
         public virtual Position Position { get; private set; } = null!;
