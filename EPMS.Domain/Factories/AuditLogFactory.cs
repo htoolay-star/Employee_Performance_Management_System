@@ -23,8 +23,8 @@ namespace EPMS.Domain.Factories
                 var oldValues = new Dictionary<string, object?>();
                 var newValues = new Dictionary<string, object?>();
 
-                var primaryKey = entry.Properties.FirstOrDefault(p => p.Metadata.IsPrimaryKey());
-                var entityId = primaryKey?.CurrentValue?.ToString() ?? "Unknown";
+                var entityId = entry.Entity.PublicId.ToString();
+                var action = GetAuditAction(entry);
 
                 foreach (var property in entry.Properties)
                 {
@@ -54,13 +54,27 @@ namespace EPMS.Domain.Factories
                     userId: userId,
                     entityName: entry.Entity.GetType().Name,
                     entityId: entityId,
-                    action: entry.State.ToString().ToUpperInvariant(),
+                    action: action,
                     oldValues: oldValues.Count > 0 ? JsonSerializer.Serialize(oldValues) : null,
                     newValues: newValues.Count > 0 ? JsonSerializer.Serialize(newValues) : null,
                     timestamp: timestamp));
             }
 
             return auditLogs;
+        }
+
+        private static string GetAuditAction(EntityEntry<IAuditableEntity> entry)
+        {
+            if (entry.State == EntityState.Modified &&
+                entry.Entity is ISoftDeletable &&
+                entry.Properties.Any(p => p.Metadata.Name == nameof(ISoftDeletable.IsDeleted) &&
+                                          p.IsModified &&
+                                          p.CurrentValue is true))
+            {
+                return EntityState.Deleted.ToString().ToUpperInvariant();
+            }
+
+            return entry.State.ToString().ToUpperInvariant();
         }
     }
 }
