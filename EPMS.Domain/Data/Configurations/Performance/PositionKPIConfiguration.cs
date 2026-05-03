@@ -15,7 +15,15 @@ namespace EPMS.Domain.Data.Configurations.Performance
         {
             entity.ToTable("PositionKPIs", "perf");
 
-            entity.HasKey(e => new { e.PositionId, e.KPIId });
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).UseIdentityColumn();
+
+            entity.Property(e => e.PublicId).IsRequired();
+            entity.HasIndex(e => e.PublicId).IsUnique().HasFilter("[IsDeleted] = 0");
+
+            entity.HasIndex(e => new { e.PositionId, e.KPIId })
+                  .IsUnique()
+                  .HasFilter("[IsDeleted] = 0");
 
             entity.Property(e => e.TargetValue).HasMaxLength(100);
             entity.Property(e => e.TargetUnit).HasMaxLength(100);
@@ -38,7 +46,11 @@ namespace EPMS.Domain.Data.Configurations.Performance
                   .OnDelete(DeleteBehavior.Restrict);
 
             entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.UpdatedAt).IsRequired();
             entity.Property(e => e.Version).IsRowVersion();
+
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false).IsRequired();
+            entity.Property(e => e.DeletedAt);
         }
     }
 }

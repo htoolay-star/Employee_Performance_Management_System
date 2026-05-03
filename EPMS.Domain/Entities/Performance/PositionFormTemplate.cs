@@ -1,4 +1,4 @@
-﻿using EPMS.Domain.Contracts;
+using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Hr;
 using System;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class PositionFormTemplate
+    public class PositionFormTemplate : AuditableEntity, ISoftDeletable
     {
         private PositionFormTemplate() { }
 
@@ -23,7 +23,8 @@ namespace EPMS.Domain.Entities.Performance
         public long FormTemplateId { get; private set; }
         public bool IsMandatory { get; private set; }
 
-        public DateTimeOffset CreatedAt { get; set; }
+        public bool IsDeleted { get; set; }
+        public DateTimeOffset? DeletedAt { get; set; }
 
         public byte[] Version { get; private set; } = Array.Empty<byte>();
 

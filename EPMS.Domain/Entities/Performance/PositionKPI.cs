@@ -1,4 +1,4 @@
-﻿using EPMS.Domain.Contracts;
+using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Hr;
 using System;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class PositionKPI
+    public class PositionKPI : AuditableEntity, ISoftDeletable
     {
         private PositionKPI() { }
 
@@ -34,7 +34,8 @@ namespace EPMS.Domain.Entities.Performance
         public string? TargetUnit { get; private set; }
         public decimal Weightage { get; private set; }
 
-        public DateTimeOffset CreatedAt { get; set; }
+        public bool IsDeleted { get; set; }
+        public DateTimeOffset? DeletedAt { get; set; }
 
         public byte[] Version { get; private set; } = Array.Empty<byte>();
 

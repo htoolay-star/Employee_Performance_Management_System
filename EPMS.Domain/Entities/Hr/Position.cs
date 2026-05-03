@@ -1,4 +1,4 @@
-﻿using EPMS.Domain.Contracts;
+using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Auth;
 using EPMS.Domain.Entities.Performance;
 using System;
@@ -62,7 +62,7 @@ namespace EPMS.Domain.Entities.Hr
         {
             if (!_positionPermissions.Any(p => p.PermissionId == permissionId))
             {
-                _positionPermissions.Add(new PositionPermission(Id, permissionId, DateTimeOffset.UtcNow));
+                _positionPermissions.Add(new PositionPermission(Id, permissionId));
             }
         }
 

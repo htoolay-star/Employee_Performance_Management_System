@@ -15,7 +15,15 @@ namespace EPMS.Domain.Data.Configurations.Auth
         {
             entity.ToTable("PositionPermissions", "auth");
 
-            entity.HasKey(e => new { e.PositionId, e.PermissionId });
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).UseIdentityColumn();
+
+            entity.Property(e => e.PublicId).IsRequired();
+            entity.HasIndex(e => e.PublicId).IsUnique().HasFilter("[IsDeleted] = 0");
+
+            entity.HasIndex(e => new { e.PositionId, e.PermissionId })
+                  .IsUnique()
+                  .HasFilter("[IsDeleted] = 0");
 
             entity.HasOne(e => e.Permission)
                   .WithMany()
@@ -28,7 +36,11 @@ namespace EPMS.Domain.Data.Configurations.Auth
                   .OnDelete(DeleteBehavior.Cascade);
 
             entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.UpdatedAt).IsRequired();
             entity.Property(e => e.Version).IsRowVersion();
+
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false).IsRequired();
+            entity.Property(e => e.DeletedAt);
         }
     }
 }
