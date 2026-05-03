@@ -17,9 +17,6 @@ namespace EPMS.Domain.Data.Configurations.Performance
             builder.ToTable("FormQuestions", "perf");
             builder.HasKey(e => e.Id);
             builder.Property(e => e.Id).UseIdentityColumn();
-
-            builder.HasQueryFilter(e => !e.IsDeleted);
-
             builder.Property(e => e.PublicId).IsRequired();
             builder.HasIndex(e => e.PublicId).IsUnique().HasFilter("[IsDeleted] = 0");
 

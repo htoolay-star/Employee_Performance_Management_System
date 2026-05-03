@@ -16,9 +16,6 @@ namespace EPMS.Domain.Data.Configurations.Auth
             entity.ToTable("Users", "auth");
 
             entity.HasKey(e => e.Id);
-
-            entity.HasQueryFilter(e => !e.IsDeleted);
-
             entity.Property(e => e.PublicId).IsRequired();
             entity.HasIndex(e => e.PublicId).IsUnique().HasFilter("[IsDeleted] = 0");
 
