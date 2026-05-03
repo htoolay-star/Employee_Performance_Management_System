@@ -1,10 +1,8 @@
-using EPMS.Application.Interfaces.Performance;
 using EPMS.Domain.Interface.IService;
 using EPMS.Shared.DTOs.Form;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 
-namespace EPMS.WebAPI.Controllers
+namespace EPMS.Api.Controllers.Performance
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -12,19 +10,21 @@ namespace EPMS.WebAPI.Controllers
     {
         private readonly IAppraisalService _appraisalService;
 
+        // Constructor Injection - Scrutor will handle IAppraisalService registration automatically
         public AppraisalController(IAppraisalService appraisalService)
         {
             _appraisalService = appraisalService;
         }
 
         /// <summary>
-        /// Submits performance assessment results and calculates the final grade.
+        /// Submits an employee appraisal (Self, Manager, or 360)
         /// </summary>
         [HttpPost("submit")]
-        public async Task<IActionResult> Submit([FromBody] AppraisalSubmissionDto dto)
+        public async Task<IActionResult> SubmitAppraisal(AppraisalSubmissionDto dto)
         {
-            // Note: Validation is handled by FluentValidation before hitting this point.
-            // Note: Exception/Error handling is handled by Global Exception Middleware.
+            // Business Logic, Validations, and Condition checks are handled inside the service.
+            // Any exceptions thrown (e.g., KeyNotFound, InvalidOperation) will be caught by 
+            // the GlobalExceptionHandler middleware in Program.cs.
 
             var result = await _appraisalService.SubmitAppraisalAsync(dto);
 
@@ -32,12 +32,13 @@ namespace EPMS.WebAPI.Controllers
         }
 
         /// <summary>
-        /// Retrieves detailed appraisal scores by ID.
+        /// Gets detailed appraisal information by ID
         /// </summary>
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(long id)
+        [HttpGet("{id:long}")]
+        public async Task<IActionResult> GetAppraisalDetails(long id)
         {
             var result = await _appraisalService.GetAppraisalDetailsAsync(id);
+
             return Ok(result);
         }
     }

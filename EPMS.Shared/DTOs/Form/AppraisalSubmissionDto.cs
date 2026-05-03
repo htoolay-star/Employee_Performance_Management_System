@@ -1,16 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using EPMS.Shared.Enums;
 
 namespace EPMS.Shared.DTOs.Form
 {
     public class AppraisalSubmissionDto
     {
-        public long Id { get; set; }
+        public long Id { get; set; } 
         public long EvaluatorId { get; set; }
-        public string EvaluatorRole { get; set; } = string.Empty;
+        public string EvaluatorRole { get; set; } = string.Empty; 
+        public AppraisalFormType FormType { get; set; } 
         public List<AppraisalDetailDto> Details { get; set; } = new();
     }
 }

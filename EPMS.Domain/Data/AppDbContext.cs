@@ -1,4 +1,4 @@
-using EPMS.Domain.Contracts;
+﻿using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.App;
 using EPMS.Domain.Entities.Audit;
 using EPMS.Domain.Entities.Auth;
@@ -91,9 +91,11 @@ namespace EPMS.Domain.Data
             }
 
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
-            }
-        
 
+            modelBuilder.Entity<Appraisal>().Ignore(a => a.FinalRatingId);
+
+            modelBuilder.Entity<EmployeeEmployment>().Ignore(e => e.DirectManager);
+        }
         public override int SaveChanges()
         {
             var entries = ChangeTracker.Entries<ISoftDeletable>();

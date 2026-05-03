@@ -11,5 +11,6 @@ namespace EPMS.Shared.DTOs.Form
         public long Id { get; set; }
         public decimal TotalScore { get; set; }
         public string Grade { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty;
     }
 }

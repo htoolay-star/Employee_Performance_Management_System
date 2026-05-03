@@ -27,10 +27,10 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.HasOne(e => e.Cycle).WithMany().HasForeignKey(e => e.CycleId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne(e => e.Appraiser).WithMany().HasForeignKey(e => e.AppraiserId).OnDelete(DeleteBehavior.Restrict);
 
-            entity.HasOne(e => e.FinalRating)
-                  .WithMany()
-                  .HasForeignKey(e => e.FinalRatingId)
-                  .OnDelete(DeleteBehavior.Restrict);
+            //entity.HasOne(e => e.FinalRating)
+            //      .WithMany()
+            //      .HasForeignKey(e => e.FinalRatingId)
+            //      .OnDelete(DeleteBehavior.Restrict);
 
             entity.Metadata.FindNavigation(nameof(Appraisal.Details))?
                   .SetPropertyAccessMode(PropertyAccessMode.Field);

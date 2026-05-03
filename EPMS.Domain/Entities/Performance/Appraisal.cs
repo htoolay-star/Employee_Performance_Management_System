@@ -3,6 +3,7 @@ using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Domain.Entities.Hr;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -55,7 +56,9 @@ namespace EPMS.Domain.Entities.Performance
         public virtual AppraisalCycle Cycle { get; private set; } = null!;
         public virtual EmployeeProfile Appraiser { get; private set; } = null!;
 
+        [NotMapped]
         public int? FinalRatingId { get; private set; }
+        [NotMapped]
         public virtual RatingScale? FinalRating { get; private set; }
 
         private readonly List<AppraisalDetail> _details = new();
