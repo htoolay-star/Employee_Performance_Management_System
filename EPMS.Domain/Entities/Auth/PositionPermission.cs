@@ -11,15 +11,15 @@ namespace EPMS.Domain.Entities.Auth
     {
         private PositionPermission() { }
 
-        public PositionPermission(long positionId, int permissionId)
+        public PositionPermission(long positionId, long permissionId, DateTimeOffset createdAt)
         {
             PositionId = positionId;
             PermissionId = permissionId;
-            CreatedAt = DateTimeOffset.UtcNow;
+            CreatedAt = createdAt;
         }
 
         public long PositionId { get; private set; }
-        public int PermissionId { get; private set; }
+        public long PermissionId { get; private set; }
 
         public DateTimeOffset CreatedAt { get; private set; }
 

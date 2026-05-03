@@ -6,18 +6,15 @@ using System.Threading.Tasks;
 
 namespace EPMS.Shared.Enums
 {
-    namespace EPMS.Shared.Enums
+    public enum UserRole
     {
-        public enum UserRole
-        {
-            /// <summary> Technical support & Emergency troubleshooting only </summary>
-            SystemAdmin = 1,
+        /// <summary> Technical support & Emergency troubleshooting only </summary>
+        SystemAdmin = 1,
 
-            /// <summary> Power user for HR & Operations (No Role assignment) </summary>
-            Admin = 2,
+        /// <summary> Power user for HR & Operations (No Role assignment) </summary>
+        Admin = 2,
 
-            /// <summary> Standard employee access </summary>
-            User = 3
-        }
+        /// <summary> Standard employee access </summary>
+        User = 3
     }
 }

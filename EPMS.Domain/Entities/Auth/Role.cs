@@ -1,5 +1,4 @@
 ﻿using EPMS.Domain.Contracts;
-using EPMS.Shared.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +11,7 @@ namespace EPMS.Domain.Entities.Auth
     {
         private Role() { }
 
-        public Role(int id, string name, string? description = null)
+        public Role(long id, string name, string? description = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
@@ -26,6 +25,8 @@ namespace EPMS.Domain.Entities.Auth
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }
+
+        public byte[] Version { get; private set; } = Array.Empty<byte>();
 
         public void UpdateDetails(string name, string? description)
         {

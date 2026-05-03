@@ -18,19 +18,17 @@ namespace EPMS.Domain.Data.Configurations.EmployeeInfo
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).UseIdentityColumn();
 
-            entity.HasQueryFilter(e => !e.IsDeleted);
-
             entity.Property(e => e.PublicId).IsRequired();
-            entity.HasIndex(e => e.PublicId).IsUnique();
+            entity.HasIndex(e => e.PublicId).IsUnique().HasFilter("[IsDeleted] = 0");
 
             entity.HasIndex(e => e.UserId)
                   .IsUnique()
-                  .HasFilter($"{nameof(EmployeeProfile.UserId)} IS NOT NULL");
+                  .HasFilter("[UserId] IS NOT NULL AND [IsDeleted] = 0");
 
             entity.Property(e => e.UserId)
                   .IsRequired(false);
 
-            entity.HasIndex(e => e.StaffNo).IsUnique();
+            entity.HasIndex(e => e.StaffNo).IsUnique().HasFilter("[IsDeleted] = 0");
             entity.Property(e => e.StaffNo).HasMaxLength(50).IsRequired();
 
             entity.Property(e => e.FirstName).HasMaxLength(100).IsRequired();
@@ -60,7 +58,10 @@ namespace EPMS.Domain.Data.Configurations.EmployeeInfo
             entity.Property(e => e.ProfilePictureUrl).HasMaxLength(500);
             entity.Property(e => e.ProfileThumbnailUrl).HasMaxLength(500);
 
-            entity.Property(e => e.AdditionalData);
+            entity.Property(e => e.AdditionalData).HasColumnType("nvarchar(max)");
+
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false).IsRequired();
+            entity.Property(e => e.DeletedAt);
         }
     }
 }

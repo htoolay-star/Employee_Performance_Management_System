@@ -23,7 +23,9 @@ namespace EPMS.Domain.Data.Interceptors
         {
             if (eventData.Context is not null)
             {
-                UpdateTimestamps(eventData.Context);
+                var utcNow = timeProvider.GetUtcNow();
+                ApplySoftDeleteLogic(eventData.Context, utcNow);
+                UpdateTimestamps(eventData.Context, utcNow);
                 AddAuditLogs(eventData.Context);
             }
             return base.SavingChanges(eventData, result);
@@ -36,18 +38,17 @@ namespace EPMS.Domain.Data.Interceptors
         {
             if (eventData.Context is not null)
             {
-                UpdateTimestamps(eventData.Context);
+                var utcNow = timeProvider.GetUtcNow();
+                ApplySoftDeleteLogic(eventData.Context, utcNow);
+                UpdateTimestamps(eventData.Context, utcNow);
                 AddAuditLogs(eventData.Context);
             }
             return base.SavingChangesAsync(eventData, result, cancellationToken);
         }
 
-        private void UpdateTimestamps(DbContext context)
+        private static void UpdateTimestamps(DbContext context, DateTimeOffset utcNow)
         {
-            var entries = context.ChangeTracker.Entries<IAuditableEntity>();
-            var utcNow = timeProvider.GetUtcNow();
-
-            foreach (var entry in entries)
+            foreach (var entry in context.ChangeTracker.Entries<IAuditableEntity>())
             {
                 if (entry.State == EntityState.Added)
                 {
@@ -76,6 +77,19 @@ namespace EPMS.Domain.Data.Interceptors
             var auditLogs = auditLogFactory.CreateAuditLogs(auditableEntries, currentUserService.UserId);
 
             context.Set<AuditLog>().AddRange(auditLogs);
+        }
+
+        private static void ApplySoftDeleteLogic(DbContext context, DateTimeOffset utcNow)
+        {
+            foreach (var entry in context.ChangeTracker.Entries<ISoftDeletable>())
+            {
+                if (entry.State == EntityState.Deleted)
+                {
+                    entry.State = EntityState.Modified;
+                    entry.Entity.IsDeleted = true;
+                    entry.Entity.DeletedAt = utcNow;
+                }
+            }
         }
     }
 }

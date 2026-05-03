@@ -19,8 +19,8 @@ namespace EPMS.Domain.Entities.EmployeeInfo
 
             UserId = userId;
             StaffNo = staffNo.Trim().ToUpperInvariant();
-            FirstName = firstName;
-            LastName = lastName;
+            FirstName = firstName.Trim();
+            LastName = lastName?.Trim();
         }
 
         public long? UserId { get; private set; }
@@ -62,7 +62,7 @@ namespace EPMS.Domain.Entities.EmployeeInfo
         public virtual EmployeePayrollInfo? PayrollInfo { get; private set; }
         public virtual EmployeeFamilyInfo? FamilyInfo { get; private set; }
 
-        public void UpdateDemographics(string gender, DateOnly? dateOfBirth, string nationality)
+        public void UpdateDemographics(string? gender, DateOnly? dateOfBirth, string? nationality)
         {
             Gender = gender?.Trim();
             DateOfBirth = dateOfBirth;

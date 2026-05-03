@@ -19,13 +19,17 @@ namespace EPMS.Domain.Data.Configurations.Audit
 
             builder.Property(e => e.EntityName).HasMaxLength(100).IsRequired();
             builder.Property(e => e.EntityId).HasMaxLength(100).IsRequired();
-            builder.Property(e => e.Action).HasMaxLength(20).IsRequired();
+            builder.Property(e => e.Action).HasMaxLength(50).IsRequired();
 
-            builder.Property(e => e.OldValues);
-            builder.Property(e => e.NewValues);
+            builder.Property(e => e.OldValues).HasColumnType("nvarchar(max)").HasConversion<string>();
+            builder.Property(e => e.NewValues).HasColumnType("nvarchar(max)").HasConversion<string>();
 
             builder.Property(e => e.IpAddress).HasMaxLength(50);
+
             builder.Property(e => e.Timestamp).IsRequired();
+
+            builder.HasIndex(e => e.Timestamp)
+                   .HasDatabaseName("IX_AuditLogs_Timestamp");
 
             builder.HasIndex(e => new { e.EntityName, e.EntityId });
             builder.HasIndex(e => e.UserId);

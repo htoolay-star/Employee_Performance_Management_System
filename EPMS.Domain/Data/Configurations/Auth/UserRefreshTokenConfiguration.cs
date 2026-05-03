@@ -39,6 +39,9 @@ namespace EPMS.Domain.Data.Configurations.Auth
             entity.HasIndex(e => e.UserId)
                   .HasDatabaseName("IX_auth_UserRefreshTokens_UserId")
                   .IncludeProperties(e => new { e.IsRevoked, e.IsUsed });
+
+            entity.Property(e => e.IsUsed).HasDefaultValue(false).IsRequired();
+            entity.Property(e => e.IsRevoked).HasDefaultValue(false).IsRequired();
         }
     }
 }

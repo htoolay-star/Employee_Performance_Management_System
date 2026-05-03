@@ -1,5 +1,6 @@
 ﻿using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Hr;
+using EPMS.Shared.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -64,7 +65,7 @@ namespace EPMS.Domain.Entities.EmployeeInfo
 
         public void ConfirmEmployment(DateOnly confirmationDate)
         {
-            EmploymentStatus = "Permanent";
+            EmploymentStatus = EmploymentStatuses.Permanent;
             DateOfConfirmation = confirmationDate;
         }
 

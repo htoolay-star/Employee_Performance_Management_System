@@ -19,10 +19,8 @@ namespace EPMS.Domain.Data.Configurations.EmployeeInfo
 
             entity.Ignore(e => e.Id);
 
-            entity.HasQueryFilter(e => !e.IsDeleted);
-
             entity.Property(e => e.PublicId).IsRequired();
-            entity.HasIndex(e => e.PublicId).IsUnique();
+            entity.HasIndex(e => e.PublicId).IsUnique().HasFilter("[IsDeleted] = 0");
 
             entity.HasOne(e => e.Profile)
                   .WithOne(p => p.Employment)
@@ -55,9 +53,15 @@ namespace EPMS.Domain.Data.Configurations.EmployeeInfo
             entity.Property(e => e.DateOfIncrement);
             entity.Property(e => e.ProductProject).HasMaxLength(200);
 
+            entity.Property(e => e.MobileAttendance).HasDefaultValue(false).IsRequired();
+            entity.Property(e => e.ProbationMonth);
+
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.Property(e => e.UpdatedAt).IsRequired();
             entity.Property(e => e.Version).IsRowVersion();
+
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false).IsRequired();
+            entity.Property(e => e.DeletedAt);
         }
     }
 }

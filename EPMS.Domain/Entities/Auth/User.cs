@@ -1,9 +1,7 @@
 ﻿using EPMS.Domain.Contracts;
 using EPMS.Shared.Enums;
-using EPMS.Shared.Enums.EPMS.Shared.Enums;
 using System;
 using System.Collections.Generic;
-using System.Data.SqlTypes;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,7 +20,7 @@ namespace EPMS.Domain.Entities.Auth
 
             Email = email;
             PasswordHash = passwordHash;
-            RoleId = (int)role;
+            RoleId = (long)role;
             SecurityStamp = Guid.NewGuid().ToString();
             IsFirstLogin = true;
             IsActive = true;
@@ -45,7 +43,7 @@ namespace EPMS.Domain.Entities.Auth
 
         public byte[] Version { get; private set; } = Array.Empty<byte>();
 
-        public int RoleId { get; private set; }
+        public long RoleId { get; private set; }
         public virtual Role Role { get; private set; } = null!;
 
         private readonly List<UserRefreshToken> _refreshTokens = new();
@@ -109,9 +107,14 @@ namespace EPMS.Domain.Entities.Auth
             RevokeAllTokens();
         }
 
+        public void Activate()
+        {
+            IsActive = true;
+        }
+
         public void ChangeRole(UserRole newRole)
         {
-            RoleId = (int)newRole;
+            RoleId = (long)newRole;
         }
 
         public void UpdateLastLogin(TimeProvider timeProvider)
