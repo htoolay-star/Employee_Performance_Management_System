@@ -1,4 +1,4 @@
-﻿using EPMS.Domain.Entities.EmployeeInfo;
+using EPMS.Domain.Entities.EmployeeInfo;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -21,7 +21,7 @@ namespace EPMS.Domain.Data.Configurations.EmployeeInfo
             entity.HasQueryFilter(e => !e.IsDeleted);
 
             entity.Property(e => e.PublicId).IsRequired();
-            entity.HasIndex(e => e.PublicId).IsUnique();
+            entity.HasIndex(e => e.PublicId).IsUnique().HasFilter("[IsDeleted] = 0");
 
             entity.HasOne(e => e.Profile)
                   .WithOne(p => p.PayrollInfo)
@@ -38,6 +38,8 @@ namespace EPMS.Domain.Data.Configurations.EmployeeInfo
             entity.Property(e => e.TaxNo).HasMaxLength(50);
             entity.Property(e => e.SSBStatus).HasMaxLength(50);
             entity.Property(e => e.SSCBNo).HasMaxLength(50);
+            entity.Property(e => e.ComplianceEarnedPoints);
+            entity.Property(e => e.ComplianceBalancePoints);
 
             entity.Property(e => e.Currency).HasMaxLength(10);
             entity.Property(e => e.PayType).HasMaxLength(50);
@@ -48,6 +50,9 @@ namespace EPMS.Domain.Data.Configurations.EmployeeInfo
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.Property(e => e.UpdatedAt).IsRequired();
             entity.Property(e => e.Version).IsRowVersion();
+
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false).IsRequired();
+            entity.Property(e => e.DeletedAt);
         }
     }
 }

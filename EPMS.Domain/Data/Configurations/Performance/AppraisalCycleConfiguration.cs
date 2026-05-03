@@ -1,4 +1,4 @@
-﻿using EPMS.Domain.Entities.Performance;
+using EPMS.Domain.Entities.Performance;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -20,9 +20,9 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.HasQueryFilter(e => !e.IsDeleted);
 
             entity.Property(e => e.PublicId).IsRequired();
-            entity.HasIndex(e => e.PublicId).IsUnique();
+            entity.HasIndex(e => e.PublicId).IsUnique().HasFilter("[IsDeleted] = 0");
 
-            entity.HasIndex(e => new { e.Name, e.Year }).IsUnique();
+            entity.HasIndex(e => new { e.Name, e.Year }).IsUnique().HasFilter("[IsDeleted] = 0");
 
             entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
             entity.Property(e => e.AppraisalType).HasMaxLength(20).IsRequired();
@@ -39,6 +39,9 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.Property(e => e.UpdatedAt).IsRequired();
             entity.Property(e => e.Version).IsRowVersion();
+
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false).IsRequired();
+            entity.Property(e => e.DeletedAt);
 
             entity.Property(e => e.PeerReviewStartDate);
             entity.Property(e => e.PeerReviewDeadline);

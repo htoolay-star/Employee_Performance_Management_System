@@ -1,4 +1,4 @@
-﻿using EPMS.Domain.Entities.App;
+using EPMS.Domain.Entities.App;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -16,6 +16,8 @@ namespace EPMS.Domain.Data.Configurations.App
             builder.ToTable("SystemSettings", "app");
             builder.HasKey(e => e.Id);
             builder.Property(e => e.Id).UseIdentityColumn();
+
+            builder.HasQueryFilter(e => !e.IsDeleted);
 
             builder.Property(e => e.PublicId).IsRequired();
             builder.HasIndex(e => e.PublicId).IsUnique().HasFilter("[IsDeleted] = 0");

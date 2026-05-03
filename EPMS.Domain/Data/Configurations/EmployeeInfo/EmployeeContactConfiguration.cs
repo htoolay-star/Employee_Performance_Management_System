@@ -1,4 +1,4 @@
-﻿using EPMS.Domain.Entities.EmployeeInfo;
+using EPMS.Domain.Entities.EmployeeInfo;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -18,6 +18,8 @@ namespace EPMS.Domain.Data.Configurations.EmployeeInfo
             entity.HasKey(e => e.EmployeeId);
 
             entity.Ignore(e => e.Id);
+
+            entity.HasQueryFilter(e => !e.IsDeleted);
 
             entity.Property(e => e.PublicId).IsRequired();
             entity.HasIndex(e => e.PublicId).IsUnique().HasFilter("[IsDeleted] = 0");

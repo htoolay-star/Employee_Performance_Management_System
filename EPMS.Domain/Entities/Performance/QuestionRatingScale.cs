@@ -25,8 +25,8 @@ namespace EPMS.Domain.Entities.Performance
         }
 
         public string Name { get; private set; } = string.Empty;
-        public int MinScore { get; private set; }
-        public int MaxScore { get; private set; }
+        public decimal MinScore { get; private set; }
+        public decimal MaxScore { get; private set; }
         public bool IsActive { get; private set; }
 
         public bool IsDeleted { get; set; }
