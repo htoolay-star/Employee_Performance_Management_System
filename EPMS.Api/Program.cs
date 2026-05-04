@@ -19,7 +19,6 @@ using EPMS.Domain.Repository.Hr;
 using EPMS.Domain.Repository.Info;
 using EPMS.Domain.Services;
 using EPMS.Domain.Services.Auth;
-using EPMS.Shared.DTOs.PositionDTOs;
 using EPMS.Shared.Enums;
 using EPMS.Shared.Models;
 using FluentValidation;
@@ -35,6 +34,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<SeedSettings>(builder.Configuration.GetSection("SeedSettings"));
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.Configure<CryptoSettings>(builder.Configuration.GetSection("CryptoSettings"));
+builder.Services.Configure<CacheSettings>(builder.Configuration.GetSection("CacheSettings"));
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<AuditInterceptor>();
 
