@@ -24,7 +24,7 @@ namespace EPMS.Domain.Data.Configurations.Performance
             builder.Property(e => e.Reason).IsRequired();
             builder.Property(e => e.Priority).HasMaxLength(20).HasDefaultValue("Normal");
 
-            builder.Property(e => e.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
+            builder.Property(e => e.Status).HasMaxLength(20).IsRequired();
             builder.Property(e => e.HRComments).HasMaxLength(500);
             builder.Property(e => e.ActionDate);
 

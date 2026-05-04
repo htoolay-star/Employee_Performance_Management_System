@@ -19,6 +19,7 @@ using EPMS.Domain.Repository.Hr;
 using EPMS.Domain.Repository.Info;
 using EPMS.Domain.Services;
 using EPMS.Domain.Services.Auth;
+using EPMS.Shared.DTOs.PositionDTOs;
 using EPMS.Shared.Enums;
 using EPMS.Shared.Models;
 using FluentValidation;

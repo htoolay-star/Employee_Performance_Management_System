@@ -18,12 +18,10 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.HasIndex(e => new { e.EmployeeId, e.CycleId, e.EvaluatorRole }).IsUnique().HasFilter("[IsDeleted] = 0");
 
             entity.Property(e => e.Status)
-                  .HasConversion<string>()
                   .HasMaxLength(20)
                   .IsRequired();
 
             entity.Property(e => e.EvaluatorRole)
-                  .HasConversion<string>()
                   .HasMaxLength(50)
                   .IsRequired();
 

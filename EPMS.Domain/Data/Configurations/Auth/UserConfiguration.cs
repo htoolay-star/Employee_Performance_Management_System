@@ -44,6 +44,9 @@ namespace EPMS.Domain.Data.Configurations.Auth
                   .HasForeignKey(e => e.UserId)
                   .OnDelete(DeleteBehavior.Cascade);
 
+            entity.Metadata.FindNavigation(nameof(User.RefreshTokens))?
+                  .SetPropertyAccessMode(PropertyAccessMode.Field);
+
             entity.Property(e => e.Version).IsRowVersion();
 
             entity.HasOne(e => e.Role)

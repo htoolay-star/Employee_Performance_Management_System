@@ -13,7 +13,7 @@ namespace EPMS.Domain.Entities.Performance
     {
         private ContinuousFeedback() { }
 
-        public ContinuousFeedback(long employeeId, long givenById, string feedbackType, string content, string visibility = FeedbackVisibility.Public, long? relatedGoalId = null, TimeProvider timeProvider)
+        public ContinuousFeedback(long employeeId, long givenById, string feedbackType, string content, TimeProvider timeProvider, string visibility = FeedbackVisibility.Public, long? relatedGoalId = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(feedbackType);
             ArgumentException.ThrowIfNullOrWhiteSpace(content);

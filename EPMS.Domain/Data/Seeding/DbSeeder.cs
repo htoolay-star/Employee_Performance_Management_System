@@ -35,7 +35,7 @@ namespace EPMS.Domain.Data.Seeding
 
         private async Task SeedSystemSettingsAsync()
         {
-            var setting = await _uow.Auth.SystemSettings.GetByKeyAsync("DefaultUserPassword");
+            var setting = await _uow.App.SystemSettings.GetByKeyAsync("DefaultUserPassword");
 
             if (setting == null)
             {
@@ -47,7 +47,7 @@ namespace EPMS.Domain.Data.Seeding
                     "Initial default password assigned to newly created users (AES Encrypted)."
                 );
 
-                _uow.Auth.SystemSettings.Add(defaultPwSetting);
+                _uow.App.SystemSettings.Add(defaultPwSetting);
                 await _uow.CompleteAsync();
             }
         }

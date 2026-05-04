@@ -21,8 +21,8 @@ namespace EPMS.Domain.Data.Configurations.Audit
             builder.Property(e => e.EntityId).HasMaxLength(100).IsRequired();
             builder.Property(e => e.Action).HasMaxLength(50).IsRequired();
 
-            builder.Property(e => e.OldValues).HasColumnType("nvarchar(max)").HasConversion<string>();
-            builder.Property(e => e.NewValues).HasColumnType("nvarchar(max)").HasConversion<string>();
+            builder.Property(e => e.OldValues).HasColumnType("nvarchar(max)");
+            builder.Property(e => e.NewValues).HasColumnType("nvarchar(max)");
 
             builder.Property(e => e.IpAddress).HasMaxLength(50);
 
