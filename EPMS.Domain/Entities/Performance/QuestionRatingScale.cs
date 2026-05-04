@@ -11,7 +11,7 @@ namespace EPMS.Domain.Entities.Performance
     {
         private QuestionRatingScale() { }
 
-        public QuestionRatingScale(string name, int minScore, int maxScore)
+        public QuestionRatingScale(string name, decimal minScore, decimal maxScore)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(name);
 

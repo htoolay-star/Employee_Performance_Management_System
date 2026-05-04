@@ -53,10 +53,10 @@ namespace EPMS.Domain.Entities.Performance
         public virtual EmployeeProfile Employee { get; private set; } = null!;
         public virtual EmployeeProfile Manager { get; private set; } = null!;
 
-        public void CompleteMeeting(string? summary, string? sharedNotes, string? privateNotes, string? actionItems)
+        public void CompleteMeeting(string? summary, string? sharedNotes, string? privateNotes, string? actionItems, TimeProvider timeProvider)
         {
             Status = "Completed";
-            ActualDate = DateTimeOffset.UtcNow;
+            ActualDate = timeProvider.GetUtcNow();
 
             Summary = summary?.Trim();
             DiscussionNotes = sharedNotes?.Trim();
@@ -64,15 +64,20 @@ namespace EPMS.Domain.Entities.Performance
             ActionItems = actionItems?.Trim();
         }
 
-        public void AcknowledgeByEmployee()
+        public void AcknowledgeByEmployee(TimeProvider timeProvider)
         {
             if (Status != "Completed") throw new InvalidOperationException("Only completed meetings can be acknowledged.");
 
             IsAcknowledgedByEmployee = true;
-            AcknowledgedAt = DateTimeOffset.UtcNow;
+            AcknowledgedAt = timeProvider.GetUtcNow();
         }
 
-        public void Cancel() => Status = "Cancelled";
+        public void Cancel()
+        {
+            if (Status == "Completed") throw new InvalidOperationException("Cannot cancel a completed meeting.");
+            if (Status == "Cancelled") throw new InvalidOperationException("Meeting is already cancelled.");
+            Status = "Cancelled";
+        }
 
         public void LinkToPIP(long pipId)
         {

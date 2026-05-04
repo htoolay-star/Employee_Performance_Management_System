@@ -27,9 +27,6 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.Property(e => e.StartDate).IsRequired();
             entity.Property(e => e.EndDate).IsRequired();
 
-            entity.Property(e => e.SelfReviewDeadline);
-            entity.Property(e => e.ManagerReviewDeadline);
-
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.IsLocked).HasDefaultValue(false);
 

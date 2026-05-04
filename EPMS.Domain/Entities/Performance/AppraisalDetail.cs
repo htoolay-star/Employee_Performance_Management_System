@@ -16,6 +16,9 @@ namespace EPMS.Domain.Entities.Performance
             ArgumentException.ThrowIfNullOrWhiteSpace(kpiName);
             ArgumentOutOfRangeException.ThrowIfNegative(weightage);
 
+            if (!kpiId.HasValue && !questionId.HasValue)
+                throw new ArgumentException("Either KPIId or QuestionId must be provided.");
+
             AppraisalId = appraisalId;
             KPIId = kpiId;
             QuestionId = questionId;

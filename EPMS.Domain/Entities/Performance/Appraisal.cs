@@ -60,10 +60,15 @@ namespace EPMS.Domain.Entities.Performance
         private readonly List<AppraisalRecommendation> _recommendations = new();
         public virtual IReadOnlyCollection<AppraisalRecommendation> Recommendations => _recommendations.AsReadOnly();
 
+        private readonly List<EvaluationResponse> _responses = new();
+        public virtual IReadOnlyCollection<EvaluationResponse> Responses => _responses.AsReadOnly();
+
         public decimal? TotalScore { get; private set; }
 
         public void CalculateTotalScore(RatingScale matchingScale)
         {
+            ArgumentNullException.ThrowIfNull(matchingScale)
+
             if (Details.Any())
             {
                 TotalScore = Details.Sum(d => d.WeightedScore);
@@ -75,7 +80,7 @@ namespace EPMS.Domain.Entities.Performance
         public void SubmitManagerReview(string? comment)
         {
             ManagerComment = comment?.Trim();
-            Status = "Completed";
+            Status = "Reviewed";
             ReviewDate = DateTimeOffset.UtcNow;
         }
 
@@ -95,7 +100,7 @@ namespace EPMS.Domain.Entities.Performance
         {
             if (IsLocked) throw new InvalidOperationException("Appraisal is already locked.");
 
-            Status = "Completed";
+            Status = "Finalized";
             FinalizedDate = DateTimeOffset.UtcNow;
             IsLocked = true;
             LockedAt = DateTimeOffset.UtcNow;

@@ -58,6 +58,9 @@ namespace EPMS.Domain.Entities.Performance
 
         public void ConcludePIP(bool isSuccessful, string? notes)
         {
+            if (Status is "Successful" or "Failed")
+                throw new InvalidOperationException("PIP is already concluded.");
+
             Status = isSuccessful ? "Successful" : "Failed";
             FinalOutcomeNotes = notes?.Trim();
         }

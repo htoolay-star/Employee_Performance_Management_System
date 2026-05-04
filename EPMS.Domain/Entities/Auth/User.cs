@@ -1,4 +1,5 @@
 ﻿using EPMS.Domain.Contracts;
+using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Shared.Enums;
 using System;
 using System.Collections.Generic;
@@ -45,6 +46,7 @@ namespace EPMS.Domain.Entities.Auth
 
         public long RoleId { get; private set; }
         public virtual Role Role { get; private set; } = null!;
+        public virtual EmployeeProfile? Profile { get; private set; }
 
         private readonly List<UserRefreshToken> _refreshTokens = new();
         public virtual IReadOnlyCollection<UserRefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();

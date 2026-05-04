@@ -35,7 +35,7 @@ namespace EPMS.Domain.Data.Configurations.Performance
             builder.HasOne(e => e.FormTemplate)
                    .WithMany()
                    .HasForeignKey(e => e.FormTemplateId)
-                   .OnDelete(DeleteBehavior.Cascade);
+                   .OnDelete(DeleteBehavior.Restrict);
 
             builder.Property(e => e.CreatedAt).IsRequired();
             builder.Property(e => e.UpdatedAt).IsRequired();

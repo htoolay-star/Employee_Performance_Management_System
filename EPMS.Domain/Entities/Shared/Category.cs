@@ -33,7 +33,9 @@ namespace EPMS.Domain.Entities.Shared
 
         public long? ParentId { get; private set; }
         public virtual Category? Parent { get; private set; }
-        public virtual ICollection<Category> SubCategories { get; private set; } = new List<Category>();
+
+        private readonly List<Category> _subCategories = new();
+        public virtual IReadOnlyCollection<Category> SubCategories => _subCategories.AsReadOnly();
 
         public bool IsActive { get; private set; }
 

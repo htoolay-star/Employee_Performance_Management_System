@@ -49,17 +49,17 @@ namespace EPMS.Domain.Entities.Performance
         public virtual Appraisal Appraisal { get; private set; } = null!;
         public virtual EmployeeProfile? ProcessedBy { get; private set; }
 
-        public void Approve(long hrAdminId, string? comments)
+        public void Approve(long hrAdminId, string? comments, TimeProvider timeProvider)
         {
             if (Status != "Pending") throw new InvalidOperationException("Only pending recommendations can be approved.");
 
             Status = "Approved";
             HRComments = comments?.Trim();
             ProcessedById = hrAdminId;
-            ActionDate = DateTimeOffset.UtcNow;
+            ActionDate = timeProvider.GetUtcNow();
         }
 
-        public void Reject(long hrAdminId, string reason)
+        public void Reject(long hrAdminId, string reason, TimeProvider timeProvider)
         {
             if (Status != "Pending") throw new InvalidOperationException("Only pending recommendations can be rejected.");
 
@@ -68,7 +68,7 @@ namespace EPMS.Domain.Entities.Performance
             Status = "Rejected";
             HRComments = reason.Trim();
             ProcessedById = hrAdminId;
-            ActionDate = DateTimeOffset.UtcNow;
+            ActionDate = timeProvider.GetUtcNow();
         }
     }
 }

@@ -1,6 +1,5 @@
 using EPMS.Domain.Contracts;
 using System;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EPMS.Domain.Entities.Hr
 {

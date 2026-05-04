@@ -26,8 +26,8 @@ namespace EPMS.Domain.Data.Configurations.Hr
 
             entity.Property(e => e.IsActive).HasDefaultValue(true);
 
-            entity.Property(e => e.CreatedAt);
-            entity.Property(e => e.UpdatedAt);
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.UpdatedAt).IsRequired();
 
             entity.Property(e => e.Version).IsRowVersion();
 

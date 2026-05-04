@@ -10,6 +10,8 @@ namespace EPMS.Domain.Data.Configurations.Performance
         {
             entity.ToTable("Appraisals", "perf");
             entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).UseIdentityColumn();
+
             entity.Property(e => e.PublicId).IsRequired();
             entity.HasIndex(e => e.PublicId).IsUnique().HasFilter("[IsDeleted] = 0");
 
@@ -63,6 +65,9 @@ namespace EPMS.Domain.Data.Configurations.Performance
                   .SetPropertyAccessMode(PropertyAccessMode.Field);
 
             entity.Metadata.FindNavigation(nameof(Appraisal.Recommendations))?
+                  .SetPropertyAccessMode(PropertyAccessMode.Field);
+
+            entity.Metadata.FindNavigation(nameof(Appraisal.Responses)) ?
                   .SetPropertyAccessMode(PropertyAccessMode.Field);
         }
     }

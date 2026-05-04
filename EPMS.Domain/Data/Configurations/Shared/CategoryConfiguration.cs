@@ -39,6 +39,9 @@ namespace EPMS.Domain.Data.Configurations.Shared
 
             entity.Property(e => e.IsDeleted).HasDefaultValue(false).IsRequired();
             entity.Property(e => e.DeletedAt);
+
+            entity.Metadata.FindNavigation(nameof(Category.SubCategories))?
+                  .SetPropertyAccessMode(PropertyAccessMode.Field);
         }
     }
 }

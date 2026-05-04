@@ -60,8 +60,12 @@ namespace EPMS.Domain.Entities.EmployeeInfo
             ArgumentException.ThrowIfNullOrWhiteSpace(payType);
 
             Salary = newSalary;
-            PayType = payType.Trim();
-            DateOfPayTypeChanged = changeDate;
+
+            if (payType.Trim() != PayType)
+            {
+                PayType = payType.Trim();
+                DateOfPayTypeChanged = changeDate;
+            }
 
             DateOfSalaryChanged = changeDate;
 

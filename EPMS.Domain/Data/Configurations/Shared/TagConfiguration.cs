@@ -24,7 +24,8 @@ namespace EPMS.Domain.Data.Configurations.Shared
             entity.Property(e => e.Module).HasMaxLength(50);
 
             entity.Property(e => e.CreatedAt)
-                  .ValueGeneratedOnAdd();
+                  .ValueGeneratedOnAdd().
+                  HasDefaultValueSql("SYSDATETIMEOFFSET()");
         }
     }
 }

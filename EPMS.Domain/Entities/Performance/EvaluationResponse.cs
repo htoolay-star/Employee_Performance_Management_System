@@ -50,8 +50,7 @@ namespace EPMS.Domain.Entities.Performance
 
         public void SetRating(int ratingValue, QuestionRatingScale scale)
         {
-            if (scale == null)
-                throw new InvalidOperationException("This question does not have a rating scale configured.");
+            ArgumentNullException.ThrowIfNull(scale);
 
             if (!scale.IsValidScore(ratingValue))
                 throw new ArgumentException($"Invalid Rating! Acceptable range is {scale.MinScore} to {scale.MaxScore}. You entered {ratingValue}.");

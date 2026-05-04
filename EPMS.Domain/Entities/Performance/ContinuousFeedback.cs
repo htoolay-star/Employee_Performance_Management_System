@@ -12,7 +12,7 @@ namespace EPMS.Domain.Entities.Performance
     {
         private ContinuousFeedback() { }
 
-        public ContinuousFeedback(long employeeId, long givenById, string feedbackType, string content, string visibility = "Public", long? relatedGoalId = null)
+        public ContinuousFeedback(long employeeId, long givenById, string feedbackType, string content, string visibility = "Public", long? relatedGoalId = null, TimeProvider timeProvider)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(feedbackType);
             ArgumentException.ThrowIfNullOrWhiteSpace(content);
@@ -26,7 +26,7 @@ namespace EPMS.Domain.Entities.Performance
             Visibility = visibility.Trim().ToUpperInvariant();
 
             RelatedGoalId = relatedGoalId;
-            FeedbackDate = DateTimeOffset.UtcNow;
+            FeedbackDate = timeProvider.GetUtcNow();
         }
 
         public long EmployeeId { get; private set; }
