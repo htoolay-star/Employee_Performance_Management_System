@@ -52,6 +52,26 @@ namespace EPMS.Domain.Data.Seeding
             }
         }
 
+        private async Task SeedRolesAsync()
+        {
+            var existingRoles = await _uow.Auth.Roles.GetAllAsync();
+            if (existingRoles.Any()) return;
+
+            var roles = new List<Role>
+            {
+                new Role(1, "SystemAdmin", "Technical support & Emergency troubleshooting only"),
+                new Role(2, "Admin", "Power user for HR & Operations (No Role assignment)"),
+                new Role(3, "User", "Standard employee access")
+            };
+
+            foreach (var role in roles)
+            {
+                _uow.Auth.Roles.Add(role);
+            }
+
+            await _uow.CompleteAsync();
+        }
+
         private async Task SeedSystemAdminAsync()
         {
             if (await _uow.Auth.Users.ExistsAsync(_settings.SAEmail)) return;
