@@ -30,6 +30,7 @@ namespace EPMS.Domain.Data.Seeding
         public async Task SeedAsync()
         {
             await SeedSystemSettingsAsync();
+            await SeedRolesAsync();
             await SeedSystemAdminAsync();
         }
 
