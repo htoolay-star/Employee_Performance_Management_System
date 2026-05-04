@@ -1,5 +1,6 @@
 ﻿using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.EmployeeInfo;
+using EPMS.Shared.Constants;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +25,7 @@ namespace EPMS.Domain.Entities.Performance
             EndDate = endDate;
 
             Reason = reason.Trim();
-            Status = "Open";
+            Status = PIPStatuses.Open;
         }
 
         public long EmployeeId { get; private set; }
@@ -58,10 +59,10 @@ namespace EPMS.Domain.Entities.Performance
 
         public void ConcludePIP(bool isSuccessful, string? notes)
         {
-            if (Status is "Successful" or "Failed")
+            if (Status is PIPStatuses.Successful or PIPStatuses.Failed)
                 throw new InvalidOperationException("PIP is already concluded.");
 
-            Status = isSuccessful ? "Successful" : "Failed";
+            Status = isSuccessful ? PIPStatuses.Successful : PIPStatuses.Failed;
             FinalOutcomeNotes = notes?.Trim();
         }
 
@@ -71,7 +72,7 @@ namespace EPMS.Domain.Entities.Performance
             if (newEndDate <= EndDate) throw new ArgumentException("Extension date must be later than the current end date.");
 
             EndDate = newEndDate;
-            Status = "Extended";
+            Status = PIPStatuses.Extended;
             Reason += $"\n\n[Extended]: {reasonExtension.Trim()}";
         }
     }

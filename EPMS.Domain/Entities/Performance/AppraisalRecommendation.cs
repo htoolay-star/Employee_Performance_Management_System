@@ -1,5 +1,6 @@
 ﻿using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.EmployeeInfo;
+using EPMS.Shared.Constants;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +13,7 @@ namespace EPMS.Domain.Entities.Performance
     {
         private AppraisalRecommendation() { }
 
-        public AppraisalRecommendation(long appraisalId, string type, string reason, string? proposedValue = null, string priority = "Normal")
+        public AppraisalRecommendation(long appraisalId, string type, string reason, string? proposedValue = null, string priority = RecommendationPriorities.Normal)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(type);
             ArgumentException.ThrowIfNullOrWhiteSpace(reason);
@@ -25,7 +26,7 @@ namespace EPMS.Domain.Entities.Performance
             ProposedValue = proposedValue?.Trim();
             Priority = priority.Trim().ToUpperInvariant();
 
-            Status = "Pending";
+            Status = RecommendationStatuses.Pending;
         }
 
         public long AppraisalId { get; private set; }
@@ -51,9 +52,9 @@ namespace EPMS.Domain.Entities.Performance
 
         public void Approve(long hrAdminId, string? comments, TimeProvider timeProvider)
         {
-            if (Status != "Pending") throw new InvalidOperationException("Only pending recommendations can be approved.");
+            if (Status != RecommendationStatuses.Pending) throw new InvalidOperationException("Only pending recommendations can be approved.");
 
-            Status = "Approved";
+            Status = RecommendationStatuses.Approved;
             HRComments = comments?.Trim();
             ProcessedById = hrAdminId;
             ActionDate = timeProvider.GetUtcNow();
@@ -61,11 +62,11 @@ namespace EPMS.Domain.Entities.Performance
 
         public void Reject(long hrAdminId, string reason, TimeProvider timeProvider)
         {
-            if (Status != "Pending") throw new InvalidOperationException("Only pending recommendations can be rejected.");
+            if (Status != RecommendationStatuses.Pending) throw new InvalidOperationException("Only pending recommendations can be rejected.");
 
             ArgumentException.ThrowIfNullOrWhiteSpace(reason);
 
-            Status = "Rejected";
+            Status = RecommendationStatuses.Rejected;
             HRComments = reason.Trim();
             ProcessedById = hrAdminId;
             ActionDate = timeProvider.GetUtcNow();

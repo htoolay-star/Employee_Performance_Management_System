@@ -1,4 +1,5 @@
 ﻿using EPMS.Domain.Contracts;
+using EPMS.Shared.Constants;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,7 +21,7 @@ namespace EPMS.Domain.Entities.Performance
             Title = title.Trim();
             SuccessCriteria = successCriteria.Trim();
             Description = description?.Trim();
-            Status = "In-Progress";
+            Status = ObjectiveStatuses.InProgress;
         }
 
         public long PIPId { get; private set; }

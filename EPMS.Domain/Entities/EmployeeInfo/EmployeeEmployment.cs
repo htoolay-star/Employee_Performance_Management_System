@@ -1,6 +1,6 @@
 ﻿using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Hr;
-using EPMS.Shared.Enums;
+using EPMS.Shared.Constants;
 using System;
 using System.Collections.Generic;
 using System.Linq;

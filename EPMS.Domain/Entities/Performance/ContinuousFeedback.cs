@@ -1,5 +1,6 @@
 ﻿using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.EmployeeInfo;
+using EPMS.Shared.Constants;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +13,7 @@ namespace EPMS.Domain.Entities.Performance
     {
         private ContinuousFeedback() { }
 
-        public ContinuousFeedback(long employeeId, long givenById, string feedbackType, string content, string visibility = "Public", long? relatedGoalId = null, TimeProvider timeProvider)
+        public ContinuousFeedback(long employeeId, long givenById, string feedbackType, string content, string visibility = FeedbackVisibility.Public, long? relatedGoalId = null, TimeProvider timeProvider)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(feedbackType);
             ArgumentException.ThrowIfNullOrWhiteSpace(content);

@@ -1,6 +1,7 @@
 ﻿using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Domain.Entities.Hr;
+using EPMS.Shared.Constants;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,7 +20,7 @@ namespace EPMS.Domain.Entities.Performance
             CycleId = cycleId;
             AppraiserId = appraiserId;
             EvaluatorRole = evaluatorRole;
-            Status = "Draft";
+            Status = AppraisalStatuses.Draft;
         }
 
         public long EmployeeId { get; private set; }
@@ -80,7 +81,7 @@ namespace EPMS.Domain.Entities.Performance
         public void SubmitManagerReview(string? comment)
         {
             ManagerComment = comment?.Trim();
-            Status = "Reviewed";
+            Status = AppraisalStatuses.Reviewed;
             ReviewDate = DateTimeOffset.UtcNow;
         }
 
@@ -100,7 +101,7 @@ namespace EPMS.Domain.Entities.Performance
         {
             if (IsLocked) throw new InvalidOperationException("Appraisal is already locked.");
 
-            Status = "Finalized";
+            Status = AppraisalStatuses.Finalized;
             FinalizedDate = DateTimeOffset.UtcNow;
             IsLocked = true;
             LockedAt = DateTimeOffset.UtcNow;
@@ -112,7 +113,7 @@ namespace EPMS.Domain.Entities.Performance
             if (string.IsNullOrWhiteSpace(reason)) throw new ArgumentException("An unlock reason is strictly required by compliance.");
 
             IsLocked = false;
-            Status = "In Progress";
+            Status = AppraisalStatuses.InProgress;
             UnLockedById = adminId;
             UnLockedAt = DateTimeOffset.UtcNow;
 

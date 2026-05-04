@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EPMS.Shared.Enums
+namespace EPMS.Shared.Constants
 {
     public static class EmploymentStatuses
     {

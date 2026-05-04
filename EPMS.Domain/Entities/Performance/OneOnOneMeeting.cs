@@ -1,5 +1,6 @@
 ﻿using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.EmployeeInfo;
+using EPMS.Shared.Constants;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,7 +23,7 @@ namespace EPMS.Domain.Entities.Performance
             Title = title.Trim();
 
             ScheduledDate = scheduledDate;
-            Status = "Scheduled";
+            Status = MeetingStatuses.Scheduled;
         }
 
         public long EmployeeId { get; private set; }
@@ -47,7 +48,7 @@ namespace EPMS.Domain.Entities.Performance
 
         public byte[] Version { get; private set; } = Array.Empty<byte>();
         public long? RelatedPIPId { get; private set; }
-        public string MeetingType { get; private set; } = "Regular";
+        public string MeetingType { get; private set; } = MeetingTypes.Regular;
         public virtual PIP? RelatedPIP { get; private set; }
 
         public virtual EmployeeProfile Employee { get; private set; } = null!;
@@ -55,7 +56,7 @@ namespace EPMS.Domain.Entities.Performance
 
         public void CompleteMeeting(string? summary, string? sharedNotes, string? privateNotes, string? actionItems, TimeProvider timeProvider)
         {
-            Status = "Completed";
+            Status = MeetingStatuses.Completed;
             ActualDate = timeProvider.GetUtcNow();
 
             Summary = summary?.Trim();
@@ -66,7 +67,7 @@ namespace EPMS.Domain.Entities.Performance
 
         public void AcknowledgeByEmployee(TimeProvider timeProvider)
         {
-            if (Status != "Completed") throw new InvalidOperationException("Only completed meetings can be acknowledged.");
+            if (Status != MeetingStatuses.Completed) throw new InvalidOperationException("Only completed meetings can be acknowledged.");
 
             IsAcknowledgedByEmployee = true;
             AcknowledgedAt = timeProvider.GetUtcNow();
@@ -74,15 +75,15 @@ namespace EPMS.Domain.Entities.Performance
 
         public void Cancel()
         {
-            if (Status == "Completed") throw new InvalidOperationException("Cannot cancel a completed meeting.");
-            if (Status == "Cancelled") throw new InvalidOperationException("Meeting is already cancelled.");
-            Status = "Cancelled";
+            if (Status == MeetingStatuses.Completed) throw new InvalidOperationException("Cannot cancel a completed meeting.");
+            if (Status == MeetingStatuses.Cancelled) throw new InvalidOperationException("Meeting is already cancelled.");
+            Status = MeetingStatuses.Cancelled;
         }
 
         public void LinkToPIP(long pipId)
         {
             RelatedPIPId = pipId;
-            MeetingType = "PIP-Review";
+            MeetingType = MeetingTypes.PIPReview;
         }
     }
 }

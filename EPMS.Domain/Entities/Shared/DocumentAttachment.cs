@@ -1,5 +1,6 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Auth;
+using EPMS.Shared.Constants;
 using System;
 
 namespace EPMS.Domain.Entities.Shared
@@ -38,7 +39,7 @@ namespace EPMS.Domain.Entities.Shared
             MimeType = mimeType.Trim().ToLowerInvariant();
             UploadedById = uploadedById;
             Description = description?.Trim();
-            Category = category?.Trim().ToUpperInvariant() ?? "GENERAL";
+            Category = category?.Trim().ToUpperInvariant() ?? DocumentCategories.General;
 
             IsDeleted = false;
         }
