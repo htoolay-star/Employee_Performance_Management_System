@@ -29,7 +29,6 @@ namespace EPMS.Domain.Repository.Base
 
         public UnitOfWork(
             AppDbContext context,
-            IDbContextTransaction? transaction,
             Lazy<IAppModule> app,
             Lazy<IAuthModule> auth,
             Lazy<IInfoModule> info,
@@ -39,7 +38,6 @@ namespace EPMS.Domain.Repository.Base
             )
         {
             _context = context;
-            _transaction = transaction;
             _app = app;
             _auth = auth;
             _info = info;
