@@ -28,7 +28,7 @@ namespace EPMS.Domain.Data.Configurations.Performance
             builder.Property(e => e.QuestionComment).HasMaxLength(500);
 
             builder.HasOne(e => e.Appraisal)
-                   .WithMany()
+                   .WithMany(a => a.Responses)
                    .HasForeignKey(e => e.AppraisalId)
                    .OnDelete(DeleteBehavior.Cascade);
 

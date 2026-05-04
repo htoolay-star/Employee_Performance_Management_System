@@ -1,4 +1,5 @@
 using EPMS.Domain.Entities.Auth;
+using EPMS.Domain.Entities.EmployeeInfo;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -48,6 +49,11 @@ namespace EPMS.Domain.Data.Configurations.Auth
             entity.HasOne(e => e.Role)
                    .WithMany()
                    .HasForeignKey(e => e.RoleId)
+                   .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Profile)
+                   .WithOne()
+                   .HasForeignKey<EmployeeProfile>(e => e.UserId)
                    .OnDelete(DeleteBehavior.Restrict);
 
             entity.Property(e => e.IsDeleted).HasDefaultValue(false).IsRequired();
