@@ -1,4 +1,4 @@
-﻿using EPMS.Domain.Entities.Hr;
+using EPMS.Domain.Entities.Hr;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -17,8 +17,10 @@ namespace EPMS.Domain.Data.Configurations.Hr
 
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).UseIdentityColumn();
+            entity.Property(e => e.PublicId).IsRequired();
+            entity.HasIndex(e => e.PublicId).IsUnique().HasFilter("[IsDeleted] = 0");
 
-            entity.HasIndex(e => e.Rating).IsUnique();
+            entity.HasIndex(e => e.Rating).IsUnique().HasFilter("[IsDeleted] = 0");
 
             entity.Property(e => e.Label).HasMaxLength(50).IsRequired();
 
@@ -27,12 +29,16 @@ namespace EPMS.Domain.Data.Configurations.Hr
 
             entity.Property(e => e.PerformanceLevel).HasMaxLength(50);
             entity.Property(e => e.PromotionEligibility).HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(250);
 
             entity.Property(e => e.IsActive).HasDefaultValue(true);
 
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.Property(e => e.UpdatedAt).IsRequired();
             entity.Property(e => e.Version).IsRowVersion();
+
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false).IsRequired();
+            entity.Property(e => e.DeletedAt);
         }
     }
 }

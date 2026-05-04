@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class KPIMaster : IAuditableEntity , ISoftDeletable
+    public class KPIMaster : AuditableEntity , ISoftDeletable
     {
         private KPIMaster() { }
 
-        public KPIMaster(int categoryId, string code, string name, string? description = null)
+        public KPIMaster(long categoryId, string code, string name, string? description = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(code);
             ArgumentException.ThrowIfNullOrWhiteSpace(name);
@@ -24,15 +24,11 @@ namespace EPMS.Domain.Entities.Performance
             IsActive = true;
         }
 
-        public long Id { get; private set; }
-        public int CategoryId { get; private set; }
+        public long CategoryId { get; private set; }
         public string Code { get; private set; } = string.Empty;
         public string Name { get; private set; } = string.Empty;
         public string? Description { get; private set; }
         public bool IsActive { get; private set; }
-
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }

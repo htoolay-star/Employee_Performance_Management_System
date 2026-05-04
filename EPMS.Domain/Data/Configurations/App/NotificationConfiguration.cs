@@ -23,6 +23,7 @@ namespace EPMS.Domain.Data.Configurations.App
             builder.Property(e => e.RedirectUrl).HasMaxLength(500);
 
             builder.Property(e => e.IsRead).HasDefaultValue(false);
+            builder.Property(e => e.ReadAt);
 
             builder.HasOne(e => e.User)
                    .WithMany()

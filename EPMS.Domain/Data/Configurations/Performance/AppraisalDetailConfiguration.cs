@@ -15,8 +15,13 @@ namespace EPMS.Domain.Data.Configurations.Performance
         {
             entity.ToTable("AppraisalDetails", "perf");
             entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).UseIdentityColumn();
+
+            entity.Property(e => e.PublicId).IsRequired();
+            entity.HasIndex(e => e.PublicId).IsUnique().HasFilter("[IsDeleted] = 0");
 
             entity.Property(e => e.KPIName).HasMaxLength(250).IsRequired();
+            entity.Property(e => e.KPIId);
             entity.Property(e => e.CategoryName).HasMaxLength(100);
             entity.Property(e => e.TargetValue).HasMaxLength(100);
             entity.Property(e => e.ActualValue).HasMaxLength(100);
@@ -39,6 +44,9 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.Property(e => e.UpdatedAt).IsRequired();
             entity.Property(e => e.Version).IsRowVersion();
+
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false).IsRequired();
+            entity.Property(e => e.DeletedAt);
         }
     }
 }

@@ -1,5 +1,6 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Data;
+using EPMS.Domain.Interface.Irepo.App;
 using EPMS.Domain.Interface.Irepo.Auth;
 using EPMS.Domain.Interface.Irepo.Hr;
 using EPMS.Domain.Interface.Irepo.Info;
@@ -18,23 +19,41 @@ namespace EPMS.Domain.Repository.Base
     {
         private readonly AppDbContext _context;
         private IDbContextTransaction? _transaction;
-       
-        private IAuthModule? _auth;
-        private IInfoModule? _info;
-        private IHRModule? _hr;
-        private IPerfModule? _perf;
-        private ISharedModule? _shared;
 
-        public UnitOfWork(AppDbContext context)
+        private readonly Lazy<IAppModule> _app;
+        private readonly Lazy<IAuthModule> _auth;
+        private readonly Lazy<IInfoModule> _info;
+        private readonly Lazy<IHRModule> _hr;
+        private readonly Lazy<IPerfModule> _perf;
+        private readonly Lazy<ISharedModule> _shared;
+
+        public UnitOfWork(
+            AppDbContext context,
+            IDbContextTransaction? transaction,
+            Lazy<IAppModule> app,
+            Lazy<IAuthModule> auth,
+            Lazy<IInfoModule> info,
+            Lazy<IHRModule> hr,
+            Lazy<IPerfModule> perf,
+            Lazy<ISharedModule> shared
+            )
         {
             _context = context;
+            _transaction = transaction;
+            _app = app;
+            _auth = auth;
+            _info = info;
+            _hr = hr;
+            _perf = perf;
+            _shared = shared;
         }
 
-        public IAuthModule Auth => _auth ??= new AuthModule(_context);
-        public IInfoModule Info => _info ??= new InfoModule(_context);
-        public IHRModule HR => _hr ??= new HRModule(_context);
-        public IPerfModule Performance => _perf ??= new PerfModule(_context);
-        public ISharedModule Shared => _shared ??= new SharedModule(_context);
+        public IAppModule App => _app.Value;
+        public IAuthModule Auth => _auth.Value;
+        public IInfoModule Info => _info.Value;
+        public IHRModule HR => _hr.Value;
+        public IPerfModule Performance => _perf.Value;
+        public ISharedModule Shared => _shared.Value;
 
         public async Task<int> CompleteAsync() => await _context.SaveChangesAsync();
 

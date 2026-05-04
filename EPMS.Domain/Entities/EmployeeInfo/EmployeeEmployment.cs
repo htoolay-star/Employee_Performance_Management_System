@@ -1,5 +1,6 @@
 ﻿using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Hr;
+using EPMS.Shared.Constants;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.EmployeeInfo
 {
-    public class EmployeeEmployment : IAuditableEntity , ISoftDeletable
+    public class EmployeeEmployment : AuditableEntity , ISoftDeletable
     {
         private EmployeeEmployment() { }
 
@@ -48,10 +49,7 @@ namespace EPMS.Domain.Entities.EmployeeInfo
         public bool MobileAttendance { get; private set; }
 
         public DateOnly? DateOfIncrement { get; private set; }
-        public string? ProductProject { get; private set; } // Map to Product/Project
-
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
+        public string? ProductProject { get; private set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }
@@ -67,7 +65,7 @@ namespace EPMS.Domain.Entities.EmployeeInfo
 
         public void ConfirmEmployment(DateOnly confirmationDate)
         {
-            EmploymentStatus = "Permanent";
+            EmploymentStatus = EmploymentStatuses.Permanent;
             DateOfConfirmation = confirmationDate;
         }
 

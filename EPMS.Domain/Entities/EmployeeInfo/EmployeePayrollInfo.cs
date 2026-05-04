@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.EmployeeInfo
 {
-    public class EmployeePayrollInfo : IAuditableEntity , ISoftDeletable
+    public class EmployeePayrollInfo : AuditableEntity , ISoftDeletable
     {
         private EmployeePayrollInfo() { }
 
@@ -39,9 +39,6 @@ namespace EPMS.Domain.Entities.EmployeeInfo
         public DateOnly? DateOfSalaryChanged { get; private set; }
         public DateOnly? DateOfCurrencyChange { get; private set; }
 
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
-
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }
 
@@ -63,8 +60,12 @@ namespace EPMS.Domain.Entities.EmployeeInfo
             ArgumentException.ThrowIfNullOrWhiteSpace(payType);
 
             Salary = newSalary;
-            PayType = payType.Trim();
-            DateOfPayTypeChanged = changeDate;
+
+            if (payType.Trim() != PayType)
+            {
+                PayType = payType.Trim();
+                DateOfPayTypeChanged = changeDate;
+            }
 
             DateOfSalaryChanged = changeDate;
 

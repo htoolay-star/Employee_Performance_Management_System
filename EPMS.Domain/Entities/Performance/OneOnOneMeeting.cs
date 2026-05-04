@@ -1,5 +1,6 @@
 ﻿using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.EmployeeInfo;
+using EPMS.Shared.Constants;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class OneOnOneMeeting : IAuditableEntity , ISoftDeletable
+    public class OneOnOneMeeting : AuditableEntity , ISoftDeletable
     {
         private OneOnOneMeeting() { }
 
@@ -22,10 +23,9 @@ namespace EPMS.Domain.Entities.Performance
             Title = title.Trim();
 
             ScheduledDate = scheduledDate;
-            Status = "Scheduled";
+            Status = MeetingStatuses.Scheduled;
         }
 
-        public long Id { get; private set; }
         public long EmployeeId { get; private set; }
         public long ManagerId { get; private set; }
 
@@ -43,24 +43,21 @@ namespace EPMS.Domain.Entities.Performance
         public bool IsAcknowledgedByEmployee { get; private set; }
         public DateTimeOffset? AcknowledgedAt { get; private set; }
 
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
-
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }
 
         public byte[] Version { get; private set; } = Array.Empty<byte>();
         public long? RelatedPIPId { get; private set; }
-        public string MeetingType { get; private set; } = "Regular";
+        public string MeetingType { get; private set; } = MeetingTypes.Regular;
         public virtual PIP? RelatedPIP { get; private set; }
 
         public virtual EmployeeProfile Employee { get; private set; } = null!;
         public virtual EmployeeProfile Manager { get; private set; } = null!;
 
-        public void CompleteMeeting(string? summary, string? sharedNotes, string? privateNotes, string? actionItems)
+        public void CompleteMeeting(string? summary, string? sharedNotes, string? privateNotes, string? actionItems, TimeProvider timeProvider)
         {
-            Status = "Completed";
-            ActualDate = DateTimeOffset.UtcNow;
+            Status = MeetingStatuses.Completed;
+            ActualDate = timeProvider.GetUtcNow();
 
             Summary = summary?.Trim();
             DiscussionNotes = sharedNotes?.Trim();
@@ -68,20 +65,25 @@ namespace EPMS.Domain.Entities.Performance
             ActionItems = actionItems?.Trim();
         }
 
-        public void AcknowledgeByEmployee()
+        public void AcknowledgeByEmployee(TimeProvider timeProvider)
         {
-            if (Status != "Completed") throw new InvalidOperationException("Only completed meetings can be acknowledged.");
+            if (Status != MeetingStatuses.Completed) throw new InvalidOperationException("Only completed meetings can be acknowledged.");
 
             IsAcknowledgedByEmployee = true;
-            AcknowledgedAt = DateTimeOffset.UtcNow;
+            AcknowledgedAt = timeProvider.GetUtcNow();
         }
 
-        public void Cancel() => Status = "Cancelled";
+        public void Cancel()
+        {
+            if (Status == MeetingStatuses.Completed) throw new InvalidOperationException("Cannot cancel a completed meeting.");
+            if (Status == MeetingStatuses.Cancelled) throw new InvalidOperationException("Meeting is already cancelled.");
+            Status = MeetingStatuses.Cancelled;
+        }
 
         public void LinkToPIP(long pipId)
         {
             RelatedPIPId = pipId;
-            MeetingType = "PIP-Review";
+            MeetingType = MeetingTypes.PIPReview;
         }
     }
 }

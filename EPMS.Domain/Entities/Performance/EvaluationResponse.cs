@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class EvaluationResponse : IAuditableEntity , ISoftDeletable
+    public class EvaluationResponse : AuditableEntity , ISoftDeletable
     {
         private EvaluationResponse() { }
 
-        public EvaluationResponse(long appraisalId, int templateId, int questionId, long evaluatorId, string evaluatorRole, bool isAnonymous = false)
+        public EvaluationResponse(long appraisalId, long templateId, long questionId, long evaluatorId, string evaluatorRole, bool isAnonymous = false)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(evaluatorRole);
 
@@ -26,10 +26,9 @@ namespace EPMS.Domain.Entities.Performance
             IsAnonymous = isAnonymous;
         }
 
-        public long Id { get; private set; }
         public long AppraisalId { get; private set; }
-        public int TemplateId { get; private set; }
-        public int QuestionId { get; private set; }
+        public long TemplateId { get; private set; }
+        public long QuestionId { get; private set; }
 
         public long EvaluatorId { get; private set; }
         public string EvaluatorRole { get; private set; } = string.Empty;
@@ -38,9 +37,6 @@ namespace EPMS.Domain.Entities.Performance
         public bool? YesNoAnswer { get; private set; }
         public int? RatingValue { get; private set; }
         public string? QuestionComment { get; private set; }
-
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }
@@ -54,8 +50,7 @@ namespace EPMS.Domain.Entities.Performance
 
         public void SetRating(int ratingValue, QuestionRatingScale scale)
         {
-            if (scale == null)
-                throw new InvalidOperationException("This question does not have a rating scale configured.");
+            ArgumentNullException.ThrowIfNull(scale);
 
             if (!scale.IsValidScore(ratingValue))
                 throw new ArgumentException($"Invalid Rating! Acceptable range is {scale.MinScore} to {scale.MaxScore}. You entered {ratingValue}.");

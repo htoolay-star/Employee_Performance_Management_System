@@ -1,5 +1,6 @@
 ﻿using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.EmployeeInfo;
+using EPMS.Shared.Constants;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,11 +9,11 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class AppraisalRecommendation : IAuditableEntity , ISoftDeletable
+    public class AppraisalRecommendation : AuditableEntity , ISoftDeletable
     {
         private AppraisalRecommendation() { }
 
-        public AppraisalRecommendation(long appraisalId, string type, string reason, string? proposedValue = null, string priority = "Normal")
+        public AppraisalRecommendation(long appraisalId, string type, string reason, string? proposedValue = null, string priority = RecommendationPriorities.Normal)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(type);
             ArgumentException.ThrowIfNullOrWhiteSpace(reason);
@@ -25,10 +26,9 @@ namespace EPMS.Domain.Entities.Performance
             ProposedValue = proposedValue?.Trim();
             Priority = priority.Trim().ToUpperInvariant();
 
-            Status = "Pending";
+            Status = RecommendationStatuses.Pending;
         }
 
-        public long Id { get; private set; }
         public long AppraisalId { get; private set; }
 
         public string RecommendationType { get; private set; } = string.Empty;
@@ -42,9 +42,6 @@ namespace EPMS.Domain.Entities.Performance
         public long? ProcessedById { get; private set; }
         public DateTimeOffset? ActionDate { get; private set; }
 
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
-
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }
 
@@ -53,26 +50,26 @@ namespace EPMS.Domain.Entities.Performance
         public virtual Appraisal Appraisal { get; private set; } = null!;
         public virtual EmployeeProfile? ProcessedBy { get; private set; }
 
-        public void Approve(long hrAdminId, string? comments)
+        public void Approve(long hrAdminId, string? comments, TimeProvider timeProvider)
         {
-            if (Status != "Pending") throw new InvalidOperationException("Only pending recommendations can be approved.");
+            if (Status != RecommendationStatuses.Pending) throw new InvalidOperationException("Only pending recommendations can be approved.");
 
-            Status = "Approved";
+            Status = RecommendationStatuses.Approved;
             HRComments = comments?.Trim();
             ProcessedById = hrAdminId;
-            ActionDate = DateTimeOffset.UtcNow;
+            ActionDate = timeProvider.GetUtcNow();
         }
 
-        public void Reject(long hrAdminId, string reason)
+        public void Reject(long hrAdminId, string reason, TimeProvider timeProvider)
         {
-            if (Status != "Pending") throw new InvalidOperationException("Only pending recommendations can be rejected.");
+            if (Status != RecommendationStatuses.Pending) throw new InvalidOperationException("Only pending recommendations can be rejected.");
 
             ArgumentException.ThrowIfNullOrWhiteSpace(reason);
 
-            Status = "Rejected";
+            Status = RecommendationStatuses.Rejected;
             HRComments = reason.Trim();
             ProcessedById = hrAdminId;
-            ActionDate = DateTimeOffset.UtcNow;
+            ActionDate = timeProvider.GetUtcNow();
         }
     }
 }

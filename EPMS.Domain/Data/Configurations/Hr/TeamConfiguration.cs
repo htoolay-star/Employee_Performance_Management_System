@@ -17,15 +17,22 @@ namespace EPMS.Domain.Data.Configurations.Hr
 
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).UseIdentityColumn();
+            entity.Property(e => e.PublicId).IsRequired();
+            entity.HasIndex(e => e.PublicId).IsUnique().HasFilter("[IsDeleted] = 0");
 
             entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
 
-            entity.HasIndex(e => new { e.DepartmentId, e.Name }).IsUnique();
+            entity.HasIndex(e => new { e.DepartmentId, e.Name }).IsUnique().HasFilter("[IsDeleted] = 0");
 
             entity.Property(e => e.IsActive).HasDefaultValue(true);
 
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.Property(e => e.UpdatedAt).IsRequired();
+
+            entity.Property(e => e.Version).IsRowVersion();
+
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false).IsRequired();
+            entity.Property(e => e.DeletedAt);
 
             entity.HasOne(e => e.Department)
                   .WithMany(d => d.Teams)

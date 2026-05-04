@@ -1,5 +1,6 @@
 ﻿using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.EmployeeInfo;
+using EPMS.Shared.Constants;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,11 +9,11 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class ContinuousFeedback : IAuditableEntity , ISoftDeletable
+    public class ContinuousFeedback : AuditableEntity , ISoftDeletable
     {
         private ContinuousFeedback() { }
 
-        public ContinuousFeedback(long employeeId, long givenById, string feedbackType, string content, string visibility = "Public", long? relatedGoalId = null)
+        public ContinuousFeedback(long employeeId, long givenById, string feedbackType, string content, TimeProvider timeProvider, string visibility = FeedbackVisibility.Public, long? relatedGoalId = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(feedbackType);
             ArgumentException.ThrowIfNullOrWhiteSpace(content);
@@ -26,10 +27,9 @@ namespace EPMS.Domain.Entities.Performance
             Visibility = visibility.Trim().ToUpperInvariant();
 
             RelatedGoalId = relatedGoalId;
-            FeedbackDate = DateTimeOffset.UtcNow;
+            FeedbackDate = timeProvider.GetUtcNow();
         }
 
-        public long Id { get; private set; }
         public long EmployeeId { get; private set; }
         public long GivenById { get; private set; }
         public long? RelatedGoalId { get; private set; }
@@ -40,15 +40,11 @@ namespace EPMS.Domain.Entities.Performance
 
         public DateTimeOffset FeedbackDate { get; private set; }
 
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
-
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }
 
         public byte[] Version { get; private set; } = Array.Empty<byte>();
 
-        // Navigations
         public virtual EmployeeProfile Employee { get; private set; } = null!;
         public virtual EmployeeProfile GivenBy { get; private set; } = null!;
         public virtual KPIMaster? RelatedGoal { get; private set; }

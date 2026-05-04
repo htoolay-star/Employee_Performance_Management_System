@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Auth
 {
-    public class Permission : IAuditableEntity, ISoftDeletable
+    public class Permission : AuditableEntity, ISoftDeletable
     {
         private Permission() { }
 
@@ -23,15 +23,11 @@ namespace EPMS.Domain.Entities.Auth
             IsActive = true;
         }
 
-        public int Id { get; private set; }
         public string Code { get; private set; } = string.Empty;
         public string Name { get; private set; } = string.Empty;
         public string? Description { get; private set; }
 
         public bool IsActive { get; private set; }
-
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }

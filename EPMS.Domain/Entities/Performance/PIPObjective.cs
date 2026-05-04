@@ -1,4 +1,5 @@
 ﻿using EPMS.Domain.Contracts;
+using EPMS.Shared.Constants;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class PIPObjective : IAuditableEntity , ISoftDeletable
+    public class PIPObjective : AuditableEntity , ISoftDeletable
     {
         private PIPObjective() { }
 
@@ -20,10 +21,9 @@ namespace EPMS.Domain.Entities.Performance
             Title = title.Trim();
             SuccessCriteria = successCriteria.Trim();
             Description = description?.Trim();
-            Status = "In-Progress";
+            Status = ObjectiveStatuses.InProgress;
         }
 
-        public long Id { get; private set; }
         public long PIPId { get; private set; }
 
         public string Title { get; private set; } = string.Empty;
@@ -32,9 +32,6 @@ namespace EPMS.Domain.Entities.Performance
 
         public string Status { get; private set; } = string.Empty;
         public string? ManagerComment { get; private set; }
-
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }

@@ -1,4 +1,5 @@
-﻿using EPMS.Domain.Entities.Auth;
+using EPMS.Domain.Entities.Auth;
+using EPMS.Domain.Entities.EmployeeInfo;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -16,13 +17,10 @@ namespace EPMS.Domain.Data.Configurations.Auth
             entity.ToTable("Users", "auth");
 
             entity.HasKey(e => e.Id);
+            entity.Property(e => e.PublicId).IsRequired();
+            entity.HasIndex(e => e.PublicId).IsUnique().HasFilter("[IsDeleted] = 0");
 
-            entity.HasIndex(e => e.UserGuid).IsUnique();
-            entity.Property(e => e.UserGuid)
-                  .HasDefaultValueSql("NEWSEQUENTIALID()")
-                  .ValueGeneratedOnAdd();
-
-            entity.HasIndex(e => e.NormalizedEmail).IsUnique();
+            entity.HasIndex(e => e.NormalizedEmail).IsUnique().HasFilter("[IsDeleted] = 0");
             entity.Property(e => e.Email).HasMaxLength(256).IsRequired();
             entity.Property(e => e.NormalizedEmail)
                   .HasMaxLength(256)
@@ -38,13 +36,16 @@ namespace EPMS.Domain.Data.Configurations.Auth
             entity.Property(e => e.LockoutEndDate);
             entity.Property(e => e.LastLoginDate);
 
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
-            entity.Property(e => e.UpdatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.UpdatedAt).IsRequired();
 
             entity.HasMany(e => e.RefreshTokens)
                   .WithOne(t => t.User)
                   .HasForeignKey(e => e.UserId)
                   .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Metadata.FindNavigation(nameof(User.RefreshTokens))?
+                  .SetPropertyAccessMode(PropertyAccessMode.Field);
 
             entity.Property(e => e.Version).IsRowVersion();
 
@@ -52,6 +53,18 @@ namespace EPMS.Domain.Data.Configurations.Auth
                    .WithMany()
                    .HasForeignKey(e => e.RoleId)
                    .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Profile)
+                   .WithOne()
+                   .HasForeignKey<EmployeeProfile>(e => e.UserId)
+                   .OnDelete(DeleteBehavior.Restrict);
+
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false).IsRequired();
+            entity.Property(e => e.DeletedAt);
+
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.IsFirstLogin).HasDefaultValue(true);
+            entity.Property(e => e.FailedLoginAttempts).HasDefaultValue(0);
         }
     }
 }

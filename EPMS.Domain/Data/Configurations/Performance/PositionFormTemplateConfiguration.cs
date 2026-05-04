@@ -15,7 +15,15 @@ namespace EPMS.Domain.Data.Configurations.Performance
         {
             builder.ToTable("PositionFormTemplates", "perf");
 
-            builder.HasKey(e => new { e.PositionId, e.FormTemplateId });
+            builder.HasKey(e => e.Id);
+            builder.Property(e => e.Id).UseIdentityColumn();
+
+            builder.Property(e => e.PublicId).IsRequired();
+            builder.HasIndex(e => e.PublicId).IsUnique().HasFilter("[IsDeleted] = 0");
+
+            builder.HasIndex(e => new { e.PositionId, e.FormTemplateId })
+                   .IsUnique()
+                   .HasFilter("[IsDeleted] = 0");
 
             builder.Property(e => e.IsMandatory).HasDefaultValue(true);
 
@@ -27,11 +35,14 @@ namespace EPMS.Domain.Data.Configurations.Performance
             builder.HasOne(e => e.FormTemplate)
                    .WithMany()
                    .HasForeignKey(e => e.FormTemplateId)
-                   .OnDelete(DeleteBehavior.Cascade);
+                   .OnDelete(DeleteBehavior.Restrict);
 
             builder.Property(e => e.CreatedAt).IsRequired();
             builder.Property(e => e.UpdatedAt).IsRequired();
             builder.Property(e => e.Version).IsRowVersion();
+
+            builder.Property(e => e.IsDeleted).HasDefaultValue(false).IsRequired();
+            builder.Property(e => e.DeletedAt);
         }
     }
 }

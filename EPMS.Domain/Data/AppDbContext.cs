@@ -40,17 +40,21 @@ namespace EPMS.Domain.Data
         // --- Employee Info Schema ---
         public DbSet<EmployeeContact> EmployeeContact => Set<EmployeeContact>();
         public DbSet<EmployeeEmployment> EmployeeEmployments => Set<EmployeeEmployment>();
+        public DbSet<EmployeeEmploymentHistory> EmployeeEmploymentHistories => Set<EmployeeEmploymentHistory>();
         public DbSet<EmployeeFamilyInfo> EmployeeFamilyInfos => Set<EmployeeFamilyInfo>();
         public DbSet<EmployeePayrollInfo> EmployeePayrollInfos => Set<EmployeePayrollInfo>();
+        public DbSet<EmployeeSalaryHistory> EmployeeSalaryHistories => Set<EmployeeSalaryHistory>();
         public DbSet<EmployeeProfile> EmployeeProfiles => Set<EmployeeProfile>();
 
         // Shared Schema
         public DbSet<Category> Categories => Set<Category>();
         public DbSet<Tag> Tags => Set<Tag>();
+        public DbSet<DocumentAttachment> DocumentAttachments => Set<DocumentAttachment>();
 
         // Performance Schema
         public DbSet<KPIMaster> KPIMasters => Set<KPIMaster>();
         public DbSet<PositionKPI> PositionKPIs => Set<PositionKPI>();
+        public DbSet<PositionKPIHistory> PositionKPIHistories => Set<PositionKPIHistory>();
         public DbSet<KPIWeightPriority> KPIWeightPriorities => Set<KPIWeightPriority>();
         public DbSet<AppraisalCycle> AppraisalCycles => Set<AppraisalCycle>();
         public DbSet<Appraisal> Appraisals => Set<Appraisal>();
@@ -64,8 +68,10 @@ namespace EPMS.Domain.Data
         public DbSet<PIP> PIPs => Set<PIP>();
         public DbSet<PIPObjective> PIPObjectives => Set<PIPObjective>();
         public DbSet<AppraisalRecommendation> AppraisalRecommendations => Set<AppraisalRecommendation>();
+        public DbSet<AppraisalStatusHistory> AppraisalStatusHistories => Set<AppraisalStatusHistory>();
         public DbSet<PositionFormTemplate> PositionFormTemplates => Set<PositionFormTemplate>();
         public DbSet<PositionPIPTemplate> PositionPIPTemplates => Set<PositionPIPTemplate>();
+        public DbSet<PIPStatusHistory> PIPStatusHistories => Set<PIPStatusHistory>();
 
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
         {
@@ -91,52 +97,6 @@ namespace EPMS.Domain.Data
             }
 
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
-        }
-
-        public override int SaveChanges()
-        {
-            var entries = ChangeTracker.Entries<ISoftDeletable>();
-
-            foreach (var entry in entries)
-            {
-                if (entry.State == EntityState.Deleted)
-                {
-                    entry.State = EntityState.Modified;
-
-                    entry.Entity.IsDeleted = true;
-                    entry.Entity.DeletedAt = DateTimeOffset.UtcNow;
-
-                    if (entry.Entity is IAuditableEntity auditable)
-                    {
-                        auditable.UpdatedAt = DateTimeOffset.UtcNow;
-                    }
-                }
-            }
-
-            return base.SaveChanges();
-        }
-
-        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-        {
-            var entries = ChangeTracker.Entries<ISoftDeletable>();
-
-            foreach (var entry in entries)
-            {
-                if (entry.State == EntityState.Deleted)
-                {
-                    entry.State = EntityState.Modified;
-
-                    entry.Entity.IsDeleted = true;
-                    entry.Entity.DeletedAt = DateTimeOffset.UtcNow;
-
-                    if (entry.Entity is IAuditableEntity auditable)
-                    {
-                        auditable.UpdatedAt = DateTimeOffset.UtcNow;
-                    }
-                }
-            }
-
-            return await base.SaveChangesAsync(cancellationToken);
         }
 
         private static LambdaExpression ConvertFilterExpression(Type entityType)

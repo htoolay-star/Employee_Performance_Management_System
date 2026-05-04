@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class QuestionRatingScale : IAuditableEntity , ISoftDeletable
+    public class QuestionRatingScale : AuditableEntity , ISoftDeletable
     {
         private QuestionRatingScale() { }
 
-        public QuestionRatingScale(string name, int minScore, int maxScore)
+        public QuestionRatingScale(string name, decimal minScore, decimal maxScore)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
@@ -24,14 +24,10 @@ namespace EPMS.Domain.Entities.Performance
             IsActive = true;
         }
 
-        public int Id { get; private set; }
         public string Name { get; private set; } = string.Empty;
-        public int MinScore { get; private set; }
-        public int MaxScore { get; private set; }
+        public decimal MinScore { get; private set; }
+        public decimal MaxScore { get; private set; }
         public bool IsActive { get; private set; }
-
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.App
 {
-    public class SystemSetting : IAuditableEntity , ISoftDeletable
+    public class SystemSetting : AuditableEntity , ISoftDeletable
     {
         private SystemSetting() { }
 
@@ -21,13 +21,9 @@ namespace EPMS.Domain.Entities.App
             Description = description?.Trim();
         }
 
-        public int Id { get; private set; }
         public string Key { get; private set; } = string.Empty;
         public string Value { get; private set; } = string.Empty;
         public string? Description { get; private set; }
-
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }

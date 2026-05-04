@@ -1,4 +1,4 @@
-﻿using EPMS.Domain.Contracts;
+using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Auth;
 using EPMS.Domain.Entities.Performance;
 using System;
@@ -9,11 +9,11 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Hr
 {
-    public class Position : IAuditableEntity , ISoftDeletable
+    public class Position : AuditableEntity , ISoftDeletable
     {
         private Position() { }
 
-        public Position(string title, int levelId)
+        public Position(string title, long levelId)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(title);
 
@@ -23,24 +23,22 @@ namespace EPMS.Domain.Entities.Hr
             IsActive = true;
         }
 
-        public long Id { get; private set; }
         public string Title { get; private set; } = string.Empty;
 
-        public int LevelId { get; private set; }
+        public long LevelId { get; private set; }
         public virtual Level Level { get; private set; } = null!;
 
         public bool IsActive { get; private set; }
 
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
-
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }
+
+        public byte[] Version { get; private set; } = Array.Empty<byte>();
 
         public void Deactivate() => IsActive = false;
         public void Reactivate() => IsActive = true;
 
-        public void Update(string title, int levelId)
+        public void Update(string title, long levelId)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(title);
             Title = title.Trim();
@@ -59,11 +57,11 @@ namespace EPMS.Domain.Entities.Hr
         private readonly List<PositionPIPTemplate> _positionPIPTemplates = new();
         public virtual IReadOnlyCollection<PositionPIPTemplate> PositionPIPTemplates => _positionPIPTemplates.AsReadOnly();
 
-        public void AssignPermission(int permissionId)
+        public void AssignPermission(long permissionId)
         {
             if (!_positionPermissions.Any(p => p.PermissionId == permissionId))
             {
-                _positionPermissions.Add(new PositionPermission(this.Id, permissionId));
+                _positionPermissions.Add(new PositionPermission(Id, permissionId));
             }
         }
 

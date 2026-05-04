@@ -1,4 +1,4 @@
-﻿using EPMS.Shared.Enums.EPMS.Shared.Enums;
+﻿using EPMS.Shared.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +11,7 @@ namespace EPMS.Shared.Constants
     {
         public const string SystemAdmin = nameof(UserRole.SystemAdmin);
         public const string Admin = nameof(UserRole.Admin);
-        public const string Staff = nameof(UserRole.User);
+        public const string User = nameof(UserRole.User);
 
         public const string SA_Admin = "SystemAdmin,Admin";
     }

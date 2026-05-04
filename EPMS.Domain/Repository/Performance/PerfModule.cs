@@ -1,5 +1,8 @@
-﻿using EPMS.Domain.Data;
+﻿using AutoMapper;
+using EPMS.Domain.Data;
+using EPMS.Domain.Interface.Irepo.Info;
 using EPMS.Domain.Interface.Irepo.Performance;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,14 +11,11 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Repository.Performance
 {
-    public class PerfModule : IPerfModule
+    public class PerfModule(IServiceProvider serviceProvider) : IPerfModule
     {
-        private readonly AppDbContext _context;
-
         private IAppraisalRepository? _perfAppraisalRepository;
 
-        public PerfModule(AppDbContext context) => _context = context;
-
-        public IAppraisalRepository Appraisals => _perfAppraisalRepository ??= new AppraisalRepository(_context);
+        public IAppraisalRepository Appraisals =>
+        _perfAppraisalRepository ??= serviceProvider.GetRequiredService<IAppraisalRepository>();
     }
 }

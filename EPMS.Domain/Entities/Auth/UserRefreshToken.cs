@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EPMS.Domain.Contracts;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Auth
 {
-    public class UserRefreshToken
+    public class UserRefreshToken : BaseEntity
     {
         private UserRefreshToken() { }
 
@@ -22,7 +23,6 @@ namespace EPMS.Domain.Entities.Auth
             ExpiresAt = expiresAt;
         }
 
-        public long Id { get; private set; }
         public long UserId { get; private set; }
         public string Token { get; private set; } = string.Empty;
         public string JwtId { get; private set; } = string.Empty;

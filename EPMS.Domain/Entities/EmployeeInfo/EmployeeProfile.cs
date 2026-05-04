@@ -8,22 +8,20 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.EmployeeInfo
 {
-    public class EmployeeProfile : IAuditableEntity , ISoftDeletable
+    public class EmployeeProfile : AuditableEntity , ISoftDeletable
     {
         private EmployeeProfile() { }
 
-        public EmployeeProfile(long userId, string staffNo, string firstName, string? lastName)
+        public EmployeeProfile(long? userId, string staffNo, string firstName, string? lastName)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(staffNo);
             ArgumentException.ThrowIfNullOrWhiteSpace(firstName);
 
             UserId = userId;
             StaffNo = staffNo.Trim().ToUpperInvariant();
-            FirstName = firstName;
-            LastName = lastName;
+            FirstName = firstName.Trim();
+            LastName = lastName?.Trim();
         }
-
-        public long Id { get; private set; }
 
         public long? UserId { get; private set; }
 
@@ -54,9 +52,6 @@ namespace EPMS.Domain.Entities.EmployeeInfo
 
         public string? AdditionalData { get; private set; }
 
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
-
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }
 
@@ -67,7 +62,7 @@ namespace EPMS.Domain.Entities.EmployeeInfo
         public virtual EmployeePayrollInfo? PayrollInfo { get; private set; }
         public virtual EmployeeFamilyInfo? FamilyInfo { get; private set; }
 
-        public void UpdateDemographics(string gender, DateOnly? dateOfBirth, string nationality)
+        public void UpdateDemographics(string? gender, DateOnly? dateOfBirth, string? nationality)
         {
             Gender = gender?.Trim();
             DateOfBirth = dateOfBirth;

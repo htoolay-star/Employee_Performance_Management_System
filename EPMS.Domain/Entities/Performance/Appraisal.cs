@@ -1,6 +1,7 @@
 ﻿using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Domain.Entities.Hr;
+using EPMS.Shared.Constants;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,22 +10,21 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class Appraisal : IAuditableEntity , ISoftDeletable
+    public class Appraisal : AuditableEntity , ISoftDeletable
     {
         private Appraisal() { }
 
-        public Appraisal(long employeeId, int cycleId, long appraiserId, string evaluatorRole)
+        public Appraisal(long employeeId, long cycleId, long appraiserId, string evaluatorRole)
         {
             EmployeeId = employeeId;
             CycleId = cycleId;
             AppraiserId = appraiserId;
             EvaluatorRole = evaluatorRole;
-            Status = "Draft";
+            Status = AppraisalStatuses.Draft;
         }
 
-        public long Id { get; private set; }
         public long EmployeeId { get; private set; }
-        public int CycleId { get; private set; }
+        public long CycleId { get; private set; }
         public long AppraiserId { get; private set; }
         public string EvaluatorRole { get; private set; } = string.Empty;
 
@@ -34,9 +34,6 @@ namespace EPMS.Domain.Entities.Performance
         public string? EmployeeComment { get; private set; }
         public string? ManagerComment { get; private set; }
         public DateTimeOffset? ReviewDate { get; private set; }
-
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }
@@ -55,7 +52,7 @@ namespace EPMS.Domain.Entities.Performance
         public virtual AppraisalCycle Cycle { get; private set; } = null!;
         public virtual EmployeeProfile Appraiser { get; private set; } = null!;
 
-        public int? FinalRatingId { get; private set; }
+        public long? FinalRatingId { get; private set; }
         public virtual RatingScale? FinalRating { get; private set; }
 
         private readonly List<AppraisalDetail> _details = new();
@@ -64,10 +61,15 @@ namespace EPMS.Domain.Entities.Performance
         private readonly List<AppraisalRecommendation> _recommendations = new();
         public virtual IReadOnlyCollection<AppraisalRecommendation> Recommendations => _recommendations.AsReadOnly();
 
+        private readonly List<EvaluationResponse> _responses = new();
+        public virtual IReadOnlyCollection<EvaluationResponse> Responses => _responses.AsReadOnly();
+
         public decimal? TotalScore { get; private set; }
 
         public void CalculateTotalScore(RatingScale matchingScale)
         {
+            ArgumentNullException.ThrowIfNull(matchingScale);
+
             if (Details.Any())
             {
                 TotalScore = Details.Sum(d => d.WeightedScore);
@@ -79,7 +81,7 @@ namespace EPMS.Domain.Entities.Performance
         public void SubmitManagerReview(string? comment)
         {
             ManagerComment = comment?.Trim();
-            Status = "Completed";
+            Status = AppraisalStatuses.Reviewed;
             ReviewDate = DateTimeOffset.UtcNow;
         }
 
@@ -99,7 +101,7 @@ namespace EPMS.Domain.Entities.Performance
         {
             if (IsLocked) throw new InvalidOperationException("Appraisal is already locked.");
 
-            Status = "Completed";
+            Status = AppraisalStatuses.Finalized;
             FinalizedDate = DateTimeOffset.UtcNow;
             IsLocked = true;
             LockedAt = DateTimeOffset.UtcNow;
@@ -111,7 +113,7 @@ namespace EPMS.Domain.Entities.Performance
             if (string.IsNullOrWhiteSpace(reason)) throw new ArgumentException("An unlock reason is strictly required by compliance.");
 
             IsLocked = false;
-            Status = "In Progress";
+            Status = AppraisalStatuses.InProgress;
             UnLockedById = adminId;
             UnLockedAt = DateTimeOffset.UtcNow;
 

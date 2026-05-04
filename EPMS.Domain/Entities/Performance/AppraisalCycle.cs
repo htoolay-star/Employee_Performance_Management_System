@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class AppraisalCycle : IAuditableEntity , ISoftDeletable
+    public class AppraisalCycle : AuditableEntity , ISoftDeletable
     {
         private AppraisalCycle() { }
 
@@ -29,7 +29,6 @@ namespace EPMS.Domain.Entities.Performance
             IsLocked = false;
         }
 
-        public int Id { get; private set; }
         public string Name { get; private set; } = string.Empty;
         public int Year { get; private set; }
         public string AppraisalType { get; private set; } = string.Empty;
@@ -50,9 +49,6 @@ namespace EPMS.Domain.Entities.Performance
 
         public bool IsActive { get; private set; }
         public bool IsLocked { get; private set; }
-
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }

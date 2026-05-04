@@ -1,4 +1,4 @@
-﻿using EPMS.Domain.Entities.Auth;
+using EPMS.Domain.Entities.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -17,8 +17,10 @@ namespace EPMS.Domain.Data.Configurations.Auth
 
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).UseIdentityColumn();
+            entity.Property(e => e.PublicId).IsRequired();
+            entity.HasIndex(e => e.PublicId).IsUnique().HasFilter("[IsDeleted] = 0");
 
-            entity.HasIndex(e => e.Code).IsUnique();
+            entity.HasIndex(e => e.Code).IsUnique().HasFilter("[IsDeleted] = 0");
             entity.Property(e => e.Code).HasMaxLength(100).IsRequired();
 
             entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
@@ -29,6 +31,9 @@ namespace EPMS.Domain.Data.Configurations.Auth
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.Property(e => e.UpdatedAt).IsRequired();
             entity.Property(e => e.Version).IsRowVersion();
+
+            entity.Property(e => e.IsDeleted).HasDefaultValue(false).IsRequired();
+            entity.Property(e => e.DeletedAt);
         }
     }
 }

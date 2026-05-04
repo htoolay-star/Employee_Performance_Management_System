@@ -3,7 +3,7 @@ using EPMS.Domain.Entities.App;
 using EPMS.Domain.Entities.Auth;
 using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Domain.Interface.IService.App;
-using EPMS.Shared.Enums.EPMS.Shared.Enums;
+using EPMS.Shared.Enums;
 using EPMS.Shared.Models;
 using Microsoft.Extensions.Options;
 using System;
@@ -35,7 +35,7 @@ namespace EPMS.Domain.Data.Seeding
 
         private async Task SeedSystemSettingsAsync()
         {
-            var setting = await _uow.Auth.SystemSettings.GetByKeyAsync("DefaultUserPassword");
+            var setting = await _uow.App.SystemSettings.GetByKeyAsync("DefaultUserPassword");
 
             if (setting == null)
             {
@@ -47,9 +47,29 @@ namespace EPMS.Domain.Data.Seeding
                     "Initial default password assigned to newly created users (AES Encrypted)."
                 );
 
-                _uow.Auth.SystemSettings.Add(defaultPwSetting);
+                _uow.App.SystemSettings.Add(defaultPwSetting);
                 await _uow.CompleteAsync();
             }
+        }
+
+        private async Task SeedRolesAsync()
+        {
+            var existingRoles = await _uow.Auth.Roles.GetAllAsync();
+            if (existingRoles.Any()) return;
+
+            var roles = new List<Role>
+            {
+                new Role(1, "SystemAdmin", "Technical support & Emergency troubleshooting only"),
+                new Role(2, "Admin", "Power user for HR & Operations (No Role assignment)"),
+                new Role(3, "User", "Standard employee access")
+            };
+
+            foreach (var role in roles)
+            {
+                _uow.Auth.Roles.Add(role);
+            }
+
+            await _uow.CompleteAsync();
         }
 
         private async Task SeedSystemAdminAsync()

@@ -1,4 +1,5 @@
-﻿using EPMS.Domain.Entities.Auth;
+﻿using EPMS.Domain.Contracts;
+using EPMS.Domain.Entities.Auth;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.App
 {
-    public class Notification
+    public class Notification : BaseEntity
     {
         private Notification() { }
 
@@ -28,7 +29,6 @@ namespace EPMS.Domain.Entities.App
             CreatedAt = DateTimeOffset.UtcNow;
         }
 
-        public long Id { get; private set; }
         public long ToUserId { get; private set; }
         public string Title { get; private set; } = string.Empty;
         public string Message { get; private set; } = string.Empty;

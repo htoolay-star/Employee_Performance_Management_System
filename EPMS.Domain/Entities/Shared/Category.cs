@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Shared
 {
-    public class Category : IAuditableEntity , ISoftDeletable
+    public class Category : AuditableEntity , ISoftDeletable
     {
         private Category() { }
 
-        public Category(string module, string code, string name, string? description = null, int? parentId = null)
+        public Category(string module, string code, string name, string? description = null, long? parentId = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(module);
             ArgumentException.ThrowIfNullOrWhiteSpace(code);
@@ -26,20 +26,18 @@ namespace EPMS.Domain.Entities.Shared
             IsActive = true;
         }
 
-        public int Id { get; private set; }
         public string Module { get; private set; } = string.Empty;
         public string Code { get; private set; } = string.Empty;
         public string Name { get; private set; } = string.Empty;
         public string? Description { get; private set; }
 
-        public int? ParentId { get; private set; }
+        public long? ParentId { get; private set; }
         public virtual Category? Parent { get; private set; }
-        public virtual ICollection<Category> SubCategories { get; private set; } = new List<Category>();
+
+        private readonly List<Category> _subCategories = new();
+        public virtual IReadOnlyCollection<Category> SubCategories => _subCategories.AsReadOnly();
 
         public bool IsActive { get; private set; }
-
-        public DateTimeOffset CreatedAt { get; set; }
-        public DateTimeOffset UpdatedAt { get; set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }
@@ -54,7 +52,7 @@ namespace EPMS.Domain.Entities.Shared
             Description = description?.Trim();
         }
 
-        public void MoveToParent(int? newParentId)
+        public void MoveToParent(long? newParentId)
         {
             if (newParentId.HasValue && newParentId.Value == this.Id)
             {
