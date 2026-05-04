@@ -1,5 +1,6 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Data;
+using EPMS.Domain.Interface.Irepo.App;
 using EPMS.Domain.Interface.Irepo.Auth;
 using EPMS.Domain.Interface.Irepo.Hr;
 using EPMS.Domain.Interface.Irepo.Info;
@@ -19,6 +20,7 @@ namespace EPMS.Domain.Repository.Base
         private readonly AppDbContext _context;
         private IDbContextTransaction? _transaction;
 
+        private readonly Lazy<IAppModule> _app;
         private readonly Lazy<IAuthModule> _auth;
         private readonly Lazy<IInfoModule> _info;
         private readonly Lazy<IHRModule> _hr;
@@ -27,6 +29,8 @@ namespace EPMS.Domain.Repository.Base
 
         public UnitOfWork(
             AppDbContext context,
+            IDbContextTransaction? transaction,
+            Lazy<IAppModule> app,
             Lazy<IAuthModule> auth,
             Lazy<IInfoModule> info,
             Lazy<IHRModule> hr,
@@ -35,6 +39,8 @@ namespace EPMS.Domain.Repository.Base
             )
         {
             _context = context;
+            _transaction = transaction;
+            _app = app;
             _auth = auth;
             _info = info;
             _hr = hr;
@@ -42,6 +48,7 @@ namespace EPMS.Domain.Repository.Base
             _shared = shared;
         }
 
+        public IAppModule App => _app.Value;
         public IAuthModule Auth => _auth.Value;
         public IInfoModule Info => _info.Value;
         public IHRModule HR => _hr.Value;

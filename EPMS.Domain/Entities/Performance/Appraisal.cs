@@ -68,7 +68,7 @@ namespace EPMS.Domain.Entities.Performance
 
         public void CalculateTotalScore(RatingScale matchingScale)
         {
-            ArgumentNullException.ThrowIfNull(matchingScale)
+            ArgumentNullException.ThrowIfNull(matchingScale);
 
             if (Details.Any())
             {

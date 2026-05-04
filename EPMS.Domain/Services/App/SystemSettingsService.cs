@@ -24,7 +24,7 @@ namespace EPMS.Domain.Services.App
 
         public async Task<string?> GetSettingValueAsync(string key)
         {
-            var setting = await _uow.Auth.SystemSettings.GetByKeyAsync(key);
+            var setting = await _uow.App.SystemSettings.GetByKeyAsync(key);
             return setting?.Value;
         }
 
@@ -32,7 +32,7 @@ namespace EPMS.Domain.Services.App
         {
             const string key = SettingKeys.DefaultUserPassword;
 
-            var setting = await _uow.Auth.SystemSettings.GetByKeyAsync(key);
+            var setting = await _uow.App.SystemSettings.GetByKeyAsync(key);
 
             if (setting == null)
             {
@@ -51,7 +51,7 @@ namespace EPMS.Domain.Services.App
 
         public async Task UpdateSettingAsync(string key, string newValue)
         {
-            var setting = await _uow.Auth.SystemSettings.GetByKeyAsync(key, trackChanges: true);
+            var setting = await _uow.App.SystemSettings.GetByKeyAsync(key, trackChanges: true);
 
             if (setting == null) throw new Exception("Setting not found.");
 
@@ -68,12 +68,12 @@ namespace EPMS.Domain.Services.App
         {
             var encryptedValue = _cryptoService.Encrypt(newPlainPassword);
 
-            var setting = await _uow.Auth.SystemSettings.GetByKeyAsync(SettingKeys.DefaultUserPassword, trackChanges: true);
+            var setting = await _uow.App.SystemSettings.GetByKeyAsync(SettingKeys.DefaultUserPassword, trackChanges: true);
 
             if (setting == null)
             {
                 setting = new SystemSetting(SettingKeys.DefaultUserPassword, encryptedValue, "Default password for new users.");
-                _uow.Auth.SystemSettings.Add(setting);
+                _uow.App.SystemSettings.Add(setting);
             }
             else
             {

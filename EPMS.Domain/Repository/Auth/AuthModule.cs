@@ -13,14 +13,10 @@ namespace EPMS.Domain.Repository.Auth
 {
     public class AuthModule(IServiceProvider serviceProvider) : IAuthModule
     {
-        private ISystemSettingsRepository? _systemSettings;
         private IUserRepository? _users;
         private IUserRefreshTokenRepository? _usersRefreshToken;
         private IRoleRepository? _roles;
         private IPermissionRepository? _permissions;
-
-        public ISystemSettingsRepository SystemSettings =>
-        _systemSettings ??= serviceProvider.GetRequiredService<ISystemSettingsRepository>();
 
         public IUserRepository Users =>
         _users ??= serviceProvider.GetRequiredService<IUserRepository>();
