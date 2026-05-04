@@ -8,12 +8,6 @@ using EPMS.Shared.DTOs.AuthDTOs;
 using EPMS.Shared.Enums;
 using EPMS.Shared.Models;
 using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static EPMS.Shared.Constants.ValidationMessages.AuthValidationMessages;
 
 namespace EPMS.Domain.Services.Auth
 {
@@ -23,6 +17,7 @@ namespace EPMS.Domain.Services.Auth
         private readonly IPasswordHasher _passwordHasher;
         private readonly ITokenService _tokenService;
         private readonly ISystemSettingsService _settingsService;
+        private readonly ICacheService _cacheService;
         private readonly TimeProvider _timeProvider;
         private readonly JwtSettings _jwtSettings;
 
@@ -31,6 +26,7 @@ namespace EPMS.Domain.Services.Auth
             IPasswordHasher passwordHasher,
             ITokenService tokenService,
             ISystemSettingsService settingsService,
+            ICacheService cacheService,
             IOptions<JwtSettings> jwtOptions,
             TimeProvider timeProvider)
         {
@@ -38,6 +34,7 @@ namespace EPMS.Domain.Services.Auth
             _passwordHasher = passwordHasher;
             _tokenService = tokenService;
             _settingsService = settingsService;
+            _cacheService = cacheService;
             _timeProvider = timeProvider;
             _jwtSettings = jwtOptions.Value;
         }
@@ -231,6 +228,61 @@ namespace EPMS.Domain.Services.Auth
                 _unitOfWork.Auth.UsersRefreshToken.Delete(storedToken);
                 await _unitOfWork.CompleteAsync();
             }
+        }
+
+        // Caching helper methods - examples of how to use ICacheService
+
+        /// <summary>
+        /// Gets user roles from cache or database. Cached for 1 hour.
+        /// </summary>
+        public async Task<List<string>> GetUserRolesAsync(long userId)
+        {
+            var cacheKey = CacheKeys.UserRoles(userId);
+
+            var cachedRoles = await _cacheService.GetAsync<List<string>>(cacheKey);
+            if (cachedRoles != null)
+                return cachedRoles;
+
+            var user = await _unitOfWork.Auth.Users.GetByIdAsync(userId);
+            if (user == null)
+                return new List<string>();
+
+            var roles = new List<string> { user.Role.Name };
+
+            // Cache for 1 hour
+            await _cacheService.SetAsync(cacheKey, roles, TimeSpan.FromHours(1));
+
+            return roles;
+        }
+
+        /// <summary>
+        /// Invalidates user cache when user data changes.
+        /// Call this after user update/delete operations.
+        /// </summary>
+        public async Task InvalidateUserCacheAsync(long userId, string email)
+        {
+            await _cacheService.RemoveAsync(CacheKeys.UserById(userId));
+            await _cacheService.RemoveAsync(CacheKeys.UserByEmail(email));
+            await _cacheService.RemoveAsync(CacheKeys.UserRoles(userId));
+            await _cacheService.RemoveAsync(CacheKeys.UserPermissions(userId));
+        }
+
+        /// <summary>
+        /// Blacklists a token (for logout/all scenarios). Cached until token expiry.
+        /// </summary>
+        public async Task BlacklistTokenAsync(string token, TimeSpan expiration)
+        {
+            var cacheKey = CacheKeys.AuthTokenBlacklist(token);
+            await _cacheService.SetAsync(cacheKey, true, expiration);
+        }
+
+        /// <summary>
+        /// Checks if a token is blacklisted.
+        /// </summary>
+        public async Task<bool> IsTokenBlacklistedAsync(string token)
+        {
+            var cacheKey = CacheKeys.AuthTokenBlacklist(token);
+            return await _cacheService.GetAsync<bool>(cacheKey);
         }
     }
 }

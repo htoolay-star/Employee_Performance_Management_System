@@ -1,13 +1,7 @@
 ﻿using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.App;
 using EPMS.Domain.Interface.IService.App;
-using EPMS.Domain.Repository.Base;
 using EPMS.Shared.Constants;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EPMS.Domain.Services.App
 {
