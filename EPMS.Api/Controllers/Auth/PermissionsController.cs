@@ -1,12 +1,14 @@
 using EPMS.Domain.Interface.IService.Auth;
+using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.AuthDTOs.PermissionDTOS;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EPMS.Api.Controllers.Auth
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = RoleConstants.Admin)]
     public class PermissionsController : ControllerBase
     {
         private readonly IPermissionService _permissionService;

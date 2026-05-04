@@ -5,6 +5,7 @@ using EPMS.Domain.Interface.IService.Auth;
 using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Auth;
 using EPMS.Shared.DTOs.AuthDTOs;
+using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.Enums;
 using EPMS.Shared.Models;
 using Microsoft.Extensions.Options;
@@ -20,6 +21,10 @@ namespace EPMS.Domain.Services.Auth
         private readonly ICacheService _cacheService;
         private readonly TimeProvider _timeProvider;
         private readonly JwtSettings _jwtSettings;
+
+        // Cache TTL constants
+        private static readonly TimeSpan UserCacheTtl = TimeSpan.FromMinutes(5);
+        private static readonly TimeSpan RolesCacheTtl = TimeSpan.FromHours(1);
 
         public AuthService(
             IUnitOfWork unitOfWork,
@@ -39,27 +44,100 @@ namespace EPMS.Domain.Services.Auth
             _jwtSettings = jwtOptions.Value;
         }
 
-        public async Task<AuthResponse> LoginAsync(LoginRequest request)
+        /// <summary>
+        /// Gets user by email with caching. Returns cached user if available and active.
+        /// </summary>
+        private async Task<User?> GetCachedUserByEmailAsync(string email)
         {
-            var user = await _unitOfWork.Auth.Users.GetByEmailAsync(request.Email, trackChanges: true);
+            var cacheKey = CacheKeys.UserByEmail(email);
+
+            // Try cache first
+            var cached = await _cacheService.GetAsync<CachedUserInfo>(cacheKey);
+            if (cached != null && cached.IsActive)
+            {
+                // Reconstruct user from cache
+                var role = new Role(0, cached.RoleName ?? RoleConstants.User, null);
+                var user = new User(cached.Email, cached.PasswordHash, Enum.Parse<UserRole>(cached.RoleName ?? nameof(UserRole.User)));
+
+                // Set private fields via reflection
+                typeof(User).GetProperty("Id")?.SetValue(user, cached.Id);
+                typeof(User).GetProperty("PublicId")?.SetValue(user, cached.PublicId);
+                typeof(User).GetProperty("IsActive")?.SetValue(user, cached.IsActive);
+                typeof(User).GetProperty("IsFirstLogin")?.SetValue(user, cached.IsFirstLogin);
+                typeof(User).GetProperty("LastLoginDate")?.SetValue(user, cached.LastLoginDate);
+
+                return user;
+            }
+
+            // Cache miss - fetch from DB
+            var userFromDb = await _unitOfWork.Auth.Users.GetByEmailAsync(email, trackChanges: true);
+
+            if (userFromDb != null)
+            {
+                // Store in cache
+                var userInfo = new CachedUserInfo
+                {
+                    Id = userFromDb.Id,
+                    PublicId = userFromDb.PublicId,
+                    Email = userFromDb.Email,
+                    RoleName = userFromDb.Role.Name,
+                    IsActive = userFromDb.IsActive,
+                    IsFirstLogin = userFromDb.IsFirstLogin,
+                    LastLoginDate = userFromDb.LastLoginDate,
+                    PasswordHash = userFromDb.PasswordHash
+                };
+                await _cacheService.SetAsync(cacheKey, userInfo, UserCacheTtl);
+            }
+
+            return userFromDb;
+        }
+
+        /// <summary>
+        /// Updates user cache after successful login or user update.
+        /// </summary>
+        private async Task UpdateUserCacheAsync(User user)
+        {
+            var cacheKey = CacheKeys.UserByEmail(user.Email);
+            var userInfo = new CachedUserInfo
+            {
+                Id = user.Id,
+                PublicId = user.PublicId,
+                Email = user.Email,
+                RoleName = user.Role.Name,
+                IsActive = user.IsActive,
+                IsFirstLogin = user.IsFirstLogin,
+                LastLoginDate = user.LastLoginDate,
+                PasswordHash = user.PasswordHash
+            };
+            await _cacheService.SetAsync(cacheKey, userInfo, UserCacheTtl);
+        }
+
+        public async Task<SuccessResponse<AuthResponse>> LoginAsync(LoginRequest request)
+        {
+            // Use cached user lookup for better performance
+            var user = await GetCachedUserByEmailAsync(request.Email);
 
             if (user == null || !user.IsActive)
             {
-                throw new UnauthorizedAccessException("Invalid email or password.");
+                return SuccessResponse<AuthResponse>.Fail("Invalid email or password.", ErrorType.Unauthorized);
             }
 
             var isPasswordValid = _passwordHasher.Verify(request.Password, user.PasswordHash);
 
             if (!isPasswordValid)
             {
-                throw new UnauthorizedAccessException("Invalid email or password.");
+                return SuccessResponse<AuthResponse>.Fail("Invalid email or password.", ErrorType.Unauthorized);
             }
 
             var jwtId = Guid.NewGuid().ToString();
+
+            // Use cached roles for better performance
+            var roles = await GetUserRolesAsync(user.Id);
+
             var userInfo = new ITokenService.TokenUserInfo(
                 user.Id,
                 user.Email,
-                new List<string> { user.Role.Name },
+                roles,
                 jwtId,
                 user.IsFirstLogin
             );
@@ -74,14 +152,16 @@ namespace EPMS.Domain.Services.Auth
 
             await _unitOfWork.CompleteAsync();
 
-            return new AuthResponse
+            // Update cache with latest user data
+            await UpdateUserCacheAsync(user);
+
+            var authData = new AuthResponse
             {
-                Success = true,
-                Message = "Login successful",
                 Tokens = new TokenResponse
                 {
                     AccessToken = accessToken,
-                    RefreshToken = refreshToken
+                    RefreshToken = refreshToken,
+                    RefreshTokenExpiration = expiry
                 },
                 User = new UserDto
                 {
@@ -93,14 +173,16 @@ namespace EPMS.Domain.Services.Auth
                     LastLoginDate = user.LastLoginDate
                 }
             };
+
+            return SuccessResponse<AuthResponse>.Ok(authData, "Login successful");
         }
 
-        public async Task<AuthResponse> RegisterAsync(CreateUserRequest request)
+        public async Task<SuccessResponse<AuthResponse>> RegisterAsync(CreateUserRequest request)
         {
             var userAlreadyExists = await _unitOfWork.Auth.Users.ExistsAsync(request.Email);
             if (userAlreadyExists)
             {
-                throw new InvalidOperationException("Email is already registered.");
+                return SuccessResponse<AuthResponse>.Fail("Email is already registered.", ErrorType.Conflict);
             }
 
             var plainDefaultPassword = await _settingsService.GetDefaultPasswordAsync();
@@ -126,14 +208,13 @@ namespace EPMS.Domain.Services.Auth
             newUser.AddRefreshToken(refreshToken, jwtId, _timeProvider, _timeProvider.GetUtcNow().AddDays(_jwtSettings.RefreshTokenExpirationDays));
             await _unitOfWork.CompleteAsync();
 
-            return new AuthResponse
+            var authData = new AuthResponse
             {
-                Success = true,
-                Message = "User registered successfully",
                 Tokens = new TokenResponse
                 {
                     AccessToken = accessToken,
-                    RefreshToken = refreshToken
+                    RefreshToken = refreshToken,
+                    RefreshTokenExpiration = _timeProvider.GetUtcNow().AddDays(_jwtSettings.RefreshTokenExpirationDays)
                 },
                 User = new UserDto
                 {
@@ -145,31 +226,37 @@ namespace EPMS.Domain.Services.Auth
                     LastLoginDate = newUser.LastLoginDate
                 }
             };
+
+            return SuccessResponse<AuthResponse>.Ok(authData, "User registered successfully");
         }
 
-        public async Task<AuthResponse> RefreshTokenAsync(RefreshTokenRequest request)
+        public async Task<SuccessResponse<AuthResponse>> RefreshTokenAsync(RefreshTokenRequest request)
         {
             var storedToken = await _unitOfWork.Auth.UsersRefreshToken.GetByTokenWithUserAsync(request.RefreshToken);
 
             if (storedToken == null)
             {
-                throw new UnauthorizedAccessException("Invalid refresh token.");
+                return SuccessResponse<AuthResponse>.Fail("Invalid refresh token.", ErrorType.Unauthorized);
             }
 
             if (storedToken.ExpiresAt < _timeProvider.GetUtcNow())
             {
                 _unitOfWork.Auth.UsersRefreshToken.Delete(storedToken);
                 await _unitOfWork.CompleteAsync();
-                throw new UnauthorizedAccessException("Refresh token expired. Please login again.");
+                return SuccessResponse<AuthResponse>.Fail("Refresh token expired. Please login again.", ErrorType.Unauthorized);
             }
 
             var user = storedToken.User;
 
             var newJwtId = Guid.NewGuid().ToString();
+
+            // Use cached roles for better performance
+            var roles = await GetUserRolesAsync(user.Id);
+
             var userInfo = new ITokenService.TokenUserInfo(
                 user.Id,
                 user.Email,
-                new List<string> { user.Role.Name },
+                roles,
                 newJwtId,
                 user.IsFirstLogin
             );
@@ -183,51 +270,68 @@ namespace EPMS.Domain.Services.Auth
 
             await _unitOfWork.CompleteAsync();
 
-            return new AuthResponse
+            var authData = new AuthResponse
             {
-                Success = true,
                 Tokens = new TokenResponse
                 {
                     AccessToken = newAccessToken,
-                    RefreshToken = newRefreshToken
+                    RefreshToken = newRefreshToken,
+                    RefreshTokenExpiration = _timeProvider.GetUtcNow().AddDays(_jwtSettings.RefreshTokenExpirationDays)
                 },
-                User = new UserDto 
+                User = new UserDto
                 {
                     UserGuid = user.PublicId,
-                    Email = user.Email, 
+                    Email = user.Email,
                     RoleName = user.Role.Name,
                     IsActive = user.IsActive,
                     IsFirstLogin = user.IsFirstLogin,
                     LastLoginDate = user.LastLoginDate
                 }
             };
+
+            return SuccessResponse<AuthResponse>.Ok(authData, "Token refreshed successfully");
         }
 
-        public async Task<bool> ChangePasswordAsync(Guid userGuid, ChangePasswordRequest request)
+        public async Task<SuccessResponse> ChangePasswordAsync(Guid userGuid, ChangePasswordRequest request)
         {
             var user = await _unitOfWork.Auth.Users.GetByIdAsync(userGuid);
-            if (user == null) throw new KeyNotFoundException("User not found.");
+            if (user == null) return SuccessResponse.Fail("User not found.", ErrorType.NotFound);
 
             if (!_passwordHasher.Verify(request.CurrentPassword, user.PasswordHash))
             {
-                throw new UnauthorizedAccessException("Current password is incorrect.");
+                return SuccessResponse.Fail("Current password is incorrect.", ErrorType.Unauthorized);
             }
 
             var hashedNewPassword = _passwordHasher.Hash(request.NewPassword);
 
             user.ChangePassword(hashedNewPassword);
 
-            return await _unitOfWork.CompleteAsync() > 0;
+            var result = await _unitOfWork.CompleteAsync() > 0;
+
+            // Invalidate cache when password changes
+            if (result)
+            {
+                await InvalidateUserCacheAsync(user.Id, user.Email);
+                return SuccessResponse<bool>.Ok(true, "Password changed successfully.");
+            }
+
+            return SuccessResponse.Fail("Failed to change password.");
         }
 
-        public async Task LogoutAsync(string refreshToken)
+        public async Task<SuccessResponse> LogoutAsync(string refreshToken)
         {
             var storedToken = await _unitOfWork.Auth.UsersRefreshToken.GetByTokenWithUserAsync(refreshToken);
             if (storedToken != null)
             {
+                var user = storedToken.User;
                 _unitOfWork.Auth.UsersRefreshToken.Delete(storedToken);
                 await _unitOfWork.CompleteAsync();
+
+                // Invalidate user cache on logout
+                await InvalidateUserCacheAsync(user.Id, user.Email);
             }
+
+            return SuccessResponse.Ok("Logged out successfully.");
         }
 
         // Caching helper methods - examples of how to use ICacheService
@@ -249,8 +353,8 @@ namespace EPMS.Domain.Services.Auth
 
             var roles = new List<string> { user.Role.Name };
 
-            // Cache for 1 hour
-            await _cacheService.SetAsync(cacheKey, roles, TimeSpan.FromHours(1));
+            // Cache roles
+            await _cacheService.SetAsync(cacheKey, roles, RolesCacheTtl);
 
             return roles;
         }

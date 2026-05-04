@@ -1,4 +1,6 @@
 ﻿using EPMS.Shared.Constants.EPMS.Shared.Constants;
+using EPMS.Shared.DTOs.Common;
+using EPMS.Shared.Enums;
 using FluentValidation;
 using FluentValidation.Results;
 using Microsoft.AspNetCore.Diagnostics;
@@ -19,19 +21,13 @@ namespace EPMS.Api.Middlewares
         {
             logger.LogError(exception, "Exception occurred: {Message}", exception.Message);
 
-            var (statusCode, title, detail) = MapException(exception);
+            var (statusCode, message, errorType) = MapException(exception);
 
-            var problemDetails = new ProblemDetails
-            {
-                Status = statusCode,
-                Title = title,
-                Detail = detail,
-                Instance = httpContext.Request.Path
-            };
+            Dictionary<string, string[]>? validationErrors = null;
 
             if (exception is FluentValidation.ValidationException valEx)
             {
-                problemDetails.Extensions["errors"] = valEx.Errors
+                validationErrors = valEx.Errors
                     .GroupBy(e => e.PropertyName)
                     .ToDictionary(
                         g => string.IsNullOrEmpty(g.Key) ? "general" : JsonNamingPolicy.CamelCase.ConvertName(g.Key),
@@ -39,65 +35,50 @@ namespace EPMS.Api.Middlewares
                     );
             }
 
-            if (env.IsDevelopment())
+            var response = SuccessResponse.Fail(message, errorType, validationErrors);
+
+            if (env.IsDevelopment() && errorType == ErrorType.ServerError)
             {
-                problemDetails.Extensions["stackTrace"] = exception.StackTrace;
+                response = response with { Message = $"{message} - {exception.Message}" };
             }
 
             httpContext.Response.StatusCode = statusCode;
-            await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
+            httpContext.Response.ContentType = "application/json";
+            await httpContext.Response.WriteAsJsonAsync(response, cancellationToken);
 
             return true;
         }
 
-        private (int StatusCode, string Title, string Detail) MapException(Exception ex) => ex switch
+        private (int StatusCode, string Message, ErrorType ErrorType) MapException(Exception ex) => ex switch
         {
             FluentValidation.ValidationException => (
-                (int)HttpStatusCode.UnprocessableEntity,
-                ErrorMessages.Titles.ValidationError,
-                ErrorMessages.Descriptions.ValidationFailure
-            ),
-
-            InvalidOperationException => (
-                (int)HttpStatusCode.UnprocessableEntity,
-                ErrorMessages.Titles.BusinessRuleViolation,
-                ex.Message
-            ),
-
-            ArgumentException => (
-                (int)HttpStatusCode.UnprocessableEntity,
-                ErrorMessages.Titles.InvalidArgument,
-                ex.Message
-            ),
-
-            DbUpdateConcurrencyException => (
-                (int)HttpStatusCode.Conflict,
-                ErrorMessages.Titles.ConcurrencyError,
-                ErrorMessages.Descriptions.ConcurrencyConflict
-            ),
-
-            KeyNotFoundException => (
-                (int)HttpStatusCode.NotFound,
-                ErrorMessages.Titles.NotFound,
-                ex.Message
+                (int)HttpStatusCode.BadRequest,
+                "Validation failed. Please check the inputted data.",
+                ErrorType.Validation
             ),
 
             UnauthorizedAccessException => (
                 (int)HttpStatusCode.Unauthorized,
-                ErrorMessages.Titles.Unauthorized,
-                ErrorMessages.Descriptions.UnauthorizedAccess
+                "You are not authorized to perform this action.",
+                ErrorType.Unauthorized
             ),
 
-            DbUpdateException => (
-                (int)HttpStatusCode.BadRequest,
-                ErrorMessages.Titles.DatabaseError,
-                env.IsDevelopment() ? ex.InnerException?.Message ?? ex.Message : ErrorMessages.Descriptions.DatabaseErrorGeneric
+            KeyNotFoundException => (
+                (int)HttpStatusCode.NotFound,
+                "The requested resource was not found.",
+                ErrorType.NotFound
+            ),
+
+            InvalidOperationException => (
+                (int)HttpStatusCode.Conflict,
+                ex.Message,
+                ErrorType.Conflict
             ),
 
             _ => (
                 (int)HttpStatusCode.InternalServerError,
-                ErrorMessages.Titles.ServerError,
-                ErrorMessages.Descriptions.InternalServerError
+                "An unexpected internal server error occurred.",
+                ErrorType.ServerError
             )
         };
     }
