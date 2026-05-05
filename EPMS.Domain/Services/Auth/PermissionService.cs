@@ -3,6 +3,8 @@ using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Auth;
 using EPMS.Domain.Interface.IService.Auth;
 using EPMS.Shared.DTOs.AuthDTOs.PermissionDTOS;
+using EPMS.Shared.DTOs.Common;
+using EPMS.Shared.Enums;
 
 namespace EPMS.Domain.Services.Auth
 {
@@ -16,59 +18,60 @@ namespace EPMS.Domain.Services.Auth
             _uow = uow;
             _mapper = mapper;
         }
-        public async Task<IEnumerable<PermissionDto>> GetAllPermissionsAsync()
+
+        public async Task<SuccessResponse<IEnumerable<PermissionDto>>> GetAllPermissionsAsync()
         {
             var permissions = await _uow.Auth.Permissions.GetAllAsync();
-            return _mapper.Map<IEnumerable<PermissionDto>>(permissions);
+            var dtos = _mapper.Map<IEnumerable<PermissionDto>>(permissions);
+            return SuccessResponse<IEnumerable<PermissionDto>>.Ok(dtos);
         }
 
-        public async Task<PermissionDto?> GetPermissionByIdAsync(int id)
+        public async Task<SuccessResponse<PermissionDto>> GetPermissionByIdAsync(int id)
         {
             var permission = await _uow.Auth.Permissions.GetByIdAsync(id);
 
-            if (permission == null) throw new Exception("Permission not found");
+            if (permission == null)
+                return SuccessResponse<PermissionDto>.Fail("Permission not found.", ErrorType.NotFound);
 
-            return _mapper.Map<PermissionDto>(permission);
+            var dto = _mapper.Map<PermissionDto>(permission);
+            return SuccessResponse<PermissionDto>.Ok(dto);
         }
 
- 
-        public async Task CreatePermissionAsync(CreatePermissionDto dto)
+        public async Task<SuccessResponse> CreatePermissionAsync(CreatePermissionDto dto)
         {
-            
             if (!await _uow.Auth.Permissions.IsCodeUniqueAsync(dto.Code))
-            {
-                throw new Exception("Permission Code already have");
-            }
-            
+                return SuccessResponse.Fail("Permission code already exists.", ErrorType.Conflict);
+
             var permission = new Permission(dto.Code, dto.Name, dto.Description);
 
             _uow.Auth.Permissions.Add(permission);
             await _uow.CompleteAsync();
+            return SuccessResponse.Ok("Permission created successfully.");
         }
 
-        
-        public async Task UpdatePermissionAsync(int id, UpdatePermissionDto dto)
+        public async Task<SuccessResponse> UpdatePermissionAsync(int id, UpdatePermissionDto dto)
         {
             var permission = await _uow.Auth.Permissions.GetByIdAsync(id);
 
-            if (permission == null) throw new Exception("Permission not found");
+            if (permission == null)
+                return SuccessResponse.Fail("Permission not found.", ErrorType.NotFound);
 
             permission.UpdateDetails(dto.Name, dto.Description);
 
             await _uow.CompleteAsync();
+            return SuccessResponse.Ok("Permission updated successfully.");
         }
 
-        public async Task DeletePermissionAsync(int id)
+        public async Task<SuccessResponse> DeletePermissionAsync(int id)
         {
             var permission = await _uow.Auth.Permissions.GetByIdAsync(id);
 
-            if (permission == null) throw new Exception("Permission not found");
+            if (permission == null)
+                return SuccessResponse.Fail("Permission not found.", ErrorType.NotFound);
 
-            if (permission != null)
-            {
-                _uow.Auth.Permissions.Delete(permission);
-                await _uow.CompleteAsync();
-            }
+            _uow.Auth.Permissions.Delete(permission);
+            await _uow.CompleteAsync();
+            return SuccessResponse.Ok("Permission deleted successfully.");
         }
     }
 }

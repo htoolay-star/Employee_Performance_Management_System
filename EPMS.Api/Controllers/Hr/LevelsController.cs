@@ -1,4 +1,6 @@
+using EPMS.Api.Controllers.Common;
 using EPMS.Domain.Interfaces;
+using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.LevelDTOs;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,7 +8,7 @@ namespace EPMS.Api.Controllers.Hr;
 
 [ApiController]
 [Route("api/[controller]")]
-public class LevelsController : ControllerBase
+public class LevelsController : ApiControllerBase
 {
     private readonly ILevelService _service;
 
@@ -16,37 +18,37 @@ public class LevelsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<ActionResult<SuccessResponse<IEnumerable<LevelDto>>>> GetAll()
     {
         var result = await _service.GetAllAsync();
-        return Ok(result);
+        return HandleResult(result);
     }
 
     [HttpGet("{id:int}")]
-    public async Task<IActionResult> GetById(int id)
+    public async Task<ActionResult<SuccessResponse<LevelDto>>> GetById(int id)
     {
         var result = await _service.GetByIdAsync(id);
-        return Ok(result);
+        return HandleResult(result);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(CreateLevelDto dto)
+    public async Task<ActionResult<SuccessResponse<int>>> Create(CreateLevelDto dto)
     {
-        var id = await _service.CreateAsync(dto);
-        return Ok(new { Id = id, Message = "Created Successfully" });
+        var result = await _service.CreateAsync(dto);
+        return HandleResult(result);
     }
 
     [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update(int id, UpdateLevelDto dto)
+    public async Task<ActionResult<SuccessResponse>> Update(int id, UpdateLevelDto dto)
     {
-        await _service.UpdateAsync(id, dto);
-        return Ok(new { Message = "Updated Successfully" });
+        var result = await _service.UpdateAsync(id, dto);
+        return HandleResult(result);
     }
 
     [HttpDelete("{id:int}")]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<ActionResult<SuccessResponse>> Delete(int id)
     {
-        await _service.DeleteAsync(id);
-        return NoContent();
+        var result = await _service.DeleteAsync(id);
+        return HandleResult(result);
     }
 }
