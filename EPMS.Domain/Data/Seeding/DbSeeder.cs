@@ -83,7 +83,7 @@ namespace EPMS.Domain.Data.Seeding
             {
                 var passwordHash = BCrypt.Net.BCrypt.EnhancedHashPassword(_settings.SAPassword, 12);
 
-                var adminUser = new User(_settings.SAEmail, passwordHash, UserRole.SystemAdmin);
+                var adminUser = User.CreateSystemAdmin(_settings.SAEmail, passwordHash);
 
                 _uow.Auth.Users.Add(adminUser);
                 await _uow.CompleteAsync();

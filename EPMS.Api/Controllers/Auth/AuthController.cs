@@ -35,7 +35,7 @@ namespace EPMS.Api.Controllers.Auth
 
         [Authorize(Roles = RoleConstants.SystemAdmin)]
         [HttpPost("register")]
-        public async Task<ActionResult<SuccessResponse<AuthResponse>>> Register([FromBody] CreateUserRequest request)
+        public async Task<ActionResult<SuccessResponse<UserDto>>> Register([FromBody] CreateUserRequest request)
         {
             var response = await _authService.RegisterAsync(request);
             return HandleResult(response);
@@ -53,14 +53,14 @@ namespace EPMS.Api.Controllers.Auth
         [HttpPost("change-password")]
         public async Task<ActionResult<SuccessResponse>> ChangePassword([FromBody] ChangePasswordRequest request)
         {
-            var userGuidClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            if (!Guid.TryParse(userGuidClaim, out var userGuid))
+            if (!long.TryParse(userIdClaim, out var userId))
             {
                 return HandleResult(SuccessResponse.Fail("Invalid user token.", ErrorType.Unauthorized));
             }
 
-            var response = await _authService.ChangePasswordAsync(userGuid, request);
+            var response = await _authService.ChangePasswordAsync(userId, request);
             return HandleResult(response);
         }
 

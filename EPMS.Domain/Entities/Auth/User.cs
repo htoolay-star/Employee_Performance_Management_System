@@ -123,5 +123,13 @@ namespace EPMS.Domain.Entities.Auth
         {
             LastLoginDate = timeProvider.GetUtcNow();
         }
+
+        public static User CreateSystemAdmin(string email, string passwordHash)
+        {
+            return new User(email, passwordHash, UserRole.SystemAdmin)
+            {
+                IsFirstLogin = false
+            };
+        }
     }
 }
