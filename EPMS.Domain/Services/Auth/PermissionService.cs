@@ -23,7 +23,7 @@ namespace EPMS.Domain.Services.Auth
         {
             var permissions = await _uow.Auth.Permissions.GetAllAsync();
             var dtos = _mapper.Map<IEnumerable<PermissionDto>>(permissions);
-            return SuccessResponse<IEnumerable<PermissionDto>>.Ok(dtos);
+            return SuccessResponse<IEnumerable<PermissionDto>>.Ok(dtos, "Permissions retrieved successfully.");
         }
 
         public async Task<SuccessResponse<PermissionDto>> GetPermissionByIdAsync(int id)
@@ -34,7 +34,7 @@ namespace EPMS.Domain.Services.Auth
                 return SuccessResponse<PermissionDto>.Fail("Permission not found.", ErrorType.NotFound);
 
             var dto = _mapper.Map<PermissionDto>(permission);
-            return SuccessResponse<PermissionDto>.Ok(dto);
+            return SuccessResponse<PermissionDto>.Ok(dto, "Permission retrieved successfully.");
         }
 
         public async Task<SuccessResponse> CreatePermissionAsync(CreatePermissionDto dto)

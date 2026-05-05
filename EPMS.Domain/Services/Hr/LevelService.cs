@@ -23,7 +23,7 @@ public class LevelService : ILevelService
     {
         var levels = await _uow.HR.Levels.GetAllAsync();
         var dtos = _mapper.Map<IEnumerable<LevelDto>>(levels);
-        return SuccessResponse<IEnumerable<LevelDto>>.Ok(dtos);
+        return SuccessResponse<IEnumerable<LevelDto>>.Ok(dtos, "Levels retrieved successfully.");
     }
 
     public async Task<SuccessResponse<LevelDto>> GetByIdAsync(int id)
@@ -34,7 +34,7 @@ public class LevelService : ILevelService
             return SuccessResponse<LevelDto>.Fail($"Level with ID '{id}' was not found.", ErrorType.NotFound);
 
         var dto = _mapper.Map<LevelDto>(level);
-        return SuccessResponse<LevelDto>.Ok(dto);
+        return SuccessResponse<LevelDto>.Ok(dto, "Level retrieved successfully.");
     }
 
     public async Task<SuccessResponse<int>> CreateAsync(CreateLevelDto dto)

@@ -25,7 +25,7 @@ public class PositionService : IPositionService
     {
         var positions = await _uow.HR.Positions.GetAllWithLevelAsync();
         var dtos = _mapper.Map<IEnumerable<PositionDto>>(positions);
-        return SuccessResponse<IEnumerable<PositionDto>>.Ok(dtos);
+        return SuccessResponse<IEnumerable<PositionDto>>.Ok(dtos, "Positions retrieved successfully.");
     }
 
     public async Task<SuccessResponse<PositionDto>> GetByIdAsync(long id)
@@ -36,7 +36,7 @@ public class PositionService : IPositionService
             return SuccessResponse<PositionDto>.Fail($"Position with ID '{id}' was not found.", ErrorType.NotFound);
 
         var dto = _mapper.Map<PositionDto>(position);
-        return SuccessResponse<PositionDto>.Ok(dto);
+        return SuccessResponse<PositionDto>.Ok(dto, "Position retrieved successfully.");
     }
 
     public async Task<SuccessResponse<long>> CreateAsync(CreatePositionDto dto)
@@ -96,7 +96,7 @@ public class PositionService : IPositionService
 
         var permissions = await _uow.Auth.PositionPermissions.GetPermissionsForPositionAsync(positionId);
         var dtos = _mapper.Map<IEnumerable<PermissionDto>>(permissions);
-        return SuccessResponse<IEnumerable<PermissionDto>>.Ok(dtos);
+        return SuccessResponse<IEnumerable<PermissionDto>>.Ok(dtos, "Permissions retrieved successfully.");
     }
 
     public async Task<SuccessResponse> AssignPermissionToPositionAsync(long positionId, long permissionId)
