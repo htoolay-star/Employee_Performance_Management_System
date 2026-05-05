@@ -1,14 +1,11 @@
 ﻿using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Shared;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace EPMS.Domain.Interface.Irepo.Shared
+namespace EPMS.Domain.Interface.Irepo.Shared;
+
+public interface ICategoryRepository : IGenericRepository<Category>
 {
-    public interface ICategoryRepository : IGenericRepository<Category>
-    {
-    }
+    Task<bool> ExistsByCodeAsync(string code, string module, int? excludeId = null);
+    Task<bool> ExistsByNameAsync(string name, string module, int? excludeId = null);
+    Task<bool> HasSubCategoriesAsync(int categoryId);
 }

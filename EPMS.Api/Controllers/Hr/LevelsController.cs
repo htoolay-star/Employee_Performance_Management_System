@@ -24,29 +24,29 @@ public class LevelsController : ApiControllerBase
         return HandleResult(result);
     }
 
-    [HttpGet("{id:int}")]
-    public async Task<ActionResult<SuccessResponse<LevelDto>>> GetById(int id)
+    [HttpGet("{id:long}")]
+    public async Task<ActionResult<SuccessResponse<LevelDto>>> GetById(long id)
     {
         var result = await _service.GetByIdAsync(id);
         return HandleResult(result);
     }
 
     [HttpPost]
-    public async Task<ActionResult<SuccessResponse<int>>> Create(CreateLevelDto dto)
+    public async Task<ActionResult<SuccessResponse<long>>> Create(CreateLevelDto dto)
     {
         var result = await _service.CreateAsync(dto);
         return HandleResult(result);
     }
 
-    [HttpPut("{id:int}")]
-    public async Task<ActionResult<SuccessResponse>> Update(int id, UpdateLevelDto dto)
+    [HttpPut("{id:long}")]
+    public async Task<ActionResult<SuccessResponse>> Update(long id, UpdateLevelDto dto)
     {
         var result = await _service.UpdateAsync(id, dto);
         return HandleResult(result);
     }
 
-    [HttpDelete("{id:int}")]
-    public async Task<ActionResult<SuccessResponse>> Delete(int id)
+    [HttpDelete("{id:long}")]
+    public async Task<ActionResult<SuccessResponse>> Delete(long id)
     {
         var result = await _service.DeleteAsync(id);
         return HandleResult(result);

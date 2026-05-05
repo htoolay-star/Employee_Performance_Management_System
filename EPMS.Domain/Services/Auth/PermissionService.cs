@@ -26,7 +26,7 @@ namespace EPMS.Domain.Services.Auth
             return SuccessResponse<IEnumerable<PermissionDto>>.Ok(dtos, "Permissions retrieved successfully.");
         }
 
-        public async Task<SuccessResponse<PermissionDto>> GetPermissionByIdAsync(int id)
+        public async Task<SuccessResponse<PermissionDto>> GetPermissionByIdAsync(long id)
         {
             var permission = await _uow.Auth.Permissions.GetByIdAsync(id);
 
@@ -37,19 +37,19 @@ namespace EPMS.Domain.Services.Auth
             return SuccessResponse<PermissionDto>.Ok(dto, "Permission retrieved successfully.");
         }
 
-        public async Task<SuccessResponse> CreatePermissionAsync(CreatePermissionDto dto)
+        public async Task<SuccessResponse<long>> CreatePermissionAsync(CreatePermissionDto dto)
         {
             if (!await _uow.Auth.Permissions.IsCodeUniqueAsync(dto.Code))
-                return SuccessResponse.Fail("Permission code already exists.", ErrorType.Conflict);
+                return SuccessResponse<long>.Fail("Permission code already exists.", ErrorType.Conflict);
 
             var permission = new Permission(dto.Code, dto.Name, dto.Description);
 
             _uow.Auth.Permissions.Add(permission);
             await _uow.CompleteAsync();
-            return SuccessResponse.Ok("Permission created successfully.");
+            return SuccessResponse<long>.Ok(permission.Id, "Permission created successfully.");
         }
 
-        public async Task<SuccessResponse> UpdatePermissionAsync(int id, UpdatePermissionDto dto)
+        public async Task<SuccessResponse> UpdatePermissionAsync(long id, UpdatePermissionDto dto)
         {
             var permission = await _uow.Auth.Permissions.GetByIdAsync(id);
 
@@ -62,7 +62,7 @@ namespace EPMS.Domain.Services.Auth
             return SuccessResponse.Ok("Permission updated successfully.");
         }
 
-        public async Task<SuccessResponse> DeletePermissionAsync(int id)
+        public async Task<SuccessResponse> DeletePermissionAsync(long id)
         {
             var permission = await _uow.Auth.Permissions.GetByIdAsync(id);
 

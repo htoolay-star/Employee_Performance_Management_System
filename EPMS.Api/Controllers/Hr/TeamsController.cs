@@ -1,12 +1,17 @@
-using Microsoft.AspNetCore.Mvc;
+using EPMS.Api.Controllers.Common;
 using EPMS.Domain.Interfaces;
+using EPMS.Shared.Constants;
+using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.TeamDTOs;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace EPMS.Api.Controllers.Hr;
 
 [ApiController]
 [Route("api/[controller]")]
-public class TeamsController : ControllerBase
+[Authorize(Roles = RoleConstants.Admin)]
+public class TeamsController : ApiControllerBase
 {
     private readonly ITeamService _teamService;
 
@@ -16,37 +21,37 @@ public class TeamsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<ActionResult<SuccessResponse<IEnumerable<TeamDto>>>> GetAll()
     {
         var result = await _teamService.GetAllAsync();
-        return Ok(result);
+        return HandleResult(result);
     }
 
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(long id)
+    [HttpGet("{id:long}")]
+    public async Task<ActionResult<SuccessResponse<TeamDto>>> GetById(long id)
     {
         var result = await _teamService.GetByIdAsync(id);
-        return Ok(result);
+        return HandleResult(result);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(CreateTeamDto dto)
+    public async Task<ActionResult<SuccessResponse<long>>> Create(CreateTeamDto dto)
     {
-        var id = await _teamService.CreateAsync(dto);
-        return Ok(new { Id = id, Message = "Created Successfully" });
+        var result = await _teamService.CreateAsync(dto);
+        return HandleResult(result);
     }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(long id, UpdateTeamDto dto)
+    [HttpPut("{id:long}")]
+    public async Task<ActionResult<SuccessResponse>> Update(long id, UpdateTeamDto dto)
     {
-        await _teamService.UpdateAsync(id, dto);
-        return Ok(new { Message = "Updated Successfully" });
+        var result = await _teamService.UpdateAsync(id, dto);
+        return HandleResult(result);
     }
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(long id)
+    [HttpDelete("{id:long}")]
+    public async Task<ActionResult<SuccessResponse>> Delete(long id)
     {
-        await _teamService.DeleteAsync(id);
-        return NoContent();
+        var result = await _teamService.DeleteAsync(id);
+        return HandleResult(result);
     }
 }

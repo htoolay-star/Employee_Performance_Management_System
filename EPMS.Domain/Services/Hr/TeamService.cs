@@ -3,7 +3,9 @@ using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Hr;
 using EPMS.Domain.Interface.Irepo.Hr;
 using EPMS.Domain.Interfaces;
+using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.TeamDTOs;
+using EPMS.Shared.Enums;
 
 namespace EPMS.Domain.Services.Hr;
 
@@ -18,46 +20,44 @@ public class TeamService : ITeamService
         _uow = uow;
     }
 
-    public async Task<IEnumerable<TeamDto>> GetAllAsync()
+    public async Task<SuccessResponse<IEnumerable<TeamDto>>> GetAllAsync()
     {
         var teams = await _uow.HR.Teams.GetAllAsync();
-        return _mapper.Map<IEnumerable<TeamDto>>(teams);
+        var dtos = _mapper.Map<IEnumerable<TeamDto>>(teams);
+        return SuccessResponse<IEnumerable<TeamDto>>.Ok(dtos, "Teams retrieved successfully.");
     }
 
-    public async Task<TeamDto?> GetByIdAsync(long id)
+    public async Task<SuccessResponse<TeamDto>> GetByIdAsync(long id)
     {
         var team = await _uow.HR.Teams.GetByIdAsync(id);
 
         if (team == null)
-            throw new KeyNotFoundException($"Team with ID '{id}' was not found.");
+            return SuccessResponse<TeamDto>.Fail($"Team with ID '{id}' was not found.", ErrorType.NotFound);
 
-        return _mapper.Map<TeamDto>(team);
+        var dto = _mapper.Map<TeamDto>(team);
+        return SuccessResponse<TeamDto>.Ok(dto, "Team retrieved successfully.");
     }
 
-    public async Task<long> CreateAsync(CreateTeamDto dto)
+    public async Task<SuccessResponse<long>> CreateAsync(CreateTeamDto dto)
     {
         if (await _uow.HR.Teams.ExistsByNameInDepartmentAsync(dto.Name, dto.DepartmentId))
-        {
-            throw new InvalidOperationException($"Team with name '{dto.Name}' already exists in this department.");
-        }
+            return SuccessResponse<long>.Fail($"Team with name '{dto.Name}' already exists in this department.", ErrorType.Conflict);
 
         var entity = new Team(dto.Name, dto.DepartmentId);
         _uow.HR.Teams.Add(entity);
         await _uow.CompleteAsync();
-        return entity.Id;
+        return SuccessResponse<long>.Ok(entity.Id, "Team created successfully.");
     }
 
-    public async Task UpdateAsync(long id, UpdateTeamDto dto)
+    public async Task<SuccessResponse> UpdateAsync(long id, UpdateTeamDto dto)
     {
         var team = await _uow.HR.Teams.GetByIdAsync(id);
 
         if (team == null)
-            throw new KeyNotFoundException($"Team with ID '{id}' was not found.");
+            return SuccessResponse.Fail($"Team with ID '{id}' was not found.", ErrorType.NotFound);
 
         if (team.Name != dto.Name && await _uow.HR.Teams.ExistsByNameInDepartmentAsync(dto.Name, team.DepartmentId))
-        {
-            throw new InvalidOperationException($"Another team with name '{dto.Name}' already exists in this department.");
-        }
+            return SuccessResponse.Fail($"Another team with name '{dto.Name}' already exists in this department.", ErrorType.Conflict);
 
         team.Rename(dto.Name);
         
@@ -65,19 +65,18 @@ public class TeamService : ITeamService
         else team.Deactivate();
 
         await _uow.CompleteAsync();
+        return SuccessResponse.Ok("Team updated successfully.");
     }
 
-    public async Task DeleteAsync(long id)
+    public async Task<SuccessResponse> DeleteAsync(long id)
     {
         var team = await _uow.HR.Teams.GetByIdAsync(id);
 
         if (team == null)
-            throw new KeyNotFoundException($"Team with ID '{id}' was not found.");
+            return SuccessResponse.Fail($"Team with ID '{id}' was not found.", ErrorType.NotFound);
 
-        if (team != null)
-        {
-            _uow.HR.Teams.Delete(team);
-            await _uow.CompleteAsync();
-        }
+        _uow.HR.Teams.Delete(team);
+        await _uow.CompleteAsync();
+        return SuccessResponse.Ok("Team deleted successfully.");
     }
 }

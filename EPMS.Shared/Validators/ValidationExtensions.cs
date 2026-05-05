@@ -73,7 +73,7 @@ public static class ValidationExtensions
             .MaximumLength(100).WithMessage(HrValidationMessages.Position.TitleMaxLength);
     }
 
-    public static IRuleBuilderOptions<T, int> ApplyPositionLevelIdRules<T>(this IRuleBuilder<T, int> ruleBuilder)
+    public static IRuleBuilderOptions<T, long> ApplyPositionLevelIdRules<T>(this IRuleBuilder<T, long> ruleBuilder)
     {
         return ruleBuilder.GreaterThan(0).WithMessage(HrValidationMessages.Position.LevelIdInvalid);
     }
@@ -141,7 +141,7 @@ public static class ValidationExtensions
             .WithMessage(SharedValidationMessages.Category.DescriptionMaxLength);
     }
 
-    public static IRuleBuilderOptions<T, int?> ApplyCategoryOptionalParentIdRules<T>(this IRuleBuilder<T, int?> ruleBuilder)
+    public static IRuleBuilderOptions<T, long?> ApplyCategoryOptionalParentIdRules<T>(this IRuleBuilder<T, long?> ruleBuilder)
     {
         return ruleBuilder
             .Must(pid => !pid.HasValue || pid.Value > 0)

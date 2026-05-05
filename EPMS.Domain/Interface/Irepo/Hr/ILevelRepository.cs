@@ -5,6 +5,6 @@ namespace EPMS.Domain.Interface.Irepo.Hr;
 
 public interface ILevelRepository : IGenericRepository<Level>
 {
-    Task<bool> ExistsByCodeAsync(string code, int? excludeLevelId = null, CancellationToken cancellationToken = default);
-    Task<bool> HasPositionsAsync(int levelId, CancellationToken cancellationToken = default);
+    Task<bool> ExistsByCodeAsync(string code, long? excludeLevelId = null, CancellationToken cancellationToken = default);
+    Task<bool> HasPositionsAsync(long levelId, CancellationToken cancellationToken = default);
 }

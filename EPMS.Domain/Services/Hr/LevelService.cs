@@ -26,7 +26,7 @@ public class LevelService : ILevelService
         return SuccessResponse<IEnumerable<LevelDto>>.Ok(dtos, "Levels retrieved successfully.");
     }
 
-    public async Task<SuccessResponse<LevelDto>> GetByIdAsync(int id)
+    public async Task<SuccessResponse<LevelDto>> GetByIdAsync(long id)
     {
         var level = await _uow.HR.Levels.GetByIdAsync(id);
 
@@ -37,18 +37,18 @@ public class LevelService : ILevelService
         return SuccessResponse<LevelDto>.Ok(dto, "Level retrieved successfully.");
     }
 
-    public async Task<SuccessResponse<int>> CreateAsync(CreateLevelDto dto)
+    public async Task<SuccessResponse<long>> CreateAsync(CreateLevelDto dto)
     {
         if (await _uow.HR.Levels.ExistsByCodeAsync(dto.Code))
-            return SuccessResponse<int>.Fail($"Level with code '{dto.Code.Trim().ToUpperInvariant()}' already exists.", ErrorType.Conflict);
+            return SuccessResponse<long>.Fail($"Level with code '{dto.Code.Trim().ToUpperInvariant()}' already exists.", ErrorType.Conflict);
 
         var entity = new Level(dto.Code, dto.Name, dto.Description);
         _uow.HR.Levels.Add(entity);
         await _uow.CompleteAsync();
-        return SuccessResponse<int>.Ok(checked((int)entity.Id), "Level created successfully.");
+        return SuccessResponse<long>.Ok(entity.Id, "Level created successfully.");
     }
 
-    public async Task<SuccessResponse> UpdateAsync(int id, UpdateLevelDto dto)
+    public async Task<SuccessResponse> UpdateAsync(long id, UpdateLevelDto dto)
     {
         var level = await _uow.HR.Levels.GetByIdAsync(id);
 
@@ -64,7 +64,7 @@ public class LevelService : ILevelService
         return SuccessResponse.Ok("Level updated successfully.");
     }
 
-    public async Task<SuccessResponse> DeleteAsync(int id)
+    public async Task<SuccessResponse> DeleteAsync(long id)
     {
         var level = await _uow.HR.Levels.GetByIdAsync(id);
 

@@ -1,16 +1,12 @@
-﻿using EPMS.Shared.DTOs.TagDTOs;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using EPMS.Shared.DTOs.Common;
+using EPMS.Shared.DTOs.TagDTOs;
 
-namespace EPMS.Domain.Interface.IService.Shared
+namespace EPMS.Domain.Interface.IService.Shared;
+
+public interface ITagService
 {
-    public interface ITagService
-    {
-        Task<IEnumerable<TagDto>> GetAllTagsAsync();
-        Task CreateTagAsync(CreateTagDto dto);
-        Task DeleteTagAsync(int id);
-    }
+    Task<SuccessResponse<IEnumerable<TagDto>>> GetAllTagsAsync();
+    Task<SuccessResponse<TagDto>> GetTagByIdAsync(int id);
+    Task<SuccessResponse<long>> CreateTagAsync(CreateTagDto dto);
+    Task<SuccessResponse> DeleteTagAsync(int id);
 }

@@ -1,18 +1,13 @@
 ﻿using EPMS.Shared.DTOs.CategoryDTOs;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using EPMS.Shared.DTOs.Common;
 
-namespace EPMS.Domain.Interface.IService.Shared
+namespace EPMS.Domain.Interface.IService.Shared;
+
+public interface ICategoryService
 {
-    public interface ICategoryService
-    {
-        Task<IEnumerable<CategoryDto>> GetAllCategoriesAsync();
-        Task<CategoryDto?> GetCategoryByIdAsync(int id);
-        Task CreateCategoryAsync(CreateCategoryDto dto);
-        Task UpdateCategoryAsync(int id, UpdateCategoryDto dto);
-        Task DeleteCategoryAsync(int id);
-    }
+    Task<SuccessResponse<IEnumerable<CategoryDto>>> GetAllCategoriesAsync();
+    Task<SuccessResponse<CategoryDto>> GetCategoryByIdAsync(int id);
+    Task<SuccessResponse<long>> CreateCategoryAsync(CreateCategoryDto dto);
+    Task<SuccessResponse> UpdateCategoryAsync(int id, UpdateCategoryDto dto);
+    Task<SuccessResponse> DeleteCategoryAsync(int id);
 }
