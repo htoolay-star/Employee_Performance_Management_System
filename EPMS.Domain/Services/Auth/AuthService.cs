@@ -9,6 +9,7 @@ using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.Enums;
 using EPMS.Shared.Models;
 using Microsoft.Extensions.Options;
+using static EPMS.Shared.Constants.ValidationMessages.AuthValidationMessages;
 
 namespace EPMS.Domain.Services.Auth
 {
@@ -114,19 +115,41 @@ namespace EPMS.Domain.Services.Auth
 
         public async Task<SuccessResponse<AuthResponse>> LoginAsync(LoginRequest request)
         {
-            // Use cached user lookup for better performance
-            var user = await GetCachedUserByEmailAsync(request.Email);
+            // Use cache for fast credential validation, then load a tracked entity for updates.
+            // Reconstructing EF entities from cache is fragile (missing navigation properties, tracking, etc.).
+            var cachedUser = await _cacheService.GetAsync<CachedUserInfo>(CacheKeys.UserByEmail(request.Email));
+
+            if (cachedUser != null)
+            {
+                if (!cachedUser.IsActive)
+                {
+                    return SuccessResponse<AuthResponse>.Fail("Invalid email or password.", ErrorType.Unauthorized);
+                }
+
+                var isPasswordValidCached = _passwordHasher.Verify(request.Password, cachedUser.PasswordHash);
+                if (!isPasswordValidCached)
+                {
+                    return SuccessResponse<AuthResponse>.Fail("Invalid email or password.", ErrorType.Unauthorized);
+                }
+            }
+
+            // Load from DB with tracking so refresh tokens / last login updates persist.
+            // If cache was empty, this is the first (and only) lookup.
+            var user = await _unitOfWork.Auth.Users.GetByEmailAsync(request.Email, trackChanges: true);
 
             if (user == null || !user.IsActive)
             {
                 return SuccessResponse<AuthResponse>.Fail("Invalid email or password.", ErrorType.Unauthorized);
             }
 
-            var isPasswordValid = _passwordHasher.Verify(request.Password, user.PasswordHash);
-
-            if (!isPasswordValid)
+            // If cache was empty, validate password against DB hash.
+            if (cachedUser == null)
             {
-                return SuccessResponse<AuthResponse>.Fail("Invalid email or password.", ErrorType.Unauthorized);
+                var isPasswordValid = _passwordHasher.Verify(request.Password, user.PasswordHash);
+                if (!isPasswordValid)
+                {
+                    return SuccessResponse<AuthResponse>.Fail("Invalid email or password.", ErrorType.Unauthorized);
+                }
             }
 
             var jwtId = Guid.NewGuid().ToString();
@@ -177,12 +200,12 @@ namespace EPMS.Domain.Services.Auth
             return SuccessResponse<AuthResponse>.Ok(authData, "Login successful");
         }
 
-        public async Task<SuccessResponse<AuthResponse>> RegisterAsync(CreateUserRequest request)
+        public async Task<SuccessResponse<UserDto>> RegisterAsync(CreateUserRequest request)
         {
             var userAlreadyExists = await _unitOfWork.Auth.Users.ExistsAsync(request.Email);
             if (userAlreadyExists)
             {
-                return SuccessResponse<AuthResponse>.Fail("Email is already registered.", ErrorType.Conflict);
+                return SuccessResponse<UserDto>.Fail("Email is already registered.", ErrorType.Conflict);
             }
 
             var plainDefaultPassword = await _settingsService.GetDefaultPasswordAsync();
@@ -193,41 +216,18 @@ namespace EPMS.Domain.Services.Auth
             _unitOfWork.Auth.Users.Add(newUser);
             await _unitOfWork.CompleteAsync();
 
-            var jwtId = Guid.NewGuid().ToString();
-            var userInfo = new ITokenService.TokenUserInfo(
-                newUser.Id,
-                newUser.Email,
-                new List<string> { UserRole.Admin.ToString() },
-                jwtId,
-                newUser.IsFirstLogin
-            );
-
-            var accessToken = _tokenService.GenerateAccessToken(userInfo);
-            var refreshToken = _tokenService.GenerateRefreshToken();
-
-            newUser.AddRefreshToken(refreshToken, jwtId, _timeProvider, _timeProvider.GetUtcNow().AddDays(_jwtSettings.RefreshTokenExpirationDays));
-            await _unitOfWork.CompleteAsync();
-
-            var authData = new AuthResponse
+            var user = new UserDto
             {
-                Tokens = new TokenResponse
-                {
-                    AccessToken = accessToken,
-                    RefreshToken = refreshToken,
-                    RefreshTokenExpiration = _timeProvider.GetUtcNow().AddDays(_jwtSettings.RefreshTokenExpirationDays)
-                },
-                User = new UserDto
-                {
-                    UserGuid = newUser.PublicId,
-                    Email = newUser.Email,
-                    RoleName = UserRole.Admin.ToString(),
-                    IsActive = newUser.IsActive,
-                    IsFirstLogin = newUser.IsFirstLogin,
-                    LastLoginDate = newUser.LastLoginDate
-                }
+                UserGuid = newUser.PublicId,
+                Email = newUser.Email,
+                RoleName = UserRole.Admin.ToString(),
+                IsActive = newUser.IsActive,
+                IsFirstLogin = newUser.IsFirstLogin,
+                LastLoginDate = newUser.LastLoginDate
             };
 
-            return SuccessResponse<AuthResponse>.Ok(authData, "User registered successfully");
+
+            return SuccessResponse<UserDto>.Ok(user, "User registered successfully");
         }
 
         public async Task<SuccessResponse<AuthResponse>> RefreshTokenAsync(RefreshTokenRequest request)
@@ -292,9 +292,9 @@ namespace EPMS.Domain.Services.Auth
             return SuccessResponse<AuthResponse>.Ok(authData, "Token refreshed successfully");
         }
 
-        public async Task<SuccessResponse> ChangePasswordAsync(Guid userGuid, ChangePasswordRequest request)
+        public async Task<SuccessResponse> ChangePasswordAsync(long userId, ChangePasswordRequest request)
         {
-            var user = await _unitOfWork.Auth.Users.GetByIdAsync(userGuid);
+            var user = await _unitOfWork.Auth.Users.GetByIdAsync(userId);
             if (user == null) return SuccessResponse.Fail("User not found.", ErrorType.NotFound);
 
             if (!_passwordHasher.Verify(request.CurrentPassword, user.PasswordHash))
