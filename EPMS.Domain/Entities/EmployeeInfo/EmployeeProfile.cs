@@ -101,5 +101,13 @@ namespace EPMS.Domain.Entities.EmployeeInfo
                 throw new ArgumentException("AdditionalData must be a valid, structurally sound JSON string.");
             }
         }
+
+        public void LinkUser(long userId)
+        {
+            if (UserId != null)
+                throw new InvalidOperationException("Profile already has a linked user.");
+
+            UserId = userId;
+        }
     }
 }

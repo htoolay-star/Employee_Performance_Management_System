@@ -18,7 +18,7 @@ namespace EPMS.Api.Extensions
             services.AddHttpContextAccessor();
 
             services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
-            services.AddValidatorsFromAssembly(typeof(ValidationExtensions).Assembly);
+            services.AddValidatorsFromAssembly(typeof(AuthValidationExtensions).Assembly);
             services.AddAutoMapper(cfg => cfg.AddMaps(typeof(MappingProfile).Assembly));
 
             services.AddTransient(typeof(Lazy<>), typeof(LazyResolution<>));

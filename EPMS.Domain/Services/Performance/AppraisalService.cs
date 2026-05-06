@@ -83,7 +83,7 @@ namespace EPMS.Application.Services.Performance
         }
         public async Task<bool> UpdateContinuousFeedbackAsync(long id, string empComment, string mgrComment)
         {
-            var appraisal = await _unitOfWork.Appraisals.GetByIdAsync(id);
+            var appraisal = await _unitOfWork.Perf.Appraisals.GetByIdAsync(id);
 
             if (appraisal == null || appraisal.IsLocked) return false;
 
@@ -91,18 +91,18 @@ namespace EPMS.Application.Services.Performance
             type.GetProperty(nameof(Appraisal.EmployeeComment))?.SetValue(appraisal, empComment);
             type.GetProperty(nameof(Appraisal.ManagerComment))?.SetValue(appraisal, mgrComment);
 
-            _unitOfWork.Appraisals.Update(appraisal);
+            _unitOfWork.Perf.Appraisals.Update(appraisal);
             return await _unitOfWork.CompleteAsync() > 0;
         }
 
         public async Task<bool> ConductOneOnOneMeetingAsync(long id, string finalManagerComment)
         {
-            var appraisal = await _unitOfWork.Appraisals.GetByIdAsync(id);
+            var appraisal = await _unitOfWork.Perf.Appraisals.GetByIdAsync(id);
             if (appraisal == null || appraisal.IsLocked) return false;
 
             appraisal.SubmitManagerReview(finalManagerComment);
 
-            _unitOfWork.Appraisals.Update(appraisal);
+            _unitOfWork.Perf.Appraisals.Update(appraisal);
             return await _unitOfWork.CompleteAsync() > 0;
         }
     }

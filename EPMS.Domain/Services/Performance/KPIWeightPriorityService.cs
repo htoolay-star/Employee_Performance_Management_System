@@ -31,7 +31,7 @@ public class KPIWeightPriorityService : IKPIWeightPriorityService
     {
         var priorities = await _uow.Perf.KPIWeightPriorities.GetActiveAsync();
         var dtos = _mapper.Map<IEnumerable<KPIWeightPriorityDto>>(priorities);
-        return SuccessResponse<IEnumerable<KPIWeightPriorityDto>>.Ok(dtos, "Active KPI weight priorities retrieved successfully.");
+        return SuccessResponse<IEnumerable<KPIWeightPriorityDto>>.Ok(dtos, KPIWeightPriorityMsg.RetrievedActive);
     }
 
     public async Task<SuccessResponse<KPIWeightPriorityDto>> GetByIdAsync(long id)
@@ -50,7 +50,7 @@ public class KPIWeightPriorityService : IKPIWeightPriorityService
         var priority = await _uow.Perf.KPIWeightPriorities.GetByLevelNameAsync(levelName);
 
         if (priority == null)
-            return SuccessResponse<KPIWeightPriorityDto>.Fail($"KPI weight priority with level name '{levelName}' was not found.", ErrorType.NotFound);
+            return SuccessResponse<KPIWeightPriorityDto>.Fail(KPIWeightPriorityMsg.NotFoundByLevelName(levelName), ErrorType.NotFound);
 
         var dto = _mapper.Map<KPIWeightPriorityDto>(priority);
         return SuccessResponse<KPIWeightPriorityDto>.Ok(dto, KPIWeightPriorityMsg.Retrieved);
@@ -60,7 +60,7 @@ public class KPIWeightPriorityService : IKPIWeightPriorityService
     {
         // Validate level name uniqueness
         if (await _uow.Perf.KPIWeightPriorities.LevelNameExistsAsync(dto.LevelName))
-            return SuccessResponse<long>.Fail($"KPI weight priority with level name '{dto.LevelName}' already exists.", ErrorType.Conflict);
+            return SuccessResponse<long>.Fail(string.Format(KPIWeightPriorityMsg.DuplicateLevelName, dto.LevelName), ErrorType.Conflict);
 
         // Validate weight bounds
         if (dto.MinWeight > dto.MaxWeight)
@@ -93,8 +93,19 @@ public class KPIWeightPriorityService : IKPIWeightPriorityService
         if (!string.IsNullOrEmpty(dto.ColorCode) && !IsValidHexColor(dto.ColorCode))
             return SuccessResponse.Fail(KPIWeightPriorityMsg.InvalidColorCode, ErrorType.Validation);
 
-        // Note: The entity doesn't have update methods, so we would need to handle this differently
-        // For now, this is a placeholder for the update logic
+        // Update bounds if provided
+        if (dto.MinWeight.HasValue || dto.MaxWeight.HasValue)
+        {
+            var minScore = dto.MinWeight ?? priority.MinWeight;
+            var maxScore = dto.MaxWeight ?? priority.MaxWeight;
+            priority.UpdateBounds(minScore, maxScore);
+        }
+
+        // Update color code if provided
+        if (dto.ColorCode != null)
+        {
+            priority.UpdateDetails(priority.LevelName, dto.ColorCode);
+        }
 
         await _uow.CompleteAsync();
         return SuccessResponse.Ok(KPIWeightPriorityMsg.Updated);
@@ -120,9 +131,7 @@ public class KPIWeightPriorityService : IKPIWeightPriorityService
         if (priority == null)
             return SuccessResponse.Fail(KPIWeightPriorityMsg.NotFound(id), ErrorType.NotFound);
 
-        // Note: The entity doesn't have deactivate method, so we would need to handle this differently
-        // For now, this is a placeholder
-
+        priority.Deactivate();
         await _uow.CompleteAsync();
         return SuccessResponse.Ok(KPIWeightPriorityMsg.Deactivated);
     }
@@ -134,9 +143,7 @@ public class KPIWeightPriorityService : IKPIWeightPriorityService
         if (priority == null)
             return SuccessResponse.Fail(KPIWeightPriorityMsg.NotFound(id), ErrorType.NotFound);
 
-        // Note: The entity doesn't have reactivate method, so we would need to handle this differently
-        // For now, this is a placeholder
-
+        priority.Reactivate();
         await _uow.CompleteAsync();
         return SuccessResponse.Ok(KPIWeightPriorityMsg.Reactivated);
     }

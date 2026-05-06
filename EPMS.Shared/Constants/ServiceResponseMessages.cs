@@ -190,9 +190,12 @@ public static class ServiceResponseMessages
         public const string Reactivated = "KPI weight priority reactivated successfully.";
         public const string Retrieved = "KPI weight priority retrieved successfully.";
         public const string RetrievedAll = "KPI weight priorities retrieved successfully.";
+        public const string RetrievedActive = "Active KPI weight priorities retrieved successfully.";
         public const string MinGreaterThanMax = "Minimum weight cannot be greater than maximum weight.";
         public const string InvalidColorCode = "Color code must be a valid hex color code (e.g., #FF5733).";
+        public const string DuplicateLevelName = "KPI weight priority with level name '{0}' already exists.";
         public static string NotFound(long id) => $"KPI weight priority with ID '{id}' was not found.";
+        public static string NotFoundByLevelName(string levelName) => $"KPI weight priority with level name '{levelName}' was not found.";
     }
 
     public static class PermissionMsg

@@ -39,5 +39,22 @@ namespace EPMS.Domain.Entities.Performance
         public byte[] Version { get; private set; } = Array.Empty<byte>();
 
         public bool IsValidWeight(decimal weight) => weight >= MinWeight && weight <= MaxWeight;
+
+        public void UpdateBounds(decimal minWeight, decimal maxWeight)
+        {
+            if (minWeight > maxWeight)
+                throw new ArgumentException("MinWeight cannot be greater than MaxWeight.");
+            MinWeight = minWeight;
+            MaxWeight = maxWeight;
+        }
+
+        public void UpdateDetails(string levelName, string? colorCode)
+        {
+            LevelName = levelName.Trim();
+            ColorCode = colorCode?.Trim().ToUpperInvariant();
+        }
+
+        public void Deactivate() => IsActive = false;
+        public void Reactivate() => IsActive = true;
     }
 }
