@@ -17,6 +17,7 @@ namespace EPMS.Domain.Repository.Auth
         private IUserRefreshTokenRepository? _usersRefreshToken;
         private IRoleRepository? _roles;
         private IPermissionRepository? _permissions;
+        private IPositionPermissionRepository? _positionPermissions;
 
         public IUserRepository Users =>
         _users ??= serviceProvider.GetRequiredService<IUserRepository>();
@@ -29,5 +30,8 @@ namespace EPMS.Domain.Repository.Auth
 
         public IPermissionRepository Permissions =>
         _permissions ??= serviceProvider.GetRequiredService<IPermissionRepository>();
+
+        public IPositionPermissionRepository PositionPermissions =>
+        _positionPermissions ??= serviceProvider.GetRequiredService<IPositionPermissionRepository>();
     }
 }

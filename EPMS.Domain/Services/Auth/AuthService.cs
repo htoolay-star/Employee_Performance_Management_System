@@ -312,7 +312,7 @@ namespace EPMS.Domain.Services.Auth
             if (result)
             {
                 await InvalidateUserCacheAsync(user.Id, user.Email);
-                return SuccessResponse<bool>.Ok(true, "Password changed successfully.");
+                return SuccessResponse.Ok("Password changed successfully.");
             }
 
             return SuccessResponse.Fail("Failed to change password.");

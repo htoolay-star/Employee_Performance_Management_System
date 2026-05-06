@@ -8,6 +8,9 @@ namespace EPMS.Domain.Interface.Irepo.Performance
 {
     public interface IPerfModule
     {
-         IAppraisalRepository Appraisals { get; }
+        IAppraisalRepository Appraisals { get; }
+        IKPIWeightPriorityRepository KPIWeightPriorities { get; }
+        IRatingScaleRepository RatingScales { get; }
+
     }
 }

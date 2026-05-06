@@ -4,5 +4,6 @@ public record UpdateCategoryDto
 {
     public string Name { get; init; } = string.Empty;
     public string? Description { get; init; }
-    public int? ParentId { get; init; }
+    public long? ParentId { get; init; }
+    public bool IsActive { get; private set; }
 }

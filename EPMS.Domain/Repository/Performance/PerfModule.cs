@@ -14,8 +14,16 @@ namespace EPMS.Domain.Repository.Performance
     public class PerfModule(IServiceProvider serviceProvider) : IPerfModule
     {
         private IAppraisalRepository? _perfAppraisalRepository;
+        private IRatingScaleRepository? _perfRatingScaleRepository;
+        private IKPIWeightPriorityRepository? _perfKPIWeightPriorityRepository;
 
         public IAppraisalRepository Appraisals =>
-        _perfAppraisalRepository ??= serviceProvider.GetRequiredService<IAppraisalRepository>();
+            _perfAppraisalRepository ??= serviceProvider.GetRequiredService<IAppraisalRepository>();
+
+        public IRatingScaleRepository RatingScales =>
+            _perfRatingScaleRepository ??= serviceProvider.GetRequiredService<IRatingScaleRepository>();
+
+        public IKPIWeightPriorityRepository KPIWeightPriorities =>
+            _perfKPIWeightPriorityRepository ??= serviceProvider.GetRequiredService<IKPIWeightPriorityRepository>();
     }
 }

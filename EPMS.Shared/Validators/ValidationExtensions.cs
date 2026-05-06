@@ -73,7 +73,7 @@ public static class ValidationExtensions
             .MaximumLength(100).WithMessage(HrValidationMessages.Position.TitleMaxLength);
     }
 
-    public static IRuleBuilderOptions<T, int> ApplyPositionLevelIdRules<T>(this IRuleBuilder<T, int> ruleBuilder)
+    public static IRuleBuilderOptions<T, long> ApplyPositionLevelIdRules<T>(this IRuleBuilder<T, long> ruleBuilder)
     {
         return ruleBuilder.GreaterThan(0).WithMessage(HrValidationMessages.Position.LevelIdInvalid);
     }
@@ -141,7 +141,7 @@ public static class ValidationExtensions
             .WithMessage(SharedValidationMessages.Category.DescriptionMaxLength);
     }
 
-    public static IRuleBuilderOptions<T, int?> ApplyCategoryOptionalParentIdRules<T>(this IRuleBuilder<T, int?> ruleBuilder)
+    public static IRuleBuilderOptions<T, long?> ApplyCategoryOptionalParentIdRules<T>(this IRuleBuilder<T, long?> ruleBuilder)
     {
         return ruleBuilder
             .Must(pid => !pid.HasValue || pid.Value > 0)
@@ -160,5 +160,182 @@ public static class ValidationExtensions
         return ruleBuilder
             .Must(s => s == null || string.IsNullOrWhiteSpace(s) || s.Length <= 50)
             .WithMessage(SharedValidationMessages.Tag.ModuleMaxLength);
+    }
+
+    // EmployeeInfo Extension Methods
+    public static IRuleBuilderOptions<T, long> ApplyEmployeeIdRules<T>(this IRuleBuilder<T, long> ruleBuilder)
+    {
+        return ruleBuilder.GreaterThan(0).WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.EmployeeIdInvalid);
+    }
+
+    public static IRuleBuilderOptions<T, string> ApplyStaffNoRules<T>(this IRuleBuilder<T, string> ruleBuilder)
+    {
+        return ruleBuilder
+            .NotEmpty().WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.StaffNoRequired)
+            .MaximumLength(20).WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.StaffNoMaxLength);
+    }
+
+    public static IRuleBuilderOptions<T, string> ApplyPersonNameRules<T>(this IRuleBuilder<T, string> ruleBuilder)
+    {
+        return ruleBuilder
+            .NotEmpty().WithMessage("Name is required.")
+            .MaximumLength(100).WithMessage("Name cannot exceed 100 characters.");
+    }
+
+    public static IRuleBuilderOptions<T, string> ApplyOptionalPersonNameRules<T>(this IRuleBuilder<T, string> ruleBuilder)
+    {
+        return ruleBuilder.MaximumLength(100).WithMessage("Name cannot exceed 100 characters.");
+    }
+
+    public static IRuleBuilderOptions<T, string> ApplyPhoneNumberRules<T>(this IRuleBuilder<T, string> ruleBuilder)
+    {
+        return ruleBuilder
+            .MaximumLength(20).WithMessage(EmployeeInfoValidationMessages.EmployeeContact.PhoneNumberMaxLength)
+            .Matches(@"^[+]?[\d\s\-\(\)]+$").WithMessage(EmployeeInfoValidationMessages.EmployeeContact.PhoneNumberInvalid);
+    }
+
+    public static IRuleBuilderOptions<T, string> ApplyOptionalPhoneNumberRules<T>(
+        this IRuleBuilder<T, string> ruleBuilder,
+        Func<T, string?> propertySelector)
+    {
+        return ruleBuilder
+            .MaximumLength(20).WithMessage(EmployeeInfoValidationMessages.EmployeeContact.PhoneNumberMaxLength)
+            .Matches(@"^[+]?[\d\s\-\(\)]+$").WithMessage(EmployeeInfoValidationMessages.EmployeeContact.PhoneNumberInvalid)
+            .When(x => !string.IsNullOrWhiteSpace(propertySelector(x)));
+    }
+
+    public static IRuleBuilderOptions<T, string> ApplyEmailAddressRules<T>(this IRuleBuilder<T, string> ruleBuilder)
+    {
+        return ruleBuilder
+            .MaximumLength(100).WithMessage(EmployeeInfoValidationMessages.EmployeeContact.EmailAddressMaxLength)
+            .EmailAddress().WithMessage(EmployeeInfoValidationMessages.EmployeeContact.EmailAddressInvalid);
+    }
+
+    public static IRuleBuilderOptions<T, string> ApplyOptionalEmailAddressRules<T>(
+            this IRuleBuilder<T, string> ruleBuilder,
+            Func<T, string?> propertySelector)
+    {
+        return ruleBuilder
+            .MaximumLength(100).WithMessage(EmployeeInfoValidationMessages.EmployeeContact.EmailAddressMaxLength)
+            .EmailAddress().WithMessage(EmployeeInfoValidationMessages.EmployeeContact.EmailAddressInvalid)
+            .When(x => !string.IsNullOrWhiteSpace(propertySelector(x)));
+    }
+
+    public static IRuleBuilderOptions<T, string> ApplyAddressRules<T>(this IRuleBuilder<T, string> ruleBuilder)
+    {
+        return ruleBuilder.MaximumLength(500).WithMessage(EmployeeInfoValidationMessages.EmployeeContact.ContactAddressMaxLength);
+    }
+
+    public static IRuleBuilderOptions<T, string> ApplyNRCRules<T>(this IRuleBuilder<T, string> ruleBuilder)
+    {
+        return ruleBuilder.MaximumLength(50).WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.NRCMaxLength);
+    }
+
+    public static IRuleBuilderOptions<T, string> ApplyCurrencyRules<T>(
+            this IRuleBuilder<T, string> ruleBuilder,
+            Func<T, string?> propertySelector)
+    {
+        return ruleBuilder
+            .MaximumLength(10).WithMessage(EmployeeInfoValidationMessages.EmployeePayrollInfo.CurrencyMaxLength)
+            .Matches(@"^[A-Z]{3}$").WithMessage(EmployeeInfoValidationMessages.EmployeePayrollInfo.CurrencyInvalid)
+            .When(x => !string.IsNullOrWhiteSpace(propertySelector(x)));
+    }
+
+    public static IRuleBuilderOptions<T, decimal> ApplySalaryRules<T>(this IRuleBuilder<T, decimal> ruleBuilder)
+    {
+        return ruleBuilder.GreaterThanOrEqualTo(0).WithMessage(EmployeeInfoValidationMessages.EmployeePayrollInfo.SalaryInvalid);
+    }
+
+    public static IRuleBuilderOptions<T, DateOnly> ApplyDateOfBirthRules<T>(
+            this IRuleBuilder<T, DateOnly> ruleBuilder,
+            TimeProvider timeProvider)
+    {
+        return ruleBuilder
+            .LessThanOrEqualTo(x => DateOnly.FromDateTime(timeProvider.GetLocalNow().DateTime))
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.DateOfBirthFuture);
+    }
+
+    public static IRuleBuilderOptions<T, DateOnly?> ApplyOptionalDateOfBirthRules<T>(
+            this IRuleBuilder<T, DateOnly?> ruleBuilder,
+            TimeProvider timeProvider,
+            Func<T, DateOnly?> propertySelector)
+    {
+        return ruleBuilder
+            .LessThanOrEqualTo(x => DateOnly.FromDateTime(timeProvider.GetLocalNow().DateTime))
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.DateOfBirthFuture)
+            .When(x => propertySelector(x).HasValue);
+    }
+
+    public static IRuleBuilderOptions<T, DateOnly> ApplyFutureDatePreventionRules<T>(this IRuleBuilder<T, DateOnly> ruleBuilder)
+    {
+        return ruleBuilder.LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.Today))
+            .WithMessage("Date cannot be in the future.");
+    }
+
+    public static IRuleBuilderOptions<T, DateOnly?> ApplyOptionalFutureDatePreventionRules<T>(
+            this IRuleBuilder<T, DateOnly?> ruleBuilder,
+            TimeProvider timeProvider,
+            Func<T, DateOnly?> propertySelector)
+    {
+        return ruleBuilder
+            .LessThanOrEqualTo(x => DateOnly.FromDateTime(timeProvider.GetLocalNow().DateTime))
+            .WithMessage("Date cannot be in the future.")
+            .When(x => propertySelector(x).HasValue);
+    }
+
+    public static IRuleBuilderOptions<T, string> ApplyHexColorCodeRules<T>(
+            this IRuleBuilder<T, string> ruleBuilder,
+            Func<T, string?> propertySelector)
+    {
+        return ruleBuilder
+            .Matches(@"^#[0-9A-Fa-f]{6}$").WithMessage(PerformanceValidationMessages.KPIWeightPriority.ColorCodeInvalid)
+            .When(x => !string.IsNullOrWhiteSpace(propertySelector(x)));
+    }
+
+    // Performance Extension Methods
+    public static IRuleBuilderOptions<T, int> ApplyRatingRules<T>(this IRuleBuilder<T, int> ruleBuilder)
+    {
+        return ruleBuilder.GreaterThan(0).WithMessage(PerformanceValidationMessages.RatingScale.RatingInvalid);
+    }
+
+    public static IRuleBuilderOptions<T, decimal> ApplyScoreRangeRules<T>(this IRuleBuilder<T, decimal> ruleBuilder, string scoreType)
+    {
+        return ruleBuilder
+            .GreaterThanOrEqualTo(0).WithMessage($"{scoreType} score must be greater than or equal to 0.");
+    }
+
+    public static IRuleBuilderOptions<T, decimal?> ApplyOptionalScoreRangeRules<T>(
+    this IRuleBuilder<T, decimal?> ruleBuilder,
+    string scoreType,
+    Func<T, decimal?> propertySelector)
+    {
+        return ruleBuilder
+            .GreaterThanOrEqualTo(0)
+            .WithMessage($"{scoreType} score must be greater than or equal to 0.")
+            .When(x => propertySelector(x).HasValue);
+    }
+
+    public static IRuleBuilderOptions<T, decimal> ApplyWeightRangeRules<T>(this IRuleBuilder<T, decimal> ruleBuilder, string weightType)
+    {
+        return ruleBuilder
+            .GreaterThanOrEqualTo(0).WithMessage($"{weightType} weight must be greater than or equal to 0.");
+    }
+
+    public static IRuleBuilderOptions<T, decimal?> ApplyOptionalyWeightRangeRules<T>(
+    this IRuleBuilder<T, decimal?> ruleBuilder,
+    string weightType,
+    Func<T, decimal?> propertySelector)
+    {
+        return ruleBuilder
+            .GreaterThanOrEqualTo(0)
+            .WithMessage($"{weightType} weight must be greater than or equal to 0.")
+            .When(x => propertySelector(x).HasValue);
+    }
+
+    public static IRuleBuilderOptions<T, string> ApplyPerformanceLevelNameRules<T>(this IRuleBuilder<T, string> ruleBuilder)
+    {
+        return ruleBuilder
+            .NotEmpty().WithMessage(PerformanceValidationMessages.KPIWeightPriority.LevelNameRequired)
+            .MaximumLength(50).WithMessage(PerformanceValidationMessages.KPIWeightPriority.LevelNameMaxLength);
     }
 }

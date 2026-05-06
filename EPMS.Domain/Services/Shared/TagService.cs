@@ -3,47 +3,65 @@ using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Shared;
 using EPMS.Domain.Interface.Irepo.Shared;
 using EPMS.Domain.Interface.IService.Shared;
+using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.TagDTOs;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using EPMS.Shared.Enums;
 
-namespace EPMS.Domain.Services.Shared
+namespace EPMS.Domain.Services.Shared;
+
+public class TagService : ITagService
 {
-    public class TagService : ITagService
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
+
+    public TagService(IUnitOfWork unitOfWork, IMapper mapper)
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IMapper _mapper;
+        _unitOfWork = unitOfWork;
+        _mapper = mapper;
+    }
 
-        public TagService(IUnitOfWork unitOfWork, IMapper mapper)
+    public async Task<SuccessResponse<IEnumerable<TagDto>>> GetAllTagsAsync()
+    {
+        var tags = await _unitOfWork.Shared.Tags.GetAllAsync();
+        var dtos = _mapper.Map<IEnumerable<TagDto>>(tags);
+        return SuccessResponse<IEnumerable<TagDto>>.Ok(dtos, "Tags retrieved successfully.");
+    }
+
+    public async Task<SuccessResponse<TagDto>> GetTagByIdAsync(int id)
+    {
+        var tag = await _unitOfWork.Shared.Tags.GetByIdAsync(id);
+
+        if (tag == null)
+            return SuccessResponse<TagDto>.Fail($"Tag with ID '{id}' was not found.", ErrorType.NotFound);
+
+        var dto = _mapper.Map<TagDto>(tag);
+        return SuccessResponse<TagDto>.Ok(dto, "Tag retrieved successfully.");
+    }
+
+    public async Task<SuccessResponse<long>> CreateTagAsync(CreateTagDto dto)
+    {
+        // Check for duplicate
+        if (await _unitOfWork.Shared.Tags.ExistsByNameAsync(dto.Name, dto.Module))
         {
-            _unitOfWork = unitOfWork;
-            _mapper = mapper;
+            var moduleMsg = string.IsNullOrWhiteSpace(dto.Module) ? "" : $" in module '{dto.Module}'";
+            return SuccessResponse<long>.Fail($"Tag with name '{dto.Name}' already exists{moduleMsg}.", ErrorType.Conflict);
         }
 
-        public async Task<IEnumerable<TagDto>> GetAllTagsAsync()
-        {
-            var tags = await _unitOfWork.Shared.Tags.GetAllAsync();
-            return _mapper.Map<IEnumerable<TagDto>>(tags);
-        }
+        var tag = new Tag(dto.Name, dto.Module);
+        _unitOfWork.Shared.Tags.Add(tag);
+        await _unitOfWork.CompleteAsync();
+        return SuccessResponse<long>.Ok(tag.Id, "Tag created successfully.");
+    }
 
-        public async Task CreateTagAsync(CreateTagDto dto)
-        {
-            var tag = new Tag(dto.Name, dto.Module);
-            _unitOfWork.Shared.Tags.Add(tag);
-            await _unitOfWork.CompleteAsync();
-        }
+    public async Task<SuccessResponse> DeleteTagAsync(int id)
+    {
+        var tag = await _unitOfWork.Shared.Tags.GetByIdAsync(id);
 
-        public async Task DeleteTagAsync(int id)
-        {
-            var tag = await _unitOfWork.Shared.Tags.GetByIdAsync(id);
-            if (tag != null)
-            {
-                _unitOfWork.Shared.Tags.Delete(tag);
-                await _unitOfWork.CompleteAsync();
-            }
-        }
+        if (tag == null)
+            return SuccessResponse.Fail($"Tag with ID '{id}' was not found.", ErrorType.NotFound);
+
+        _unitOfWork.Shared.Tags.Delete(tag);
+        await _unitOfWork.CompleteAsync();
+        return SuccessResponse.Ok("Tag deleted successfully.");
     }
 }

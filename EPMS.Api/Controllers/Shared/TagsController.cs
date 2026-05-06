@@ -1,40 +1,50 @@
-﻿using EPMS.Domain.Interface.IService.Shared;
+﻿using EPMS.Api.Controllers.Common;
+using EPMS.Domain.Interface.IService.Shared;
+using EPMS.Shared.Constants;
+using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.TagDTOs;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace EPMS.Api.Controllers.Shared
+namespace EPMS.Api.Controllers.Shared;
+
+[Route("api/[controller]")]
+[ApiController]
+[Authorize(Roles = RoleConstants.Admin)]
+public class TagsController : ApiControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class TagsController : ControllerBase
+    private readonly ITagService _tagService;
+
+    public TagsController(ITagService tagService)
     {
-        private readonly ITagService _tagService;
+        _tagService = tagService;
+    }
 
-        public TagsController(ITagService tagService)
-        {
-            _tagService = tagService;
-        }
+    [HttpGet]
+    public async Task<ActionResult<SuccessResponse<IEnumerable<TagDto>>>> GetAll()
+    {
+        var result = await _tagService.GetAllTagsAsync();
+        return HandleResult(result);
+    }
 
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<TagDto>>> GetAll()
-        {
-            var tags = await _tagService.GetAllTagsAsync();
-            return Ok(tags);
-        }
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<SuccessResponse<TagDto>>> GetById(int id)
+    {
+        var result = await _tagService.GetTagByIdAsync(id);
+        return HandleResult(result);
+    }
 
-        [HttpPost]
-        public async Task<IActionResult> Create(CreateTagDto dto)
-        {
-            await _tagService.CreateTagAsync(dto);
-            return Ok(new { message = "Successful create new Tag" });
-        }
+    [HttpPost]
+    public async Task<ActionResult<SuccessResponse<long>>> Create(CreateTagDto dto)
+    {
+        var result = await _tagService.CreateTagAsync(dto);
+        return HandleResult(result);
+    }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            await _tagService.DeleteTagAsync(id);
-            return Ok(new { message = "Successful Delelted Tag" });
-        }
+    [HttpDelete("{id:int}")]
+    public async Task<ActionResult<SuccessResponse>> Delete(int id)
+    {
+        var result = await _tagService.DeleteTagAsync(id);
+        return HandleResult(result);
     }
 }

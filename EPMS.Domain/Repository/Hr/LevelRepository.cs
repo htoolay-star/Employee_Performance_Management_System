@@ -10,7 +10,7 @@ public class LevelRepository : GenericRepository<Level>, ILevelRepository
 {
     public LevelRepository(AppDbContext context) : base(context) { }
 
-    public async Task<bool> ExistsByCodeAsync(string code, int? excludeLevelId = null, CancellationToken cancellationToken = default)
+    public async Task<bool> ExistsByCodeAsync(string code, long? excludeLevelId = null, CancellationToken cancellationToken = default)
     {
         var normalized = code.Trim().ToUpperInvariant();
         var query = _dbSet.Where(l => l.Code == normalized);
@@ -19,7 +19,7 @@ public class LevelRepository : GenericRepository<Level>, ILevelRepository
         return await query.AnyAsync(cancellationToken);
     }
 
-    public async Task<bool> HasPositionsAsync(int levelId, CancellationToken cancellationToken = default)
+    public async Task<bool> HasPositionsAsync(long levelId, CancellationToken cancellationToken = default)
     {
         return await _context.Positions.AnyAsync(p => p.LevelId == levelId, cancellationToken);
     }

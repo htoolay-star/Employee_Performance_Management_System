@@ -2,18 +2,22 @@
 using EPMS.Domain.Entities.Shared;
 using EPMS.Domain.Interface.Irepo.Shared;
 using EPMS.Domain.Repository.Base;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
-namespace EPMS.Domain.Repository.Shared
+namespace EPMS.Domain.Repository.Shared;
+
+public class TagRepository : GenericRepository<Tag>, ITagRepository
 {
-    public class TagRepository : GenericRepository<Tag>, ITagRepository
+    public TagRepository(AppDbContext context) : base(context) { }
+
+    public async Task<bool> ExistsByNameAsync(string name, string? module = null)
     {
-        public TagRepository(AppDbContext context) : base(context)
-        {
-        }
+        var normalizedName = name.Trim().ToLowerInvariant();
+        var query = _dbSet.Where(t => t.Name == normalizedName);
+        
+        if (!string.IsNullOrWhiteSpace(module))
+            query = query.Where(t => t.Module == module);
+        
+        return await query.AnyAsync();
     }
 }

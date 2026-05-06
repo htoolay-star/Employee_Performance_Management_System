@@ -4,68 +4,115 @@ using EPMS.Domain.Entities.Shared;
 using EPMS.Domain.Interface.Irepo.Shared;
 using EPMS.Domain.Interface.IService.Shared;
 using EPMS.Shared.DTOs.CategoryDTOs;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using EPMS.Shared.DTOs.Common;
+using EPMS.Shared.Enums;
 
-namespace EPMS.Domain.Services.Shared
+namespace EPMS.Domain.Services.Shared;
+
+public class CategoryService : ICategoryService
 {
-    public class CategoryService : ICategoryService
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
+
+    public CategoryService(IUnitOfWork unitOfWork, IMapper mapper)
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IMapper _mapper;
+        _unitOfWork = unitOfWork;
+        _mapper = mapper;
+    }
 
-        public CategoryService(IUnitOfWork unitOfWork, IMapper mapper)
+    public async Task<SuccessResponse<IEnumerable<CategoryDto>>> GetAllCategoriesAsync()
+    {
+        var categories = await _unitOfWork.Shared.Categories.GetAllAsync();
+        var dtos = _mapper.Map<IEnumerable<CategoryDto>>(categories);
+        return SuccessResponse<IEnumerable<CategoryDto>>.Ok(dtos, "Categories retrieved successfully.");
+    }
+
+    public async Task<SuccessResponse<CategoryDto>> GetCategoryByIdAsync(int id)
+    {
+        var category = await _unitOfWork.Shared.Categories.GetByIdAsync(id);
+
+        if (category == null)
+            return SuccessResponse<CategoryDto>.Fail($"Category with ID '{id}' was not found.", ErrorType.NotFound);
+
+        var dto = _mapper.Map<CategoryDto>(category);
+        return SuccessResponse<CategoryDto>.Ok(dto, "Category retrieved successfully.");
+    }
+
+    public async Task<SuccessResponse<long>> CreateCategoryAsync(CreateCategoryDto dto)
+    {
+        var normalizedModule = dto.Module.Trim().ToUpperInvariant();
+        var normalizedCode = dto.Code.Trim().ToUpperInvariant();
+
+        if (await _unitOfWork.Shared.Categories.ExistsByCodeAsync(normalizedCode, normalizedModule))
+            return SuccessResponse<long>.Fail($"Category with code '{normalizedCode}' already exists in module '{normalizedModule}'.", ErrorType.Conflict);
+
+        if (await _unitOfWork.Shared.Categories.ExistsByNameAsync(dto.Name, normalizedModule))
+            return SuccessResponse<long>.Fail($"Category with name '{dto.Name}' already exists in module '{normalizedModule}'.", ErrorType.Conflict);
+
+        // Validate parent exists if specified
+        if (dto.ParentId.HasValue)
         {
-            _unitOfWork = unitOfWork;
-            _mapper = mapper;
+            var parent = await _unitOfWork.Shared.Categories.GetByIdAsync(dto.ParentId.Value);
+            if (parent == null)
+                return SuccessResponse<long>.Fail($"Parent category with ID '{dto.ParentId.Value}' was not found.", ErrorType.NotFound);
         }
 
-        public async Task<IEnumerable<CategoryDto>> GetAllCategoriesAsync()
+        var category = new Category(dto.Module, dto.Code, dto.Name, dto.Description, dto.ParentId);
+        _unitOfWork.Shared.Categories.Add(category);
+        await _unitOfWork.CompleteAsync();
+        return SuccessResponse<long>.Ok(category.Id, "Category created successfully.");
+    }
+
+    public async Task<SuccessResponse> UpdateCategoryAsync(int id, UpdateCategoryDto dto)
+    {
+        var category = await _unitOfWork.Shared.Categories.GetByIdAsync(id);
+
+        if (category == null)
+            return SuccessResponse.Fail($"Category with ID '{id}' was not found.", ErrorType.NotFound);
+
+        var normalizedModule = category.Module;
+
+        // Check for duplicate name
+        if (category.Name != dto.Name && await _unitOfWork.Shared.Categories.ExistsByNameAsync(dto.Name, normalizedModule, id))
+            return SuccessResponse.Fail($"Another category with name '{dto.Name}' already exists in module '{normalizedModule}'.", ErrorType.Conflict);
+
+        // Validate new parent if changing
+        if (category.ParentId != dto.ParentId)
         {
-            var categories = await _unitOfWork.Shared.Categories.GetAllAsync();
-            return _mapper.Map<IEnumerable<CategoryDto>>(categories);
-        }
-
-        public async Task<CategoryDto?> GetCategoryByIdAsync(int id)
-        {
-            var category = await _unitOfWork.Shared.Categories.GetByIdAsync(id);
-            return category == null ? null : _mapper.Map<CategoryDto>(category);
-        }
-
-        public async Task CreateCategoryAsync(CreateCategoryDto dto)
-        {
-            var category = new Category(dto.Module, dto.Code, dto.Name, dto.Description, dto.ParentId);
-            _unitOfWork.Shared.Categories.Add(category);
-            await _unitOfWork.CompleteAsync();
-        }
-
-        public async Task UpdateCategoryAsync(int id, UpdateCategoryDto dto)
-        {
-            var category = await _unitOfWork.Shared.Categories.GetByIdAsync(id);
-            if (category == null) throw new Exception("Not Found Category");
-
-            category.UpdateDetails(dto.Name, dto.Description);
-
-
-            if (category.ParentId != dto.ParentId)
+            if (dto.ParentId.HasValue)
             {
-                category.MoveToParent(dto.ParentId);
-            }
+                if (dto.ParentId.Value == id)
+                    return SuccessResponse.Fail("A category cannot be its own parent.", ErrorType.Validation);
 
-            await _unitOfWork.CompleteAsync();
+                var parent = await _unitOfWork.Shared.Categories.GetByIdAsync(dto.ParentId.Value);
+                if (parent == null)
+                    return SuccessResponse.Fail($"Parent category with ID '{dto.ParentId.Value}' was not found.", ErrorType.NotFound);
+            }
+            category.MoveToParent(dto.ParentId);
         }
 
-        public async Task DeleteCategoryAsync(int id)
-        {
-            var category = await _unitOfWork.Shared.Categories.GetByIdAsync(id);
-            if (category != null)
-            {
-                _unitOfWork.Shared.Categories.Delete(category);
-                await _unitOfWork.CompleteAsync();
-            }
-        }
+        category.UpdateDetails(dto.Name, dto.Description);
+
+        if (dto.IsActive) category.Reactivate();
+        else category.Deactivate();
+
+        await _unitOfWork.CompleteAsync();
+        return SuccessResponse.Ok("Category updated successfully.");
+    }
+
+    public async Task<SuccessResponse> DeleteCategoryAsync(int id)
+    {
+        var category = await _unitOfWork.Shared.Categories.GetByIdAsync(id);
+
+        if (category == null)
+            return SuccessResponse.Fail($"Category with ID '{id}' was not found.", ErrorType.NotFound);
+
+        // Check for subcategories
+        if (await _unitOfWork.Shared.Categories.HasSubCategoriesAsync(id))
+            return SuccessResponse.Fail($"Cannot delete category '{id}' because it has subcategories. Please delete or reassign subcategories first.", ErrorType.Conflict);
+
+        _unitOfWork.Shared.Categories.Delete(category);
+        await _unitOfWork.CompleteAsync();
+        return SuccessResponse.Ok("Category deleted successfully.");
     }
 }

@@ -2,11 +2,11 @@
 
 public record CategoryDto
 {
-    public int Id { get; init; }
+    public long Id { get; init; }
     public string Module { get; init; } = string.Empty;
     public string Code { get; init; } = string.Empty;
     public string Name { get; init; } = string.Empty;
     public string? Description { get; init; }
-    public int? ParentId { get; init; }
+    public long? ParentId { get; init; }
     public bool IsActive { get; init; }
 }

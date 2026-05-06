@@ -21,4 +21,9 @@ public class TeamRepository : GenericRepository<Team>, ITeamRepository
     {
         return await _dbSet.AnyAsync(t => t.DepartmentId == departmentId && t.Name == name);
     }
+
+    public async Task<bool> ExistsByIdAsync(long id)
+    {
+        return await _dbSet.AnyAsync(t => t.Id == id);
+    }
 }

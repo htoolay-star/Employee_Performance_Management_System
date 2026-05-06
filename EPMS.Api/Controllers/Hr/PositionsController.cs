@@ -1,4 +1,7 @@
+using EPMS.Api.Controllers.Common;
 using EPMS.Domain.Interfaces;
+using EPMS.Shared.DTOs.AuthDTOs.PermissionDTOS;
+using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.PositionDTOs;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,7 +9,7 @@ namespace EPMS.Api.Controllers.Hr;
 
 [ApiController]
 [Route("api/[controller]")]
-public class PositionsController : ControllerBase
+public class PositionsController : ApiControllerBase
 {
     private readonly IPositionService _service;
 
@@ -16,37 +19,59 @@ public class PositionsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<ActionResult<SuccessResponse<IEnumerable<PositionDto>>>> GetAll()
     {
         var result = await _service.GetAllAsync();
-        return Ok(result);
+        return HandleResult(result);
     }
 
     [HttpGet("{id:long}")]
-    public async Task<IActionResult> GetById(long id)
+    public async Task<ActionResult<SuccessResponse<PositionDto>>> GetById(long id)
     {
         var result = await _service.GetByIdAsync(id);
-        return Ok(result);
+        return HandleResult(result);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(CreatePositionDto dto)
+    public async Task<ActionResult<SuccessResponse<long>>> Create(CreatePositionDto dto)
     {
-        var id = await _service.CreateAsync(dto);
-        return Ok(new { Id = id, Message = "Created Successfully" });
+        var result = await _service.CreateAsync(dto);
+        return HandleResult(result);
     }
 
     [HttpPut("{id:long}")]
-    public async Task<IActionResult> Update(long id, UpdatePositionDto dto)
+    public async Task<ActionResult<SuccessResponse>> Update(long id, UpdatePositionDto dto)
     {
-        await _service.UpdateAsync(id, dto);
-        return Ok(new { Message = "Updated Successfully" });
+        var result = await _service.UpdateAsync(id, dto);
+        return HandleResult(result);
     }
 
     [HttpDelete("{id:long}")]
-    public async Task<IActionResult> Delete(long id)
+    public async Task<ActionResult<SuccessResponse>> Delete(long id)
     {
-        await _service.DeleteAsync(id);
-        return NoContent();
+        var result = await _service.DeleteAsync(id);
+        return HandleResult(result);
+    }
+
+    // Permission management endpoints
+    [HttpGet("{positionId:long}/permissions")]
+    public async Task<ActionResult<SuccessResponse<IEnumerable<PermissionDto>>>> GetPermissions(long positionId)
+    {
+        var result = await _service.GetPermissionsForPositionAsync(positionId);
+        return HandleResult(result);
+    }
+
+    [HttpPost("{positionId:long}/permissions/{permissionId:long}")]
+    public async Task<ActionResult<SuccessResponse>> AssignPermission(long positionId, long permissionId)
+    {
+        var result = await _service.AssignPermissionToPositionAsync(positionId, permissionId);
+        return HandleResult(result);
+    }
+
+    [HttpDelete("{positionId:long}/permissions/{permissionId:long}")]
+    public async Task<ActionResult<SuccessResponse>> RemovePermission(long positionId, long permissionId)
+    {
+        var result = await _service.RemovePermissionFromPositionAsync(positionId, permissionId);
+        return HandleResult(result);
     }
 }

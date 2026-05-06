@@ -1,5 +1,9 @@
+using EPMS.Api.Controllers.Common;
 using EPMS.Domain.Interfaces;
+using EPMS.Shared.Constants;
+using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.DepartmentDTOs;
+using EPMS.Shared.DTOs.TeamDTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,7 +11,8 @@ namespace EPMS.Api.Controllers.Hr;
 
 [ApiController]
 [Route("api/[controller]")]
-public class DepartmentsController : ControllerBase
+[Authorize(Roles = RoleConstants.Admin)]
+public class DepartmentsController : ApiControllerBase
 {
     private readonly IDepartmentService _service;
 
@@ -17,38 +22,59 @@ public class DepartmentsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<ActionResult<SuccessResponse<IEnumerable<DepartmentDto>>>> GetAll()
     {
         var result = await _service.GetAllAsync();
-        return Ok(result);
+        return HandleResult(result);
     }
 
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(long id)
+    [HttpGet("{id:long}")]
+    public async Task<ActionResult<SuccessResponse<DepartmentDto>>> GetById(long id)
     {
         var result = await _service.GetByIdAsync(id);
-        return Ok(result);
+        return HandleResult(result);
     }
 
-    [Authorize]
-    [HttpPost("create")]
-    public async Task<IActionResult> Create(CreateDepartmentDto dto)
+    [HttpPost]
+    public async Task<ActionResult<SuccessResponse<long>>> Create(CreateDepartmentDto dto)
     {
-        var id = await _service.CreateAsync(dto);
-        return CreatedAtAction(nameof(GetById), new { id }, new { id, message = "Created successfully." });
+        var result = await _service.CreateAsync(dto);
+        return HandleResult(result);
     }
 
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(long id, UpdateDepartmentDto dto)
+    [HttpPut("{id:long}")]
+    public async Task<ActionResult<SuccessResponse>> Update(long id, UpdateDepartmentDto dto)
     {
-        await _service.UpdateAsync(id, dto);
-        return Ok(new { Message = "Updated Successfully" });
+        var result = await _service.UpdateAsync(id, dto);
+        return HandleResult(result);
     }
 
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Delete(long id)
+    [HttpDelete("{id:long}")]
+    public async Task<ActionResult<SuccessResponse>> Delete(long id)
     {
-        await _service.DeleteAsync(id);
-        return NoContent();
+        var result = await _service.DeleteAsync(id);
+        return HandleResult(result);
+    }
+
+    // Team management endpoints
+    [HttpGet("{departmentId:long}/teams")]
+    public async Task<ActionResult<SuccessResponse<IEnumerable<TeamDto>>>> GetTeams(long departmentId)
+    {
+        var result = await _service.GetTeamsForDepartmentAsync(departmentId);
+        return HandleResult(result);
+    }
+
+    [HttpPost("{departmentId:long}/teams")]
+    public async Task<ActionResult<SuccessResponse>> AddTeam(long departmentId, [FromBody] string teamName)
+    {
+        var result = await _service.AddTeamToDepartmentAsync(departmentId, teamName);
+        return HandleResult(result);
+    }
+
+    [HttpDelete("{departmentId:long}/teams/{teamId:long}")]
+    public async Task<ActionResult<SuccessResponse>> RemoveTeam(long departmentId, long teamId)
+    {
+        var result = await _service.RemoveTeamFromDepartmentAsync(departmentId, teamId);
+        return HandleResult(result);
     }
 }

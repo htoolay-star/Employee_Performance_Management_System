@@ -1,6 +1,8 @@
+using EPMS.Api.Controllers.Common;
 using EPMS.Domain.Interface.IService.Auth;
 using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.AuthDTOs.PermissionDTOS;
+using EPMS.Shared.DTOs.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,7 +11,7 @@ namespace EPMS.Api.Controllers.Auth
     [Route("api/[controller]")]
     [ApiController]
     [Authorize(Roles = RoleConstants.Admin)]
-    public class PermissionsController : ControllerBase
+    public class PermissionsController : ApiControllerBase
     {
         private readonly IPermissionService _permissionService;
 
@@ -19,40 +21,38 @@ namespace EPMS.Api.Controllers.Auth
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<PermissionDto>>> GetAll()
+        public async Task<ActionResult<SuccessResponse<IEnumerable<PermissionDto>>>> GetAll()
         {
-            var permissions = await _permissionService.GetAllPermissionsAsync();
-            return Ok(permissions);
-        }
-        [HttpGet("{id}")]
-        public async Task<ActionResult<PermissionDto>> GetById(int id)
-        {
-            var permission = await _permissionService.GetPermissionByIdAsync(id);
-
-            return Ok(permission);
+            var result = await _permissionService.GetAllPermissionsAsync();
+            return HandleResult(result);
         }
 
+        [HttpGet("{id:long}")]
+        public async Task<ActionResult<SuccessResponse<PermissionDto>>> GetById(long id)
+        {
+            var result = await _permissionService.GetPermissionByIdAsync(id);
+            return HandleResult(result);
+        }
 
         [HttpPost]
-        public async Task<IActionResult> Create(CreatePermissionDto dto)
+        public async Task<ActionResult<SuccessResponse<long>>> Create(CreatePermissionDto dto)
         {
-            await _permissionService.CreatePermissionAsync(dto);
-            return Ok(new { message = "Permission Created successfully." });
+            var result = await _permissionService.CreatePermissionAsync(dto);
+            return HandleResult(result);
         }
 
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, UpdatePermissionDto dto)
+        [HttpPut("{id:long}")]
+        public async Task<ActionResult<SuccessResponse>> Update(long id, UpdatePermissionDto dto)
         {
-            await _permissionService.UpdatePermissionAsync(id, dto);
-            return Ok(new { message = "Permission Updated Successfully" });
+            var result = await _permissionService.UpdatePermissionAsync(id, dto);
+            return HandleResult(result);
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        [HttpDelete("{id:long}")]
+        public async Task<ActionResult<SuccessResponse>> Delete(long id)
         {
-            await _permissionService.DeletePermissionAsync(id);
-            return Ok(new { message = "Permission Deleted Successfully" });
+            var result = await _permissionService.DeletePermissionAsync(id);
+            return HandleResult(result);
         }
     }
 }

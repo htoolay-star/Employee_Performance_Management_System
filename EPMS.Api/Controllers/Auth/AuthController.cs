@@ -82,7 +82,7 @@ namespace EPMS.Api.Controllers.Auth
         public async Task<ActionResult<SuccessResponse>> UpdateDefaultPassword([FromBody] UpdateDefaultPasswordRequest request)
         {
             await _settingsService.UpdateDefaultPasswordAsync(request.NewDefaultPassword);
-            return Ok(new { message = "Default password updated successfully." });
+            return HandleResult(SuccessResponse.Ok("Default password updated successfully."));
         }
     }
 }

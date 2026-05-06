@@ -26,4 +26,9 @@ public class DepartmentRepository : GenericRepository<Department>, IDepartmentRe
     {
         return await _dbSet.AnyAsync(d => d.Name == name);
     }
+
+    public async Task<bool> ExistsByIdAsync(long id)
+    {
+        return await _dbSet.AnyAsync(d => d.Id == id);
+    }
 }
