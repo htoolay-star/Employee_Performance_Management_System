@@ -1,3 +1,4 @@
+using EPMS.Shared.Constants.ValidationMessages;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using FluentValidation;
 
@@ -9,40 +10,40 @@ public class CreateEmployeeEmploymentHistoryValidator : AbstractValidator<Create
     {
         RuleFor(x => x.EmployeeId)
             .GreaterThan(0)
-            .WithMessage("Employee ID must be greater than 0.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.EmployeeIdInvalid);
 
         RuleFor(x => x.DepartmentId)
             .GreaterThan(0)
-            .WithMessage("Department ID must be greater than 0.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.DepartmentIdInvalid);
 
         RuleFor(x => x.PositionId)
             .GreaterThan(0)
-            .WithMessage("Position ID must be greater than 0.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.PositionIdInvalid);
 
         RuleFor(x => x.EmploymentStatus)
             .NotEmpty()
-            .WithMessage("Employment status is required.")
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.EmploymentStatusRequired)
             .MaximumLength(50)
-            .WithMessage("Employment status cannot exceed 50 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.EmploymentStatusMaxLength);
 
         RuleFor(x => x.EffectiveDate)
             .NotEmpty()
-            .WithMessage("Effective date is required.")
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeHistory.EffectiveDateRequired)
             .LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.Today))
-            .WithMessage("Effective date cannot be in the future.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeHistory.EffectiveDateFuture);
 
         RuleFor(x => x.ChangeReason)
             .MaximumLength(500)
-            .WithMessage("Change reason cannot exceed 500 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeHistory.ChangeReasonMaxLength);
 
         RuleFor(x => x.ManagerId)
             .GreaterThan(0)
             .When(x => x.ManagerId.HasValue)
-            .WithMessage("Manager ID must be greater than 0.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeHistory.ManagerIdInvalid);
 
         RuleFor(x => x.ChangedById)
             .GreaterThan(0)
             .When(x => x.ChangedById.HasValue)
-            .WithMessage("Changed by ID must be greater than 0.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeHistory.ChangedByIdInvalid);
     }
 }

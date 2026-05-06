@@ -2,6 +2,7 @@
 using EPMS.Api.Middlewares;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace EPMS.Api.Extensions
@@ -20,7 +21,7 @@ namespace EPMS.Api.Extensions
             })
             .AddJsonOptions(options =>
             {
-                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
             });
 
             services.Configure<ApiBehaviorOptions>(options =>

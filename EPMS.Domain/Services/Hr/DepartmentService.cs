@@ -3,10 +3,13 @@ using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Hr;
 using EPMS.Domain.Interface.Irepo.Hr;
 using EPMS.Domain.Interfaces;
+using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.DepartmentDTOs;
 using EPMS.Shared.DTOs.TeamDTOs;
 using EPMS.Shared.Enums;
+using DeptMsg = EPMS.Shared.Constants.ServiceResponseMessages.DepartmentMsg;
+using TeamMsg = EPMS.Shared.Constants.ServiceResponseMessages.TeamMsg;
 
 namespace EPMS.Domain.Services.Hr;
 
@@ -25,7 +28,7 @@ public class DepartmentService : IDepartmentService
     {
         var departments = await _uow.HR.Departments.GetAllAsync();
         var dtos = _mapper.Map<IEnumerable<DepartmentDto>>(departments);
-        return SuccessResponse<IEnumerable<DepartmentDto>>.Ok(dtos, "Departments retrieved successfully.");
+        return SuccessResponse<IEnumerable<DepartmentDto>>.Ok(dtos, DeptMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<DepartmentDto>> GetByIdAsync(long id)
@@ -33,24 +36,24 @@ public class DepartmentService : IDepartmentService
         var department = await _uow.HR.Departments.GetDepartmentWithTeamsAsync(id);
 
         if (department is null)
-            return SuccessResponse<DepartmentDto>.Fail($"Department with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse<DepartmentDto>.Fail(DeptMsg.NotFound(id), ErrorType.NotFound);
 
         var dto = _mapper.Map<DepartmentDto>(department);
-        return SuccessResponse<DepartmentDto>.Ok(dto, "Department retrieved successfully.");
+        return SuccessResponse<DepartmentDto>.Ok(dto, DeptMsg.Retrieved);
     }
 
     public async Task<SuccessResponse<long>> CreateAsync(CreateDepartmentDto dto)
     {
         if (await _uow.HR.Departments.ExistsByCodeAsync(dto.Code))
-            return SuccessResponse<long>.Fail($"Department with code '{dto.Code}' already exists.", ErrorType.Conflict);
+            return SuccessResponse<long>.Fail(string.Format(DeptMsg.DuplicateCode, dto.Code), ErrorType.Conflict);
 
         if (await _uow.HR.Departments.ExistsByNameAsync(dto.Name))
-            return SuccessResponse<long>.Fail($"Department with name '{dto.Name}' already exists.", ErrorType.Conflict);
+            return SuccessResponse<long>.Fail(string.Format(DeptMsg.DuplicateName, dto.Name), ErrorType.Conflict);
 
         var entity = new Department(dto.Code, dto.Name);
         _uow.HR.Departments.Add(entity);
         await _uow.CompleteAsync();
-        return SuccessResponse<long>.Ok(entity.Id, "Department created successfully.");
+        return SuccessResponse<long>.Ok(entity.Id, DeptMsg.Created);
     }
 
     public async Task<SuccessResponse> UpdateAsync(long id, UpdateDepartmentDto dto)
@@ -58,10 +61,10 @@ public class DepartmentService : IDepartmentService
         var department = await _uow.HR.Departments.GetByIdAsync(id);
 
         if (department == null)
-            return SuccessResponse.Fail($"Department with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse.Fail(DeptMsg.NotFound(id), ErrorType.NotFound);
 
         if (department.Name != dto.Name && await _uow.HR.Departments.ExistsByNameAsync(dto.Name))
-            return SuccessResponse.Fail($"Another department with name '{dto.Name}' already exists.", ErrorType.Conflict);
+            return SuccessResponse.Fail(string.Format(DeptMsg.DuplicateNameOther, dto.Name), ErrorType.Conflict);
 
         department.Rename(dto.Name);
         
@@ -69,7 +72,7 @@ public class DepartmentService : IDepartmentService
         else department.Deactivate();
 
         await _uow.CompleteAsync();
-        return SuccessResponse.Ok("Department updated successfully.");
+        return SuccessResponse.Ok(DeptMsg.Updated);
     }
 
     public async Task<SuccessResponse> DeleteAsync(long id)
@@ -77,11 +80,11 @@ public class DepartmentService : IDepartmentService
         var department = await _uow.HR.Departments.GetByIdAsync(id);
 
         if (department == null)
-            return SuccessResponse.Fail($"Department with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse.Fail(DeptMsg.NotFound(id), ErrorType.NotFound);
 
         _uow.HR.Departments.Delete(department);
         await _uow.CompleteAsync();
-        return SuccessResponse.Ok("Department deleted successfully.");
+        return SuccessResponse.Ok(DeptMsg.Deleted);
     }
 
     public async Task<SuccessResponse<IEnumerable<TeamDto>>> GetTeamsForDepartmentAsync(long departmentId)
@@ -89,11 +92,11 @@ public class DepartmentService : IDepartmentService
         var department = await _uow.HR.Departments.GetByIdAsync(departmentId);
 
         if (department is null)
-            return SuccessResponse<IEnumerable<TeamDto>>.Fail($"Department with ID '{departmentId}' was not found.", ErrorType.NotFound);
+            return SuccessResponse<IEnumerable<TeamDto>>.Fail(TeamMsg.NotFoundForDepartment(departmentId), ErrorType.NotFound);
 
         var teams = await _uow.HR.Teams.GetTeamsByDepartmentAsync(departmentId);
         var dtos = _mapper.Map<IEnumerable<TeamDto>>(teams);
-        return SuccessResponse<IEnumerable<TeamDto>>.Ok(dtos, "Teams retrieved successfully.");
+        return SuccessResponse<IEnumerable<TeamDto>>.Ok(dtos, TeamMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse> AddTeamToDepartmentAsync(long departmentId, string teamName)
@@ -101,14 +104,14 @@ public class DepartmentService : IDepartmentService
         var department = await _uow.HR.Departments.GetDepartmentWithTeamsAsync(departmentId);
 
         if (department is null)
-            return SuccessResponse.Fail($"Department with ID '{departmentId}' was not found.", ErrorType.NotFound);
+            return SuccessResponse.Fail(TeamMsg.NotFoundForDepartment(departmentId), ErrorType.NotFound);
 
         if (await _uow.HR.Teams.ExistsByNameInDepartmentAsync(teamName, departmentId))
-            return SuccessResponse.Fail($"Team with name '{teamName}' already exists in this department.", ErrorType.Conflict);
+            return SuccessResponse.Fail(string.Format(TeamMsg.DuplicateName, teamName), ErrorType.Conflict);
 
         department.AddTeam(teamName);
         await _uow.CompleteAsync();
-        return SuccessResponse.Ok("Team added successfully.");
+        return SuccessResponse.Ok(TeamMsg.Added);
     }
 
     public async Task<SuccessResponse> RemoveTeamFromDepartmentAsync(long departmentId, long teamId)
@@ -116,18 +119,18 @@ public class DepartmentService : IDepartmentService
         var department = await _uow.HR.Departments.GetByIdAsync(departmentId);
 
         if (department is null)
-            return SuccessResponse.Fail($"Department with ID '{departmentId}' was not found.", ErrorType.NotFound);
+            return SuccessResponse.Fail(TeamMsg.NotFoundForDepartment(departmentId), ErrorType.NotFound);
 
         var team = await _uow.HR.Teams.GetByIdAsync(teamId);
 
         if (team is null)
-            return SuccessResponse.Fail($"Team with ID '{teamId}' was not found.", ErrorType.NotFound);
+            return SuccessResponse.Fail(TeamMsg.NotFound(teamId), ErrorType.NotFound);
 
         if (team.DepartmentId != departmentId)
-            return SuccessResponse.Fail($"Team '{teamId}' does not belong to department '{departmentId}'.", ErrorType.Conflict);
+            return SuccessResponse.Fail(TeamMsg.NotFoundInDepartment(teamId, departmentId), ErrorType.Conflict);
 
         _uow.HR.Teams.Delete(team);
         await _uow.CompleteAsync();
-        return SuccessResponse.Ok("Team removed successfully.");
+        return SuccessResponse.Ok(TeamMsg.Removed);
     }
 }

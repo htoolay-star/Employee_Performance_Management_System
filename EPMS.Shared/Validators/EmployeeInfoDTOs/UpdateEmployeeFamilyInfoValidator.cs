@@ -1,3 +1,4 @@
+using EPMS.Shared.Constants.ValidationMessages;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using FluentValidation;
 
@@ -9,30 +10,30 @@ public class UpdateEmployeeFamilyInfoValidator : AbstractValidator<UpdateEmploye
     {
         RuleFor(x => x.MaritalStatus)
             .MaximumLength(50)
-            .WithMessage("Marital status cannot exceed 50 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeFamilyInfo.MaritalStatusMaxLength);
 
         RuleFor(x => x.SpouseName)
             .MaximumLength(100)
-            .WithMessage("Spouse name cannot exceed 100 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeFamilyInfo.SpouseNameMaxLength);
 
         RuleFor(x => x.SpouseNRCNo)
             .MaximumLength(50)
-            .WithMessage("Spouse NRC number cannot exceed 50 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeFamilyInfo.SpouseNRCMaxLength);
 
         RuleFor(x => x.SpouseOccupation)
             .MaximumLength(100)
-            .WithMessage("Spouse occupation cannot exceed 100 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeFamilyInfo.SpouseOccupationMaxLength);
 
         RuleFor(x => x.FatherName)
             .MaximumLength(100)
-            .WithMessage("Father name cannot exceed 100 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeFamilyInfo.FatherNameMaxLength);
 
         RuleFor(x => x.FatherNRCNo)
             .MaximumLength(50)
-            .WithMessage("Father NRC number cannot exceed 50 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeFamilyInfo.FatherNRCMaxLength);
 
         RuleFor(x => x.FatherOccupation)
             .MaximumLength(100)
-            .WithMessage("Father occupation cannot exceed 100 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeFamilyInfo.FatherOccupationMaxLength);
     }
 }

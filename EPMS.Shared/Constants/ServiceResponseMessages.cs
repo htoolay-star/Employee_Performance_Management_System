@@ -1,0 +1,210 @@
+namespace EPMS.Shared.Constants;
+
+public static class ServiceResponseMessages
+{
+    public static class AuthMsg
+    {
+        public const string InvalidCredentials = "Invalid email or password.";
+        public const string EmailAlreadyRegistered = "Email is already registered.";
+        public const string UserNotFound = "User not found.";
+        public const string CurrentPasswordIncorrect = "Current password is incorrect.";
+        public const string PasswordChangeFailed = "Failed to change password.";
+        public const string PasswordChanged = "Password changed successfully.";
+        public const string LoggedOut = "Logged out successfully.";
+        public const string InvalidRefreshToken = "Invalid refresh token.";
+        public const string RefreshTokenExpired = "Refresh token expired. Please login again.";
+        public const string LoginSuccess = "Login successful";
+        public const string TokenRefreshed = "Token refreshed successfully";
+        public static string UserRegistered => "User registered successfully";
+    }
+
+    public static class DepartmentMsg
+    {
+        public const string Created = "Department created successfully.";
+        public const string Updated = "Department updated successfully.";
+        public const string Deleted = "Department deleted successfully.";
+        public const string Retrieved = "Department retrieved successfully.";
+        public const string RetrievedAll = "Departments retrieved successfully.";
+        public const string DuplicateCode = "Department with code '{0}' already exists.";
+        public const string DuplicateName = "Department with name '{0}' already exists.";
+        public const string DuplicateNameOther = "Another department with name '{0}' already exists.";
+        public static string NotFound(long id) => $"Department with ID '{id}' was not found.";
+    }
+
+    public static class TeamMsg
+    {
+        public const string Created = "Team created successfully.";
+        public const string Updated = "Team updated successfully.";
+        public const string Deleted = "Team deleted successfully.";
+        public const string Retrieved = "Team retrieved successfully.";
+        public const string RetrievedAll = "Teams retrieved successfully.";
+        public const string Added = "Team added successfully.";
+        public const string Removed = "Team removed successfully.";
+        public const string DuplicateName = "Team with name '{0}' already exists in this department.";
+        public static string NotFound(long id) => $"Team with ID '{id}' was not found.";
+        public static string NotFoundInDepartment(long teamId, long departmentId) => $"Team '{teamId}' does not belong to department '{departmentId}'.";
+        public static string NotFoundForDepartment(long departmentId) => $"Department with ID '{departmentId}' was not found.";
+    }
+
+    public static class PositionMsg
+    {
+        public const string Created = "Position created successfully.";
+        public const string Updated = "Position updated successfully.";
+        public const string Deleted = "Position deleted successfully.";
+        public const string Retrieved = "Position retrieved successfully.";
+        public const string RetrievedAll = "Positions retrieved successfully.";
+        public const string DuplicateTitle = "Position with title '{0}' already exists.";
+        public const string PermissionAssigned = "Permission assigned successfully.";
+        public const string PermissionRemoved = "Permission removed successfully.";
+        public static string NotFound(long id) => $"Position with ID '{id}' was not found.";
+        public static string LevelNotFound(long levelId) => $"Level with ID '{levelId}' was not found.";
+    }
+
+    public static class LevelMsg
+    {
+        public const string Created = "Level created successfully.";
+        public const string Updated = "Level updated successfully.";
+        public const string Deleted = "Level deleted successfully.";
+        public const string Retrieved = "Level retrieved successfully.";
+        public const string RetrievedAll = "Levels retrieved successfully.";
+        public const string DuplicateCode = "Level with code '{0}' already exists.";
+        public const string DuplicateName = "Level with name '{0}' already exists.";
+        public static string NotFound(long id) => $"Level with ID '{id}' was not found.";
+    }
+
+    public static class EmployeeProfileMsg
+    {
+        public const string Created = "Employee profile created successfully.";
+        public const string Updated = "Employee profile updated successfully.";
+        public const string Deleted = "Employee profile deleted successfully.";
+        public const string Retrieved = "Employee profile retrieved successfully.";
+        public const string RetrievedAll = "Employee profiles retrieved successfully.";
+        public const string DuplicateStaffNo = "Staff number '{0}' already exists.";
+        public const string DuplicateEmail = "Employee with email '{0}' already exists.";
+        public const string DuplicateUserId = "Employee with user ID '{0}' already exists.";
+        public static string NotFound(long id) => $"Employee profile with ID '{id}' was not found.";
+    }
+
+    public static class EmployeeContactMsg
+    {
+        public const string Created = "Employee contact created successfully.";
+        public const string Updated = "Employee contact updated successfully.";
+        public const string Deleted = "Employee contact deleted successfully.";
+        public const string Retrieved = "Employee contact retrieved successfully.";
+        public const string RetrievedAll = "Employee contacts retrieved successfully.";
+        public static string NotFound(long id) => $"Employee contact with ID '{id}' was not found.";
+    }
+
+    public static class EmployeeEmploymentMsg
+    {
+        public const string Created = "Employee employment created successfully.";
+        public const string Updated = "Employee employment updated successfully.";
+        public const string Deleted = "Employee employment deleted successfully.";
+        public const string Retrieved = "Employee employment retrieved successfully.";
+        public const string RetrievedAll = "Employee employments retrieved successfully.";
+        public static string NotFound(long id) => $"Employee employment with ID '{id}' was not found.";
+    }
+
+    public static class EmployeePayrollInfoMsg
+    {
+        public const string Created = "Employee payroll info created successfully.";
+        public const string Updated = "Employee payroll info updated successfully.";
+        public const string Deleted = "Employee payroll info deleted successfully.";
+        public const string Retrieved = "Employee payroll info retrieved successfully.";
+        public const string RetrievedAll = "Employee payroll info retrieved successfully.";
+        public const string SalaryNegative = "Salary cannot be negative.";
+        public static string NotFound(long id) => $"Employee payroll info with ID '{id}' was not found.";
+    }
+
+    public static class EmployeeFamilyInfoMsg
+    {
+        public const string Created = "Employee family info created successfully.";
+        public const string Updated = "Employee family info updated successfully.";
+        public const string Deleted = "Employee family info deleted successfully.";
+        public const string Retrieved = "Employee family info retrieved successfully.";
+        public const string RetrievedAll = "Employee family info retrieved successfully.";
+        public static string NotFound(long id) => $"Employee family info with ID '{id}' was not found.";
+    }
+
+    public static class EmployeeSalaryHistoryMsg
+    {
+        public const string Created = "Employee salary history created successfully.";
+        public const string Retrieved = "Employee salary history retrieved successfully.";
+        public const string RetrievedAll = "Employee salary histories retrieved successfully.";
+        public const string SalaryNegative = "Salary amounts cannot be negative.";
+        public const string ChangeReasonRequired = "Change reason is required.";
+        public static string NotFound(long id) => $"Employee salary history with ID '{id}' was not found.";
+    }
+
+    public static class EmployeeEmploymentHistoryMsg
+    {
+        public const string Created = "Employee employment history created successfully.";
+        public const string Retrieved = "Employee employment history retrieved successfully.";
+        public const string RetrievedAll = "Employee employment histories retrieved successfully.";
+        public static string NotFound(long id) => $"Employee employment history with ID '{id}' was not found.";
+    }
+
+    public static class CategoryMsg
+    {
+        public const string Created = "Category created successfully.";
+        public const string Updated = "Category updated successfully.";
+        public const string Deleted = "Category deleted successfully.";
+        public const string Retrieved = "Category retrieved successfully.";
+        public const string RetrievedAll = "Categories retrieved successfully.";
+        public const string DuplicateCode = "Category with code '{0}' already exists.";
+        public const string DuplicateName = "Category with name '{0}' already exists.";
+        public const string SelfParent = "A category cannot be its own parent.";
+        public static string NotFound(long id) => $"Category with ID '{id}' was not found.";
+    }
+
+    public static class TagMsg
+    {
+        public const string Created = "Tag created successfully.";
+        public const string Updated = "Tag updated successfully.";
+        public const string Deleted = "Tag deleted successfully.";
+        public const string Retrieved = "Tag retrieved successfully.";
+        public const string RetrievedAll = "Tags retrieved successfully.";
+        public const string DuplicateName = "Tag with name '{0}' already exists.";
+        public static string NotFound(long id) => $"Tag with ID '{id}' was not found.";
+    }
+
+    public static class RatingScaleMsg
+    {
+        public const string Created = "Rating scale created successfully.";
+        public const string Updated = "Rating scale updated successfully.";
+        public const string Deleted = "Rating scale deleted successfully.";
+        public const string Deactivated = "Rating scale deactivated successfully.";
+        public const string Reactivated = "Rating scale reactivated successfully.";
+        public const string Retrieved = "Rating scale retrieved successfully.";
+        public const string RetrievedAll = "Rating scales retrieved successfully.";
+        public const string MinGreaterThanMax = "Minimum score cannot be greater than maximum score.";
+        public static string NotFound(long id) => $"Rating scale with ID '{id}' was not found.";
+    }
+
+    public static class KPIWeightPriorityMsg
+    {
+        public const string Created = "KPI weight priority created successfully.";
+        public const string Updated = "KPI weight priority updated successfully.";
+        public const string Deleted = "KPI weight priority deleted successfully.";
+        public const string Deactivated = "KPI weight priority deactivated successfully.";
+        public const string Reactivated = "KPI weight priority reactivated successfully.";
+        public const string Retrieved = "KPI weight priority retrieved successfully.";
+        public const string RetrievedAll = "KPI weight priorities retrieved successfully.";
+        public const string MinGreaterThanMax = "Minimum weight cannot be greater than maximum weight.";
+        public const string InvalidColorCode = "Color code must be a valid hex color code (e.g., #FF5733).";
+        public static string NotFound(long id) => $"KPI weight priority with ID '{id}' was not found.";
+    }
+
+    public static class PermissionMsg
+    {
+        public const string Created = "Permission created successfully.";
+        public const string Updated = "Permission updated successfully.";
+        public const string Deleted = "Permission deleted successfully.";
+        public const string Retrieved = "Permission retrieved successfully.";
+        public const string RetrievedAll = "Permissions retrieved successfully.";
+        public const string DuplicateCode = "Permission code already exists.";
+        public const string DuplicateName = "Permission with name '{0}' already exists.";
+        public const string NotFound = "Permission not found.";
+        public static string NotFoundById(long id) => $"Permission with ID '{id}' was not found.";
+    }
+}

@@ -178,13 +178,13 @@ public static class ValidationExtensions
     public static IRuleBuilderOptions<T, string> ApplyPersonNameRules<T>(this IRuleBuilder<T, string> ruleBuilder)
     {
         return ruleBuilder
-            .NotEmpty().WithMessage("Name is required.")
-            .MaximumLength(100).WithMessage("Name cannot exceed 100 characters.");
+            .NotEmpty().WithMessage(EmployeeInfoValidationMessages.Common.NameRequired)
+            .MaximumLength(100).WithMessage(EmployeeInfoValidationMessages.Common.NameMaxLength);
     }
 
     public static IRuleBuilderOptions<T, string> ApplyOptionalPersonNameRules<T>(this IRuleBuilder<T, string> ruleBuilder)
     {
-        return ruleBuilder.MaximumLength(100).WithMessage("Name cannot exceed 100 characters.");
+        return ruleBuilder.MaximumLength(100).WithMessage(EmployeeInfoValidationMessages.Common.NameMaxLength);
     }
 
     public static IRuleBuilderOptions<T, string> ApplyPhoneNumberRules<T>(this IRuleBuilder<T, string> ruleBuilder)
@@ -269,7 +269,7 @@ public static class ValidationExtensions
     public static IRuleBuilderOptions<T, DateOnly> ApplyFutureDatePreventionRules<T>(this IRuleBuilder<T, DateOnly> ruleBuilder)
     {
         return ruleBuilder.LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.Today))
-            .WithMessage("Date cannot be in the future.");
+            .WithMessage(EmployeeInfoValidationMessages.Common.DateFuture);
     }
 
     public static IRuleBuilderOptions<T, DateOnly?> ApplyOptionalFutureDatePreventionRules<T>(
@@ -279,7 +279,7 @@ public static class ValidationExtensions
     {
         return ruleBuilder
             .LessThanOrEqualTo(x => DateOnly.FromDateTime(timeProvider.GetLocalNow().DateTime))
-            .WithMessage("Date cannot be in the future.")
+            .WithMessage(EmployeeInfoValidationMessages.Common.DateFuture)
             .When(x => propertySelector(x).HasValue);
     }
 
@@ -300,8 +300,14 @@ public static class ValidationExtensions
 
     public static IRuleBuilderOptions<T, decimal> ApplyScoreRangeRules<T>(this IRuleBuilder<T, decimal> ruleBuilder, string scoreType)
     {
+        var message = scoreType switch
+        {
+            "Minimum" => PerformanceValidationMessages.ScoreRange.MinimumScoreInvalid,
+            "Maximum" => PerformanceValidationMessages.ScoreRange.MaximumScoreInvalid,
+            _ => PerformanceValidationMessages.ScoreRange.MinimumScoreInvalid
+        };
         return ruleBuilder
-            .GreaterThanOrEqualTo(0).WithMessage($"{scoreType} score must be greater than or equal to 0.");
+            .GreaterThanOrEqualTo(0).WithMessage(message);
     }
 
     public static IRuleBuilderOptions<T, decimal?> ApplyOptionalScoreRangeRules<T>(
@@ -309,16 +315,28 @@ public static class ValidationExtensions
     string scoreType,
     Func<T, decimal?> propertySelector)
     {
+        var message = scoreType switch
+        {
+            "Minimum" => PerformanceValidationMessages.ScoreRange.MinimumScoreInvalid,
+            "Maximum" => PerformanceValidationMessages.ScoreRange.MaximumScoreInvalid,
+            _ => PerformanceValidationMessages.ScoreRange.MinimumScoreInvalid
+        };
         return ruleBuilder
             .GreaterThanOrEqualTo(0)
-            .WithMessage($"{scoreType} score must be greater than or equal to 0.")
+            .WithMessage(message)
             .When(x => propertySelector(x).HasValue);
     }
 
     public static IRuleBuilderOptions<T, decimal> ApplyWeightRangeRules<T>(this IRuleBuilder<T, decimal> ruleBuilder, string weightType)
     {
+        var message = weightType switch
+        {
+            "Minimum" => PerformanceValidationMessages.WeightRange.MinimumWeightInvalid,
+            "Maximum" => PerformanceValidationMessages.WeightRange.MaximumWeightInvalid,
+            _ => PerformanceValidationMessages.WeightRange.MinimumWeightInvalid
+        };
         return ruleBuilder
-            .GreaterThanOrEqualTo(0).WithMessage($"{weightType} weight must be greater than or equal to 0.");
+            .GreaterThanOrEqualTo(0).WithMessage(message);
     }
 
     public static IRuleBuilderOptions<T, decimal?> ApplyOptionalyWeightRangeRules<T>(
@@ -326,9 +344,15 @@ public static class ValidationExtensions
     string weightType,
     Func<T, decimal?> propertySelector)
     {
+        var message = weightType switch
+        {
+            "Minimum" => PerformanceValidationMessages.WeightRange.MinimumWeightInvalid,
+            "Maximum" => PerformanceValidationMessages.WeightRange.MaximumWeightInvalid,
+            _ => PerformanceValidationMessages.WeightRange.MinimumWeightInvalid
+        };
         return ruleBuilder
             .GreaterThanOrEqualTo(0)
-            .WithMessage($"{weightType} weight must be greater than or equal to 0.")
+            .WithMessage(message)
             .When(x => propertySelector(x).HasValue);
     }
 

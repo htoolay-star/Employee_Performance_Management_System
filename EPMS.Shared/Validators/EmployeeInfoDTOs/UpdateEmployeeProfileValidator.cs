@@ -1,3 +1,4 @@
+using EPMS.Shared.Constants.ValidationMessages;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using FluentValidation;
 
@@ -9,50 +10,50 @@ public class UpdateEmployeeProfileValidator : AbstractValidator<UpdateEmployeePr
     {
         RuleFor(x => x.OtherName)
             .MaximumLength(100)
-            .WithMessage("Other name cannot exceed 100 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.OtherNameMaxLength);
 
         RuleFor(x => x.NRCNo)
             .MaximumLength(50)
-            .WithMessage("NRC number cannot exceed 50 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.NRCMaxLength);
 
         RuleFor(x => x.Gender)
             .Must(g => string.IsNullOrEmpty(g) || g.Equals("Male", StringComparison.OrdinalIgnoreCase) || 
                       g.Equals("Female", StringComparison.OrdinalIgnoreCase) || g.Equals("Other", StringComparison.OrdinalIgnoreCase))
-            .WithMessage("Gender must be Male, Female, or Other.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.GenderInvalid);
 
         RuleFor(x => x.DateOfBirth)
             .LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.Today))
             .When(x => x.DateOfBirth.HasValue)
-            .WithMessage("Date of birth cannot be in the future.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.DateOfBirthFuture);
 
         RuleFor(x => x.Nationality)
             .MaximumLength(100)
-            .WithMessage("Nationality cannot exceed 100 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.NationalityMaxLength);
 
         RuleFor(x => x.WorkPermitNo)
             .MaximumLength(50)
-            .WithMessage("Work permit number cannot exceed 50 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.WorkPermitNoMaxLength);
 
         RuleFor(x => x.WorkPermitValidDate)
             .LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.Today))
             .When(x => x.WorkPermitValidDate.HasValue)
-            .WithMessage("Work permit valid date cannot be in the future.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.WorkPermitValidDateFuture);
 
         RuleFor(x => x.WorkPermitExpireDate)
             .GreaterThan(x => x.WorkPermitValidDate)
             .When(x => x.WorkPermitValidDate.HasValue && x.WorkPermitExpireDate.HasValue)
-            .WithMessage("Work permit expire date must be after valid date.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.WorkPermitExpireDateAfterValid);
 
         RuleFor(x => x.ProfilePictureUrl)
             .Must(url => string.IsNullOrEmpty(url) || Uri.TryCreate(url, UriKind.Absolute, out _))
-            .WithMessage("Profile picture URL must be a valid URL.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.ProfilePictureUrlInvalid);
 
         RuleFor(x => x.ProfileThumbnailUrl)
             .Must(url => string.IsNullOrEmpty(url) || Uri.TryCreate(url, UriKind.Absolute, out _))
-            .WithMessage("Profile thumbnail URL must be a valid URL.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.ProfileThumbnailUrlInvalid);
 
         RuleFor(x => x.AdditionalData)
             .MaximumLength(2000)
-            .WithMessage("Additional data cannot exceed 2000 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.AdditionalDataMaxLength);
     }
 }

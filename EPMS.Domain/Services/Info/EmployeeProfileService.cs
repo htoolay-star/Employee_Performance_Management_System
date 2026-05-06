@@ -2,10 +2,11 @@ using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Domain.Interface.IService.Info;
+using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using EPMS.Shared.Enums;
-using Microsoft.EntityFrameworkCore;
+using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 namespace EPMS.Domain.Services.Info;
 
@@ -24,7 +25,7 @@ public class EmployeeProfileService : IEmployeeProfileService
     {
         var profiles = await _uow.Info.EmployeeProfiles.GetAllAsync();
         var dtos = _mapper.Map<IEnumerable<EmployeeProfileDto>>(profiles);
-        return SuccessResponse<IEnumerable<EmployeeProfileDto>>.Ok(dtos, "Employee profiles retrieved successfully.");
+        return SuccessResponse<IEnumerable<EmployeeProfileDto>>.Ok(dtos, EmployeeProfileMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<EmployeeProfileDto>> GetByIdAsync(long id)
@@ -32,10 +33,10 @@ public class EmployeeProfileService : IEmployeeProfileService
         var profile = await _uow.Info.EmployeeProfiles.GetByIdAsync(id);
 
         if (profile == null)
-            return SuccessResponse<EmployeeProfileDto>.Fail($"Employee profile with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse<EmployeeProfileDto>.Fail(EmployeeProfileMsg.NotFound(id), ErrorType.NotFound);
 
         var dto = _mapper.Map<EmployeeProfileDto>(profile);
-        return SuccessResponse<EmployeeProfileDto>.Ok(dto, "Employee profile retrieved successfully.");
+        return SuccessResponse<EmployeeProfileDto>.Ok(dto, EmployeeProfileMsg.Retrieved);
     }
 
     public async Task<SuccessResponse<EmployeeProfileDetailDto>> GetFullProfileAsync(long id)
@@ -43,7 +44,7 @@ public class EmployeeProfileService : IEmployeeProfileService
         var profile = await _uow.Info.EmployeeProfiles.GetByIdAsync(id);
 
         if (profile == null)
-            return SuccessResponse<EmployeeProfileDetailDto>.Fail($"Employee profile with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse<EmployeeProfileDetailDto>.Fail(EmployeeProfileMsg.NotFound(id), ErrorType.NotFound);
 
         var dto = _mapper.Map<EmployeeProfileDetailDto>(profile);
         
@@ -60,7 +61,7 @@ public class EmployeeProfileService : IEmployeeProfileService
         var family = await _uow.Info.EmployeeFamilyInfos.GetByEmployeeIdAsync(id);
         dto = dto with { FamilyInfo = family.FirstOrDefault() != null ? _mapper.Map<EmployeeFamilyInfoDto>(family.First()) : null };
 
-        return SuccessResponse<EmployeeProfileDetailDto>.Ok(dto, "Full employee profile retrieved successfully.");
+        return SuccessResponse<EmployeeProfileDetailDto>.Ok(dto, EmployeeProfileMsg.Retrieved);
     }
 
     public async Task<SuccessResponse<long>> CreateAsync(CreateEmployeeProfileDto dto)
@@ -68,14 +69,14 @@ public class EmployeeProfileService : IEmployeeProfileService
         // Check for duplicate StaffNo
         var existing = await _uow.Info.EmployeeProfiles.GetByStaffNoAsync(dto.StaffNo);
         if (existing != null)
-            return SuccessResponse<long>.Fail($"Employee with staff number '{dto.StaffNo}' already exists.", ErrorType.Conflict);
+            return SuccessResponse<long>.Fail(string.Format(EmployeeProfileMsg.DuplicateStaffNo, dto.StaffNo), ErrorType.Conflict);
 
         // Check for duplicate UserId if provided
         if (dto.UserId.HasValue)
         {
             var existingUser = await _uow.Info.EmployeeProfiles.GetByUserIdAsync(dto.UserId.Value);
             if (existingUser != null)
-                return SuccessResponse<long>.Fail($"Employee profile for user ID '{dto.UserId.Value}' already exists.", ErrorType.Conflict);
+                return SuccessResponse<long>.Fail(string.Format(EmployeeProfileMsg.DuplicateUserId, dto.UserId.Value), ErrorType.Conflict);
         }
 
         var profile = new EmployeeProfile(dto.UserId, dto.StaffNo, dto.FirstName, dto.LastName);
@@ -88,7 +89,7 @@ public class EmployeeProfileService : IEmployeeProfileService
         _uow.Info.EmployeeProfiles.Add(profile);
         await _uow.CompleteAsync();
         
-        return SuccessResponse<long>.Ok(profile.Id, "Employee profile created successfully.");
+        return SuccessResponse<long>.Ok(profile.Id, EmployeeProfileMsg.Created);
     }
 
     public async Task<SuccessResponse> UpdateAsync(long id, UpdateEmployeeProfileDto dto)
@@ -96,7 +97,7 @@ public class EmployeeProfileService : IEmployeeProfileService
         var profile = await _uow.Info.EmployeeProfiles.GetByIdAsync(id);
 
         if (profile == null)
-            return SuccessResponse.Fail($"Employee profile with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse.Fail(EmployeeProfileMsg.NotFound(id), ErrorType.NotFound);
 
         profile.UpdateDemographics(dto.Gender, dto.DateOfBirth, dto.Nationality);
         
@@ -110,7 +111,7 @@ public class EmployeeProfileService : IEmployeeProfileService
             profile.UpdateAdditionalData(dto.AdditionalData);
 
         await _uow.CompleteAsync();
-        return SuccessResponse.Ok("Employee profile updated successfully.");
+        return SuccessResponse.Ok(EmployeeProfileMsg.Updated);
     }
 
     public async Task<SuccessResponse> DeleteAsync(long id)
@@ -118,12 +119,12 @@ public class EmployeeProfileService : IEmployeeProfileService
         var profile = await _uow.Info.EmployeeProfiles.GetByIdAsync(id);
 
         if (profile == null)
-            return SuccessResponse.Fail($"Employee profile with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse.Fail(EmployeeProfileMsg.NotFound(id), ErrorType.NotFound);
 
         _uow.Info.EmployeeProfiles.Delete(profile);
         await _uow.CompleteAsync();
         
-        return SuccessResponse.Ok("Employee profile deleted successfully.");
+        return SuccessResponse.Ok(EmployeeProfileMsg.Deleted);
     }
 
     public async Task<SuccessResponse<EmployeeProfileDto>> GetByStaffNoAsync(string staffNo)
@@ -131,10 +132,10 @@ public class EmployeeProfileService : IEmployeeProfileService
         var profile = await _uow.Info.EmployeeProfiles.GetByStaffNoAsync(staffNo);
 
         if (profile == null)
-            return SuccessResponse<EmployeeProfileDto>.Fail($"Employee with staff number '{staffNo}' was not found.", ErrorType.NotFound);
+            return SuccessResponse<EmployeeProfileDto>.Fail(EmployeeProfileMsg.NotFound(0), ErrorType.NotFound);
 
         var dto = _mapper.Map<EmployeeProfileDto>(profile);
-        return SuccessResponse<EmployeeProfileDto>.Ok(dto, "Employee profile retrieved successfully.");
+        return SuccessResponse<EmployeeProfileDto>.Ok(dto, EmployeeProfileMsg.Retrieved);
     }
 
     public async Task<SuccessResponse<EmployeeProfileDto>> GetByUserIdAsync(long userId)
@@ -142,9 +143,9 @@ public class EmployeeProfileService : IEmployeeProfileService
         var profile = await _uow.Info.EmployeeProfiles.GetByUserIdAsync(userId);
 
         if (profile == null)
-            return SuccessResponse<EmployeeProfileDto>.Fail($"Employee profile for user ID '{userId}' was not found.", ErrorType.NotFound);
+            return SuccessResponse<EmployeeProfileDto>.Fail(EmployeeProfileMsg.NotFound(0), ErrorType.NotFound);
 
         var dto = _mapper.Map<EmployeeProfileDto>(profile);
-        return SuccessResponse<EmployeeProfileDto>.Ok(dto, "Employee profile retrieved successfully.");
+        return SuccessResponse<EmployeeProfileDto>.Ok(dto, EmployeeProfileMsg.Retrieved);
     }
 }

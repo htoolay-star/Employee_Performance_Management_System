@@ -1,0 +1,13 @@
+@page "/logout"
+@inject TokenStorage TokenStorage
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await TokenStorage.ClearTokensAsync();
+        ((JwtAuthenticationStateProvider)AuthenticationStateProvider).MarkUserAsLoggedOut();
+        Navigation.NavigateTo("/login");
+    }
+}

@@ -5,6 +5,7 @@ using EPMS.Domain.Interface.IService.Auth;
 using EPMS.Shared.DTOs.AuthDTOs.PermissionDTOS;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.Enums;
+using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 namespace EPMS.Domain.Services.Auth
 {
@@ -23,7 +24,7 @@ namespace EPMS.Domain.Services.Auth
         {
             var permissions = await _uow.Auth.Permissions.GetAllAsync();
             var dtos = _mapper.Map<IEnumerable<PermissionDto>>(permissions);
-            return SuccessResponse<IEnumerable<PermissionDto>>.Ok(dtos, "Permissions retrieved successfully.");
+            return SuccessResponse<IEnumerable<PermissionDto>>.Ok(dtos, PermissionMsg.RetrievedAll);
         }
 
         public async Task<SuccessResponse<PermissionDto>> GetPermissionByIdAsync(long id)
@@ -31,10 +32,10 @@ namespace EPMS.Domain.Services.Auth
             var permission = await _uow.Auth.Permissions.GetByIdAsync(id);
 
             if (permission == null)
-                return SuccessResponse<PermissionDto>.Fail("Permission not found.", ErrorType.NotFound);
+                return SuccessResponse<PermissionDto>.Fail(PermissionMsg.NotFound, ErrorType.NotFound);
 
             var dto = _mapper.Map<PermissionDto>(permission);
-            return SuccessResponse<PermissionDto>.Ok(dto, "Permission retrieved successfully.");
+            return SuccessResponse<PermissionDto>.Ok(dto, PermissionMsg.Retrieved);
         }
 
         public async Task<SuccessResponse<long>> CreatePermissionAsync(CreatePermissionDto dto)
@@ -46,7 +47,7 @@ namespace EPMS.Domain.Services.Auth
 
             _uow.Auth.Permissions.Add(permission);
             await _uow.CompleteAsync();
-            return SuccessResponse<long>.Ok(permission.Id, "Permission created successfully.");
+            return SuccessResponse<long>.Ok(permission.Id, PermissionMsg.Created);
         }
 
         public async Task<SuccessResponse> UpdatePermissionAsync(long id, UpdatePermissionDto dto)
@@ -54,12 +55,12 @@ namespace EPMS.Domain.Services.Auth
             var permission = await _uow.Auth.Permissions.GetByIdAsync(id);
 
             if (permission == null)
-                return SuccessResponse.Fail("Permission not found.", ErrorType.NotFound);
+                return SuccessResponse.Fail(PermissionMsg.NotFound, ErrorType.NotFound);
 
             permission.UpdateDetails(dto.Name, dto.Description);
 
             await _uow.CompleteAsync();
-            return SuccessResponse.Ok("Permission updated successfully.");
+            return SuccessResponse.Ok(PermissionMsg.Updated);
         }
 
         public async Task<SuccessResponse> DeletePermissionAsync(long id)
@@ -67,11 +68,11 @@ namespace EPMS.Domain.Services.Auth
             var permission = await _uow.Auth.Permissions.GetByIdAsync(id);
 
             if (permission == null)
-                return SuccessResponse.Fail("Permission not found.", ErrorType.NotFound);
+                return SuccessResponse.Fail(PermissionMsg.NotFound, ErrorType.NotFound);
 
             _uow.Auth.Permissions.Delete(permission);
             await _uow.CompleteAsync();
-            return SuccessResponse.Ok("Permission deleted successfully.");
+            return SuccessResponse.Ok(PermissionMsg.Deleted);
         }
     }
 }

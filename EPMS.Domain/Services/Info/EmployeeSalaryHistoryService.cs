@@ -5,6 +5,7 @@ using EPMS.Domain.Interface.IService.Info;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using EPMS.Shared.Enums;
+using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 namespace EPMS.Domain.Services.Info;
 
@@ -23,7 +24,7 @@ public class EmployeeSalaryHistoryService : IEmployeeSalaryHistoryService
     {
         var histories = await _uow.Info.EmployeeSalaryHistories.GetAllAsync();
         var dtos = _mapper.Map<IEnumerable<EmployeeSalaryHistoryDto>>(histories);
-        return SuccessResponse<IEnumerable<EmployeeSalaryHistoryDto>>.Ok(dtos, "Salary histories retrieved successfully.");
+        return SuccessResponse<IEnumerable<EmployeeSalaryHistoryDto>>.Ok(dtos, EmployeeSalaryHistoryMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<EmployeeSalaryHistoryDto>> GetByIdAsync(long id)
@@ -31,17 +32,17 @@ public class EmployeeSalaryHistoryService : IEmployeeSalaryHistoryService
         var history = await _uow.Info.EmployeeSalaryHistories.GetByIdAsync(id);
 
         if (history == null)
-            return SuccessResponse<EmployeeSalaryHistoryDto>.Fail($"Salary history with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse<EmployeeSalaryHistoryDto>.Fail(EmployeeSalaryHistoryMsg.NotFound(id), ErrorType.NotFound);
 
         var dto = _mapper.Map<EmployeeSalaryHistoryDto>(history);
-        return SuccessResponse<EmployeeSalaryHistoryDto>.Ok(dto, "Salary history retrieved successfully.");
+        return SuccessResponse<EmployeeSalaryHistoryDto>.Ok(dto, EmployeeSalaryHistoryMsg.Retrieved);
     }
 
     public async Task<SuccessResponse<IEnumerable<EmployeeSalaryHistoryDto>>> GetByEmployeeIdAsync(long employeeId)
     {
         var histories = await _uow.Info.EmployeeSalaryHistories.GetByEmployeeIdAsync(employeeId);
         var dtos = _mapper.Map<IEnumerable<EmployeeSalaryHistoryDto>>(histories);
-        return SuccessResponse<IEnumerable<EmployeeSalaryHistoryDto>>.Ok(dtos, "Salary histories retrieved successfully.");
+        return SuccessResponse<IEnumerable<EmployeeSalaryHistoryDto>>.Ok(dtos, EmployeeSalaryHistoryMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<long>> CreateAsync(CreateEmployeeSalaryHistoryDto dto)
@@ -49,13 +50,13 @@ public class EmployeeSalaryHistoryService : IEmployeeSalaryHistoryService
         // Check if profile exists
         var profile = await _uow.Info.EmployeeProfiles.GetByIdAsync(dto.EmployeeId);
         if (profile == null)
-            return SuccessResponse<long>.Fail($"Employee profile with ID '{dto.EmployeeId}' was not found.", ErrorType.NotFound);
+            return SuccessResponse<long>.Fail(EmployeeProfileMsg.NotFound(dto.EmployeeId), ErrorType.NotFound);
 
         if (dto.PreviousAmount < 0 || dto.NewAmount < 0)
-            return SuccessResponse<long>.Fail("Salary amounts cannot be negative.", ErrorType.Validation);
+            return SuccessResponse<long>.Fail(EmployeeSalaryHistoryMsg.SalaryNegative, ErrorType.Validation);
 
         if (string.IsNullOrWhiteSpace(dto.ChangeReason))
-            return SuccessResponse<long>.Fail("Change reason is required.", ErrorType.Validation);
+            return SuccessResponse<long>.Fail(EmployeeSalaryHistoryMsg.ChangeReasonRequired, ErrorType.Validation);
 
         var history = new EmployeeSalaryHistory(
             dto.EmployeeId,
@@ -68,6 +69,6 @@ public class EmployeeSalaryHistoryService : IEmployeeSalaryHistoryService
         _uow.Info.EmployeeSalaryHistories.Add(history);
         await _uow.CompleteAsync();
 
-        return SuccessResponse<long>.Ok(history.Id, "Salary history created successfully.");
+        return SuccessResponse<long>.Ok(history.Id, EmployeeSalaryHistoryMsg.Created);
     }
 }

@@ -5,6 +5,7 @@ using EPMS.Domain.Interface.IService.Performance;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.PerformanceDTOs.RatingScaleDTOs;
 using EPMS.Shared.Enums;
+using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 namespace EPMS.Domain.Services.Performance;
 
@@ -23,7 +24,7 @@ public class RatingScaleService : IRatingScaleService
     {
         var ratingScales = await _uow.Perf.RatingScales.GetAllAsync();
         var dtos = _mapper.Map<IEnumerable<RatingScaleDto>>(ratingScales);
-        return SuccessResponse<IEnumerable<RatingScaleDto>>.Ok(dtos, "Rating scales retrieved successfully.");
+        return SuccessResponse<IEnumerable<RatingScaleDto>>.Ok(dtos, RatingScaleMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<IEnumerable<RatingScaleDto>>> GetActiveAsync()
@@ -38,10 +39,10 @@ public class RatingScaleService : IRatingScaleService
         var ratingScale = await _uow.Perf.RatingScales.GetByIdAsync(id);
 
         if (ratingScale == null)
-            return SuccessResponse<RatingScaleDto>.Fail($"Rating scale with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse<RatingScaleDto>.Fail(RatingScaleMsg.NotFound(id), ErrorType.NotFound);
 
         var dto = _mapper.Map<RatingScaleDto>(ratingScale);
-        return SuccessResponse<RatingScaleDto>.Ok(dto, "Rating scale retrieved successfully.");
+        return SuccessResponse<RatingScaleDto>.Ok(dto, RatingScaleMsg.Retrieved);
     }
 
     public async Task<SuccessResponse<RatingScaleDto>> GetByRatingAsync(int rating)
@@ -63,14 +64,14 @@ public class RatingScaleService : IRatingScaleService
 
         // Validate score bounds
         if (dto.MinScore > dto.MaxScore)
-            return SuccessResponse<long>.Fail("Minimum score cannot be greater than maximum score.", ErrorType.Validation);
+            return SuccessResponse<long>.Fail(RatingScaleMsg.MinGreaterThanMax, ErrorType.Validation);
 
         var ratingScale = new RatingScale(dto.Rating, dto.Label, dto.MinScore, dto.MaxScore);
 
         _uow.Perf.RatingScales.Add(ratingScale);
         await _uow.CompleteAsync();
 
-        return SuccessResponse<long>.Ok(ratingScale.Id, "Rating scale created successfully.");
+        return SuccessResponse<long>.Ok(ratingScale.Id, RatingScaleMsg.Created);
     }
 
     public async Task<SuccessResponse> UpdateAsync(long id, UpdateRatingScaleDto dto)
@@ -78,11 +79,11 @@ public class RatingScaleService : IRatingScaleService
         var ratingScale = await _uow.Perf.RatingScales.GetByIdAsync(id);
 
         if (ratingScale == null)
-            return SuccessResponse.Fail($"Rating scale with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse.Fail(RatingScaleMsg.NotFound(id), ErrorType.NotFound);
 
         // Validate score bounds if provided
         if (dto.MinScore.HasValue && dto.MaxScore.HasValue && dto.MinScore.Value > dto.MaxScore.Value)
-            return SuccessResponse.Fail("Minimum score cannot be greater than maximum score.", ErrorType.Validation);
+            return SuccessResponse.Fail(RatingScaleMsg.MinGreaterThanMax, ErrorType.Validation);
 
         // Update bounds if provided
         if (dto.MinScore.HasValue || dto.MaxScore.HasValue)
@@ -96,7 +97,7 @@ public class RatingScaleService : IRatingScaleService
         ratingScale.UpdateDetails(dto.PerformanceLevel, dto.PromotionEligibility, dto.Description);
 
         await _uow.CompleteAsync();
-        return SuccessResponse.Ok("Rating scale updated successfully.");
+        return SuccessResponse.Ok(RatingScaleMsg.Updated);
     }
 
     public async Task<SuccessResponse> DeleteAsync(long id)
@@ -104,12 +105,12 @@ public class RatingScaleService : IRatingScaleService
         var ratingScale = await _uow.Perf.RatingScales.GetByIdAsync(id);
 
         if (ratingScale == null)
-            return SuccessResponse.Fail($"Rating scale with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse.Fail(RatingScaleMsg.NotFound(id), ErrorType.NotFound);
 
         _uow.Perf.RatingScales.Delete(ratingScale);
         await _uow.CompleteAsync();
 
-        return SuccessResponse.Ok("Rating scale deleted successfully.");
+        return SuccessResponse.Ok(RatingScaleMsg.Deleted);
     }
 
     public async Task<SuccessResponse> DeactivateAsync(long id)
@@ -117,12 +118,12 @@ public class RatingScaleService : IRatingScaleService
         var ratingScale = await _uow.Perf.RatingScales.GetByIdAsync(id);
 
         if (ratingScale == null)
-            return SuccessResponse.Fail($"Rating scale with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse.Fail(RatingScaleMsg.NotFound(id), ErrorType.NotFound);
 
         ratingScale.Deactivate();
         await _uow.CompleteAsync();
 
-        return SuccessResponse.Ok("Rating scale deactivated successfully.");
+        return SuccessResponse.Ok(RatingScaleMsg.Deactivated);
     }
 
     public async Task<SuccessResponse> ReactivateAsync(long id)
@@ -130,11 +131,11 @@ public class RatingScaleService : IRatingScaleService
         var ratingScale = await _uow.Perf.RatingScales.GetByIdAsync(id);
 
         if (ratingScale == null)
-            return SuccessResponse.Fail($"Rating scale with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse.Fail(RatingScaleMsg.NotFound(id), ErrorType.NotFound);
 
         ratingScale.Reactivate();
         await _uow.CompleteAsync();
 
-        return SuccessResponse.Ok("Rating scale reactivated successfully.");
+        return SuccessResponse.Ok(RatingScaleMsg.Reactivated);
     }
 }
