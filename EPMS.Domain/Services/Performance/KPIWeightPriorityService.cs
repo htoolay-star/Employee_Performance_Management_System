@@ -5,6 +5,7 @@ using EPMS.Domain.Interface.IService.Performance;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.PerformanceDTOs.KPIWeightPriorityDTOs;
 using EPMS.Shared.Enums;
+using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 namespace EPMS.Domain.Services.Performance;
 
@@ -23,7 +24,7 @@ public class KPIWeightPriorityService : IKPIWeightPriorityService
     {
         var priorities = await _uow.Perf.KPIWeightPriorities.GetAllAsync();
         var dtos = _mapper.Map<IEnumerable<KPIWeightPriorityDto>>(priorities);
-        return SuccessResponse<IEnumerable<KPIWeightPriorityDto>>.Ok(dtos, "KPI weight priorities retrieved successfully.");
+        return SuccessResponse<IEnumerable<KPIWeightPriorityDto>>.Ok(dtos, KPIWeightPriorityMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<IEnumerable<KPIWeightPriorityDto>>> GetActiveAsync()
@@ -38,10 +39,10 @@ public class KPIWeightPriorityService : IKPIWeightPriorityService
         var priority = await _uow.Perf.KPIWeightPriorities.GetByIdAsync(id);
 
         if (priority == null)
-            return SuccessResponse<KPIWeightPriorityDto>.Fail($"KPI weight priority with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse<KPIWeightPriorityDto>.Fail(KPIWeightPriorityMsg.NotFound(id), ErrorType.NotFound);
 
         var dto = _mapper.Map<KPIWeightPriorityDto>(priority);
-        return SuccessResponse<KPIWeightPriorityDto>.Ok(dto, "KPI weight priority retrieved successfully.");
+        return SuccessResponse<KPIWeightPriorityDto>.Ok(dto, KPIWeightPriorityMsg.Retrieved);
     }
 
     public async Task<SuccessResponse<KPIWeightPriorityDto>> GetByLevelNameAsync(string levelName)
@@ -52,7 +53,7 @@ public class KPIWeightPriorityService : IKPIWeightPriorityService
             return SuccessResponse<KPIWeightPriorityDto>.Fail($"KPI weight priority with level name '{levelName}' was not found.", ErrorType.NotFound);
 
         var dto = _mapper.Map<KPIWeightPriorityDto>(priority);
-        return SuccessResponse<KPIWeightPriorityDto>.Ok(dto, "KPI weight priority retrieved successfully.");
+        return SuccessResponse<KPIWeightPriorityDto>.Ok(dto, KPIWeightPriorityMsg.Retrieved);
     }
 
     public async Task<SuccessResponse<long>> CreateAsync(CreateKPIWeightPriorityDto dto)
@@ -63,18 +64,18 @@ public class KPIWeightPriorityService : IKPIWeightPriorityService
 
         // Validate weight bounds
         if (dto.MinWeight > dto.MaxWeight)
-            return SuccessResponse<long>.Fail("Minimum weight cannot be greater than maximum weight.", ErrorType.Validation);
+            return SuccessResponse<long>.Fail(KPIWeightPriorityMsg.MinGreaterThanMax, ErrorType.Validation);
 
         // Validate color code format if provided
         if (!string.IsNullOrEmpty(dto.ColorCode) && !IsValidHexColor(dto.ColorCode))
-            return SuccessResponse<long>.Fail("Color code must be a valid hex color code (e.g., #FF5733).", ErrorType.Validation);
+            return SuccessResponse<long>.Fail(KPIWeightPriorityMsg.InvalidColorCode, ErrorType.Validation);
 
         var priority = new KPIWeightPriority(dto.LevelName, dto.MinWeight, dto.MaxWeight, dto.ColorCode);
 
         _uow.Perf.KPIWeightPriorities.Add(priority);
         await _uow.CompleteAsync();
 
-        return SuccessResponse<long>.Ok(priority.Id, "KPI weight priority created successfully.");
+        return SuccessResponse<long>.Ok(priority.Id, KPIWeightPriorityMsg.Created);
     }
 
     public async Task<SuccessResponse> UpdateAsync(long id, UpdateKPIWeightPriorityDto dto)
@@ -82,21 +83,21 @@ public class KPIWeightPriorityService : IKPIWeightPriorityService
         var priority = await _uow.Perf.KPIWeightPriorities.GetByIdAsync(id);
 
         if (priority == null)
-            return SuccessResponse.Fail($"KPI weight priority with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse.Fail(KPIWeightPriorityMsg.NotFound(id), ErrorType.NotFound);
 
         // Validate weight bounds if provided
         if (dto.MinWeight.HasValue && dto.MaxWeight.HasValue && dto.MinWeight.Value > dto.MaxWeight.Value)
-            return SuccessResponse.Fail("Minimum weight cannot be greater than maximum weight.", ErrorType.Validation);
+            return SuccessResponse.Fail(KPIWeightPriorityMsg.MinGreaterThanMax, ErrorType.Validation);
 
         // Validate color code format if provided
         if (!string.IsNullOrEmpty(dto.ColorCode) && !IsValidHexColor(dto.ColorCode))
-            return SuccessResponse.Fail("Color code must be a valid hex color code (e.g., #FF5733).", ErrorType.Validation);
+            return SuccessResponse.Fail(KPIWeightPriorityMsg.InvalidColorCode, ErrorType.Validation);
 
         // Note: The entity doesn't have update methods, so we would need to handle this differently
         // For now, this is a placeholder for the update logic
 
         await _uow.CompleteAsync();
-        return SuccessResponse.Ok("KPI weight priority updated successfully.");
+        return SuccessResponse.Ok(KPIWeightPriorityMsg.Updated);
     }
 
     public async Task<SuccessResponse> DeleteAsync(long id)
@@ -104,12 +105,12 @@ public class KPIWeightPriorityService : IKPIWeightPriorityService
         var priority = await _uow.Perf.KPIWeightPriorities.GetByIdAsync(id);
 
         if (priority == null)
-            return SuccessResponse.Fail($"KPI weight priority with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse.Fail(KPIWeightPriorityMsg.NotFound(id), ErrorType.NotFound);
 
         _uow.Perf.KPIWeightPriorities.Delete(priority);
         await _uow.CompleteAsync();
 
-        return SuccessResponse.Ok("KPI weight priority deleted successfully.");
+        return SuccessResponse.Ok(KPIWeightPriorityMsg.Deleted);
     }
 
     public async Task<SuccessResponse> DeactivateAsync(long id)
@@ -117,13 +118,13 @@ public class KPIWeightPriorityService : IKPIWeightPriorityService
         var priority = await _uow.Perf.KPIWeightPriorities.GetByIdAsync(id);
 
         if (priority == null)
-            return SuccessResponse.Fail($"KPI weight priority with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse.Fail(KPIWeightPriorityMsg.NotFound(id), ErrorType.NotFound);
 
         // Note: The entity doesn't have deactivate method, so we would need to handle this differently
         // For now, this is a placeholder
 
         await _uow.CompleteAsync();
-        return SuccessResponse.Ok("KPI weight priority deactivated successfully.");
+        return SuccessResponse.Ok(KPIWeightPriorityMsg.Deactivated);
     }
 
     public async Task<SuccessResponse> ReactivateAsync(long id)
@@ -131,13 +132,13 @@ public class KPIWeightPriorityService : IKPIWeightPriorityService
         var priority = await _uow.Perf.KPIWeightPriorities.GetByIdAsync(id);
 
         if (priority == null)
-            return SuccessResponse.Fail($"KPI weight priority with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse.Fail(KPIWeightPriorityMsg.NotFound(id), ErrorType.NotFound);
 
         // Note: The entity doesn't have reactivate method, so we would need to handle this differently
         // For now, this is a placeholder
 
         await _uow.CompleteAsync();
-        return SuccessResponse.Ok("KPI weight priority reactivated successfully.");
+        return SuccessResponse.Ok(KPIWeightPriorityMsg.Reactivated);
     }
 
     private static bool IsValidHexColor(string colorCode)

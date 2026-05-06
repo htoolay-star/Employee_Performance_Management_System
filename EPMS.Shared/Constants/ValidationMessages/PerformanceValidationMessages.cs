@@ -34,5 +34,17 @@ namespace EPMS.Shared.Constants.ValidationMessages
             public const string RatingRange = "Rating must be between 1 and 5.";
             public const string CommentMaxLength = "Comment cannot exceed 1000 characters.";
         }
+
+        public static class ScoreRange
+        {
+            public const string MinimumScoreInvalid = "Minimum score must be greater than or equal to 0.";
+            public const string MaximumScoreInvalid = "Maximum score must be greater than or equal to 0.";
+        }
+
+        public static class WeightRange
+        {
+            public const string MinimumWeightInvalid = "Minimum weight must be greater than or equal to 0.";
+            public const string MaximumWeightInvalid = "Maximum weight must be greater than or equal to 0.";
+        }
     }
 }

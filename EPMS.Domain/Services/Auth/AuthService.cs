@@ -9,7 +9,7 @@ using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.Enums;
 using EPMS.Shared.Models;
 using Microsoft.Extensions.Options;
-using static EPMS.Shared.Constants.ValidationMessages.AuthValidationMessages;
+using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 namespace EPMS.Domain.Services.Auth
 {
@@ -123,13 +123,13 @@ namespace EPMS.Domain.Services.Auth
             {
                 if (!cachedUser.IsActive)
                 {
-                    return SuccessResponse<AuthResponse>.Fail("Invalid email or password.", ErrorType.Unauthorized);
+                    return SuccessResponse<AuthResponse>.Fail(AuthMsg.InvalidCredentials, ErrorType.Unauthorized);
                 }
 
                 var isPasswordValidCached = _passwordHasher.Verify(request.Password, cachedUser.PasswordHash);
                 if (!isPasswordValidCached)
                 {
-                    return SuccessResponse<AuthResponse>.Fail("Invalid email or password.", ErrorType.Unauthorized);
+                    return SuccessResponse<AuthResponse>.Fail(AuthMsg.InvalidCredentials, ErrorType.Unauthorized);
                 }
             }
 
@@ -139,7 +139,7 @@ namespace EPMS.Domain.Services.Auth
 
             if (user == null || !user.IsActive)
             {
-                return SuccessResponse<AuthResponse>.Fail("Invalid email or password.", ErrorType.Unauthorized);
+                return SuccessResponse<AuthResponse>.Fail(AuthMsg.InvalidCredentials, ErrorType.Unauthorized);
             }
 
             // If cache was empty, validate password against DB hash.
@@ -148,7 +148,7 @@ namespace EPMS.Domain.Services.Auth
                 var isPasswordValid = _passwordHasher.Verify(request.Password, user.PasswordHash);
                 if (!isPasswordValid)
                 {
-                    return SuccessResponse<AuthResponse>.Fail("Invalid email or password.", ErrorType.Unauthorized);
+                    return SuccessResponse<AuthResponse>.Fail(AuthMsg.InvalidCredentials, ErrorType.Unauthorized);
                 }
             }
 
@@ -197,7 +197,7 @@ namespace EPMS.Domain.Services.Auth
                 }
             };
 
-            return SuccessResponse<AuthResponse>.Ok(authData, "Login successful");
+            return SuccessResponse<AuthResponse>.Ok(authData, AuthMsg.LoginSuccess);
         }
 
         public async Task<SuccessResponse<UserDto>> RegisterAsync(CreateUserRequest request)
@@ -205,7 +205,7 @@ namespace EPMS.Domain.Services.Auth
             var userAlreadyExists = await _unitOfWork.Auth.Users.ExistsAsync(request.Email);
             if (userAlreadyExists)
             {
-                return SuccessResponse<UserDto>.Fail("Email is already registered.", ErrorType.Conflict);
+                return SuccessResponse<UserDto>.Fail(AuthMsg.EmailAlreadyRegistered, ErrorType.Conflict);
             }
 
             var plainDefaultPassword = await _settingsService.GetDefaultPasswordAsync();
@@ -227,7 +227,7 @@ namespace EPMS.Domain.Services.Auth
             };
 
 
-            return SuccessResponse<UserDto>.Ok(user, "User registered successfully");
+            return SuccessResponse<UserDto>.Ok(user, AuthMsg.UserRegistered);
         }
 
         public async Task<SuccessResponse<AuthResponse>> RefreshTokenAsync(RefreshTokenRequest request)
@@ -236,14 +236,14 @@ namespace EPMS.Domain.Services.Auth
 
             if (storedToken == null)
             {
-                return SuccessResponse<AuthResponse>.Fail("Invalid refresh token.", ErrorType.Unauthorized);
+                return SuccessResponse<AuthResponse>.Fail(AuthMsg.InvalidRefreshToken, ErrorType.Unauthorized);
             }
 
             if (storedToken.ExpiresAt < _timeProvider.GetUtcNow())
             {
                 _unitOfWork.Auth.UsersRefreshToken.Delete(storedToken);
                 await _unitOfWork.CompleteAsync();
-                return SuccessResponse<AuthResponse>.Fail("Refresh token expired. Please login again.", ErrorType.Unauthorized);
+                return SuccessResponse<AuthResponse>.Fail(AuthMsg.RefreshTokenExpired, ErrorType.Unauthorized);
             }
 
             var user = storedToken.User;
@@ -289,17 +289,17 @@ namespace EPMS.Domain.Services.Auth
                 }
             };
 
-            return SuccessResponse<AuthResponse>.Ok(authData, "Token refreshed successfully");
+            return SuccessResponse<AuthResponse>.Ok(authData, AuthMsg.TokenRefreshed);
         }
 
         public async Task<SuccessResponse> ChangePasswordAsync(long userId, ChangePasswordRequest request)
         {
             var user = await _unitOfWork.Auth.Users.GetByIdAsync(userId);
-            if (user == null) return SuccessResponse.Fail("User not found.", ErrorType.NotFound);
+            if (user == null) return SuccessResponse.Fail(AuthMsg.UserNotFound, ErrorType.NotFound);
 
             if (!_passwordHasher.Verify(request.CurrentPassword, user.PasswordHash))
             {
-                return SuccessResponse.Fail("Current password is incorrect.", ErrorType.Unauthorized);
+                return SuccessResponse.Fail(AuthMsg.CurrentPasswordIncorrect, ErrorType.Unauthorized);
             }
 
             var hashedNewPassword = _passwordHasher.Hash(request.NewPassword);
@@ -312,10 +312,10 @@ namespace EPMS.Domain.Services.Auth
             if (result)
             {
                 await InvalidateUserCacheAsync(user.Id, user.Email);
-                return SuccessResponse.Ok("Password changed successfully.");
+                return SuccessResponse.Ok(AuthMsg.PasswordChanged);
             }
 
-            return SuccessResponse.Fail("Failed to change password.");
+            return SuccessResponse.Fail(AuthMsg.PasswordChangeFailed);
         }
 
         public async Task<SuccessResponse> LogoutAsync(string refreshToken)
@@ -331,7 +331,7 @@ namespace EPMS.Domain.Services.Auth
                 await InvalidateUserCacheAsync(user.Id, user.Email);
             }
 
-            return SuccessResponse.Ok("Logged out successfully.");
+            return SuccessResponse.Ok(AuthMsg.LoggedOut);
         }
 
         // Caching helper methods - examples of how to use ICacheService

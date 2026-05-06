@@ -6,6 +6,7 @@ using EPMS.Domain.Interface.IService.Shared;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.TagDTOs;
 using EPMS.Shared.Enums;
+using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 namespace EPMS.Domain.Services.Shared;
 
@@ -24,7 +25,7 @@ public class TagService : ITagService
     {
         var tags = await _unitOfWork.Shared.Tags.GetAllAsync();
         var dtos = _mapper.Map<IEnumerable<TagDto>>(tags);
-        return SuccessResponse<IEnumerable<TagDto>>.Ok(dtos, "Tags retrieved successfully.");
+        return SuccessResponse<IEnumerable<TagDto>>.Ok(dtos, TagMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<TagDto>> GetTagByIdAsync(int id)
@@ -32,10 +33,10 @@ public class TagService : ITagService
         var tag = await _unitOfWork.Shared.Tags.GetByIdAsync(id);
 
         if (tag == null)
-            return SuccessResponse<TagDto>.Fail($"Tag with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse<TagDto>.Fail(TagMsg.NotFound(id), ErrorType.NotFound);
 
         var dto = _mapper.Map<TagDto>(tag);
-        return SuccessResponse<TagDto>.Ok(dto, "Tag retrieved successfully.");
+        return SuccessResponse<TagDto>.Ok(dto, TagMsg.Retrieved);
     }
 
     public async Task<SuccessResponse<long>> CreateTagAsync(CreateTagDto dto)
@@ -50,7 +51,7 @@ public class TagService : ITagService
         var tag = new Tag(dto.Name, dto.Module);
         _unitOfWork.Shared.Tags.Add(tag);
         await _unitOfWork.CompleteAsync();
-        return SuccessResponse<long>.Ok(tag.Id, "Tag created successfully.");
+        return SuccessResponse<long>.Ok(tag.Id, TagMsg.Created);
     }
 
     public async Task<SuccessResponse> DeleteTagAsync(int id)
@@ -58,10 +59,10 @@ public class TagService : ITagService
         var tag = await _unitOfWork.Shared.Tags.GetByIdAsync(id);
 
         if (tag == null)
-            return SuccessResponse.Fail($"Tag with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse.Fail(TagMsg.NotFound(id), ErrorType.NotFound);
 
         _unitOfWork.Shared.Tags.Delete(tag);
         await _unitOfWork.CompleteAsync();
-        return SuccessResponse.Ok("Tag deleted successfully.");
+        return SuccessResponse.Ok(TagMsg.Deleted);
     }
 }

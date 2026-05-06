@@ -1,3 +1,4 @@
+using EPMS.Shared.Constants.ValidationMessages;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using FluentValidation;
 
@@ -9,51 +10,51 @@ public class UpdateEmployeePayrollInfoValidator : AbstractValidator<UpdateEmploy
     {
         RuleFor(x => x.Salary)
             .GreaterThanOrEqualTo(0)
-            .WithMessage("Salary must be greater than or equal to 0.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeePayrollInfo.SalaryInvalid);
 
         RuleFor(x => x.Currency)
             .MaximumLength(10)
-            .WithMessage("Currency cannot exceed 10 characters.")
+            .WithMessage(EmployeeInfoValidationMessages.EmployeePayrollInfo.CurrencyMaxLength)
             .Matches(@"^[A-Z]{3}$")
             .When(x => !string.IsNullOrEmpty(x.Currency))
-            .WithMessage("Currency must be a valid 3-letter currency code (e.g., USD, EUR).");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeePayrollInfo.CurrencyInvalid);
 
         RuleFor(x => x.PayType)
             .MaximumLength(50)
-            .WithMessage("Pay type cannot exceed 50 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeePayrollInfo.PayTypeMaxLength);
 
         RuleFor(x => x.CostAllocate)
             .MaximumLength(100)
-            .WithMessage("Cost allocate cannot exceed 100 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeePayrollInfo.CostAllocateMaxLength);
 
         RuleFor(x => x.PayByBacklog)
             .MaximumLength(50)
-            .WithMessage("Pay by backlog cannot exceed 50 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeePayrollInfo.PayByBacklogMaxLength);
 
         RuleFor(x => x.TaxStatus)
             .MaximumLength(50)
-            .WithMessage("Tax status cannot exceed 50 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeePayrollInfo.TaxStatusMaxLength);
 
         RuleFor(x => x.TaxNo)
             .MaximumLength(50)
-            .WithMessage("Tax number cannot exceed 50 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeePayrollInfo.TaxNoMaxLength);
 
         RuleFor(x => x.SSBStatus)
             .MaximumLength(50)
-            .WithMessage("SSB status cannot exceed 50 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeePayrollInfo.SSBStatusMaxLength);
 
         RuleFor(x => x.SSCBNo)
             .MaximumLength(50)
-            .WithMessage("SSCB number cannot exceed 50 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeePayrollInfo.SSCBNoMaxLength);
 
         RuleFor(x => x.ComplianceEarnedPoints)
             .GreaterThanOrEqualTo(0)
             .When(x => x.ComplianceEarnedPoints.HasValue)
-            .WithMessage("Compliance earned points must be greater than or equal to 0.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeePayrollInfo.ComplianceEarnedPointsInvalid);
 
         RuleFor(x => x.ComplianceBalancePoints)
             .GreaterThanOrEqualTo(0)
             .When(x => x.ComplianceBalancePoints.HasValue)
-            .WithMessage("Compliance balance points must be greater than or equal to 0.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeePayrollInfo.ComplianceBalancePointsInvalid);
     }
 }

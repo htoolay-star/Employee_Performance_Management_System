@@ -5,6 +5,7 @@ using EPMS.Domain.Interface.IService.Info;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using EPMS.Shared.Enums;
+using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 namespace EPMS.Domain.Services.Info;
 
@@ -23,7 +24,7 @@ public class EmployeeFamilyInfoService : IEmployeeFamilyInfoService
     {
         var infos = await _uow.Info.EmployeeFamilyInfos.GetAllAsync();
         var dtos = _mapper.Map<IEnumerable<EmployeeFamilyInfoDto>>(infos);
-        return SuccessResponse<IEnumerable<EmployeeFamilyInfoDto>>.Ok(dtos, "Employee family info retrieved successfully.");
+        return SuccessResponse<IEnumerable<EmployeeFamilyInfoDto>>.Ok(dtos, EmployeeFamilyInfoMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<EmployeeFamilyInfoDto>> GetByIdAsync(long id)
@@ -31,10 +32,10 @@ public class EmployeeFamilyInfoService : IEmployeeFamilyInfoService
         var info = await _uow.Info.EmployeeFamilyInfos.GetByIdAsync(id);
 
         if (info == null)
-            return SuccessResponse<EmployeeFamilyInfoDto>.Fail($"Employee family info with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse<EmployeeFamilyInfoDto>.Fail(EmployeeFamilyInfoMsg.NotFound(id), ErrorType.NotFound);
 
         var dto = _mapper.Map<EmployeeFamilyInfoDto>(info);
-        return SuccessResponse<EmployeeFamilyInfoDto>.Ok(dto, "Employee family info retrieved successfully.");
+        return SuccessResponse<EmployeeFamilyInfoDto>.Ok(dto, EmployeeFamilyInfoMsg.Retrieved);
     }
 
     public async Task<SuccessResponse<EmployeeFamilyInfoDto>> GetByEmployeeIdAsync(long employeeId)
@@ -45,7 +46,7 @@ public class EmployeeFamilyInfoService : IEmployeeFamilyInfoService
             return SuccessResponse<EmployeeFamilyInfoDto>.Fail($"Family info for employee ID '{employeeId}' was not found.", ErrorType.NotFound);
 
         var dto = _mapper.Map<EmployeeFamilyInfoDto>(info);
-        return SuccessResponse<EmployeeFamilyInfoDto>.Ok(dto, "Employee family info retrieved successfully.");
+        return SuccessResponse<EmployeeFamilyInfoDto>.Ok(dto, EmployeeFamilyInfoMsg.Retrieved);
     }
 
     public async Task<SuccessResponse<long>> CreateAsync(CreateEmployeeFamilyInfoDto dto)
@@ -53,7 +54,7 @@ public class EmployeeFamilyInfoService : IEmployeeFamilyInfoService
         // Check if profile exists
         var profile = await _uow.Info.EmployeeProfiles.GetByIdAsync(dto.EmployeeId);
         if (profile == null)
-            return SuccessResponse<long>.Fail($"Employee profile with ID '{dto.EmployeeId}' was not found.", ErrorType.NotFound);
+            return SuccessResponse<long>.Fail(EmployeeProfileMsg.NotFound(dto.EmployeeId), ErrorType.NotFound);
 
         // Check if family info already exists for this employee
         var existing = await _uow.Info.EmployeeFamilyInfos.GetByEmployeeIdAsync(dto.EmployeeId);
@@ -65,7 +66,7 @@ public class EmployeeFamilyInfoService : IEmployeeFamilyInfoService
         _uow.Info.EmployeeFamilyInfos.Add(info);
         await _uow.CompleteAsync();
 
-        return SuccessResponse<long>.Ok(info.Id, "Employee family info created successfully.");
+        return SuccessResponse<long>.Ok(info.Id, EmployeeFamilyInfoMsg.Created);
     }
 
     public async Task<SuccessResponse> UpdateAsync(long id, UpdateEmployeeFamilyInfoDto dto)
@@ -73,10 +74,10 @@ public class EmployeeFamilyInfoService : IEmployeeFamilyInfoService
         var info = await _uow.Info.EmployeeFamilyInfos.GetByIdAsync(id);
 
         if (info == null)
-            return SuccessResponse.Fail($"Employee family info with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse.Fail(EmployeeFamilyInfoMsg.NotFound(id), ErrorType.NotFound);
 
         await _uow.CompleteAsync();
-        return SuccessResponse.Ok("Employee family info updated successfully.");
+        return SuccessResponse.Ok(EmployeeFamilyInfoMsg.Updated);
     }
 
     public async Task<SuccessResponse> DeleteAsync(long id)
@@ -84,11 +85,11 @@ public class EmployeeFamilyInfoService : IEmployeeFamilyInfoService
         var info = await _uow.Info.EmployeeFamilyInfos.GetByIdAsync(id);
 
         if (info == null)
-            return SuccessResponse.Fail($"Employee family info with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse.Fail(EmployeeFamilyInfoMsg.NotFound(id), ErrorType.NotFound);
 
         _uow.Info.EmployeeFamilyInfos.Delete(info);
         await _uow.CompleteAsync();
 
-        return SuccessResponse.Ok("Employee family info deleted successfully.");
+        return SuccessResponse.Ok(EmployeeFamilyInfoMsg.Deleted);
     }
 }

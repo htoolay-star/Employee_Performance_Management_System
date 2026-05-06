@@ -5,6 +5,7 @@ using EPMS.Domain.Interface.IService.Info;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using EPMS.Shared.Enums;
+using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 namespace EPMS.Domain.Services.Info;
 
@@ -23,7 +24,7 @@ public class EmployeeContactService : IEmployeeContactService
     {
         var contacts = await _uow.Info.EmployeeContacts.GetAllAsync();
         var dtos = _mapper.Map<IEnumerable<EmployeeContactDto>>(contacts);
-        return SuccessResponse<IEnumerable<EmployeeContactDto>>.Ok(dtos, "Employee contacts retrieved successfully.");
+        return SuccessResponse<IEnumerable<EmployeeContactDto>>.Ok(dtos, EmployeeContactMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<EmployeeContactDto>> GetByIdAsync(long id)
@@ -31,10 +32,10 @@ public class EmployeeContactService : IEmployeeContactService
         var contact = await _uow.Info.EmployeeContacts.GetByIdAsync(id);
 
         if (contact == null)
-            return SuccessResponse<EmployeeContactDto>.Fail($"Employee contact with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse<EmployeeContactDto>.Fail(EmployeeContactMsg.NotFound(id), ErrorType.NotFound);
 
         var dto = _mapper.Map<EmployeeContactDto>(contact);
-        return SuccessResponse<EmployeeContactDto>.Ok(dto, "Employee contact retrieved successfully.");
+        return SuccessResponse<EmployeeContactDto>.Ok(dto, EmployeeContactMsg.Retrieved);
     }
 
     public async Task<SuccessResponse<EmployeeContactDto>> GetByEmployeeIdAsync(long employeeId)
@@ -42,10 +43,10 @@ public class EmployeeContactService : IEmployeeContactService
         var contact = await _uow.Info.EmployeeContacts.GetByEmployeeIdAsync(employeeId);
 
         if (contact == null)
-            return SuccessResponse<EmployeeContactDto>.Fail($"Contact for employee ID '{employeeId}' was not found.", ErrorType.NotFound);
+            return SuccessResponse<EmployeeContactDto>.Fail(EmployeeContactMsg.NotFound(employeeId), ErrorType.NotFound);
 
         var dto = _mapper.Map<EmployeeContactDto>(contact);
-        return SuccessResponse<EmployeeContactDto>.Ok(dto, "Employee contact retrieved successfully.");
+        return SuccessResponse<EmployeeContactDto>.Ok(dto, EmployeeContactMsg.Retrieved);
     }
 
     public async Task<SuccessResponse<long>> CreateAsync(CreateEmployeeContactDto dto)
@@ -53,19 +54,19 @@ public class EmployeeContactService : IEmployeeContactService
         // Check if profile exists
         var profile = await _uow.Info.EmployeeProfiles.GetByIdAsync(dto.EmployeeId);
         if (profile == null)
-            return SuccessResponse<long>.Fail($"Employee profile with ID '{dto.EmployeeId}' was not found.", ErrorType.NotFound);
+            return SuccessResponse<long>.Fail(EmployeeProfileMsg.NotFound(dto.EmployeeId), ErrorType.NotFound);
 
         // Check if contact already exists for this employee
         var existing = await _uow.Info.EmployeeContacts.GetByEmployeeIdAsync(dto.EmployeeId);
         if (existing != null)
-            return SuccessResponse<long>.Fail($"Contact already exists for employee ID '{dto.EmployeeId}'. Use Update instead.", ErrorType.Conflict);
+            return SuccessResponse<long>.Fail(EmployeeContactMsg.Retrieved, ErrorType.Conflict);
 
         var contact = new EmployeeContact(dto.EmployeeId);
         
         _uow.Info.EmployeeContacts.Add(contact);
         await _uow.CompleteAsync();
 
-        return SuccessResponse<long>.Ok(contact.Id, "Employee contact created successfully.");
+        return SuccessResponse<long>.Ok(contact.Id, EmployeeContactMsg.Created);
     }
 
     public async Task<SuccessResponse> UpdateAsync(long id, UpdateEmployeeContactDto dto)
@@ -73,13 +74,13 @@ public class EmployeeContactService : IEmployeeContactService
         var contact = await _uow.Info.EmployeeContacts.GetByIdAsync(id);
 
         if (contact == null)
-            return SuccessResponse.Fail($"Employee contact with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse.Fail(EmployeeContactMsg.NotFound(id), ErrorType.NotFound);
 
         // Note: The entity has specific update methods but they don't match our DTO structure
         // We would need to add more flexible update methods to the entity or handle this differently
         
         await _uow.CompleteAsync();
-        return SuccessResponse.Ok("Employee contact updated successfully.");
+        return SuccessResponse.Ok(EmployeeContactMsg.Updated);
     }
 
     public async Task<SuccessResponse> DeleteAsync(long id)
@@ -87,11 +88,11 @@ public class EmployeeContactService : IEmployeeContactService
         var contact = await _uow.Info.EmployeeContacts.GetByIdAsync(id);
 
         if (contact == null)
-            return SuccessResponse.Fail($"Employee contact with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse.Fail(EmployeeContactMsg.NotFound(id), ErrorType.NotFound);
 
         _uow.Info.EmployeeContacts.Delete(contact);
         await _uow.CompleteAsync();
 
-        return SuccessResponse.Ok("Employee contact deleted successfully.");
+        return SuccessResponse.Ok(EmployeeContactMsg.Deleted);
     }
 }

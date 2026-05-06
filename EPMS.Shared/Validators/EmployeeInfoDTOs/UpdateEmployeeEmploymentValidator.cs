@@ -1,3 +1,4 @@
+using EPMS.Shared.Constants.ValidationMessages;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using FluentValidation;
 
@@ -9,56 +10,56 @@ public class UpdateEmployeeEmploymentValidator : AbstractValidator<UpdateEmploye
     {
         RuleFor(x => x.ParentDepartmentId)
             .GreaterThan(0)
-            .WithMessage("Parent department ID must be greater than 0.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.ParentDepartmentIdInvalid);
 
         RuleFor(x => x.TeamId)
             .GreaterThan(0)
             .When(x => x.TeamId.HasValue)
-            .WithMessage("Team ID must be greater than 0.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.TeamIdInvalid);
 
         RuleFor(x => x.DirectManagerId)
             .GreaterThan(0)
             .When(x => x.DirectManagerId.HasValue)
-            .WithMessage("Direct manager ID must be greater than 0.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.DirectManagerIdInvalid);
 
         RuleFor(x => x.EmploymentStatus)
             .MaximumLength(50)
-            .WithMessage("Employment status cannot exceed 50 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.EmploymentStatusMaxLength);
 
         RuleFor(x => x.StaffType)
             .MaximumLength(50)
-            .WithMessage("Staff type cannot exceed 50 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.StaffTypeMaxLength);
 
         RuleFor(x => x.ProbationMonth)
             .GreaterThanOrEqualTo(0)
             .When(x => x.ProbationMonth.HasValue)
-            .WithMessage("Probation months must be greater than or equal to 0.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.ProbationMonthInvalid);
 
         RuleFor(x => x.DateOfAppointment)
             .LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.Today))
             .When(x => x.DateOfAppointment.HasValue)
-            .WithMessage("Date of appointment cannot be in the future.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.DateOfAppointmentFuture);
 
         RuleFor(x => x.DateOfConfirmation)
             .GreaterThan(x => x.DateOfAppointment)
             .When(x => x.DateOfConfirmation.HasValue && x.DateOfAppointment.HasValue)
-            .WithMessage("Date of confirmation must be after date of appointment.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.DateOfConfirmationAfterAppointment);
 
         RuleFor(x => x.DateOfIncrement)
             .LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.Today))
             .When(x => x.DateOfIncrement.HasValue)
-            .WithMessage("Date of increment cannot be in the future.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.DateOfIncrementFuture);
 
         RuleFor(x => x.Shift)
             .MaximumLength(50)
-            .WithMessage("Shift cannot exceed 50 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.ShiftMaxLength);
 
         RuleFor(x => x.FingerPrintId)
             .MaximumLength(50)
-            .WithMessage("Fingerprint ID cannot exceed 50 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.FingerPrintIdMaxLength);
 
         RuleFor(x => x.ProductProject)
             .MaximumLength(200)
-            .WithMessage("Product/project cannot exceed 200 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.ProductProjectMaxLength);
     }
 }

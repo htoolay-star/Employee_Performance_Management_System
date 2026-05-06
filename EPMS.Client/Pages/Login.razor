@@ -1,0 +1,104 @@
+@page "/login"
+@using EPMS.Client.Services
+@using EPMS.Shared.DTOs.Auth
+@using MudBlazor
+@inject AuthApiClient AuthApiClient
+@inject TokenStorage TokenStorage
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ISnackbar Snackbar
+@attribute [AllowAnonymous]
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="d-flex align-center justify-center" Style="height:100vh;">
+    <MudPaper Elevation="25" Class="pa-8 pt-6" Style="width: 100%; max-width: 500px;">
+        <MudForm @ref="form" @bind-IsValid="success" @bind-Errors="errors">
+            <MudGrid Justify="Justify.Center">
+                <MudItem xs="12" Class="d-flex justify-center">
+                    <MudIcon Icon="@Icons.Material.Filled.Lock" Color="Color.Primary" Size="Size.Large" Class="mb-4" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4">Welcome Back!</MudText>
+                    <MudText Typo="Typo.subtitle2" Align="Align.Center" Class="mb-8">Login to your account to continue</MudText>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="Email" @bind-Value="_loginModel.Email" For="@(() => _loginModel.Email)" Required="true" RequiredError="Email is required!" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Email" Class="mb-4"></MudTextField>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" Label="Password" @bind-Value="_loginModel.Password" For="@(() => _loginModel.Password)" Required="true" RequiredError="Password is required!" InputType="@(showPassword ? InputType.Text : InputType.Password)" Variant="Variant.Outlined" Adornment="Adornment.End" AdornmentIcon="@(showPassword ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)" OnAdornmentClick="TogglePasswordVisibility" Class="mb-4"></MudTextField>
+                </MudItem>
+                <MudItem xs="12" Class="d-flex justify-space-between align-center">
+                    <MudCheckBox T="bool" @bind-Checked="_loginModel.RememberMe" Color="Color.Primary" Label="Remember me" />
+                    <MudLink Href="#" Typo="Typo.body2">Forgot password?</MudLink>
+                </MudItem>
+                <MudItem xs="12" Class="mt-4">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Class="py-3" OnClick="Submit" Disabled="!success || _isLoading">
+                        @if (_isLoading)
+                        {
+                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                            <MudText Class="ms-2">Logging in...</MudText>
+                        }
+                        else
+                        {
+                            <MudText>Login</MudText>
+                        }
+                    </MudButton>
+                </MudItem>
+                @if (!string.IsNullOrEmpty(_errorMessage))
+                {
+                    <MudItem xs="12" Class="mt-4">
+                        <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true" Class="mt-2">@_errorMessage</MudAlert>
+                    </MudItem>
+                }
+            </MudGrid>
+        </MudForm>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private MudForm form = new MudForm();
+    private LoginModel _loginModel = new LoginModel();
+    private bool success;
+    private string[] errors = { };
+    private string _errorMessage = string.Empty;
+    private bool showPassword = false;
+    private bool _isLoading = false;
+
+    private void TogglePasswordVisibility()
+    {
+        showPassword = !showPassword;
+    }
+
+    private async Task Submit()
+    {
+        _isLoading = true;
+        await form.Validate();
+
+        if (success)
+        {
+            _errorMessage = string.Empty;
+            var loginRequest = new LoginRequest { Email = _loginModel.Email, Password = _loginModel.Password };
+            var result = await AuthApiClient.Login(loginRequest);
+
+            if (result.Success && result.Data != null)
+            {
+                await TokenStorage.SetTokensAsync(result.Data.Tokens.AccessToken, result.Data.Tokens.RefreshToken);
+                ((JwtAuthenticationStateProvider)AuthenticationStateProvider).MarkUserAsAuthenticated(_loginModel.Email);
+                Navigation.NavigateTo("/dashboard");
+                Snackbar.Add("Login successful!", Severity.Success);
+            }
+            else
+            {
+                _errorMessage = result.Message;
+                Snackbar.Add(result.Message, Severity.Error);
+            }
+        }
+        _isLoading = false;
+    }
+
+    public class LoginModel
+    {
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public bool RememberMe { get; set; } = false;
+    }
+}

@@ -5,6 +5,7 @@ using EPMS.Domain.Interface.IService.Info;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using EPMS.Shared.Enums;
+using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 namespace EPMS.Domain.Services.Info;
 
@@ -23,7 +24,7 @@ public class EmployeeEmploymentHistoryService : IEmployeeEmploymentHistoryServic
     {
         var histories = await _uow.Info.EmployeeEmploymentHistories.GetAllAsync();
         var dtos = _mapper.Map<IEnumerable<EmployeeEmploymentHistoryDto>>(histories);
-        return SuccessResponse<IEnumerable<EmployeeEmploymentHistoryDto>>.Ok(dtos, "Employment histories retrieved successfully.");
+        return SuccessResponse<IEnumerable<EmployeeEmploymentHistoryDto>>.Ok(dtos, EmployeeEmploymentHistoryMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<EmployeeEmploymentHistoryDto>> GetByIdAsync(long id)
@@ -31,17 +32,17 @@ public class EmployeeEmploymentHistoryService : IEmployeeEmploymentHistoryServic
         var history = await _uow.Info.EmployeeEmploymentHistories.GetByIdAsync(id);
 
         if (history == null)
-            return SuccessResponse<EmployeeEmploymentHistoryDto>.Fail($"Employment history with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse<EmployeeEmploymentHistoryDto>.Fail(EmployeeEmploymentHistoryMsg.NotFound(id), ErrorType.NotFound);
 
         var dto = _mapper.Map<EmployeeEmploymentHistoryDto>(history);
-        return SuccessResponse<EmployeeEmploymentHistoryDto>.Ok(dto, "Employment history retrieved successfully.");
+        return SuccessResponse<EmployeeEmploymentHistoryDto>.Ok(dto, EmployeeEmploymentHistoryMsg.Retrieved);
     }
 
     public async Task<SuccessResponse<IEnumerable<EmployeeEmploymentHistoryDto>>> GetByEmployeeIdAsync(long employeeId)
     {
         var histories = await _uow.Info.EmployeeEmploymentHistories.GetByEmployeeIdAsync(employeeId);
         var dtos = _mapper.Map<IEnumerable<EmployeeEmploymentHistoryDto>>(histories);
-        return SuccessResponse<IEnumerable<EmployeeEmploymentHistoryDto>>.Ok(dtos, "Employment histories retrieved successfully.");
+        return SuccessResponse<IEnumerable<EmployeeEmploymentHistoryDto>>.Ok(dtos, EmployeeEmploymentHistoryMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<long>> CreateAsync(CreateEmployeeEmploymentHistoryDto dto)
@@ -49,15 +50,15 @@ public class EmployeeEmploymentHistoryService : IEmployeeEmploymentHistoryServic
         // Check if profile exists
         var profile = await _uow.Info.EmployeeProfiles.GetByIdAsync(dto.EmployeeId);
         if (profile == null)
-            return SuccessResponse<long>.Fail($"Employee profile with ID '{dto.EmployeeId}' was not found.", ErrorType.NotFound);
+            return SuccessResponse<long>.Fail(EmployeeProfileMsg.NotFound(dto.EmployeeId), ErrorType.NotFound);
 
         // Validate department exists
         if (!await _uow.HR.Departments.ExistsByIdAsync(dto.DepartmentId))
-            return SuccessResponse<long>.Fail($"Department with ID '{dto.DepartmentId}' was not found.", ErrorType.NotFound);
+            return SuccessResponse<long>.Fail(DepartmentMsg.NotFound(dto.DepartmentId), ErrorType.NotFound);
 
         // Validate position exists
         if (!await _uow.HR.Positions.ExistsByIdAsync(dto.PositionId))
-            return SuccessResponse<long>.Fail($"Position with ID '{dto.PositionId}' was not found.", ErrorType.NotFound);
+            return SuccessResponse<long>.Fail(PositionMsg.NotFound(dto.PositionId), ErrorType.NotFound);
 
         var history = new EmployeeEmploymentHistory(
             dto.EmployeeId,
@@ -72,6 +73,6 @@ public class EmployeeEmploymentHistoryService : IEmployeeEmploymentHistoryServic
         _uow.Info.EmployeeEmploymentHistories.Add(history);
         await _uow.CompleteAsync();
 
-        return SuccessResponse<long>.Ok(history.Id, "Employment history created successfully.");
+        return SuccessResponse<long>.Ok(history.Id, EmployeeEmploymentHistoryMsg.Created);
     }
 }

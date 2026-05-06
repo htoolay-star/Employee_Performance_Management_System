@@ -6,6 +6,7 @@ using EPMS.Domain.Interface.IService.Shared;
 using EPMS.Shared.DTOs.CategoryDTOs;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.Enums;
+using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 namespace EPMS.Domain.Services.Shared;
 
@@ -24,7 +25,7 @@ public class CategoryService : ICategoryService
     {
         var categories = await _unitOfWork.Shared.Categories.GetAllAsync();
         var dtos = _mapper.Map<IEnumerable<CategoryDto>>(categories);
-        return SuccessResponse<IEnumerable<CategoryDto>>.Ok(dtos, "Categories retrieved successfully.");
+        return SuccessResponse<IEnumerable<CategoryDto>>.Ok(dtos, CategoryMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<CategoryDto>> GetCategoryByIdAsync(int id)
@@ -32,10 +33,10 @@ public class CategoryService : ICategoryService
         var category = await _unitOfWork.Shared.Categories.GetByIdAsync(id);
 
         if (category == null)
-            return SuccessResponse<CategoryDto>.Fail($"Category with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse<CategoryDto>.Fail(CategoryMsg.NotFound(id), ErrorType.NotFound);
 
         var dto = _mapper.Map<CategoryDto>(category);
-        return SuccessResponse<CategoryDto>.Ok(dto, "Category retrieved successfully.");
+        return SuccessResponse<CategoryDto>.Ok(dto, CategoryMsg.Retrieved);
     }
 
     public async Task<SuccessResponse<long>> CreateCategoryAsync(CreateCategoryDto dto)
@@ -60,7 +61,7 @@ public class CategoryService : ICategoryService
         var category = new Category(dto.Module, dto.Code, dto.Name, dto.Description, dto.ParentId);
         _unitOfWork.Shared.Categories.Add(category);
         await _unitOfWork.CompleteAsync();
-        return SuccessResponse<long>.Ok(category.Id, "Category created successfully.");
+        return SuccessResponse<long>.Ok(category.Id, CategoryMsg.Created);
     }
 
     public async Task<SuccessResponse> UpdateCategoryAsync(int id, UpdateCategoryDto dto)
@@ -68,7 +69,7 @@ public class CategoryService : ICategoryService
         var category = await _unitOfWork.Shared.Categories.GetByIdAsync(id);
 
         if (category == null)
-            return SuccessResponse.Fail($"Category with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse.Fail(CategoryMsg.NotFound(id), ErrorType.NotFound);
 
         var normalizedModule = category.Module;
 
@@ -82,7 +83,7 @@ public class CategoryService : ICategoryService
             if (dto.ParentId.HasValue)
             {
                 if (dto.ParentId.Value == id)
-                    return SuccessResponse.Fail("A category cannot be its own parent.", ErrorType.Validation);
+                    return SuccessResponse.Fail(CategoryMsg.SelfParent, ErrorType.Validation);
 
                 var parent = await _unitOfWork.Shared.Categories.GetByIdAsync(dto.ParentId.Value);
                 if (parent == null)
@@ -97,7 +98,7 @@ public class CategoryService : ICategoryService
         else category.Deactivate();
 
         await _unitOfWork.CompleteAsync();
-        return SuccessResponse.Ok("Category updated successfully.");
+        return SuccessResponse.Ok(CategoryMsg.Updated);
     }
 
     public async Task<SuccessResponse> DeleteCategoryAsync(int id)
@@ -105,7 +106,7 @@ public class CategoryService : ICategoryService
         var category = await _unitOfWork.Shared.Categories.GetByIdAsync(id);
 
         if (category == null)
-            return SuccessResponse.Fail($"Category with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse.Fail(CategoryMsg.NotFound(id), ErrorType.NotFound);
 
         // Check for subcategories
         if (await _unitOfWork.Shared.Categories.HasSubCategoriesAsync(id))
@@ -113,6 +114,6 @@ public class CategoryService : ICategoryService
 
         _unitOfWork.Shared.Categories.Delete(category);
         await _unitOfWork.CompleteAsync();
-        return SuccessResponse.Ok("Category deleted successfully.");
+        return SuccessResponse.Ok(CategoryMsg.Deleted);
     }
 }

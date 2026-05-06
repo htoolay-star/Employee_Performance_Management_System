@@ -1,3 +1,4 @@
+using EPMS.Shared.Constants.ValidationMessages;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using FluentValidation;
 
@@ -9,54 +10,54 @@ public class CreateEmployeeEmploymentValidator : AbstractValidator<CreateEmploye
     {
         RuleFor(x => x.EmployeeId)
             .GreaterThan(0)
-            .WithMessage("Employee ID must be greater than 0.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.EmployeeIdInvalid);
 
         RuleFor(x => x.DepartmentId)
             .GreaterThan(0)
-            .WithMessage("Department ID must be greater than 0.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.DepartmentIdInvalid);
 
         RuleFor(x => x.PositionId)
             .GreaterThan(0)
-            .WithMessage("Position ID must be greater than 0.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.PositionIdInvalid);
 
         RuleFor(x => x.EmploymentStatus)
             .NotEmpty()
-            .WithMessage("Employment status is required.")
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.EmploymentStatusRequired)
             .MaximumLength(50)
-            .WithMessage("Employment status cannot exceed 50 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.EmploymentStatusMaxLength);
 
         RuleFor(x => x.ParentDepartmentId)
             .GreaterThan(0)
-            .WithMessage("Parent department ID must be greater than 0.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.ParentDepartmentIdInvalid);
 
         RuleFor(x => x.TeamId)
             .GreaterThan(0)
             .When(x => x.TeamId.HasValue)
-            .WithMessage("Team ID must be greater than 0.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.TeamIdInvalid);
 
         RuleFor(x => x.DirectManagerId)
             .GreaterThan(0)
             .When(x => x.DirectManagerId.HasValue)
-            .WithMessage("Direct manager ID must be greater than 0.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.DirectManagerIdInvalid);
 
         RuleFor(x => x.StaffType)
             .MaximumLength(50)
-            .WithMessage("Staff type cannot exceed 50 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.StaffTypeMaxLength);
 
         RuleFor(x => x.ProbationMonth)
             .GreaterThanOrEqualTo(0)
-            .WithMessage("Probation months must be greater than or equal to 0.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.ProbationMonthInvalid);
 
         RuleFor(x => x.Shift)
             .MaximumLength(50)
-            .WithMessage("Shift cannot exceed 50 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.ShiftMaxLength);
 
         RuleFor(x => x.FingerPrintId)
             .MaximumLength(50)
-            .WithMessage("Fingerprint ID cannot exceed 50 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.FingerPrintIdMaxLength);
 
         RuleFor(x => x.ProductProject)
             .MaximumLength(200)
-            .WithMessage("Product/project cannot exceed 200 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.ProductProjectMaxLength);
     }
 }

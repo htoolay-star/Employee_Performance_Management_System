@@ -5,6 +5,7 @@ using EPMS.Domain.Interface.IService.Info;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using EPMS.Shared.Enums;
+using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 namespace EPMS.Domain.Services.Info;
 
@@ -23,7 +24,7 @@ public class EmployeePayrollInfoService : IEmployeePayrollInfoService
     {
         var payrolls = await _uow.Info.EmployeePayrollInfos.GetAllAsync();
         var dtos = _mapper.Map<IEnumerable<EmployeePayrollInfoDto>>(payrolls);
-        return SuccessResponse<IEnumerable<EmployeePayrollInfoDto>>.Ok(dtos, "Employee payroll info retrieved successfully.");
+        return SuccessResponse<IEnumerable<EmployeePayrollInfoDto>>.Ok(dtos, EmployeePayrollInfoMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<EmployeePayrollInfoDto>> GetByIdAsync(long id)
@@ -31,10 +32,10 @@ public class EmployeePayrollInfoService : IEmployeePayrollInfoService
         var payroll = await _uow.Info.EmployeePayrollInfos.GetByIdAsync(id);
 
         if (payroll == null)
-            return SuccessResponse<EmployeePayrollInfoDto>.Fail($"Employee payroll info with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse<EmployeePayrollInfoDto>.Fail(EmployeePayrollInfoMsg.NotFound(id), ErrorType.NotFound);
 
         var dto = _mapper.Map<EmployeePayrollInfoDto>(payroll);
-        return SuccessResponse<EmployeePayrollInfoDto>.Ok(dto, "Employee payroll info retrieved successfully.");
+        return SuccessResponse<EmployeePayrollInfoDto>.Ok(dto, EmployeePayrollInfoMsg.Retrieved);
     }
 
     public async Task<SuccessResponse<EmployeePayrollInfoDto>> GetByEmployeeIdAsync(long employeeId)
@@ -42,10 +43,10 @@ public class EmployeePayrollInfoService : IEmployeePayrollInfoService
         var payroll = await _uow.Info.EmployeePayrollInfos.GetByEmployeeIdAsync(employeeId);
 
         if (payroll == null)
-            return SuccessResponse<EmployeePayrollInfoDto>.Fail($"Payroll info for employee ID '{employeeId}' was not found.", ErrorType.NotFound);
+            return SuccessResponse<EmployeePayrollInfoDto>.Fail(EmployeePayrollInfoMsg.NotFound(employeeId), ErrorType.NotFound);
 
         var dto = _mapper.Map<EmployeePayrollInfoDto>(payroll);
-        return SuccessResponse<EmployeePayrollInfoDto>.Ok(dto, "Employee payroll info retrieved successfully.");
+        return SuccessResponse<EmployeePayrollInfoDto>.Ok(dto, EmployeePayrollInfoMsg.Retrieved);
     }
 
     public async Task<SuccessResponse<long>> CreateAsync(CreateEmployeePayrollInfoDto dto)
@@ -53,22 +54,22 @@ public class EmployeePayrollInfoService : IEmployeePayrollInfoService
         // Check if profile exists
         var profile = await _uow.Info.EmployeeProfiles.GetByIdAsync(dto.EmployeeId);
         if (profile == null)
-            return SuccessResponse<long>.Fail($"Employee profile with ID '{dto.EmployeeId}' was not found.", ErrorType.NotFound);
+            return SuccessResponse<long>.Fail(EmployeeProfileMsg.NotFound(dto.EmployeeId), ErrorType.NotFound);
 
         // Check if payroll info already exists for this employee
         var existing = await _uow.Info.EmployeePayrollInfos.GetByEmployeeIdAsync(dto.EmployeeId);
         if (existing != null)
-            return SuccessResponse<long>.Fail($"Payroll info already exists for employee ID '{dto.EmployeeId}'. Use Update instead.", ErrorType.Conflict);
+            return SuccessResponse<long>.Fail(EmployeePayrollInfoMsg.Retrieved, ErrorType.Conflict);
 
         if (dto.Salary < 0)
-            return SuccessResponse<long>.Fail("Salary cannot be negative.", ErrorType.Validation);
+            return SuccessResponse<long>.Fail(EmployeePayrollInfoMsg.SalaryNegative, ErrorType.Validation);
 
         var payroll = new EmployeePayrollInfo(dto.EmployeeId, dto.Salary, dto.Currency);
 
         _uow.Info.EmployeePayrollInfos.Add(payroll);
         await _uow.CompleteAsync();
 
-        return SuccessResponse<long>.Ok(payroll.Id, "Employee payroll info created successfully.");
+        return SuccessResponse<long>.Ok(payroll.Id, EmployeePayrollInfoMsg.Created);
     }
 
     public async Task<SuccessResponse> UpdateAsync(long id, UpdateEmployeePayrollInfoDto dto)
@@ -76,13 +77,13 @@ public class EmployeePayrollInfoService : IEmployeePayrollInfoService
         var payroll = await _uow.Info.EmployeePayrollInfos.GetByIdAsync(id);
 
         if (payroll == null)
-            return SuccessResponse.Fail($"Employee payroll info with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse.Fail(EmployeePayrollInfoMsg.NotFound(id), ErrorType.NotFound);
 
         if (dto.Salary < 0)
-            return SuccessResponse.Fail("Salary cannot be negative.", ErrorType.Validation);
+            return SuccessResponse.Fail(EmployeePayrollInfoMsg.SalaryNegative, ErrorType.Validation);
 
         await _uow.CompleteAsync();
-        return SuccessResponse.Ok("Employee payroll info updated successfully.");
+        return SuccessResponse.Ok(EmployeePayrollInfoMsg.Updated);
     }
 
     public async Task<SuccessResponse> DeleteAsync(long id)
@@ -90,11 +91,11 @@ public class EmployeePayrollInfoService : IEmployeePayrollInfoService
         var payroll = await _uow.Info.EmployeePayrollInfos.GetByIdAsync(id);
 
         if (payroll == null)
-            return SuccessResponse.Fail($"Employee payroll info with ID '{id}' was not found.", ErrorType.NotFound);
+            return SuccessResponse.Fail(EmployeePayrollInfoMsg.NotFound(id), ErrorType.NotFound);
 
         _uow.Info.EmployeePayrollInfos.Delete(payroll);
         await _uow.CompleteAsync();
 
-        return SuccessResponse.Ok("Employee payroll info deleted successfully.");
+        return SuccessResponse.Ok(EmployeePayrollInfoMsg.Deleted);
     }
 }

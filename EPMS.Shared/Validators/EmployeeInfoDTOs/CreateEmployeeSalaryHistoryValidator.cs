@@ -1,3 +1,4 @@
+using EPMS.Shared.Constants.ValidationMessages;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using FluentValidation;
 
@@ -9,35 +10,35 @@ public class CreateEmployeeSalaryHistoryValidator : AbstractValidator<CreateEmpl
     {
         RuleFor(x => x.EmployeeId)
             .GreaterThan(0)
-            .WithMessage("Employee ID must be greater than 0.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.EmployeeIdInvalid);
 
         RuleFor(x => x.PreviousAmount)
             .GreaterThanOrEqualTo(0)
-            .WithMessage("Previous amount must be greater than or equal to 0.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeHistory.PreviousAmountInvalid);
 
         RuleFor(x => x.NewAmount)
             .GreaterThanOrEqualTo(0)
-            .WithMessage("New amount must be greater than or equal to 0.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeHistory.NewAmountInvalid);
 
         RuleFor(x => x.EffectiveDate)
             .NotEmpty()
-            .WithMessage("Effective date is required.")
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeHistory.EffectiveDateRequired)
             .LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.Today))
-            .WithMessage("Effective date cannot be in the future.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeHistory.EffectiveDateFuture);
 
         RuleFor(x => x.ChangeReason)
             .NotEmpty()
-            .WithMessage("Change reason is required.")
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeHistory.ChangeReasonRequired)
             .MaximumLength(500)
-            .WithMessage("Change reason cannot exceed 500 characters.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeHistory.ChangeReasonMaxLength);
 
         RuleFor(x => x.ApprovedById)
             .GreaterThan(0)
             .When(x => x.ApprovedById.HasValue)
-            .WithMessage("Approved by ID must be greater than 0.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeHistory.ApprovedByIdInvalid);
 
         RuleFor(x => x.NewAmount)
             .NotEqual(x => x.PreviousAmount)
-            .WithMessage("New amount must be different from previous amount.");
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeHistory.NewAmountDifferent);
     }
 }
