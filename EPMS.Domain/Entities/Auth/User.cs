@@ -80,6 +80,13 @@ namespace EPMS.Domain.Entities.Auth
             LastLoginDate = timeProvider.GetUtcNow();
         }
 
+        public void UpdateEmail(string email)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(email);
+            Email = email;
+            NormalizedEmail = email.ToUpperInvariant();
+        }
+
         public void ResetPasswordByAdmin(string newPasswordHash)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(newPasswordHash);
