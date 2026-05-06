@@ -82,5 +82,29 @@ namespace EPMS.Application.Services.Performance
 
             return result;
         }
+        public async Task<bool> UpdateContinuousFeedbackAsync(long id, string empComment, string mgrComment)
+        {
+            var appraisal = await _unitOfWork.Appraisals.GetByIdAsync(id);
+
+            if (appraisal == null || appraisal.IsLocked) return false;
+
+            var type = typeof(Appraisal);
+            type.GetProperty(nameof(Appraisal.EmployeeComment))?.SetValue(appraisal, empComment);
+            type.GetProperty(nameof(Appraisal.ManagerComment))?.SetValue(appraisal, mgrComment);
+
+            _unitOfWork.Appraisals.Update(appraisal);
+            return await _unitOfWork.CompleteAsync() > 0;
+        }
+
+        public async Task<bool> ConductOneOnOneMeetingAsync(long id, string finalManagerComment)
+        {
+            var appraisal = await _unitOfWork.Appraisals.GetByIdAsync(id);
+            if (appraisal == null || appraisal.IsLocked) return false;
+
+            appraisal.SubmitManagerReview(finalManagerComment);
+
+            _unitOfWork.Appraisals.Update(appraisal);
+            return await _unitOfWork.CompleteAsync() > 0;
+        }
     }
 }
