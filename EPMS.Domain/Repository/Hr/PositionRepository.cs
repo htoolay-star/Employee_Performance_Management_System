@@ -38,4 +38,9 @@ public class PositionRepository : GenericRepository<Position>, IPositionReposito
     {
         return await _context.Levels.AnyAsync(l => l.Id == levelId, cancellationToken);
     }
+
+    public async Task<bool> ExistsByIdAsync(long id)
+    {
+        return await _dbSet.AnyAsync(p => p.Id == id);
+    }
 }

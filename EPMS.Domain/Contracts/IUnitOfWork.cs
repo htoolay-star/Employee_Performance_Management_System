@@ -18,7 +18,7 @@ namespace EPMS.Domain.Contracts
         IAuthModule Auth { get; }
         IInfoModule Info { get; }
         IHRModule HR { get; }
-        IPerfModule Performance { get; }
+        IPerfModule Perf { get; }
         ISharedModule Shared { get; }
 
         Task<int> CompleteAsync();

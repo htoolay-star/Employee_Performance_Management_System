@@ -50,7 +50,7 @@ namespace EPMS.Domain.Repository.Base
         public IAuthModule Auth => _auth.Value;
         public IInfoModule Info => _info.Value;
         public IHRModule HR => _hr.Value;
-        public IPerfModule Performance => _perf.Value;
+        public IPerfModule Perf => _perf.Value;
         public ISharedModule Shared => _shared.Value;
 
         public async Task<int> CompleteAsync() => await _context.SaveChangesAsync();

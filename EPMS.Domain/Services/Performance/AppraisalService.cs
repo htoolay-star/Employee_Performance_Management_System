@@ -21,7 +21,7 @@ namespace EPMS.Application.Services.Performance
         public async Task<AppraisalResponseDto> SubmitAppraisalAsync(AppraisalSubmissionDto dto)
         {
             // 1. Fetch Appraisal Record with Details
-            var appraisal = await _unitOfWork.Performance.Appraisals.GetAppraisalWithDetailsAsync(dto.Id);
+            var appraisal = await _unitOfWork.Perf.Appraisals.GetAppraisalWithDetailsAsync(dto.Id);
 
             // Business Logic: All checks are done here in Service
             if (appraisal == null)
@@ -61,7 +61,7 @@ namespace EPMS.Application.Services.Performance
             }
 
             // 4. Persistence - Update record and commit transaction
-            _unitOfWork.Performance.Appraisals.Update(appraisal);
+            _unitOfWork.Perf.Appraisals.Update(appraisal);
             await _unitOfWork.CompleteAsync();
 
             return new AppraisalResponseDto
@@ -74,7 +74,7 @@ namespace EPMS.Application.Services.Performance
 
         public async Task<Appraisal> GetAppraisalDetailsAsync(long id)
         {
-            var result = await _unitOfWork.Performance.Appraisals.GetAppraisalWithDetailsAsync(id);
+            var result = await _unitOfWork.Perf.Appraisals.GetAppraisalWithDetailsAsync(id);
 
             if (result == null)
                 throw new KeyNotFoundException($"No data found for Appraisal ID {id}");
