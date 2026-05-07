@@ -12,5 +12,9 @@ namespace EPMS.Domain.Interface.Irepo.Performance
         IKPIWeightPriorityRepository KPIWeightPriorities { get; }
         IRatingScaleRepository RatingScales { get; }
 
+        IKPIMasterRepository KPIMasters { get; }
+        IPositionKPIRepository PositionKPIs { get; }
+        IPositionKPIHistoryRepository PositionKPIHistories { get; }
+
     }
 }

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using EPMS.Domain.Data;
+using EPMS.Domain.Entities.Performance;
 using EPMS.Domain.Interface.Irepo.Info;
 using EPMS.Domain.Interface.Irepo.Performance;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +17,9 @@ namespace EPMS.Domain.Repository.Performance
         private IAppraisalRepository? _perfAppraisalRepository;
         private IRatingScaleRepository? _perfRatingScaleRepository;
         private IKPIWeightPriorityRepository? _perfKPIWeightPriorityRepository;
+        private IKPIMasterRepository? _kpiMasterRepository;
+        private IPositionKPIRepository? _positionKPIRepository;
+        private IPositionKPIHistoryRepository? _positionKPIHistoryRepository;
 
         public IAppraisalRepository Appraisals =>
             _perfAppraisalRepository ??= serviceProvider.GetRequiredService<IAppraisalRepository>();
@@ -25,5 +29,14 @@ namespace EPMS.Domain.Repository.Performance
 
         public IKPIWeightPriorityRepository KPIWeightPriorities =>
             _perfKPIWeightPriorityRepository ??= serviceProvider.GetRequiredService<IKPIWeightPriorityRepository>();
+
+        public IKPIMasterRepository KPIMasters =>
+            _kpiMasterRepository ??= serviceProvider.GetRequiredService<IKPIMasterRepository>();
+
+        public IPositionKPIRepository PositionKPIs =>
+            _positionKPIRepository ??= serviceProvider.GetRequiredService<IPositionKPIRepository>();
+
+        public IPositionKPIHistoryRepository PositionKPIHistories =>
+            _positionKPIHistoryRepository ??= serviceProvider.GetRequiredService<IPositionKPIHistoryRepository>();
     }
 }
