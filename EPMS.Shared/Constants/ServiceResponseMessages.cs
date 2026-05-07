@@ -366,7 +366,7 @@ public static string DuplicateEntry = "KPI already assigned to this position.";
         public static string NotFound(long id) => $"Position form template with ID '{id}' was not found.";
     }
 
-    public static class PIPObjectiveMsg
+public static class PIPObjectiveMsg
     {
         public const string Created = "PIP objective created successfully.";
         public const string Updated = "PIP objective updated successfully.";
@@ -375,5 +375,18 @@ public static string DuplicateEntry = "KPI already assigned to this position.";
         public const string RetrievedAll = "PIP objectives retrieved successfully.";
         public const string RetrievedByPIP = "PIP objectives for PIP retrieved successfully.";
         public static string NotFound(long id) => $"PIP objective with ID '{id}' was not found.";
-}
+    }
+
+    public static class PositionPermissionMsg
+    {
+        public const string Created = "Permission assigned to position successfully.";
+        public const string Deleted = "Permission removed from position successfully.";
+        public const string Retrieved = "Position permission retrieved successfully.";
+        public const string RetrievedAll = "Position permissions retrieved successfully.";
+        public const string RetrievedByPosition = "Permissions for position retrieved successfully.";
+        public const string RetrievedByPermission = "Positions for permission retrieved successfully.";
+        public static string NotFound(long id) => $"Position permission with ID '{id}' was not found.";
+        public static string NotFoundByPositionAndPermission(long positionId, long permissionId) => $"Permission '{permissionId}' is not assigned to position '{positionId}'.";
+        public static string DuplicateEntry = "Permission is already assigned to this position.";
+    }
 }

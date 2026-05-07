@@ -38,5 +38,11 @@ namespace EPMS.Shared.Validators.ValidationMessages
         {
             public const string RefreshTokenRequired = "Refresh token is required to generate a new session.";
         }
+
+        public static class PositionPermission
+        {
+            public const string PositionIdRequired = "Position is required.";
+            public const string PermissionIdRequired = "Permission is required.";
+        }
     }
 }
