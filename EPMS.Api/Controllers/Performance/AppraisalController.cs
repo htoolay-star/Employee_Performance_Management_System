@@ -1,13 +1,15 @@
+using EPMS.Api.Controllers.Common;
 using EPMS.Domain.Interface.IService;
+using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.FormDTOs;
+using EPMS.Shared.Enums;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 
 namespace EPMS.Api.Controllers.Performance
 {
+    [Route("api/performance/appraisals")]
     [ApiController]
-    [Route("api/[controller]")]
-    public class AppraisalController : ControllerBase
+    public class AppraisalController : ApiControllerBase
     {
         private readonly IAppraisalService _appraisalService;
 
@@ -16,28 +18,42 @@ namespace EPMS.Api.Controllers.Performance
             _appraisalService = appraisalService;
         }
 
-        /// <summary>
-        /// Submits performance assessment results and calculates the final grade.
-        /// </summary>
         [HttpPost("submit")]
-        public async Task<IActionResult> Submit([FromBody] AppraisalSubmissionDto dto)
+        public async Task<ActionResult<SuccessResponse<AppraisalResponseDto>>> Submit([FromBody] AppraisalSubmissionDto dto)
         {
-            // Note: Validation is handled by FluentValidation before hitting this point.
-            // Note: Exception/Error handling is handled by Global Exception Middleware.
-
-            var result = await _appraisalService.SubmitAppraisalAsync(dto);
-
-            return Ok(result);
+            try
+            {
+                var result = await _appraisalService.SubmitAppraisalAsync(dto);
+                return Ok(SuccessResponse<AppraisalResponseDto>.Ok(result, "Appraisal submitted successfully."));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(SuccessResponse<AppraisalResponseDto>.Fail(ex.Message, ErrorType.NotFound));
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(SuccessResponse<AppraisalResponseDto>.Fail(ex.Message, ErrorType.Validation));
+            }
         }
 
-        /// <summary>
-        /// Retrieves detailed appraisal scores by ID.
-        /// </summary>
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(long id)
+        [HttpGet("{id:long}")]
+        public async Task<ActionResult<SuccessResponse<AppraisalResponseDto>>> GetById(long id)
         {
-            var result = await _appraisalService.GetAppraisalDetailsAsync(id);
-            return Ok(result);
+            try
+            {
+                var appraisal = await _appraisalService.GetAppraisalDetailsAsync(id);
+                var response = new AppraisalResponseDto
+                {
+                    Id = appraisal.Id,
+                    TotalScore = appraisal.TotalScore ?? 0,
+                    Grade = appraisal.RatingLabel ?? "N/A"
+                };
+                return Ok(SuccessResponse<AppraisalResponseDto>.Ok(response, "Appraisal retrieved successfully."));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(SuccessResponse<AppraisalResponseDto>.Fail(ex.Message, ErrorType.NotFound));
+            }
         }
     }
 }

@@ -31,7 +31,7 @@ public class RatingScaleService : IRatingScaleService
     {
         var ratingScales = await _uow.Perf.RatingScales.GetActiveAsync();
         var dtos = _mapper.Map<IEnumerable<RatingScaleDto>>(ratingScales);
-        return SuccessResponse<IEnumerable<RatingScaleDto>>.Ok(dtos, "Active rating scales retrieved successfully.");
+        return SuccessResponse<IEnumerable<RatingScaleDto>>.Ok(dtos, RatingScaleMsg.RetrievedActive);
     }
 
     public async Task<SuccessResponse<RatingScaleDto>> GetByIdAsync(long id)
@@ -50,17 +50,17 @@ public class RatingScaleService : IRatingScaleService
         var ratingScale = await _uow.Perf.RatingScales.GetByRatingAsync(rating);
 
         if (ratingScale == null)
-            return SuccessResponse<RatingScaleDto>.Fail($"Rating scale with rating '{rating}' was not found.", ErrorType.NotFound);
+            return SuccessResponse<RatingScaleDto>.Fail(RatingScaleMsg.NotFoundByRating(rating), ErrorType.NotFound);
 
         var dto = _mapper.Map<RatingScaleDto>(ratingScale);
-        return SuccessResponse<RatingScaleDto>.Ok(dto, "Rating scale retrieved successfully.");
+        return SuccessResponse<RatingScaleDto>.Ok(dto, RatingScaleMsg.Retrieved);
     }
 
     public async Task<SuccessResponse<long>> CreateAsync(CreateRatingScaleDto dto)
     {
         // Validate rating uniqueness
         if (await _uow.Perf.RatingScales.RatingExistsAsync(dto.Rating))
-            return SuccessResponse<long>.Fail($"Rating scale with rating '{dto.Rating}' already exists.", ErrorType.Conflict);
+            return SuccessResponse<long>.Fail(string.Format(RatingScaleMsg.DuplicateRating, dto.Rating), ErrorType.Conflict);
 
         // Validate score bounds
         if (dto.MinScore > dto.MaxScore)

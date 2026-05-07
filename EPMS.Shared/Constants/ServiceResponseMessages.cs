@@ -177,8 +177,11 @@ public static class ServiceResponseMessages
         public const string Reactivated = "Rating scale reactivated successfully.";
         public const string Retrieved = "Rating scale retrieved successfully.";
         public const string RetrievedAll = "Rating scales retrieved successfully.";
+        public const string RetrievedActive = "Active rating scales retrieved successfully.";
         public const string MinGreaterThanMax = "Minimum score cannot be greater than maximum score.";
+        public const string DuplicateRating = "Rating scale with rating '{0}' already exists.";
         public static string NotFound(long id) => $"Rating scale with ID '{id}' was not found.";
+        public static string NotFoundByRating(int rating) => $"Rating scale with rating '{rating}' was not found.";
     }
 
     public static class KPIWeightPriorityMsg
@@ -212,6 +215,20 @@ public static class ServiceResponseMessages
         public const string DuplicateCycle = "An appraisal cycle for year '{0}' and type '{1}' already exists.";
         public static string NotFound(long id) => $"Appraisal cycle with ID '{id}' was not found.";
         public static string AlreadyLocked = "This appraisal cycle is already locked.";
+    }
+
+    public static class KPIMasterMsg
+    {
+        public const string Created = "KPI master created successfully.";
+        public const string Updated = "KPI master updated successfully.";
+        public const string Deleted = "KPI master deleted successfully.";
+        public const string Deactivated = "KPI master deactivated successfully.";
+        public const string Reactivated = "KPI master reactivated successfully.";
+        public const string Retrieved = "KPI master retrieved successfully.";
+        public const string RetrievedAll = "KPI masters retrieved successfully.";
+        public const string RetrievedActive = "Active KPI masters retrieved successfully.";
+        public const string DuplicateCode = "KPI master with code '{0}' already exists.";
+        public static string NotFound(long id) => $"KPI master with ID '{id}' was not found.";
     }
 
     public static class PermissionMsg

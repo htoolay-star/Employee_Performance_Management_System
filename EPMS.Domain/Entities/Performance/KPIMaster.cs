@@ -36,5 +36,19 @@ namespace EPMS.Domain.Entities.Performance
         public byte[] Version { get; private set; } = Array.Empty<byte>();
 
         public virtual Category Category { get; private set; } = null!;
+
+        public void Update(long categoryId, string code, string name, string? description)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(code);
+            ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
+            CategoryId = categoryId;
+            Code = code.Trim().ToUpperInvariant();
+            Name = name.Trim();
+            Description = description?.Trim();
+        }
+
+        public void Deactivate() => IsActive = false;
+        public void Reactivate() => IsActive = true;
     }
 }

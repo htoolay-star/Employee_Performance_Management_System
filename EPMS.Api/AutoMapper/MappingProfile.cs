@@ -16,6 +16,7 @@ using EPMS.Shared.DTOs.PerformanceDTOs.RatingScaleDTOs;
 using EPMS.Domain.Entities.Performance;
 using EPMS.Shared.DTOs.PerformanceDTOs.KPIWeightPriorityDTOs;
 using EPMS.Shared.DTOs.PerformanceDTOs.AppraisalCycleDTOs;
+using EPMS.Shared.DTOs.PerformanceDTOs.KPIMasterDTOs;
 
 namespace EPMS.Api.MappingProfiles;
 
@@ -75,5 +76,7 @@ public class MappingProfile : Profile
         CreateMap<RatingScale, RatingScaleDto>();
         CreateMap<KPIWeightPriority, KPIWeightPriorityDto>();
         CreateMap<AppraisalCycle, AppraisalCycleDto>();
+        CreateMap<KPIMaster, KPIMasterDto>()
+            .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category != null ? src.Category.Name : string.Empty));
     }
 }

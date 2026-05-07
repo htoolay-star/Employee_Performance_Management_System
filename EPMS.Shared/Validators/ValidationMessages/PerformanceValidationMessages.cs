@@ -49,6 +49,7 @@ namespace EPMS.Shared.Validators.ValidationMessages
 
         public static class AppraisalCycle
         {
+            public const string IdRequired = "Appraisal cycle ID is required.";
             public const string NameRequired = "Cycle name is required.";
             public const string NameMaxLength = "Cycle name cannot exceed 100 characters.";
             public const string YearInvalid = "Year must be between 2000 and 2100.";
@@ -60,6 +61,17 @@ namespace EPMS.Shared.Validators.ValidationMessages
             public const string SelfReviewStartBeforeDeadline = "Self-review start date must be before deadline.";
             public const string ManagerReviewStartBeforeDeadline = "Manager review start date must be before deadline.";
             public const string PeerReviewStartBeforeDeadline = "Peer review start date must be before deadline.";
+        }
+
+        public static class KPIMaster
+        {
+            public const string IdRequired = "KPI master ID is required.";
+            public const string CategoryIdRequired = "Category is required.";
+            public const string CodeRequired = "KPI code is required.";
+            public const string CodeMaxLength = "KPI code cannot exceed 20 characters.";
+            public const string NameRequired = "KPI name is required.";
+            public const string NameMaxLength = "KPI name cannot exceed 100 characters.";
+            public const string DescriptionMaxLength = "Description cannot exceed 500 characters.";
         }
     }
 }

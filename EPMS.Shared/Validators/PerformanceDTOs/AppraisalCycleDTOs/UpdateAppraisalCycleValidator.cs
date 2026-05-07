@@ -11,7 +11,7 @@ namespace EPMS.Shared.Validators.PerformanceDTOs.AppraisalCycleDTOs
         {
             RuleFor(x => x.Id)
                 .GreaterThan(0)
-                .WithMessage("Invalid appraisal cycle ID.");
+                .WithMessage(PerformanceValidationMessages.AppraisalCycle.IdRequired);
 
             RuleFor(x => x.Name)
                 .NotEmpty().WithMessage(PerformanceValidationMessages.AppraisalCycle.NameRequired)
