@@ -18,6 +18,10 @@ using EPMS.Shared.DTOs.PerformanceDTOs.KPIWeightPriorityDTOs;
 using EPMS.Shared.DTOs.PerformanceDTOs.AppraisalCycleDTOs;
 using EPMS.Shared.DTOs.PerformanceDTOs.KPIMasterDTOs;
 using EPMS.Shared.DTOs.PerformanceDTOs.PIPDTOs;
+using EPMS.Shared.DTOs.PerformanceDTOs.FormTemplateDTOs;
+using EPMS.Shared.DTOs.PerformanceDTOs.ContinuousFeedbackDTOs;
+using EPMS.Shared.DTOs.PerformanceDTOs.OneOnOneMeetingDTOs;
+using EPMS.Shared.DTOs.Performance.PositionKPI;
 
 namespace EPMS.Api.MappingProfiles;
 
@@ -83,5 +87,20 @@ public class MappingProfile : Profile
         CreateMap<PIP, PIPDto>()
             .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => src.Employee != null ? $"{src.Employee.FirstName} {src.Employee.LastName}" : string.Empty))
             .ForMember(dest => dest.ManagerName, opt => opt.MapFrom(src => src.Manager != null ? $"{src.Manager.FirstName} {src.Manager.LastName}" : string.Empty));
+
+        CreateMap<FormTemplate, FormTemplateDto>();
+
+        CreateMap<ContinuousFeedback, ContinuousFeedbackDto>()
+            .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => src.Employee != null ? $"{src.Employee.FirstName} {src.Employee.LastName}" : string.Empty))
+            .ForMember(dest => dest.GivenByName, opt => opt.MapFrom(src => src.GivenBy != null ? $"{src.GivenBy.FirstName} {src.GivenBy.LastName}" : string.Empty));
+
+        CreateMap<OneOnOneMeeting, OneOnOneMeetingDto>()
+            .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => src.Employee != null ? $"{src.Employee.FirstName} {src.Employee.LastName}" : string.Empty))
+            .ForMember(dest => dest.ManagerName, opt => opt.MapFrom(src => src.Manager != null ? $"{src.Manager.FirstName} {src.Manager.LastName}" : string.Empty));
+
+        CreateMap<PositionKPI, PositionKPIDto>()
+            .ForMember(dest => dest.KPIName, opt => opt.MapFrom(src => src.KPI != null ? src.KPI.Name : string.Empty))
+            .ForMember(dest => dest.KPICode, opt => opt.MapFrom(src => src.KPI != null ? src.KPI.Code : string.Empty))
+            .ForMember(dest => dest.PriorityName, opt => opt.MapFrom(src => src.Priority != null ? src.Priority.LevelName : string.Empty));
     }
 }

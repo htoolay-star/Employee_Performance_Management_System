@@ -48,5 +48,14 @@ namespace EPMS.Domain.Entities.Performance
         public virtual EmployeeProfile Employee { get; private set; } = null!;
         public virtual EmployeeProfile GivenBy { get; private set; } = null!;
         public virtual KPIMaster? RelatedGoal { get; private set; }
+
+        public void Update(string content, string visibility)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(content);
+            ArgumentException.ThrowIfNullOrWhiteSpace(visibility);
+
+            Content = content.Trim();
+            Visibility = visibility.Trim().ToUpperInvariant();
+        }
     }
 }

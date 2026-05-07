@@ -19,6 +19,10 @@ namespace EPMS.Domain.Repository.Performance
         private IAppraisalCycleRepository? _perfAppraisalCycleRepository;
         private IKPIMasterRepository? _perfKPIMasterRepository;
         private IPIPRepository? _perfPIPRepository;
+        private IFormTemplateRepository? _perfFormTemplateRepository;
+        private IContinuousFeedbackRepository? _perfContinuousFeedbackRepository;
+        private IOneOnOneMeetingRepository? _perfOneOnOneMeetingRepository;
+        private IPositionKPIRepository? _perfPositionKPIRepository;
 
         public IAppraisalRepository Appraisals =>
             _perfAppraisalRepository ??= serviceProvider.GetRequiredService<IAppraisalRepository>();
@@ -37,5 +41,17 @@ namespace EPMS.Domain.Repository.Performance
 
         public IPIPRepository PIPs =>
             _perfPIPRepository ??= serviceProvider.GetRequiredService<IPIPRepository>();
+
+        public IFormTemplateRepository FormTemplates =>
+            _perfFormTemplateRepository ??= serviceProvider.GetRequiredService<IFormTemplateRepository>();
+
+        public IContinuousFeedbackRepository ContinuousFeedbacks =>
+            _perfContinuousFeedbackRepository ??= serviceProvider.GetRequiredService<IContinuousFeedbackRepository>();
+
+        public IOneOnOneMeetingRepository OneOnOneMeetings =>
+            _perfOneOnOneMeetingRepository ??= serviceProvider.GetRequiredService<IOneOnOneMeetingRepository>();
+
+        public IPositionKPIRepository PositionKPIs =>
+            _perfPositionKPIRepository ??= serviceProvider.GetRequiredService<IPositionKPIRepository>();
     }
 }

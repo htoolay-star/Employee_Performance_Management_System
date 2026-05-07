@@ -14,5 +14,9 @@ namespace EPMS.Domain.Interface.Irepo.Performance
         IAppraisalCycleRepository AppraisalCycles { get; }
         IKPIMasterRepository KPIMasters { get; }
         IPIPRepository PIPs { get; }
+        IFormTemplateRepository FormTemplates { get; }
+        IContinuousFeedbackRepository ContinuousFeedbacks { get; }
+        IOneOnOneMeetingRepository OneOnOneMeetings { get; }
+        IPositionKPIRepository PositionKPIs { get; }
     }
 }

@@ -42,5 +42,16 @@ namespace EPMS.Domain.Entities.Performance
         public virtual Position Position { get; private set; } = null!;
         public virtual KPIMaster KPI { get; private set; } = null!;
         public virtual KPIWeightPriority Priority { get; private set; } = null!;
+
+        public void Update(KPIWeightPriority priority, decimal weightage, string? targetValue, string? targetUnit)
+        {
+            if (!priority.IsValidWeight(weightage))
+                throw new ArgumentException($"Weightage {weightage} falls outside the allowed bounds for {priority.LevelName}.");
+
+            PriorityId = priority.Id;
+            Weightage = weightage;
+            TargetValue = targetValue?.Trim();
+            TargetUnit = targetUnit?.Trim();
+        }
     }
 }

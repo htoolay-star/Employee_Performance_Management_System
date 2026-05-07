@@ -44,6 +44,16 @@ namespace EPMS.Domain.Entities.Performance
             ArgumentException.ThrowIfNullOrWhiteSpace(newName);
             Name = newName.Trim();
         }
+
+        public void Update(string name, string formType)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(name);
+            ArgumentException.ThrowIfNullOrWhiteSpace(formType);
+
+            Name = name.Trim();
+            FormType = formType.Trim().ToUpperInvariant();
+        }
+
         public void Deactivate() => IsActive = false;
         public void Reactivate() => IsActive = true;
     }

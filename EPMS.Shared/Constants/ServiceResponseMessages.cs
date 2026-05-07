@@ -247,6 +247,59 @@ public static class ServiceResponseMessages
         public static string NotFoundByEmployee(long employeeId) => $"PIP for employee with ID '{employeeId}' was not found.";
     }
 
+    public static class FormTemplateMsg
+    {
+        public const string Created = "Form template created successfully.";
+        public const string Updated = "Form template updated successfully.";
+        public const string Deleted = "Form template deleted successfully.";
+        public const string Deactivated = "Form template deactivated successfully.";
+        public const string Reactivated = "Form template reactivated successfully.";
+        public const string Retrieved = "Form template retrieved successfully.";
+        public const string RetrievedAll = "Form templates retrieved successfully.";
+        public const string RetrievedActive = "Active form templates retrieved successfully.";
+        public const string DuplicateName = "Form template with name '{0}' already exists.";
+        public static string NotFound(long id) => $"Form template with ID '{id}' was not found.";
+    }
+
+    public static class ContinuousFeedbackMsg
+    {
+        public const string Created = "Feedback created successfully.";
+        public const string Updated = "Feedback updated successfully.";
+        public const string Deleted = "Feedback deleted successfully.";
+        public const string Retrieved = "Feedback retrieved successfully.";
+        public const string RetrievedAll = "Feedback retrieved successfully.";
+        public static string NotFound(long id) => $"Feedback with ID '{id}' was not found.";
+    }
+
+    public static class OneOnOneMeetingMsg
+    {
+        public const string Created = "Meeting scheduled successfully.";
+        public const string Updated = "Meeting updated successfully.";
+        public const string Deleted = "Meeting deleted successfully.";
+        public const string Completed = "Meeting completed successfully.";
+        public const string Cancelled = "Meeting cancelled successfully.";
+        public const string Acknowledged = "Meeting acknowledged successfully.";
+        public const string Retrieved = "Meeting retrieved successfully.";
+        public const string RetrievedAll = "Meetings retrieved successfully.";
+        public const string RetrievedUpcoming = "Upcoming meetings retrieved successfully.";
+        public static string NotFound(long id) => $"Meeting with ID '{id}' was not found.";
+public static string AlreadyCompleted = "Meeting is already completed.";
+        public static string AlreadyCancelled = "Meeting is already cancelled.";
+    }
+
+    public static class PositionKPIMsg
+    {
+        public const string Created = "Position KPI added successfully.";
+        public const string Updated = "Position KPI updated successfully.";
+        public const string Deleted = "Position KPI removed successfully.";
+        public const string Retrieved = "Position KPI retrieved successfully.";
+        public const string RetrievedAll = "Position KPIs retrieved successfully.";
+        public const string RetrievedByPosition = "Position KPIs retrieved successfully.";
+        public static string NotFound(long id) => $"Position KPI with ID '{id}' was not found.";
+public static string DuplicateEntry = "KPI already assigned to this position.";
+        public static string PriorityNotFound = "Priority not found.";
+    }
+
     public static class PermissionMsg
     {
         public const string Created = "Permission created successfully.";

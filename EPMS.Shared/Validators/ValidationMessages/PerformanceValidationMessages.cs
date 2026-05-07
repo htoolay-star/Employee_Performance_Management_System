@@ -86,5 +86,53 @@ namespace EPMS.Shared.Validators.ValidationMessages
             public const string ReasonMaxLength = "Reason cannot exceed 1000 characters.";
             public const string NotesMaxLength = "Notes cannot exceed 500 characters.";
         }
+
+        public static class FormTemplate
+        {
+            public const string IdRequired = "Form template ID is required.";
+            public const string NameRequired = "Form template name is required.";
+            public const string NameMaxLength = "Form template name cannot exceed 100 characters.";
+            public const string FormTypeRequired = "Form type is required.";
+            public const string FormTypeMaxLength = "Form type cannot exceed 50 characters.";
+        }
+
+        public static class ContinuousFeedback
+        {
+            public const string IdRequired = "Feedback ID is required.";
+            public const string EmployeeIdRequired = "Employee is required.";
+            public const string GivenByIdRequired = "Given by user is required.";
+            public const string FeedbackTypeRequired = "Feedback type is required.";
+            public const string FeedbackTypeMaxLength = "Feedback type cannot exceed 50 characters.";
+            public const string ContentRequired = "Content is required.";
+            public const string ContentMaxLength = "Content cannot exceed 2000 characters.";
+            public const string VisibilityRequired = "Visibility is required.";
+            public const string VisibilityMaxLength = "Visibility cannot exceed 50 characters.";
+        }
+
+        public static class OneOnOneMeeting
+        {
+            public const string IdRequired = "Meeting ID is required.";
+            public const string EmployeeIdRequired = "Employee is required.";
+            public const string ManagerIdRequired = "Manager is required.";
+            public const string TitleRequired = "Title is required.";
+            public const string TitleMaxLength = "Title cannot exceed 200 characters.";
+            public const string ScheduledDateRequired = "Scheduled date is required.";
+            public const string SummaryMaxLength = "Summary cannot exceed 2000 characters.";
+            public const string DiscussionNotesMaxLength = "Discussion notes cannot exceed 5000 characters.";
+            public const string PrivateNotesMaxLength = "Private notes cannot exceed 2000 characters.";
+            public const string ActionItemsMaxLength = "Action items cannot exceed 2000 characters.";
+        }
+
+        public static class PositionKPI
+        {
+            public const string IdRequired = "Position KPI ID is required.";
+            public const string PositionIdRequired = "Position is required.";
+            public const string KPIIdRequired = "KPI is required.";
+            public const string PriorityIdRequired = "Priority is required.";
+            public const string WeightageInvalid = "Weightage must be between 0 and 100.";
+            public const string WeightageExceedsPriorityMax = "Weightage exceeds the maximum allowed for this priority level.";
+            public const string TargetValueMaxLength = "Target value cannot exceed 100 characters.";
+            public const string TargetUnitMaxLength = "Target unit cannot exceed 50 characters.";
+        }
     }
 }
