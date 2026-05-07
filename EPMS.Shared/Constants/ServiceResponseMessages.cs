@@ -362,7 +362,18 @@ public static string DuplicateEntry = "KPI already assigned to this position.";
         public const string Deleted = "Position form template deleted successfully.";
         public const string Retrieved = "Position form template retrieved successfully.";
         public const string RetrievedAll = "Position form templates retrieved successfully.";
+        public const string DuplicateEntry = "Position form template already exists.";
         public static string NotFound(long id) => $"Position form template with ID '{id}' was not found.";
-        public static string DuplicateEntry = "Form template already assigned to this position.";
     }
+
+    public static class PIPObjectiveMsg
+    {
+        public const string Created = "PIP objective created successfully.";
+        public const string Updated = "PIP objective updated successfully.";
+        public const string Deleted = "PIP objective deleted successfully.";
+        public const string Retrieved = "PIP objective retrieved successfully.";
+        public const string RetrievedAll = "PIP objectives retrieved successfully.";
+        public const string RetrievedByPIP = "PIP objectives for PIP retrieved successfully.";
+        public static string NotFound(long id) => $"PIP objective with ID '{id}' was not found.";
+}
 }

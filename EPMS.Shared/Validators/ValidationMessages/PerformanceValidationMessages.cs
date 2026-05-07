@@ -153,5 +153,25 @@ namespace EPMS.Shared.Validators.ValidationMessages
             public const string SuccessCriteriaMaxLength = "Success criteria cannot exceed 1000 characters.";
             public const string DescriptionMaxLength = "Description cannot exceed 500 characters.";
         }
+
+        public static class PIPObjective
+        {
+            public const string PIPIdRequired = "PIP is required.";
+            public const string TitleRequired = "PIP objective title is required.";
+            public const string TitleMaxLength = "PIP objective title cannot exceed 200 characters.";
+            public const string SuccessCriteriaRequired = "PIP objective success criteria is required.";
+            public const string SuccessCriteriaMaxLength = "PIP objective success criteria cannot exceed 1000 characters.";
+            public const string DescriptionMaxLength = "Description cannot exceed 500 characters.";
+            public const string StatusMaxLength = "Status cannot exceed 50 characters.";
+            public const string ManagerCommentMaxLength = "Manager comment cannot exceed 500 characters.";
+        }
+
+        public static class PositionFormTemplate
+        {
+            public const string PositionIdInvalid = "Position ID must be greater than 0.";
+            public const string NameRequired = "Name is required.";
+            public const string NameMaxLength = "Name cannot exceed 100 characters.";
+            public const string DescriptionMaxLength = "Description cannot exceed 500 characters.";
+        }
     }
 }

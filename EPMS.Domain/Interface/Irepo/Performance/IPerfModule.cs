@@ -21,5 +21,6 @@ public interface IPerfModule
     IQuestionRatingScaleRepository QuestionRatingScales { get; }
     IPositionPIPTemplateRepository PositionPIPTemplates { get; }
     IPositionFormTemplateRepository PositionFormTemplates { get; }
+    IPIPObjectiveRepository PIPObjectives { get; }
 }
 }
