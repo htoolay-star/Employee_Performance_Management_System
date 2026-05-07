@@ -354,4 +354,15 @@ public static string DuplicateEntry = "KPI already assigned to this position.";
         public const string RetrievedActive = "Active position PIP templates retrieved successfully.";
         public static string NotFound(long id) => $"Position PIP template with ID '{id}' was not found.";
     }
+
+    public static class PositionFormTemplateMsg
+    {
+        public const string Created = "Position form template created successfully.";
+        public const string Updated = "Position form template updated successfully.";
+        public const string Deleted = "Position form template deleted successfully.";
+        public const string Retrieved = "Position form template retrieved successfully.";
+        public const string RetrievedAll = "Position form templates retrieved successfully.";
+        public static string NotFound(long id) => $"Position form template with ID '{id}' was not found.";
+        public static string DuplicateEntry = "Form template already assigned to this position.";
+    }
 }
