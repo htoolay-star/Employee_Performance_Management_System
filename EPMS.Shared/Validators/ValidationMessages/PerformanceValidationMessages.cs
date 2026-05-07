@@ -73,5 +73,18 @@ namespace EPMS.Shared.Validators.ValidationMessages
             public const string NameMaxLength = "KPI name cannot exceed 100 characters.";
             public const string DescriptionMaxLength = "Description cannot exceed 500 characters.";
         }
+
+        public static class PIP
+        {
+            public const string IdRequired = "PIP ID is required.";
+            public const string EmployeeIdRequired = "Employee is required.";
+            public const string ManagerIdRequired = "Manager is required.";
+            public const string StartDateRequired = "Start date is required.";
+            public const string EndDateRequired = "End date is required.";
+            public const string EndDateAfterStart = "End date must be after start date.";
+            public const string ReasonRequired = "Reason is required.";
+            public const string ReasonMaxLength = "Reason cannot exceed 1000 characters.";
+            public const string NotesMaxLength = "Notes cannot exceed 500 characters.";
+        }
     }
 }

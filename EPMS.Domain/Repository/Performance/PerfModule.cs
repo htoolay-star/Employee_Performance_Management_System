@@ -18,6 +18,7 @@ namespace EPMS.Domain.Repository.Performance
         private IKPIWeightPriorityRepository? _perfKPIWeightPriorityRepository;
         private IAppraisalCycleRepository? _perfAppraisalCycleRepository;
         private IKPIMasterRepository? _perfKPIMasterRepository;
+        private IPIPRepository? _perfPIPRepository;
 
         public IAppraisalRepository Appraisals =>
             _perfAppraisalRepository ??= serviceProvider.GetRequiredService<IAppraisalRepository>();
@@ -33,5 +34,8 @@ namespace EPMS.Domain.Repository.Performance
 
         public IKPIMasterRepository KPIMasters =>
             _perfKPIMasterRepository ??= serviceProvider.GetRequiredService<IKPIMasterRepository>();
+
+        public IPIPRepository PIPs =>
+            _perfPIPRepository ??= serviceProvider.GetRequiredService<IPIPRepository>();
     }
 }

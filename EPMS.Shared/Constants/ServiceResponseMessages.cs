@@ -231,6 +231,22 @@ public static class ServiceResponseMessages
         public static string NotFound(long id) => $"KPI master with ID '{id}' was not found.";
     }
 
+    public static class PIPMsg
+    {
+        public const string Created = "PIP created successfully.";
+        public const string Updated = "PIP updated successfully.";
+        public const string Deleted = "PIP deleted successfully.";
+        public const string Concluded = "PIP concluded successfully.";
+        public const string Extended = "PIP extended successfully.";
+        public const string Retrieved = "PIP retrieved successfully.";
+        public const string RetrievedAll = "PIPs retrieved successfully.";
+        public const string RetrievedActive = "Active PIPs retrieved successfully.";
+        public const string InvalidDateRange = "End date must be after start date.";
+        public const string AlreadyConcluded = "PIP is already concluded.";
+        public static string NotFound(long id) => $"PIP with ID '{id}' was not found.";
+        public static string NotFoundByEmployee(long employeeId) => $"PIP for employee with ID '{employeeId}' was not found.";
+    }
+
     public static class PermissionMsg
     {
         public const string Created = "Permission created successfully.";
