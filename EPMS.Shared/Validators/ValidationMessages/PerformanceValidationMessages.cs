@@ -1,4 +1,4 @@
-namespace EPMS.Shared.Constants.ValidationMessages
+namespace EPMS.Shared.Validators.ValidationMessages
 {
     public static class PerformanceValidationMessages
     {
@@ -45,6 +45,21 @@ namespace EPMS.Shared.Constants.ValidationMessages
         {
             public const string MinimumWeightInvalid = "Minimum weight must be greater than or equal to 0.";
             public const string MaximumWeightInvalid = "Maximum weight must be greater than or equal to 0.";
+        }
+
+        public static class AppraisalCycle
+        {
+            public const string NameRequired = "Cycle name is required.";
+            public const string NameMaxLength = "Cycle name cannot exceed 100 characters.";
+            public const string YearInvalid = "Year must be between 2000 and 2100.";
+            public const string AppraisalTypeRequired = "Appraisal type is required.";
+            public const string AppraisalTypeMaxLength = "Appraisal type cannot exceed 50 characters.";
+            public const string StartDateRequired = "Start date is required.";
+            public const string EndDateRequired = "End date is required.";
+            public const string EndDateAfterStart = "End date must be after start date.";
+            public const string SelfReviewStartBeforeDeadline = "Self-review start date must be before deadline.";
+            public const string ManagerReviewStartBeforeDeadline = "Manager review start date must be before deadline.";
+            public const string PeerReviewStartBeforeDeadline = "Peer review start date must be before deadline.";
         }
     }
 }

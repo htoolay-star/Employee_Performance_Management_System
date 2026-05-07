@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace EPMS.Shared.Constants.ValidationMessages
+namespace EPMS.Shared.Validators.ValidationMessages
 {
     public static class AuthValidationMessages
     {

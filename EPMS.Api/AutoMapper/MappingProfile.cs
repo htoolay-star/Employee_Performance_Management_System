@@ -15,6 +15,7 @@ using EPMS.Shared.DTOs.TeamDTOs;
 using EPMS.Shared.DTOs.PerformanceDTOs.RatingScaleDTOs;
 using EPMS.Domain.Entities.Performance;
 using EPMS.Shared.DTOs.PerformanceDTOs.KPIWeightPriorityDTOs;
+using EPMS.Shared.DTOs.PerformanceDTOs.AppraisalCycleDTOs;
 
 namespace EPMS.Api.MappingProfiles;
 
@@ -73,5 +74,6 @@ public class MappingProfile : Profile
         // Performance Entities
         CreateMap<RatingScale, RatingScaleDto>();
         CreateMap<KPIWeightPriority, KPIWeightPriorityDto>();
+        CreateMap<AppraisalCycle, AppraisalCycleDto>();
     }
 }

@@ -198,6 +198,22 @@ public static class ServiceResponseMessages
         public static string NotFoundByLevelName(string levelName) => $"KPI weight priority with level name '{levelName}' was not found.";
     }
 
+    public static class AppraisalCycleMsg
+    {
+        public const string Created = "Appraisal cycle created successfully.";
+        public const string Updated = "Appraisal cycle updated successfully.";
+        public const string Deleted = "Appraisal cycle deleted successfully.";
+        public const string Deactivated = "Appraisal cycle deactivated successfully.";
+        public const string Locked = "Appraisal cycle locked successfully.";
+        public const string Unlocked = "Appraisal cycle unlocked successfully.";
+        public const string Retrieved = "Appraisal cycle retrieved successfully.";
+        public const string RetrievedAll = "Appraisal cycles retrieved successfully.";
+        public const string RetrievedActive = "Active appraisal cycles retrieved successfully.";
+        public const string DuplicateCycle = "An appraisal cycle for year '{0}' and type '{1}' already exists.";
+        public static string NotFound(long id) => $"Appraisal cycle with ID '{id}' was not found.";
+        public static string AlreadyLocked = "This appraisal cycle is already locked.";
+    }
+
     public static class PermissionMsg
     {
         public const string Created = "Permission created successfully.";

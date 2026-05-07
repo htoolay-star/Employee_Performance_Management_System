@@ -1,4 +1,4 @@
-namespace EPMS.Shared.Constants.ValidationMessages
+namespace EPMS.Shared.Validators.ValidationMessages
 {
     public static class PermissionValidationMessages
     {

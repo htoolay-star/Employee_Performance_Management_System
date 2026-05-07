@@ -1,6 +1,6 @@
 using System;
 using System.Linq.Expressions;
-using EPMS.Shared.Constants.ValidationMessages;
+using EPMS.Shared.Validators.ValidationMessages;
 using FluentValidation;
 
 namespace EPMS.Shared.Validators;

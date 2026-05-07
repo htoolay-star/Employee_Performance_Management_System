@@ -11,6 +11,6 @@ namespace EPMS.Domain.Interface.Irepo.Performance
         IAppraisalRepository Appraisals { get; }
         IKPIWeightPriorityRepository KPIWeightPriorities { get; }
         IRatingScaleRepository RatingScales { get; }
-
+        IAppraisalCycleRepository AppraisalCycles { get; }
     }
 }
