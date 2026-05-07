@@ -76,6 +76,12 @@ public class EmployeeFamilyInfoService : IEmployeeFamilyInfoService
         if (info == null)
             return SuccessResponse.Fail(EmployeeFamilyInfoMsg.NotFound(id), ErrorType.NotFound);
 
+        if (dto.MaritalStatus != null || dto.SpouseName != null || dto.SpouseNRCNo != null || dto.SpouseOccupation != null)
+            info.UpdateMaritalStatus(dto.MaritalStatus ?? "", dto.SpouseName, dto.SpouseNRCNo, dto.SpouseOccupation);
+
+        if (dto.FatherName != null || dto.FatherNRCNo != null || dto.FatherOccupation != null)
+            info.UpdateFatherDetails(dto.FatherName, dto.FatherNRCNo, dto.FatherOccupation);
+
         await _uow.CompleteAsync();
         return SuccessResponse.Ok(EmployeeFamilyInfoMsg.Updated);
     }

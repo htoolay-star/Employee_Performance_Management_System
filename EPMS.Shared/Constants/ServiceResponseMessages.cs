@@ -312,4 +312,15 @@ public static string DuplicateEntry = "KPI already assigned to this position.";
         public const string NotFound = "Permission not found.";
         public static string NotFoundById(long id) => $"Permission with ID '{id}' was not found.";
     }
+
+    public static class NotificationMsg
+    {
+        public const string Created = "Notification sent successfully.";
+        public const string Updated = "Notification updated successfully.";
+        public const string Deleted = "Notification deleted successfully.";
+        public const string MarkedAsRead = "Notification marked as read.";
+        public const string Retrieved = "Notification retrieved successfully.";
+        public const string RetrievedAll = "Notifications retrieved successfully.";
+        public static string NotFound(long id) => $"Notification with ID '{id}' was not found.";
+    }
 }

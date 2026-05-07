@@ -79,5 +79,23 @@ namespace EPMS.Domain.Entities.EmployeeInfo
                 }
             }
         }
+
+        public void UpdateTaxInfo(string? taxStatus, string? taxNo)
+        {
+            TaxStatus = taxStatus?.Trim();
+            TaxNo = taxNo?.Trim();
+        }
+
+        public void UpdateSSBInfo(string? ssbStatus, string? sscbNo)
+        {
+            SSBStatus = ssbStatus?.Trim();
+            SSCBNo = sscbNo?.Trim();
+        }
+
+        public void UpdateCompliancePoints(int? earnedPoints, int? balancePoints)
+        {
+            ComplianceEarnedPoints = earnedPoints;
+            ComplianceBalancePoints = balancePoints;
+        }
     }
 }
