@@ -13,6 +13,7 @@ namespace EPMS.Domain.Entities.Performance
             string fromStatus,
             string toStatus,
             long changedById,
+            TimeProvider timeProvider,
             string? reason = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(toStatus);
@@ -22,7 +23,7 @@ namespace EPMS.Domain.Entities.Performance
             ToStatus = toStatus.Trim().ToUpperInvariant();
             ChangedById = changedById;
             Reason = reason?.Trim();
-            ChangedAt = DateTimeOffset.UtcNow;
+            ChangedAt = timeProvider.GetUtcNow();
         }
 
         public long PIPId { get; private set; }

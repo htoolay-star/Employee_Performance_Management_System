@@ -91,8 +91,7 @@ namespace EPMS.Domain.Services.Performance
             if (meeting.Status == Completed || meeting.Status == Cancelled)
                 return SuccessResponse.Fail(OneOnOneMeetingMsg.AlreadyCompleted, ErrorType.Validation);
 
-            meeting.GetType().GetProperty("Title")?.SetValue(meeting, dto.Title.Trim());
-            meeting.GetType().GetProperty("ScheduledDate")?.SetValue(meeting, dto.ScheduledDate);
+            meeting.Update(dto.Title, dto.ScheduledDate);
 
             _uow.Perf.OneOnOneMeetings.Update(meeting);
             await _uow.CompleteAsync();

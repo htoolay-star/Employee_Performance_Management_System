@@ -16,6 +16,7 @@ namespace EPMS.Domain.Entities.EmployeeInfo
             long? managerId,
             string employmentStatus,
             DateOnly effectiveDate,
+            TimeProvider timeProvider,
             string? changeReason = null,
             long? changedById = null)
         {
@@ -27,7 +28,7 @@ namespace EPMS.Domain.Entities.EmployeeInfo
             EffectiveDate = effectiveDate;
             ChangeReason = changeReason?.Trim();
             ChangedById = changedById;
-            CreatedAt = DateTimeOffset.UtcNow;
+            CreatedAt = timeProvider.GetUtcNow();
         }
 
         public long EmployeeId { get; private set; }

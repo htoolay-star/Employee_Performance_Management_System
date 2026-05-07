@@ -17,6 +17,7 @@ namespace EPMS.Domain.Entities.Shared
             long fileSize,
             string mimeType,
             long uploadedById,
+            TimeProvider timeProvider,
             string? description = null,
             string? category = null)
         {
@@ -38,6 +39,7 @@ namespace EPMS.Domain.Entities.Shared
             FileSize = fileSize;
             MimeType = mimeType.Trim().ToLowerInvariant();
             UploadedById = uploadedById;
+            UploadedAt = timeProvider.GetUtcNow();
             Description = description?.Trim();
             Category = category?.Trim().ToUpperInvariant() ?? DocumentCategories.General;
 
@@ -56,7 +58,7 @@ namespace EPMS.Domain.Entities.Shared
         public string Category { get; private set; } = string.Empty;
 
         public long UploadedById { get; private set; }
-        public DateTimeOffset UploadedAt { get; private set; } = DateTimeOffset.UtcNow;
+        public DateTimeOffset UploadedAt { get; private set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }

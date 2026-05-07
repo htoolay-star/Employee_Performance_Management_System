@@ -41,6 +41,13 @@ public class TagsController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HttpPut("{id:int}")]
+    public async Task<ActionResult<SuccessResponse>> Update(int id, UpdateTagDto dto)
+    {
+        var result = await _tagService.UpdateTagAsync(id, dto);
+        return HandleResult(result);
+    }
+
     [HttpDelete("{id:int}")]
     public async Task<ActionResult<SuccessResponse>> Delete(int id)
     {

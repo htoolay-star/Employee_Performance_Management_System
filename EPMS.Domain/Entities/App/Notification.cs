@@ -12,7 +12,7 @@ namespace EPMS.Domain.Entities.App
     {
         private Notification() { }
 
-        public Notification(long toUserId, string title, string message, string type, string? url = null)
+        public Notification(long toUserId, string title, string message, string type, TimeProvider timeProvider, string? url = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(title);
             ArgumentException.ThrowIfNullOrWhiteSpace(message);
@@ -26,7 +26,7 @@ namespace EPMS.Domain.Entities.App
             RedirectUrl = url?.Trim();
 
             IsRead = false;
-            CreatedAt = DateTimeOffset.UtcNow;
+            CreatedAt = timeProvider.GetUtcNow();
         }
 
         public long ToUserId { get; private set; }
@@ -43,12 +43,12 @@ namespace EPMS.Domain.Entities.App
 
         public virtual User User { get; private set; } = null!;
 
-        public void MarkAsRead()
+        public void MarkAsRead(TimeProvider timeProvider)
         {
             if (!IsRead)
             {
                 IsRead = true;
-                ReadAt = DateTimeOffset.UtcNow;
+                ReadAt = timeProvider.GetUtcNow();
             }
         }
     }

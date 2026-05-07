@@ -109,7 +109,7 @@ public class EmployeeContactService : IEmployeeContactService
         
         if (!string.IsNullOrWhiteSpace(dto.PermanentAddress))
         {
-            contact.GetType().GetProperty("PermanentAddress")?.SetValue(contact, dto.PermanentAddress);
+            contact.UpdatePermanentAddress(dto.PermanentAddress);
         }
         
         _uow.Info.EmployeeContacts.Add(contact);
@@ -135,11 +135,8 @@ public class EmployeeContactService : IEmployeeContactService
         if (dto.EmergencyMobileNo != null || dto.RelationWithEmergencyContact != null)
             contact.UpdateEmergencyContact(dto.EmergencyMobileNo, dto.RelationWithEmergencyContact);
 
-        // Handle PermanentAddress (direct property since no entity method exists)
         if (dto.PermanentAddress != null)
-        {
-            contact.GetType().GetProperty("PermanentAddress")?.SetValue(contact, dto.PermanentAddress);
-        }
+            contact.UpdatePermanentAddress(dto.PermanentAddress);
 
         // Handle EmailAddress change - update existing User if Employee has one
         if (dto.EmailAddress != null)

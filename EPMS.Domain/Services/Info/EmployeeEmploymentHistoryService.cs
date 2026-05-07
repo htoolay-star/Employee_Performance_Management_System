@@ -13,11 +13,13 @@ public class EmployeeEmploymentHistoryService : IEmployeeEmploymentHistoryServic
 {
     private readonly IUnitOfWork _uow;
     private readonly IMapper _mapper;
+    private readonly TimeProvider _timeProvider;
 
-    public EmployeeEmploymentHistoryService(IUnitOfWork uow, IMapper mapper)
+    public EmployeeEmploymentHistoryService(IUnitOfWork uow, IMapper mapper, TimeProvider timeProvider)
     {
         _uow = uow;
         _mapper = mapper;
+        _timeProvider = timeProvider;
     }
 
     public async Task<SuccessResponse<IEnumerable<EmployeeEmploymentHistoryDto>>> GetAllAsync()
@@ -67,6 +69,7 @@ public class EmployeeEmploymentHistoryService : IEmployeeEmploymentHistoryServic
             dto.ManagerId,
             dto.EmploymentStatus,
             dto.EffectiveDate,
+            _timeProvider,
             dto.ChangeReason,
             dto.ChangedById);
 

@@ -54,6 +54,24 @@ public class TagService : ITagService
         return SuccessResponse<long>.Ok(tag.Id, TagMsg.Created);
     }
 
+    public async Task<SuccessResponse> UpdateTagAsync(int id, UpdateTagDto dto)
+    {
+        var tag = await _unitOfWork.Shared.Tags.GetByIdAsync(id);
+
+        if (tag == null)
+            return SuccessResponse.Fail(TagMsg.NotFound(id), ErrorType.NotFound);
+
+        if (await _unitOfWork.Shared.Tags.ExistsByNameAsync(dto.Name, dto.Module, id))
+        {
+            var moduleMsg = string.IsNullOrWhiteSpace(dto.Module) ? "" : $" in module '{dto.Module}'";
+            return SuccessResponse.Fail($"Tag with name '{dto.Name}' already exists{moduleMsg}.", ErrorType.Conflict);
+        }
+
+        tag.Update(dto.Name, dto.Module);
+        await _unitOfWork.CompleteAsync();
+        return SuccessResponse.Ok(TagMsg.Updated);
+    }
+
     public async Task<SuccessResponse> DeleteTagAsync(int id)
     {
         var tag = await _unitOfWork.Shared.Tags.GetByIdAsync(id);

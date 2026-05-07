@@ -81,9 +81,9 @@ public class EmployeeProfileService : IEmployeeProfileService
 
         var profile = new EmployeeProfile(dto.UserId, dto.StaffNo, dto.FirstName, dto.LastName);
         
-        // Set additional properties
-        if (!string.IsNullOrEmpty(dto.OtherName)) profile.GetType().GetProperty("OtherName")?.SetValue(profile, dto.OtherName);
-        if (!string.IsNullOrEmpty(dto.NRCNo)) profile.GetType().GetProperty("NRCNo")?.SetValue(profile, dto.NRCNo);
+        // Set additional properties using entity methods
+        if (!string.IsNullOrEmpty(dto.OtherName)) profile.UpdateOtherName(dto.OtherName);
+        if (!string.IsNullOrEmpty(dto.NRCNo)) profile.UpdateNRCNo(dto.NRCNo);
         if (!string.IsNullOrEmpty(dto.Gender)) profile.UpdateDemographics(dto.Gender, dto.DateOfBirth, dto.Nationality);
         
         _uow.Info.EmployeeProfiles.Add(profile);

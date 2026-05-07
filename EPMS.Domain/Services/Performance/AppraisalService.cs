@@ -12,10 +12,12 @@ namespace EPMS.Application.Services.Performance
     public class AppraisalService : IAppraisalService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly TimeProvider _timeProvider;
 
-        public AppraisalService(IUnitOfWork unitOfWork)
+        public AppraisalService(IUnitOfWork unitOfWork, TimeProvider timeProvider)
         {
             _unitOfWork = unitOfWork;
+            _timeProvider = timeProvider;
         }
 
         public async Task<AppraisalResponseDto> SubmitAppraisalAsync(AppraisalSubmissionDto dto)
@@ -37,7 +39,7 @@ namespace EPMS.Application.Services.Performance
                 var detail = appraisal.Details.FirstOrDefault(d =>
                     (detailDto.KPIId.HasValue && d.KPIId == detailDto.KPIId) ||
                     (detailDto.QuestionId.HasValue && d.QuestionId == detailDto.QuestionId));
-
+                
                 if (detail != null)
                 {
                     // detail.Evaluate handles the internal WeightedScore calculation based on Domain logic
@@ -78,7 +80,6 @@ namespace EPMS.Application.Services.Performance
 
             if (result == null)
                 throw new KeyNotFoundException($"No data found for Appraisal ID {id}");
-
             return result;
         }
         public async Task<bool> UpdateContinuousFeedbackAsync(long id, string empComment, string mgrComment)
@@ -100,7 +101,7 @@ namespace EPMS.Application.Services.Performance
             var appraisal = await _unitOfWork.Perf.Appraisals.GetByIdAsync(id);
             if (appraisal == null || appraisal.IsLocked) return false;
 
-            appraisal.SubmitManagerReview(finalManagerComment);
+            appraisal.SubmitManagerReview(finalManagerComment, _timeProvider);
 
             _unitOfWork.Perf.Appraisals.Update(appraisal);
             return await _unitOfWork.CompleteAsync() > 0;

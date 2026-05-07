@@ -69,6 +69,16 @@ namespace EPMS.Domain.Entities.EmployeeInfo
             Nationality = nationality?.Trim();
         }
 
+        public void UpdateOtherName(string? otherName)
+        {
+            OtherName = otherName?.Trim();
+        }
+
+        public void UpdateNRCNo(string? nrcNo)
+        {
+            NRCNo = nrcNo?.Trim().ToUpperInvariant();
+        }
+
         public void UpdateWorkPermit(string? permitNo, DateOnly? validDate, DateOnly? expireDate)
         {
             WorkPermitNo = permitNo?.Trim().ToUpperInvariant();

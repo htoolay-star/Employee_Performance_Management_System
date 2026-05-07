@@ -13,11 +13,13 @@ public class EmployeeSalaryHistoryService : IEmployeeSalaryHistoryService
 {
     private readonly IUnitOfWork _uow;
     private readonly IMapper _mapper;
+    private readonly TimeProvider _timeProvider;
 
-    public EmployeeSalaryHistoryService(IUnitOfWork uow, IMapper mapper)
+    public EmployeeSalaryHistoryService(IUnitOfWork uow, IMapper mapper, TimeProvider timeProvider)
     {
         _uow = uow;
         _mapper = mapper;
+        _timeProvider = timeProvider;
     }
 
     public async Task<SuccessResponse<IEnumerable<EmployeeSalaryHistoryDto>>> GetAllAsync()
@@ -64,6 +66,7 @@ public class EmployeeSalaryHistoryService : IEmployeeSalaryHistoryService
             dto.NewAmount,
             dto.EffectiveDate,
             dto.ChangeReason,
+            _timeProvider,
             dto.ApprovedById);
 
         _uow.Info.EmployeeSalaryHistories.Add(history);

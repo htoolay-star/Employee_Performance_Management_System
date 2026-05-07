@@ -56,5 +56,10 @@ namespace EPMS.Domain.Entities.EmployeeInfo
             PresentPhoneNo = present?.Trim();
             InternalPhoneNo = internalNo?.Trim();
         }
+
+        public void UpdatePermanentAddress(string? permanentAddress)
+        {
+            PermanentAddress = permanentAddress?.Trim();
+        }
     }
 }
