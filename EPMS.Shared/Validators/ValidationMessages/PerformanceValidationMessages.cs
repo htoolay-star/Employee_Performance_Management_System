@@ -134,5 +134,24 @@ namespace EPMS.Shared.Validators.ValidationMessages
             public const string TargetValueMaxLength = "Target value cannot exceed 100 characters.";
             public const string TargetUnitMaxLength = "Target unit cannot exceed 50 characters.";
         }
+
+        public static class QuestionRatingScale
+        {
+            public const string NameRequired = "Question rating scale name is required.";
+            public const string NameMaxLength = "Name cannot exceed 100 characters.";
+            public const string MinScoreInvalid = "Minimum score must be greater than 0.";
+            public const string MaxScoreInvalid = "Maximum score must be greater than 0.";
+            public const string MaxScoreGreaterThanMin = "Maximum score must be greater than minimum score.";
+        }
+
+        public static class PositionPIPTemplate
+        {
+            public const string PositionIdInvalid = "Position ID must be greater than 0.";
+            public const string TitleRequired = "Title is required.";
+            public const string TitleMaxLength = "Title cannot exceed 200 characters.";
+            public const string SuccessCriteriaRequired = "Success criteria is required.";
+            public const string SuccessCriteriaMaxLength = "Success criteria cannot exceed 1000 characters.";
+            public const string DescriptionMaxLength = "Description cannot exceed 500 characters.";
+        }
     }
 }

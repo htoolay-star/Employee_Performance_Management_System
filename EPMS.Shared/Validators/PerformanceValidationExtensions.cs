@@ -85,4 +85,61 @@ public static class PerformanceValidationExtensions
             .NotEmpty().WithMessage(PerformanceValidationMessages.KPIWeightPriority.LevelNameRequired)
             .MaximumLength(50).WithMessage(PerformanceValidationMessages.KPIWeightPriority.LevelNameMaxLength);
     }
+
+    public static IRuleBuilderOptions<T, string> ApplyQuestionRatingScaleNameRules<T>(this IRuleBuilder<T, string> ruleBuilder)
+    {
+        return ruleBuilder
+            .NotEmpty().WithMessage(PerformanceValidationMessages.QuestionRatingScale.NameRequired)
+            .MaximumLength(100).WithMessage(PerformanceValidationMessages.QuestionRatingScale.NameMaxLength);
+    }
+
+    public static IRuleBuilderOptions<T, string?> ApplyOptionalQuestionRatingScaleNameRules<T>(this IRuleBuilder<T, string?> ruleBuilder)
+    {
+        return ruleBuilder
+            .MaximumLength(100).WithMessage(PerformanceValidationMessages.QuestionRatingScale.NameMaxLength);
+    }
+
+    public static IRuleBuilderOptions<T, decimal> ApplyMinScoreRules<T>(this IRuleBuilder<T, decimal> ruleBuilder)
+    {
+        return ruleBuilder
+            .GreaterThan(0).WithMessage(PerformanceValidationMessages.QuestionRatingScale.MinScoreInvalid);
+    }
+
+    public static IRuleBuilderOptions<T, decimal> ApplyMaxScoreRules<T>(this IRuleBuilder<T, decimal> ruleBuilder)
+    {
+        return ruleBuilder
+            .GreaterThan(0).WithMessage(PerformanceValidationMessages.QuestionRatingScale.MaxScoreInvalid);
+    }
+
+    public static IRuleBuilderOptions<T, string> ApplyPositionPIPTemplateTitleRules<T>(this IRuleBuilder<T, string> ruleBuilder)
+    {
+        return ruleBuilder
+            .NotEmpty().WithMessage(PerformanceValidationMessages.PositionPIPTemplate.TitleRequired)
+            .MaximumLength(200).WithMessage(PerformanceValidationMessages.PositionPIPTemplate.TitleMaxLength);
+    }
+
+    public static IRuleBuilderOptions<T, string?> ApplyOptionalPositionPIPTemplateTitleRules<T>(this IRuleBuilder<T, string?> ruleBuilder)
+    {
+        return ruleBuilder
+            .MaximumLength(200).WithMessage(PerformanceValidationMessages.PositionPIPTemplate.TitleMaxLength);
+    }
+
+    public static IRuleBuilderOptions<T, string> ApplyPositionPIPTemplateSuccessCriteriaRules<T>(this IRuleBuilder<T, string> ruleBuilder)
+    {
+        return ruleBuilder
+            .NotEmpty().WithMessage(PerformanceValidationMessages.PositionPIPTemplate.SuccessCriteriaRequired)
+            .MaximumLength(1000).WithMessage(PerformanceValidationMessages.PositionPIPTemplate.SuccessCriteriaMaxLength);
+    }
+
+    public static IRuleBuilderOptions<T, string?> ApplyOptionalPositionPIPTemplateSuccessCriteriaRules<T>(this IRuleBuilder<T, string?> ruleBuilder)
+    {
+        return ruleBuilder
+            .MaximumLength(1000).WithMessage(PerformanceValidationMessages.PositionPIPTemplate.SuccessCriteriaMaxLength);
+    }
+
+    public static IRuleBuilderOptions<T, string?> ApplyOptionalPositionPIPTemplateDescriptionRules<T>(this IRuleBuilder<T, string?> ruleBuilder)
+    {
+        return ruleBuilder
+            .MaximumLength(500).WithMessage(PerformanceValidationMessages.PositionPIPTemplate.DescriptionMaxLength);
+    }
 }

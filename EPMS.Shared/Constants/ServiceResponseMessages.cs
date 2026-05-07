@@ -323,4 +323,35 @@ public static string DuplicateEntry = "KPI already assigned to this position.";
         public const string RetrievedAll = "Notifications retrieved successfully.";
         public static string NotFound(long id) => $"Notification with ID '{id}' was not found.";
     }
+
+    public static class DocumentAttachmentMsg
+    {
+        public const string Created = "Document attached successfully.";
+        public const string Updated = "Document updated successfully.";
+        public const string Deleted = "Document deleted successfully.";
+        public const string Retrieved = "Document retrieved successfully.";
+        public const string RetrievedAll = "Documents retrieved successfully.";
+        public static string NotFound(long id) => $"Document with ID '{id}' was not found.";
+    }
+
+    public static class QuestionRatingScaleMsg
+    {
+        public const string Created = "Question rating scale created successfully.";
+        public const string Updated = "Question rating scale updated successfully.";
+        public const string Deleted = "Question rating scale deleted successfully.";
+        public const string Retrieved = "Question rating scale retrieved successfully.";
+        public const string RetrievedAll = "Question rating scales retrieved successfully.";
+        public static string NotFound(long id) => $"Question rating scale with ID '{id}' was not found.";
+    }
+
+    public static class PositionPIPTemplateMsg
+    {
+        public const string Created = "Position PIP template created successfully.";
+        public const string Updated = "Position PIP template updated successfully.";
+        public const string Deleted = "Position PIP template deleted successfully.";
+        public const string Retrieved = "Position PIP template retrieved successfully.";
+        public const string RetrievedAll = "Position PIP templates retrieved successfully.";
+        public const string RetrievedActive = "Active position PIP templates retrieved successfully.";
+        public static string NotFound(long id) => $"Position PIP template with ID '{id}' was not found.";
+    }
 }

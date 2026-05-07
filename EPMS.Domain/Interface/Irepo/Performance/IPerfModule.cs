@@ -6,17 +6,19 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Interface.Irepo.Performance
 {
-    public interface IPerfModule
-    {
-        IAppraisalRepository Appraisals { get; }
-        IKPIWeightPriorityRepository KPIWeightPriorities { get; }
-        IRatingScaleRepository RatingScales { get; }
-        IAppraisalCycleRepository AppraisalCycles { get; }
-        IKPIMasterRepository KPIMasters { get; }
-        IPIPRepository PIPs { get; }
-        IFormTemplateRepository FormTemplates { get; }
-        IContinuousFeedbackRepository ContinuousFeedbacks { get; }
-        IOneOnOneMeetingRepository OneOnOneMeetings { get; }
-        IPositionKPIRepository PositionKPIs { get; }
-    }
+public interface IPerfModule
+{
+    IAppraisalRepository Appraisals { get; }
+    IKPIWeightPriorityRepository KPIWeightPriorities { get; }
+    IRatingScaleRepository RatingScales { get; }
+    IAppraisalCycleRepository AppraisalCycles { get; }
+    IKPIMasterRepository KPIMasters { get; }
+    IPIPRepository PIPs { get; }
+    IFormTemplateRepository FormTemplates { get; }
+    IContinuousFeedbackRepository ContinuousFeedbacks { get; }
+    IOneOnOneMeetingRepository OneOnOneMeetings { get; }
+    IPositionKPIRepository PositionKPIs { get; }
+    IQuestionRatingScaleRepository QuestionRatingScales { get; }
+    IPositionPIPTemplateRepository PositionPIPTemplates { get; }
+}
 }
