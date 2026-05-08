@@ -173,5 +173,16 @@ namespace EPMS.Shared.Validators.ValidationMessages
             public const string NameMaxLength = "Name cannot exceed 100 characters.";
             public const string DescriptionMaxLength = "Description cannot exceed 500 characters.";
         }
+
+        public static class FormQuestion
+        {
+            public const string TemplateIdRequired = "Form template is required.";
+            public const string QuestionTextRequired = "Question text is required.";
+            public const string QuestionTextMaxLength = "Question text cannot exceed 500 characters.";
+            public const string SequenceRequired = "Sequence is required.";
+            public const string SequenceInvalid = "Sequence must be greater than 0.";
+            public const string CategoryIdInvalid = "Category ID must be greater than 0.";
+            public const string RatingScaleIdInvalid = "Rating scale ID must be greater than 0.";
+        }
     }
 }

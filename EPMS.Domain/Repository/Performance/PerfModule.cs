@@ -20,6 +20,7 @@ public class PerfModule(IServiceProvider serviceProvider) : IPerfModule
     private IKPIMasterRepository? _perfKPIMasterRepository;
     private IPIPRepository? _perfPIPRepository;
     private IFormTemplateRepository? _perfFormTemplateRepository;
+    private IFormQuestionRepository? _perfFormQuestionRepository;
     private IContinuousFeedbackRepository? _perfContinuousFeedbackRepository;
     private IOneOnOneMeetingRepository? _perfOneOnOneMeetingRepository;
     private IPositionKPIRepository? _perfPositionKPIRepository;
@@ -48,6 +49,9 @@ public class PerfModule(IServiceProvider serviceProvider) : IPerfModule
 
     public IFormTemplateRepository FormTemplates =>
         _perfFormTemplateRepository ??= serviceProvider.GetRequiredService<IFormTemplateRepository>();
+
+    public IFormQuestionRepository FormQuestions =>
+        _perfFormQuestionRepository ??= serviceProvider.GetRequiredService<IFormQuestionRepository>();
 
     public IContinuousFeedbackRepository ContinuousFeedbacks =>
         _perfContinuousFeedbackRepository ??= serviceProvider.GetRequiredService<IContinuousFeedbackRepository>();

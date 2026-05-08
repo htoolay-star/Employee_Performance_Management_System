@@ -15,6 +15,7 @@ public interface IPerfModule
     IKPIMasterRepository KPIMasters { get; }
     IPIPRepository PIPs { get; }
     IFormTemplateRepository FormTemplates { get; }
+    IFormQuestionRepository FormQuestions { get; }
     IContinuousFeedbackRepository ContinuousFeedbacks { get; }
     IOneOnOneMeetingRepository OneOnOneMeetings { get; }
     IPositionKPIRepository PositionKPIs { get; }

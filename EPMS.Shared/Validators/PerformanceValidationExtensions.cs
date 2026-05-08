@@ -218,4 +218,29 @@ public static class PerformanceValidationExtensions
         return ruleBuilder
             .MaximumLength(500).WithMessage(PerformanceValidationMessages.PIPObjective.DescriptionMaxLength);
     }
+
+    public static IRuleBuilderOptions<T, string> ApplyFormQuestionTextRules<T>(this IRuleBuilder<T, string> ruleBuilder)
+    {
+        return ruleBuilder
+            .NotEmpty().WithMessage(PerformanceValidationMessages.FormQuestion.QuestionTextRequired)
+            .MaximumLength(500).WithMessage(PerformanceValidationMessages.FormQuestion.QuestionTextMaxLength);
+    }
+
+    public static IRuleBuilderOptions<T, string?> ApplyOptionalFormQuestionTextRules<T>(this IRuleBuilder<T, string?> ruleBuilder)
+    {
+        return ruleBuilder
+            .MaximumLength(500).WithMessage(PerformanceValidationMessages.FormQuestion.QuestionTextMaxLength);
+    }
+
+    public static IRuleBuilderOptions<T, long?> ApplyOptionalFormQuestionCategoryRules<T>(this IRuleBuilder<T, long?> ruleBuilder)
+    {
+        return ruleBuilder
+            .GreaterThan(0).WithMessage(PerformanceValidationMessages.FormQuestion.CategoryIdInvalid);
+    }
+
+    public static IRuleBuilderOptions<T, long?> ApplyOptionalFormQuestionRatingScaleRules<T>(this IRuleBuilder<T, long?> ruleBuilder)
+    {
+        return ruleBuilder
+            .GreaterThan(0).WithMessage(PerformanceValidationMessages.FormQuestion.RatingScaleIdInvalid);
+    }
 }

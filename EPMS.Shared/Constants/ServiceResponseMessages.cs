@@ -389,4 +389,17 @@ public static class PIPObjectiveMsg
         public static string NotFoundByPositionAndPermission(long positionId, long permissionId) => $"Permission '{permissionId}' is not assigned to position '{positionId}'.";
         public static string DuplicateEntry = "Permission is already assigned to this position.";
     }
+
+    public static class FormQuestionMsg
+    {
+        public const string Created = "Form question created successfully.";
+        public const string Updated = "Form question updated successfully.";
+        public const string Deleted = "Form question deleted successfully.";
+        public const string Retrieved = "Form question retrieved successfully.";
+        public const string RetrievedAll = "Form questions retrieved successfully.";
+        public const string RetrievedByTemplate = "Form questions for template retrieved successfully.";
+        public const string RetrievedByCategory = "Form questions for category retrieved successfully.";
+        public static string NotFound(long id) => $"Form question with ID '{id}' was not found.";
+        public static string DuplicateEntry = "Form question with this sequence already exists in the template.";
+    }
 }
