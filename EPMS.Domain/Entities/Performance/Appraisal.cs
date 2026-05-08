@@ -78,11 +78,11 @@ namespace EPMS.Domain.Entities.Performance
             }
         }
 
-        public void SubmitManagerReview(string? comment)
+public void SubmitManagerReview(string? comment, TimeProvider timeProvider)
         {
             ManagerComment = comment?.Trim();
             Status = AppraisalStatuses.Reviewed;
-            ReviewDate = DateTimeOffset.UtcNow;
+            ReviewDate = timeProvider.GetUtcNow();
         }
 
         private void RecalculateTotalScore()
@@ -97,17 +97,18 @@ namespace EPMS.Domain.Entities.Performance
             _details.Add(detail);
             RecalculateTotalScore();
         }
-        public void FinalizeAppraisal()
+
+        public void FinalizeAppraisal(TimeProvider timeProvider)
         {
             if (IsLocked) throw new InvalidOperationException("Appraisal is already locked.");
 
             Status = AppraisalStatuses.Finalized;
-            FinalizedDate = DateTimeOffset.UtcNow;
+            FinalizedDate = timeProvider.GetUtcNow();
             IsLocked = true;
-            LockedAt = DateTimeOffset.UtcNow;
+            LockedAt = timeProvider.GetUtcNow();
         }
 
-        public void UnlockAppraisal(long adminId, string reason)
+        public void UnlockAppraisal(long adminId, string reason, TimeProvider timeProvider)
         {
             if (!IsLocked) throw new InvalidOperationException("Appraisal is not locked.");
             if (string.IsNullOrWhiteSpace(reason)) throw new ArgumentException("An unlock reason is strictly required by compliance.");
@@ -115,7 +116,7 @@ namespace EPMS.Domain.Entities.Performance
             IsLocked = false;
             Status = AppraisalStatuses.InProgress;
             UnLockedById = adminId;
-            UnLockedAt = DateTimeOffset.UtcNow;
+            UnLockedAt = timeProvider.GetUtcNow();
 
             UnLockReason = reason.Trim();
         }
@@ -128,6 +129,21 @@ namespace EPMS.Domain.Entities.Performance
                 throw new InvalidOperationException("Cannot add recommendations to a locked appraisal.");
 
             _recommendations.Add(recommendation);
+        }
+
+        public void UpdateDetails(string? status, string? employeeComment, string? managerComment, string? ratingLabel)
+        {
+            if (!string.IsNullOrWhiteSpace(status))
+                Status = status.Trim();
+
+            if (employeeComment != null)
+                EmployeeComment = employeeComment.Trim();
+
+            if (managerComment != null)
+                ManagerComment = managerComment.Trim();
+
+            if (!string.IsNullOrWhiteSpace(ratingLabel))
+                RatingLabel = ratingLabel.Trim();
         }
     }
 }

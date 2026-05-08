@@ -17,6 +17,7 @@ namespace EPMS.Domain.Entities.Performance
             string? targetValue,
             string? targetUnit,
             DateOnly effectiveDate,
+            TimeProvider timeProvider,
             string? changeReason = null,
             long? changedById = null)
         {
@@ -29,7 +30,7 @@ namespace EPMS.Domain.Entities.Performance
             EffectiveDate = effectiveDate;
             ChangeReason = changeReason?.Trim();
             ChangedById = changedById;
-            CreatedAt = DateTimeOffset.UtcNow;
+            CreatedAt = timeProvider.GetUtcNow();
         }
 
         public long PositionId { get; private set; }

@@ -14,6 +14,7 @@ namespace EPMS.Domain.Factories
             string filePath,
             long fileSize,
             string mimeType,
+            TimeProvider timeProvider,
             long uploadedById,
             string? description = null,
             string? category = null);
@@ -22,6 +23,7 @@ namespace EPMS.Domain.Factories
             string entityType,
             long entityId,
             IEnumerable<(string FileName, string FilePath, long FileSize, string MimeType)> files,
+            TimeProvider timeProvider,
             long uploadedById,
             string? description = null,
             string? category = null);
@@ -36,6 +38,7 @@ namespace EPMS.Domain.Factories
             string filePath,
             long fileSize,
             string mimeType,
+            TimeProvider timeProvider,
             long uploadedById,
             string? description = null,
             string? category = null)
@@ -47,6 +50,7 @@ namespace EPMS.Domain.Factories
                 filePath: filePath,
                 fileSize: fileSize,
                 mimeType: mimeType,
+                timeProvider: timeProvider,
                 uploadedById: uploadedById,
                 description: description,
                 category: category);
@@ -56,6 +60,7 @@ namespace EPMS.Domain.Factories
             string entityType,
             long entityId,
             IEnumerable<(string FileName, string FilePath, long FileSize, string MimeType)> files,
+            TimeProvider timeProvider,
             long uploadedById,
             string? description = null,
             string? category = null)
@@ -67,6 +72,7 @@ namespace EPMS.Domain.Factories
                 filePath: f.FilePath,
                 fileSize: f.FileSize,
                 mimeType: f.MimeType,
+                timeProvider: timeProvider,
                 uploadedById: uploadedById,
                 description: description,
                 category: category)).ToList().AsReadOnly();

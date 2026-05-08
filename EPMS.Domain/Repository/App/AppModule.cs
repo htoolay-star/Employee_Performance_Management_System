@@ -8,11 +8,15 @@ using System.Threading.Tasks;
 
 namespace EPMS.Domain.Repository.App
 {
-    public class AppModule(IServiceProvider serviceProvider) : IAppModule
-    {
-        private ISystemSettingsRepository? _systemSettings;
+public class AppModule(IServiceProvider serviceProvider) : IAppModule
+{
+    private ISystemSettingsRepository? _systemSettings;
+    private INotificationRepository? _notifications;
 
-        public ISystemSettingsRepository SystemSettings =>
+    public ISystemSettingsRepository SystemSettings =>
         _systemSettings ??= serviceProvider.GetRequiredService<ISystemSettingsRepository>();
-    }
+
+    public INotificationRepository Notifications =>
+        _notifications ??= serviceProvider.GetRequiredService<INotificationRepository>();
+}
 }

@@ -45,6 +45,14 @@ namespace EPMS.Domain.Entities.Performance
             Name = newName.Trim();
         }
 
+        public void UpdateBounds(decimal minScore, decimal maxScore)
+        {
+            if (minScore >= maxScore)
+                throw new ArgumentException("MinScore must be strictly less than MaxScore.");
+            MinScore = minScore;
+            MaxScore = maxScore;
+        }
+
         public void Deactivate() => IsActive = false;
         public void Reactivate() => IsActive = true;
     }

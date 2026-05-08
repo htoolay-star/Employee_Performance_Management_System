@@ -1,4 +1,4 @@
-using EPMS.Shared.Constants.ValidationMessages;
+using EPMS.Shared.Validators.ValidationMessages;
 using FluentValidation;
 
 namespace EPMS.Shared.Validators;
@@ -52,5 +52,63 @@ public static class SharedValidationExtensions
         return ruleBuilder
             .Must(s => s == null || string.IsNullOrWhiteSpace(s) || s.Length <= 50)
             .WithMessage(SharedValidationMessages.Tag.ModuleMaxLength);
+    }
+
+    public static IRuleBuilderOptions<T, string> ApplyEntityTypeRules<T>(this IRuleBuilder<T, string> ruleBuilder)
+    {
+        return ruleBuilder
+            .NotEmpty().WithMessage(SharedValidationMessages.DocumentAttachment.EntityType.Required)
+            .MaximumLength(50).WithMessage(SharedValidationMessages.DocumentAttachment.EntityType.MaxLength);
+    }
+
+    public static IRuleBuilderOptions<T, long> ApplyEntityIdRules<T>(this IRuleBuilder<T, long> ruleBuilder)
+    {
+        return ruleBuilder
+            .GreaterThan(0).WithMessage(SharedValidationMessages.DocumentAttachment.EntityId.Invalid);
+    }
+
+    public static IRuleBuilderOptions<T, string> ApplyFileNameRules<T>(this IRuleBuilder<T, string> ruleBuilder)
+    {
+        return ruleBuilder
+            .NotEmpty().WithMessage(SharedValidationMessages.DocumentAttachment.FileName.Required)
+            .MaximumLength(255).WithMessage(SharedValidationMessages.DocumentAttachment.FileName.MaxLength);
+    }
+
+    public static IRuleBuilderOptions<T, string> ApplyFilePathRules<T>(this IRuleBuilder<T, string> ruleBuilder)
+    {
+        return ruleBuilder
+            .NotEmpty().WithMessage(SharedValidationMessages.DocumentAttachment.FilePath.Required)
+            .MaximumLength(500).WithMessage(SharedValidationMessages.DocumentAttachment.FilePath.MaxLength);
+    }
+
+    public static IRuleBuilderOptions<T, long> ApplyFileSizeRules<T>(this IRuleBuilder<T, long> ruleBuilder)
+    {
+        return ruleBuilder
+            .GreaterThan(0).WithMessage(SharedValidationMessages.DocumentAttachment.FileSize.Invalid);
+    }
+
+    public static IRuleBuilderOptions<T, string> ApplyMimeTypeRules<T>(this IRuleBuilder<T, string> ruleBuilder)
+    {
+        return ruleBuilder
+            .NotEmpty().WithMessage(SharedValidationMessages.DocumentAttachment.MimeType.Required)
+            .MaximumLength(100).WithMessage(SharedValidationMessages.DocumentAttachment.MimeType.MaxLength);
+    }
+
+    public static IRuleBuilderOptions<T, long> ApplyUploadedByIdRules<T>(this IRuleBuilder<T, long> ruleBuilder)
+    {
+        return ruleBuilder
+            .GreaterThan(0).WithMessage(SharedValidationMessages.DocumentAttachment.UploadedById.Invalid);
+    }
+
+    public static IRuleBuilderOptions<T, string?> ApplyOptionalDescriptionRules<T>(this IRuleBuilder<T, string?> ruleBuilder)
+    {
+        return ruleBuilder
+            .MaximumLength(500).WithMessage(SharedValidationMessages.DocumentAttachment.Description.MaxLength);
+    }
+
+    public static IRuleBuilderOptions<T, string?> ApplyOptionalCategoryRules<T>(this IRuleBuilder<T, string?> ruleBuilder)
+    {
+        return ruleBuilder
+            .MaximumLength(50).WithMessage(SharedValidationMessages.DocumentAttachment.Category.MaxLength);
     }
 }

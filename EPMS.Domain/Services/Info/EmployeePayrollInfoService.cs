@@ -82,6 +82,18 @@ public class EmployeePayrollInfoService : IEmployeePayrollInfoService
         if (dto.Salary < 0)
             return SuccessResponse.Fail(EmployeePayrollInfoMsg.SalaryNegative, ErrorType.Validation);
 
+        if (dto.Salary != payroll.Salary || dto.CostAllocate != null || dto.PayByBacklog != null)
+            payroll.UpdatePayrollDetails(dto.Salary, dto.CostAllocate, dto.PayByBacklog);
+
+        if (dto.TaxStatus != null || dto.TaxNo != null)
+            payroll.UpdateTaxInfo(dto.TaxStatus, dto.TaxNo);
+
+        if (dto.SSBStatus != null || dto.SSCBNo != null)
+            payroll.UpdateSSBInfo(dto.SSBStatus, dto.SSCBNo);
+
+        if (dto.ComplianceEarnedPoints != null || dto.ComplianceBalancePoints != null)
+            payroll.UpdateCompliancePoints(dto.ComplianceEarnedPoints, dto.ComplianceBalancePoints);
+
         await _uow.CompleteAsync();
         return SuccessResponse.Ok(EmployeePayrollInfoMsg.Updated);
     }

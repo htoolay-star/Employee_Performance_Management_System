@@ -47,5 +47,15 @@ namespace EPMS.Domain.Entities.Performance
             Status = newStatus.Trim();
             ManagerComment = comment?.Trim();
         }
+
+        public void UpdateDetails(string title, string successCriteria, string? description)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(title);
+            ArgumentException.ThrowIfNullOrWhiteSpace(successCriteria);
+
+            Title = title.Trim();
+            SuccessCriteria = successCriteria.Trim();
+            Description = description?.Trim();
+        }
     }
 }

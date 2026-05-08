@@ -60,5 +60,17 @@ namespace EPMS.Domain.Entities.Performance
 
         public void SetYesNo(bool isYes) => YesNoAnswer = isYes;
         public void AddComment(string comment) => QuestionComment = comment?.Trim();
+
+        public void UpdateDetails(bool? yesNoAnswer, int? ratingValue, string? comment)
+        {
+            if (yesNoAnswer.HasValue)
+                YesNoAnswer = yesNoAnswer.Value;
+
+            if (ratingValue.HasValue)
+                RatingValue = ratingValue.Value;
+
+            if (comment != null)
+                QuestionComment = comment.Trim();
+        }
     }
 }

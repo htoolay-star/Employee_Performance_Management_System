@@ -1,5 +1,5 @@
-using EPMS.Shared.Constants.ValidationMessages;
 using EPMS.Shared.DTOs.PerformanceDTOs.KPIWeightPriorityDTOs;
+using EPMS.Shared.Validators.ValidationMessages;
 using FluentValidation;
 
 namespace EPMS.Shared.Validators.PerformanceDTOs.KPIWeightPriorityDTOs;

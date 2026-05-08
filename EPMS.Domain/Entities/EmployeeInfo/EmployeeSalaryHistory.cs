@@ -14,13 +14,13 @@ namespace EPMS.Domain.Entities.EmployeeInfo
             decimal newAmount,
             DateOnly effectiveDate,
             string changeReason,
+            TimeProvider timeProvider,
             long? approvedById = null)
         {
             if (previousAmount < 0 || newAmount < 0)
                 throw new ArgumentException("Salary amounts cannot be negative.");
 
-            if (string.IsNullOrWhiteSpace(changeReason))
-                throw new ArgumentException("Change reason is required.");
+            ArgumentException.ThrowIfNullOrWhiteSpace(changeReason);
 
             EmployeeId = employeeId;
             PreviousAmount = previousAmount;
@@ -28,8 +28,8 @@ namespace EPMS.Domain.Entities.EmployeeInfo
             EffectiveDate = effectiveDate;
             ChangeReason = changeReason.Trim();
             ApprovedById = approvedById;
-            ApprovedAt = approvedById.HasValue ? DateTimeOffset.UtcNow : null;
-            CreatedAt = DateTimeOffset.UtcNow;
+            ApprovedAt = approvedById.HasValue ? timeProvider.GetUtcNow() : null;
+            CreatedAt = timeProvider.GetUtcNow();
         }
 
         public long EmployeeId { get; private set; }
@@ -48,10 +48,10 @@ namespace EPMS.Domain.Entities.EmployeeInfo
         public virtual EmployeeProfile Employee { get; private set; } = null!;
         public virtual User? ApprovedBy { get; private set; }
 
-        public void Approve(long approvedById)
+        public void Approve(long approvedById, TimeProvider timeProvider)
         {
             ApprovedById = approvedById;
-            ApprovedAt = DateTimeOffset.UtcNow;
+            ApprovedAt = timeProvider.GetUtcNow();
         }
     }
 }

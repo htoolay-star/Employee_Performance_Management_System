@@ -20,4 +20,15 @@ public class TagRepository : GenericRepository<Tag>, ITagRepository
         
         return await query.AnyAsync();
     }
+
+    public async Task<bool> ExistsByNameAsync(string name, string? module, int excludeId)
+    {
+        var normalizedName = name.Trim().ToLowerInvariant();
+        var query = _dbSet.Where(t => t.Name == normalizedName && t.Id != excludeId);
+        
+        if (!string.IsNullOrWhiteSpace(module))
+            query = query.Where(t => t.Module == module);
+        
+        return await query.AnyAsync();
+    }
 }

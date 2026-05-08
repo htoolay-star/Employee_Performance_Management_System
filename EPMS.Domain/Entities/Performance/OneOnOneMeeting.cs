@@ -54,6 +54,13 @@ namespace EPMS.Domain.Entities.Performance
         public virtual EmployeeProfile Employee { get; private set; } = null!;
         public virtual EmployeeProfile Manager { get; private set; } = null!;
 
+        public void Update(string title, DateTimeOffset scheduledDate)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(title);
+            Title = title.Trim();
+            ScheduledDate = scheduledDate;
+        }
+
         public void CompleteMeeting(string? summary, string? sharedNotes, string? privateNotes, string? actionItems, TimeProvider timeProvider)
         {
             Status = MeetingStatuses.Completed;

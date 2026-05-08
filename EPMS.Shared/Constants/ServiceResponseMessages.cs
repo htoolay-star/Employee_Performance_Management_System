@@ -177,8 +177,11 @@ public static class ServiceResponseMessages
         public const string Reactivated = "Rating scale reactivated successfully.";
         public const string Retrieved = "Rating scale retrieved successfully.";
         public const string RetrievedAll = "Rating scales retrieved successfully.";
+        public const string RetrievedActive = "Active rating scales retrieved successfully.";
         public const string MinGreaterThanMax = "Minimum score cannot be greater than maximum score.";
+        public const string DuplicateRating = "Rating scale with rating '{0}' already exists.";
         public static string NotFound(long id) => $"Rating scale with ID '{id}' was not found.";
+        public static string NotFoundByRating(int rating) => $"Rating scale with rating '{rating}' was not found.";
     }
 
     public static class KPIWeightPriorityMsg
@@ -198,6 +201,105 @@ public static class ServiceResponseMessages
         public static string NotFoundByLevelName(string levelName) => $"KPI weight priority with level name '{levelName}' was not found.";
     }
 
+    public static class AppraisalCycleMsg
+    {
+        public const string Created = "Appraisal cycle created successfully.";
+        public const string Updated = "Appraisal cycle updated successfully.";
+        public const string Deleted = "Appraisal cycle deleted successfully.";
+        public const string Deactivated = "Appraisal cycle deactivated successfully.";
+        public const string Locked = "Appraisal cycle locked successfully.";
+        public const string Unlocked = "Appraisal cycle unlocked successfully.";
+        public const string Retrieved = "Appraisal cycle retrieved successfully.";
+        public const string RetrievedAll = "Appraisal cycles retrieved successfully.";
+        public const string RetrievedActive = "Active appraisal cycles retrieved successfully.";
+        public const string DuplicateCycle = "An appraisal cycle for year '{0}' and type '{1}' already exists.";
+        public static string NotFound(long id) => $"Appraisal cycle with ID '{id}' was not found.";
+        public static string AlreadyLocked = "This appraisal cycle is already locked.";
+    }
+
+    public static class KPIMasterMsg
+    {
+        public const string Created = "KPI master created successfully.";
+        public const string Updated = "KPI master updated successfully.";
+        public const string Deleted = "KPI master deleted successfully.";
+        public const string Deactivated = "KPI master deactivated successfully.";
+        public const string Reactivated = "KPI master reactivated successfully.";
+        public const string Retrieved = "KPI master retrieved successfully.";
+        public const string RetrievedAll = "KPI masters retrieved successfully.";
+        public const string RetrievedActive = "Active KPI masters retrieved successfully.";
+        public const string DuplicateCode = "KPI master with code '{0}' already exists.";
+        public static string NotFound(long id) => $"KPI master with ID '{id}' was not found.";
+    }
+
+    public static class PIPMsg
+    {
+        public const string Created = "PIP created successfully.";
+        public const string Updated = "PIP updated successfully.";
+        public const string Deleted = "PIP deleted successfully.";
+        public const string Concluded = "PIP concluded successfully.";
+        public const string Extended = "PIP extended successfully.";
+        public const string Retrieved = "PIP retrieved successfully.";
+        public const string RetrievedAll = "PIPs retrieved successfully.";
+        public const string RetrievedActive = "Active PIPs retrieved successfully.";
+        public const string InvalidDateRange = "End date must be after start date.";
+        public const string AlreadyConcluded = "PIP is already concluded.";
+        public static string NotFound(long id) => $"PIP with ID '{id}' was not found.";
+        public static string NotFoundByEmployee(long employeeId) => $"PIP for employee with ID '{employeeId}' was not found.";
+    }
+
+    public static class FormTemplateMsg
+    {
+        public const string Created = "Form template created successfully.";
+        public const string Updated = "Form template updated successfully.";
+        public const string Deleted = "Form template deleted successfully.";
+        public const string Deactivated = "Form template deactivated successfully.";
+        public const string Reactivated = "Form template reactivated successfully.";
+        public const string Retrieved = "Form template retrieved successfully.";
+        public const string RetrievedAll = "Form templates retrieved successfully.";
+        public const string RetrievedActive = "Active form templates retrieved successfully.";
+        public const string DuplicateName = "Form template with name '{0}' already exists.";
+        public static string NotFound(long id) => $"Form template with ID '{id}' was not found.";
+    }
+
+    public static class ContinuousFeedbackMsg
+    {
+        public const string Created = "Feedback created successfully.";
+        public const string Updated = "Feedback updated successfully.";
+        public const string Deleted = "Feedback deleted successfully.";
+        public const string Retrieved = "Feedback retrieved successfully.";
+        public const string RetrievedAll = "Feedback retrieved successfully.";
+        public static string NotFound(long id) => $"Feedback with ID '{id}' was not found.";
+    }
+
+    public static class OneOnOneMeetingMsg
+    {
+        public const string Created = "Meeting scheduled successfully.";
+        public const string Updated = "Meeting updated successfully.";
+        public const string Deleted = "Meeting deleted successfully.";
+        public const string Completed = "Meeting completed successfully.";
+        public const string Cancelled = "Meeting cancelled successfully.";
+        public const string Acknowledged = "Meeting acknowledged successfully.";
+        public const string Retrieved = "Meeting retrieved successfully.";
+        public const string RetrievedAll = "Meetings retrieved successfully.";
+        public const string RetrievedUpcoming = "Upcoming meetings retrieved successfully.";
+        public static string NotFound(long id) => $"Meeting with ID '{id}' was not found.";
+public static string AlreadyCompleted = "Meeting is already completed.";
+        public static string AlreadyCancelled = "Meeting is already cancelled.";
+    }
+
+    public static class PositionKPIMsg
+    {
+        public const string Created = "Position KPI added successfully.";
+        public const string Updated = "Position KPI updated successfully.";
+        public const string Deleted = "Position KPI removed successfully.";
+        public const string Retrieved = "Position KPI retrieved successfully.";
+        public const string RetrievedAll = "Position KPIs retrieved successfully.";
+        public const string RetrievedByPosition = "Position KPIs retrieved successfully.";
+        public static string NotFound(long id) => $"Position KPI with ID '{id}' was not found.";
+public static string DuplicateEntry = "KPI already assigned to this position.";
+        public static string PriorityNotFound = "Priority not found.";
+    }
+
     public static class PermissionMsg
     {
         public const string Created = "Permission created successfully.";
@@ -209,5 +311,144 @@ public static class ServiceResponseMessages
         public const string DuplicateName = "Permission with name '{0}' already exists.";
         public const string NotFound = "Permission not found.";
         public static string NotFoundById(long id) => $"Permission with ID '{id}' was not found.";
+    }
+
+    public static class NotificationMsg
+    {
+        public const string Created = "Notification sent successfully.";
+        public const string Updated = "Notification updated successfully.";
+        public const string Deleted = "Notification deleted successfully.";
+        public const string MarkedAsRead = "Notification marked as read.";
+        public const string Retrieved = "Notification retrieved successfully.";
+        public const string RetrievedAll = "Notifications retrieved successfully.";
+        public static string NotFound(long id) => $"Notification with ID '{id}' was not found.";
+    }
+
+    public static class DocumentAttachmentMsg
+    {
+        public const string Created = "Document attached successfully.";
+        public const string Updated = "Document updated successfully.";
+        public const string Deleted = "Document deleted successfully.";
+        public const string Retrieved = "Document retrieved successfully.";
+        public const string RetrievedAll = "Documents retrieved successfully.";
+        public static string NotFound(long id) => $"Document with ID '{id}' was not found.";
+    }
+
+    public static class QuestionRatingScaleMsg
+    {
+        public const string Created = "Question rating scale created successfully.";
+        public const string Updated = "Question rating scale updated successfully.";
+        public const string Deleted = "Question rating scale deleted successfully.";
+        public const string Retrieved = "Question rating scale retrieved successfully.";
+        public const string RetrievedAll = "Question rating scales retrieved successfully.";
+        public static string NotFound(long id) => $"Question rating scale with ID '{id}' was not found.";
+    }
+
+    public static class PositionPIPTemplateMsg
+    {
+        public const string Created = "Position PIP template created successfully.";
+        public const string Updated = "Position PIP template updated successfully.";
+        public const string Deleted = "Position PIP template deleted successfully.";
+        public const string Retrieved = "Position PIP template retrieved successfully.";
+        public const string RetrievedAll = "Position PIP templates retrieved successfully.";
+        public const string RetrievedActive = "Active position PIP templates retrieved successfully.";
+        public static string NotFound(long id) => $"Position PIP template with ID '{id}' was not found.";
+    }
+
+    public static class PositionFormTemplateMsg
+    {
+        public const string Created = "Position form template created successfully.";
+        public const string Updated = "Position form template updated successfully.";
+        public const string Deleted = "Position form template deleted successfully.";
+        public const string Retrieved = "Position form template retrieved successfully.";
+        public const string RetrievedAll = "Position form templates retrieved successfully.";
+        public const string DuplicateEntry = "Position form template already exists.";
+        public static string NotFound(long id) => $"Position form template with ID '{id}' was not found.";
+    }
+
+public static class PIPObjectiveMsg
+    {
+        public const string Created = "PIP objective created successfully.";
+        public const string Updated = "PIP objective updated successfully.";
+        public const string Deleted = "PIP objective deleted successfully.";
+        public const string Retrieved = "PIP objective retrieved successfully.";
+        public const string RetrievedAll = "PIP objectives retrieved successfully.";
+        public const string RetrievedByPIP = "PIP objectives for PIP retrieved successfully.";
+        public static string NotFound(long id) => $"PIP objective with ID '{id}' was not found.";
+    }
+
+    public static class PositionPermissionMsg
+    {
+        public const string Created = "Permission assigned to position successfully.";
+        public const string Deleted = "Permission removed from position successfully.";
+        public const string Retrieved = "Position permission retrieved successfully.";
+        public const string RetrievedAll = "Position permissions retrieved successfully.";
+        public const string RetrievedByPosition = "Permissions for position retrieved successfully.";
+        public const string RetrievedByPermission = "Positions for permission retrieved successfully.";
+        public static string NotFound(long id) => $"Position permission with ID '{id}' was not found.";
+        public static string NotFoundByPositionAndPermission(long positionId, long permissionId) => $"Permission '{permissionId}' is not assigned to position '{positionId}'.";
+        public static string DuplicateEntry = "Permission is already assigned to this position.";
+    }
+
+    public static class FormQuestionMsg
+    {
+        public const string Created = "Form question created successfully.";
+        public const string Updated = "Form question updated successfully.";
+        public const string Deleted = "Form question deleted successfully.";
+        public const string Retrieved = "Form question retrieved successfully.";
+        public const string RetrievedAll = "Form questions retrieved successfully.";
+        public const string RetrievedByTemplate = "Form questions for template retrieved successfully.";
+        public const string RetrievedByCategory = "Form questions for category retrieved successfully.";
+        public static string NotFound(long id) => $"Form question with ID '{id}' was not found.";
+        public static string DuplicateEntry = "Form question with this sequence already exists in the template.";
+    }
+
+    public static class AppraisalMsg
+    {
+        public const string Created = "Appraisal created successfully.";
+        public const string Updated = "Appraisal updated successfully.";
+        public const string Deleted = "Appraisal deleted successfully.";
+        public const string Submitted = "Appraisal submitted successfully.";
+        public const string Locked = "Appraisal locked successfully.";
+        public const string Unlocked = "Appraisal unlocked successfully.";
+        public const string Retrieved = "Appraisal retrieved successfully.";
+        public const string RetrievedAll = "Appraisals retrieved successfully.";
+        public const string RetrievedByEmployee = "Appraisals for employee retrieved successfully.";
+        public const string DuplicateEntry = "An appraisal with these parameters already exists.";
+        public const string UnlockReasonRequired = "An unlock reason is required.";
+        public static string NotFound(long id) => $"Appraisal with ID '{id}' was not found.";
+        public static string AlreadyLocked = "Appraisal is already locked.";
+        public static string AlreadyUnlocked = "Appraisal is not locked.";
+        public static string NotFoundByEmployee(long employeeId) => $"Appraisal for employee with ID '{employeeId}' was not found.";
+    }
+
+    public static class AppraisalRecommendationMsg
+    {
+        public const string Created = "Recommendation created successfully.";
+        public const string Updated = "Recommendation updated successfully.";
+        public const string Deleted = "Recommendation deleted successfully.";
+        public const string Approved = "Recommendation approved successfully.";
+        public const string Rejected = "Recommendation rejected successfully.";
+        public const string Retrieved = "Recommendation retrieved successfully.";
+        public const string RetrievedAll = "Recommendations retrieved successfully.";
+        public const string RetrievedByAppraisal = "Recommendations for appraisal retrieved successfully.";
+        public static string NotFound(long id) => $"Recommendation with ID '{id}' was not found.";
+        public static string NotFoundByAppraisal(long appraisalId) => $"Recommendation for appraisal with ID '{appraisalId}' was not found.";
+        public static string AlreadyProcessed = "Recommendation has already been processed.";
+        public static string CannotModify = "Cannot modify a processed recommendation.";
+    }
+
+    public static class EvaluationResponseMsg
+    {
+        public const string Created = "Evaluation response created successfully.";
+        public const string Updated = "Evaluation response updated successfully.";
+        public const string Deleted = "Evaluation response deleted successfully.";
+        public const string Retrieved = "Evaluation response retrieved successfully.";
+        public const string RetrievedAll = "Evaluation responses retrieved successfully.";
+        public const string RetrievedByAppraisal = "Evaluation responses for appraisal retrieved successfully.";
+        public const string RetrievedByTemplate = "Evaluation responses for template retrieved successfully.";
+        public const string RetrievedByQuestion = "Evaluation responses for question retrieved successfully.";
+        public static string NotFound(long id) => $"Evaluation response with ID '{id}' was not found.";
+        public static string NotFoundByAppraisal(long appraisalId) => $"Evaluation response for appraisal with ID '{appraisalId}' was not found.";
     }
 }
