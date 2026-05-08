@@ -1,6 +1,8 @@
 using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.EmployeeInfo;
+using EPMS.Domain.Interface.IService.App;
+using EPMS.Domain.Interface.IService.Auth;
 using EPMS.Domain.Interface.IService.Info;
 using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
@@ -14,11 +16,19 @@ public class EmployeeProfileService : IEmployeeProfileService
 {
     private readonly IUnitOfWork _uow;
     private readonly IMapper _mapper;
+    private readonly ICurrentEmployeeContextService _currentEmployee;
+    private readonly IPositionPermissionChecker _permissionChecker;
 
-    public EmployeeProfileService(IUnitOfWork uow, IMapper mapper)
+    public EmployeeProfileService(
+        IUnitOfWork uow,
+        IMapper mapper,
+        ICurrentEmployeeContextService currentEmployee,
+        IPositionPermissionChecker permissionChecker)
     {
         _uow = uow;
         _mapper = mapper;
+        _currentEmployee = currentEmployee;
+        _permissionChecker = permissionChecker;
     }
 
     public async Task<SuccessResponse<IEnumerable<EmployeeProfileDto>>> GetAllAsync()
@@ -41,6 +51,14 @@ public class EmployeeProfileService : IEmployeeProfileService
 
     public async Task<SuccessResponse<EmployeeProfileDetailDto>> GetFullProfileAsync(long id)
     {
+        var positionId = await _currentEmployee.GetPositionIdAsync();
+        if (!positionId.HasValue)
+            return SuccessResponse<EmployeeProfileDetailDto>.Fail("User position is required.", ErrorType.Forbidden);
+
+        var canView = await _permissionChecker.HasPermissionAsync(positionId.Value, PermissionCodes.InfoEmployeeFullProfileView);
+        if (!canView)
+            return SuccessResponse<EmployeeProfileDetailDto>.Fail("Permission denied.", ErrorType.Forbidden);
+
         var profile = await _uow.Info.EmployeeProfiles.GetByIdAsync(id);
 
         if (profile == null)

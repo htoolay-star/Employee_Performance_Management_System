@@ -2,7 +2,9 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Data.Seeding;
 using EPMS.Domain.Factories;
+using EPMS.Domain.Interface.IService.Auth;
 using EPMS.Domain.Repository.Base;
+using EPMS.Domain.Services.Auth;
 using EPMS.Shared.Validators;
 using FluentValidation;
 using System.Reflection;
@@ -24,6 +26,8 @@ namespace EPMS.Api.Extensions
             services.AddTransient(typeof(Lazy<>), typeof(LazyResolution<>));
             services.AddTransient<IDbSeeder, DbSeeder>();
             services.AddSingleton<IAuditLogFactory, AuditLogFactory>();
+
+            services.AddScoped<IPositionPermissionChecker, PositionPermissionChecker>();
 
             services.Scan(scan => scan
                 .FromAssembliesOf(typeof(UnitOfWork))

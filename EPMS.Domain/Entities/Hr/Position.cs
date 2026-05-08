@@ -48,6 +48,9 @@ namespace EPMS.Domain.Entities.Hr
         private readonly List<PositionPermission> _positionPermissions = new();
         public virtual IReadOnlyCollection<PositionPermission> PositionPermissions => _positionPermissions.AsReadOnly();
 
+        private readonly List<PositionRole> _positionRoles = new();
+        public virtual IReadOnlyCollection<PositionRole> PositionRoles => _positionRoles.AsReadOnly();
+
         private readonly List<PositionKPI> _positionKPIs = new();
         public virtual IReadOnlyCollection<PositionKPI> PositionKPIs => _positionKPIs.AsReadOnly();
 

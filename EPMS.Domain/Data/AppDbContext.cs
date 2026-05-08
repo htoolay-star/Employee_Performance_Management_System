@@ -26,6 +26,7 @@ namespace EPMS.Domain.Data
         // --- Auth Schema ---
         public DbSet<Permission> Permissions => Set<Permission>();
         public DbSet<PositionPermission> PositionPermissions => Set<PositionPermission>();
+        public DbSet<PositionRole> PositionRoles => Set<PositionRole>();
         public DbSet<User> Users => Set<User>();
         public DbSet<Role> Roles => Set<Role>();
         public DbSet<UserRefreshToken> UserRefreshTokens => Set<UserRefreshToken>();
