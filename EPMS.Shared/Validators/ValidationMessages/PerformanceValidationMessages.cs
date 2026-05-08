@@ -28,11 +28,29 @@ namespace EPMS.Shared.Validators.ValidationMessages
         public static class Appraisal
         {
             public const string IdRequired = "Appraisal ID is required.";
+            public const string EmployeeIdRequired = "Employee is required.";
+            public const string CycleIdRequired = "Appraisal cycle is required.";
+            public const string AppraiserIdRequired = "Appraiser is required.";
             public const string EvaluatorIdRequired = "Evaluator ID is required.";
-            public const string EvaluatorRoleRequired = "Evaluator Role is required.";
+            public const string EvaluatorRoleRequired = "Evaluator role is required.";
+            public const string EvaluatorRoleMaxLength = "Evaluator role cannot exceed 50 characters.";
             public const string DetailsRequired = "Assessment scores are required.";
             public const string RatingRange = "Rating must be between 1 and 5.";
             public const string CommentMaxLength = "Comment cannot exceed 1000 characters.";
+            public const string StatusMaxLength = "Status cannot exceed 50 characters.";
+        }
+
+        public static class AppraisalRecommendation
+        {
+            public const string AppraisalIdRequired = "Appraisal is required.";
+            public const string TypeRequired = "Recommendation type is required.";
+            public const string TypeMaxLength = "Recommendation type cannot exceed 50 characters.";
+            public const string ReasonRequired = "Reason is required.";
+            public const string ReasonMaxLength = "Reason cannot exceed 500 characters.";
+            public const string ProposedValueMaxLength = "Proposed value cannot exceed 100 characters.";
+            public const string PriorityRequired = "Priority is required.";
+            public const string PriorityMaxLength = "Priority cannot exceed 20 characters.";
+            public const string HRCommentsMaxLength = "HR comments cannot exceed 500 characters.";
         }
 
         public static class ScoreRange
@@ -183,6 +201,18 @@ namespace EPMS.Shared.Validators.ValidationMessages
             public const string SequenceInvalid = "Sequence must be greater than 0.";
             public const string CategoryIdInvalid = "Category ID must be greater than 0.";
             public const string RatingScaleIdInvalid = "Rating scale ID must be greater than 0.";
+        }
+
+        public static class EvaluationResponse
+        {
+            public const string AppraisalIdRequired = "Appraisal is required.";
+            public const string TemplateIdRequired = "Form template is required.";
+            public const string QuestionIdRequired = "Question is required.";
+            public const string EvaluatorIdRequired = "Evaluator is required.";
+            public const string EvaluatorRoleRequired = "Evaluator role is required.";
+            public const string EvaluatorRoleMaxLength = "Evaluator role cannot exceed 50 characters.";
+            public const string RatingValueInvalid = "Rating value must be between 1 and 5.";
+            public const string CommentMaxLength = "Comment cannot exceed 1000 characters.";
         }
     }
 }

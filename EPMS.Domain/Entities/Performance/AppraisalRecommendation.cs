@@ -71,5 +71,20 @@ namespace EPMS.Domain.Entities.Performance
             ProcessedById = hrAdminId;
             ActionDate = timeProvider.GetUtcNow();
         }
+
+        public void UpdateDetails(string? type, string? reason, string? proposedValue, string? priority)
+        {
+            if (!string.IsNullOrWhiteSpace(type) && type.Trim().ToUpperInvariant() != RecommendationType)
+                RecommendationType = type.Trim().ToUpperInvariant();
+
+            if (reason != null && reason.Trim() != Reason)
+                Reason = reason.Trim();
+
+            if (proposedValue != null && proposedValue.Trim() != ProposedValue)
+                ProposedValue = proposedValue.Trim();
+
+            if (!string.IsNullOrWhiteSpace(priority) && priority.Trim().ToUpperInvariant() != Priority)
+                Priority = priority.Trim().ToUpperInvariant();
+        }
     }
 }

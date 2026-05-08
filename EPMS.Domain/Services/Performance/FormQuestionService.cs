@@ -1,3 +1,4 @@
+using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Performance;
 using EPMS.Shared.DTOs.PerformanceDTOs.FormQuestionDTOs;
@@ -10,10 +11,14 @@ namespace EPMS.Domain.Services.Performance;
 public class FormQuestionService : IFormQuestionService
 {
     private readonly IUnitOfWork _uow;
+    private readonly TimeProvider _timeProvider;
+    private readonly IMapper _mapper;
 
-    public FormQuestionService(IUnitOfWork uow)
+    public FormQuestionService(IUnitOfWork uow, TimeProvider timeProvider, IMapper mapper)
     {
         _uow = uow;
+        _timeProvider = timeProvider;
+        _mapper = mapper;
     }
 
     public async Task<SuccessResponse> CreateAsync(CreateFormQuestionDto dto)
@@ -83,7 +88,7 @@ public class FormQuestionService : IFormQuestionService
             return SuccessResponse.Fail(FormQuestionMsg.NotFound(id), ErrorType.NotFound);
 
         formQuestion.IsDeleted = true;
-        formQuestion.DeletedAt = DateTimeOffset.UtcNow;
+        formQuestion.DeletedAt = _timeProvider.GetUtcNow();
 
         await _uow.CompleteAsync();
         return SuccessResponse.Ok(FormQuestionMsg.Deleted);
@@ -95,14 +100,14 @@ public class FormQuestionService : IFormQuestionService
         if (formQuestion == null)
             return SuccessResponse.Fail(FormQuestionMsg.NotFound(id), ErrorType.NotFound);
 
-        var dto = MapToDto(formQuestion);
+        var dto = _mapper.Map<FormQuestionDto>(formQuestion);
         return SuccessResponse<FormQuestionDto>.Ok(dto, FormQuestionMsg.Retrieved);
     }
 
     public async Task<SuccessResponse> GetAllAsync()
     {
         var formQuestions = await _uow.Perf.FormQuestions.GetAllAsync();
-        var dtos = formQuestions.Where(q => !q.IsDeleted).Select(MapToDto);
+        var dtos = _mapper.Map<IEnumerable<FormQuestionDto>>(formQuestions.Where(q => !q.IsDeleted));
         return SuccessResponse<IEnumerable<FormQuestionDto>>.Ok(dtos, FormQuestionMsg.RetrievedAll);
     }
 
@@ -113,30 +118,14 @@ public class FormQuestionService : IFormQuestionService
             return SuccessResponse.Fail(FormTemplateMsg.NotFound(templateId), ErrorType.NotFound);
 
         var formQuestions = await _uow.Perf.FormQuestions.GetByTemplateIdAsync(templateId);
-        var dtos = formQuestions.Select(MapToDto);
+        var dtos = _mapper.Map<IEnumerable<FormQuestionDto>>(formQuestions);
         return SuccessResponse<IEnumerable<FormQuestionDto>>.Ok(dtos, FormQuestionMsg.RetrievedByTemplate);
     }
 
     public async Task<SuccessResponse> GetByCategoryIdAsync(long categoryId)
     {
         var formQuestions = await _uow.Perf.FormQuestions.GetByCategoryIdAsync(categoryId);
-        var dtos = formQuestions.Select(MapToDto);
+        var dtos = _mapper.Map<IEnumerable<FormQuestionDto>>(formQuestions);
         return SuccessResponse<IEnumerable<FormQuestionDto>>.Ok(dtos, FormQuestionMsg.RetrievedByCategory);
-    }
-
-    private static FormQuestionDto MapToDto(FormQuestion fq)
-    {
-        return new FormQuestionDto(
-            fq.Id,
-            fq.TemplateId,
-            fq.QuestionText,
-            fq.Sequence,
-            fq.HasYesNo,
-            fq.HasComment,
-            fq.CategoryId,
-            fq.Category?.Name,
-            fq.QuestionRatingScaleId,
-            fq.RatingScale?.Name,
-            fq.Tags.Select(t => t.Name).ToList());
     }
 }

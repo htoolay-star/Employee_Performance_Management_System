@@ -1,110 +1,188 @@
-﻿using EPMS.Domain.Contracts;
+﻿using AutoMapper;
+using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Performance;
 using EPMS.Domain.Interface.IService;
+using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.FormDTOs;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using EPMS.Shared.DTOs.Common;
+using EPMS.Shared.Enums;
+using static EPMS.Shared.Constants.ServiceResponseMessages;
 
-namespace EPMS.Application.Services.Performance
+namespace EPMS.Domain.Services.Performance;
+
+public class AppraisalService : IAppraisalService
 {
-    public class AppraisalService : IAppraisalService
+    private readonly IUnitOfWork _uow;
+    private readonly TimeProvider _timeProvider;
+    private readonly IMapper _mapper;
+
+    public AppraisalService(IUnitOfWork uow, TimeProvider timeProvider, IMapper mapper)
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly TimeProvider _timeProvider;
+        _uow = uow;
+        _timeProvider = timeProvider;
+        _mapper = mapper;
+    }
 
-        public AppraisalService(IUnitOfWork unitOfWork, TimeProvider timeProvider)
+    public async Task<SuccessResponse> CreateAsync(CreateAppraisalDto dto)
+    {
+        var employee = await _uow.Info.EmployeeProfiles.GetByIdAsync(dto.EmployeeId);
+        if (employee == null)
+            return SuccessResponse.Fail(EmployeeProfileMsg.NotFound(dto.EmployeeId), ErrorType.NotFound);
+
+        var cycle = await _uow.Perf.AppraisalCycles.GetByIdAsync(dto.CycleId);
+        if (cycle == null)
+            return SuccessResponse.Fail(AppraisalCycleMsg.NotFound(dto.CycleId), ErrorType.NotFound);
+
+        var appraiser = await _uow.Info.EmployeeProfiles.GetByIdAsync(dto.AppraiserId);
+        if (appraiser == null)
+            return SuccessResponse.Fail(EmployeeProfileMsg.NotFound(dto.AppraiserId), ErrorType.NotFound);
+
+        var hasExisting = await _uow.Perf.Appraisals.HasAlreadySubmittedAsync(
+            dto.EmployeeId, dto.AppraiserId, (int)dto.CycleId, dto.EvaluatorRole);
+        if (hasExisting)
+            return SuccessResponse.Fail(AppraisalMsg.DuplicateEntry, ErrorType.Conflict);
+
+        var appraisal = new Appraisal(dto.EmployeeId, dto.CycleId, dto.AppraiserId, dto.EvaluatorRole);
+
+        _uow.Perf.Appraisals.Add(appraisal);
+        await _uow.CompleteAsync();
+
+        return SuccessResponse.Ok(AppraisalMsg.Created);
+    }
+
+    public async Task<SuccessResponse> UpdateAsync(long id, UpdateAppraisalDto dto)
+    {
+        var appraisal = await _uow.Perf.Appraisals.GetByIdAsync(id);
+        if (appraisal == null)
+            return SuccessResponse.Fail(AppraisalMsg.NotFound(id), ErrorType.NotFound);
+
+        if (appraisal.IsLocked)
+            return SuccessResponse.Fail(AppraisalMsg.AlreadyLocked, ErrorType.Conflict);
+
+        appraisal.UpdateDetails(dto.Status, dto.EmployeeComment, dto.ManagerComment, dto.RatingLabel);
+
+        await _uow.CompleteAsync();
+        return SuccessResponse.Ok(AppraisalMsg.Updated);
+    }
+
+    public async Task<SuccessResponse> DeleteAsync(long id)
+    {
+        var appraisal = await _uow.Perf.Appraisals.GetByIdAsync(id);
+        if (appraisal == null)
+            return SuccessResponse.Fail(AppraisalMsg.NotFound(id), ErrorType.NotFound);
+
+        if (appraisal.IsLocked)
+            return SuccessResponse.Fail(AppraisalMsg.AlreadyLocked, ErrorType.Conflict);
+
+        appraisal.IsDeleted = true;
+        appraisal.DeletedAt = _timeProvider.GetUtcNow();
+
+        await _uow.CompleteAsync();
+        return SuccessResponse.Ok(AppraisalMsg.Deleted);
+    }
+
+    public async Task<SuccessResponse> GetByIdAsync(long id)
+    {
+        var appraisal = await _uow.Perf.Appraisals.GetByIdAsync(id);
+        if (appraisal == null)
+            return SuccessResponse.Fail(AppraisalMsg.NotFound(id), ErrorType.NotFound);
+
+        var dto = _mapper.Map<AppraisalDto>(appraisal);
+        return SuccessResponse<AppraisalDto>.Ok(dto, AppraisalMsg.Retrieved);
+    }
+
+    public async Task<SuccessResponse> GetAllAsync()
+    {
+        var appraisals = await _uow.Perf.Appraisals.GetAllAsync();
+        var dtos = _mapper.Map<IEnumerable<AppraisalDto>>(appraisals.Where(a => !a.IsDeleted));
+        return SuccessResponse<IEnumerable<AppraisalDto>>.Ok(dtos, AppraisalMsg.RetrievedAll);
+    }
+
+    public async Task<SuccessResponse> GetByEmployeeIdAsync(long employeeId)
+    {
+        var employee = await _uow.Info.EmployeeProfiles.GetByIdAsync(employeeId);
+        if (employee == null)
+            return SuccessResponse.Fail(EmployeeProfileMsg.NotFound(employeeId), ErrorType.NotFound);
+
+        var appraisals = await _uow.Perf.Appraisals.GetEmployeeAppraisalsAsync(employeeId, 0);
+        var dtos = _mapper.Map<IEnumerable<AppraisalDto>>(appraisals.Where(a => !a.IsDeleted));
+        return SuccessResponse<IEnumerable<AppraisalDto>>.Ok(dtos, AppraisalMsg.RetrievedByEmployee);
+    }
+
+    public async Task<SuccessResponse> SubmitAsync(AppraisalSubmissionDto dto)
+    {
+        var appraisal = await _uow.Perf.Appraisals.GetAppraisalWithDetailsAsync(dto.Id);
+        if (appraisal == null)
+            return SuccessResponse.Fail(AppraisalMsg.NotFound(dto.Id), ErrorType.NotFound);
+
+        if (appraisal.IsLocked)
+            return SuccessResponse.Fail(AppraisalMsg.AlreadyLocked, ErrorType.Conflict);
+
+        foreach (var detailDto in dto.Details)
         {
-            _unitOfWork = unitOfWork;
-            _timeProvider = timeProvider;
-        }
+            var detail = appraisal.Details.FirstOrDefault(d =>
+                (detailDto.KPIId.HasValue && d.KPIId == detailDto.KPIId) ||
+                (detailDto.QuestionId.HasValue && d.QuestionId == detailDto.QuestionId));
 
-        public async Task<AppraisalResponseDto> SubmitAppraisalAsync(AppraisalSubmissionDto dto)
-        {
-            // 1. Fetch Appraisal Record with Details
-            var appraisal = await _unitOfWork.Perf.Appraisals.GetAppraisalWithDetailsAsync(dto.Id);
-
-            // Business Logic: All checks are done here in Service
-            if (appraisal == null)
-                throw new KeyNotFoundException($"Appraisal with ID {dto.Id} was not found.");
-
-            if (appraisal.IsLocked)
-                throw new InvalidOperationException("This appraisal is already finalized/locked and cannot be modified.");
-
-            // 2. Process each rating from the DTO
-            foreach (var detailDto in dto.Details)
+            if (detail != null)
             {
-                // Find matching question in the appraisal details
-                var detail = appraisal.Details.FirstOrDefault(d =>
-                    (detailDto.KPIId.HasValue && d.KPIId == detailDto.KPIId) ||
-                    (detailDto.QuestionId.HasValue && d.QuestionId == detailDto.QuestionId));
-                
-                if (detail != null)
-                {
-                    // detail.Evaluate handles the internal WeightedScore calculation based on Domain logic
-                    detail.Evaluate(detailDto.ActualValue, detailDto.Rating, detailDto.Comment);
-                }
+                detail.Evaluate(detailDto.ActualValue, detailDto.Rating, detailDto.Comment);
             }
-
-            // 3. Final Score Calculation (ACE Data System Standard)
-            // TotalScore = Sum of all weighted scores from details
-            var currentTotalScore = appraisal.Details.Sum(d => d.WeightedScore);
-
-            // Get grading scales from HR configuration (e.g., 86-100 = Outstanding)
-            var scales = await _unitOfWork.HR.RatingScales.GetAllAsync();
-            var matchingScale = scales.FirstOrDefault(s =>
-                currentTotalScore >= s.MinScore && currentTotalScore <= s.MaxScore);
-
-            if (matchingScale != null)
-            {
-                // This updates TotalScore and RatingLabel inside the entity
-                appraisal.CalculateTotalScore(matchingScale);
-            }
-
-            // 4. Persistence - Update record and commit transaction
-            _unitOfWork.Perf.Appraisals.Update(appraisal);
-            await _unitOfWork.CompleteAsync();
-
-            return new AppraisalResponseDto
-            {
-                Id = appraisal.Id,
-                TotalScore = appraisal.TotalScore ?? 0,
-                Grade = appraisal.RatingLabel ?? "N/A"
-            };
         }
 
-        public async Task<Appraisal> GetAppraisalDetailsAsync(long id)
+        var currentTotalScore = appraisal.Details.Sum(d => d.WeightedScore);
+        var scales = await _uow.HR.RatingScales.GetAllAsync();
+        var matchingScale = scales.FirstOrDefault(s =>
+            currentTotalScore >= s.MinScore && currentTotalScore <= s.MaxScore);
+
+        if (matchingScale != null)
         {
-            var result = await _unitOfWork.Perf.Appraisals.GetAppraisalWithDetailsAsync(id);
-
-            if (result == null)
-                throw new KeyNotFoundException($"No data found for Appraisal ID {id}");
-            return result;
+            appraisal.CalculateTotalScore(matchingScale);
         }
-        public async Task<bool> UpdateContinuousFeedbackAsync(long id, string empComment, string mgrComment)
+
+        _uow.Perf.Appraisals.Update(appraisal);
+        await _uow.CompleteAsync();
+
+        var response = new AppraisalResponseDto
         {
-            var appraisal = await _unitOfWork.Perf.Appraisals.GetByIdAsync(id);
+            Id = appraisal.Id,
+            TotalScore = appraisal.TotalScore ?? 0,
+            Grade = appraisal.RatingLabel ?? "N/A"
+        };
 
-            if (appraisal == null || appraisal.IsLocked) return false;
+        return SuccessResponse<AppraisalResponseDto>.Ok(response, AppraisalMsg.Submitted);
+    }
 
-            var type = typeof(Appraisal);
-            type.GetProperty(nameof(Appraisal.EmployeeComment))?.SetValue(appraisal, empComment);
-            type.GetProperty(nameof(Appraisal.ManagerComment))?.SetValue(appraisal, mgrComment);
+    public async Task<SuccessResponse> LockAsync(long id, long adminId, string reason)
+    {
+        var appraisal = await _uow.Perf.Appraisals.GetByIdAsync(id);
+        if (appraisal == null)
+            return SuccessResponse.Fail(AppraisalMsg.NotFound(id), ErrorType.NotFound);
 
-            _unitOfWork.Perf.Appraisals.Update(appraisal);
-            return await _unitOfWork.CompleteAsync() > 0;
-        }
+        if (appraisal.IsLocked)
+            return SuccessResponse.Fail(AppraisalMsg.AlreadyLocked, ErrorType.Conflict);
 
-        public async Task<bool> ConductOneOnOneMeetingAsync(long id, string finalManagerComment)
-        {
-            var appraisal = await _unitOfWork.Perf.Appraisals.GetByIdAsync(id);
-            if (appraisal == null || appraisal.IsLocked) return false;
+        appraisal.FinalizeAppraisal(_timeProvider);
 
-            appraisal.SubmitManagerReview(finalManagerComment, _timeProvider);
+        await _uow.CompleteAsync();
+        return SuccessResponse.Ok(AppraisalMsg.Locked);
+    }
 
-            _unitOfWork.Perf.Appraisals.Update(appraisal);
-            return await _unitOfWork.CompleteAsync() > 0;
-        }
+    public async Task<SuccessResponse> UnlockAsync(long id, long adminId, string reason)
+    {
+        var appraisal = await _uow.Perf.Appraisals.GetByIdAsync(id);
+        if (appraisal == null)
+            return SuccessResponse.Fail(AppraisalMsg.NotFound(id), ErrorType.NotFound);
+
+        if (!appraisal.IsLocked)
+            return SuccessResponse.Fail(AppraisalMsg.AlreadyUnlocked, ErrorType.Conflict);
+
+        if (string.IsNullOrWhiteSpace(reason))
+            return SuccessResponse.Fail(AppraisalMsg.UnlockReasonRequired, ErrorType.Validation);
+
+        appraisal.UnlockAppraisal(adminId, reason, _timeProvider);
+
+        await _uow.CompleteAsync();
+        return SuccessResponse.Ok(AppraisalMsg.Unlocked);
     }
 }

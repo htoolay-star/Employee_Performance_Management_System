@@ -1,3 +1,4 @@
+using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Auth;
 using EPMS.Shared.Constants;
@@ -11,10 +12,12 @@ namespace EPMS.Domain.Services.Auth;
 public class PositionPermissionService : IPositionPermissionService
 {
     private readonly IUnitOfWork _uow;
+    private readonly IMapper _mapper;
 
-    public PositionPermissionService(IUnitOfWork uow)
+    public PositionPermissionService(IUnitOfWork uow, IMapper mapper)
     {
         _uow = uow;
+        _mapper = mapper;
     }
 
     public async Task<SuccessResponse> CreateAsync(CreatePositionPermissionDto dto)
@@ -55,29 +58,14 @@ public class PositionPermissionService : IPositionPermissionService
         if (positionPermission == null)
             return SuccessResponse.Fail(PositionPermissionMsg.NotFound(id), ErrorType.NotFound);
 
-        var dto = new PositionPermissionDto(
-            positionPermission.Id,
-            positionPermission.PositionId,
-            positionPermission.PermissionId,
-            positionPermission.Position?.Title,
-            positionPermission.Permission?.Name,
-            positionPermission.Permission?.Code);
-
+        var dto = _mapper.Map<PositionPermissionDto>(positionPermission);
         return SuccessResponse<PositionPermissionDto>.Ok(dto, PositionPermissionMsg.Retrieved);
     }
 
     public async Task<SuccessResponse> GetAllAsync()
     {
         var positionPermissions = await _uow.Auth.PositionPermissions.GetAllAsync();
-
-        var dtos = positionPermissions.Select(pp => new PositionPermissionDto(
-            pp.Id,
-            pp.PositionId,
-            pp.PermissionId,
-            pp.Position?.Title,
-            pp.Permission?.Name,
-            pp.Permission?.Code));
-
+        var dtos = _mapper.Map<IEnumerable<PositionPermissionDto>>(positionPermissions);
         return SuccessResponse<IEnumerable<PositionPermissionDto>>.Ok(dtos, PositionPermissionMsg.RetrievedAll);
     }
 
@@ -86,14 +74,7 @@ public class PositionPermissionService : IPositionPermissionService
         var positionPermissions = await _uow.Auth.PositionPermissions
             .GetByPositionIdAsync(positionId);
 
-        var dtos = positionPermissions.Select(pp => new PositionPermissionDto(
-            pp.Id,
-            pp.PositionId,
-            pp.PermissionId,
-            pp.Position?.Title,
-            pp.Permission?.Name,
-            pp.Permission?.Code));
-
+        var dtos = _mapper.Map<IEnumerable<PositionPermissionDto>>(positionPermissions);
         return SuccessResponse<IEnumerable<PositionPermissionDto>>.Ok(dtos, PositionPermissionMsg.RetrievedByPosition);
     }
 
@@ -102,14 +83,7 @@ public class PositionPermissionService : IPositionPermissionService
         var positionPermissions = await _uow.Auth.PositionPermissions
             .GetByPermissionIdAsync(permissionId);
 
-        var dtos = positionPermissions.Select(pp => new PositionPermissionDto(
-            pp.Id,
-            pp.PositionId,
-            pp.PermissionId,
-            pp.Position?.Title,
-            pp.Permission?.Name,
-            pp.Permission?.Code));
-
+        var dtos = _mapper.Map<IEnumerable<PositionPermissionDto>>(positionPermissions);
         return SuccessResponse<IEnumerable<PositionPermissionDto>>.Ok(dtos, PositionPermissionMsg.RetrievedByPermission);
     }
 

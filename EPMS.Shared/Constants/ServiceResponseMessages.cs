@@ -402,4 +402,53 @@ public static class PIPObjectiveMsg
         public static string NotFound(long id) => $"Form question with ID '{id}' was not found.";
         public static string DuplicateEntry = "Form question with this sequence already exists in the template.";
     }
+
+    public static class AppraisalMsg
+    {
+        public const string Created = "Appraisal created successfully.";
+        public const string Updated = "Appraisal updated successfully.";
+        public const string Deleted = "Appraisal deleted successfully.";
+        public const string Submitted = "Appraisal submitted successfully.";
+        public const string Locked = "Appraisal locked successfully.";
+        public const string Unlocked = "Appraisal unlocked successfully.";
+        public const string Retrieved = "Appraisal retrieved successfully.";
+        public const string RetrievedAll = "Appraisals retrieved successfully.";
+        public const string RetrievedByEmployee = "Appraisals for employee retrieved successfully.";
+        public const string DuplicateEntry = "An appraisal with these parameters already exists.";
+        public const string UnlockReasonRequired = "An unlock reason is required.";
+        public static string NotFound(long id) => $"Appraisal with ID '{id}' was not found.";
+        public static string AlreadyLocked = "Appraisal is already locked.";
+        public static string AlreadyUnlocked = "Appraisal is not locked.";
+        public static string NotFoundByEmployee(long employeeId) => $"Appraisal for employee with ID '{employeeId}' was not found.";
+    }
+
+    public static class AppraisalRecommendationMsg
+    {
+        public const string Created = "Recommendation created successfully.";
+        public const string Updated = "Recommendation updated successfully.";
+        public const string Deleted = "Recommendation deleted successfully.";
+        public const string Approved = "Recommendation approved successfully.";
+        public const string Rejected = "Recommendation rejected successfully.";
+        public const string Retrieved = "Recommendation retrieved successfully.";
+        public const string RetrievedAll = "Recommendations retrieved successfully.";
+        public const string RetrievedByAppraisal = "Recommendations for appraisal retrieved successfully.";
+        public static string NotFound(long id) => $"Recommendation with ID '{id}' was not found.";
+        public static string NotFoundByAppraisal(long appraisalId) => $"Recommendation for appraisal with ID '{appraisalId}' was not found.";
+        public static string AlreadyProcessed = "Recommendation has already been processed.";
+        public static string CannotModify = "Cannot modify a processed recommendation.";
+    }
+
+    public static class EvaluationResponseMsg
+    {
+        public const string Created = "Evaluation response created successfully.";
+        public const string Updated = "Evaluation response updated successfully.";
+        public const string Deleted = "Evaluation response deleted successfully.";
+        public const string Retrieved = "Evaluation response retrieved successfully.";
+        public const string RetrievedAll = "Evaluation responses retrieved successfully.";
+        public const string RetrievedByAppraisal = "Evaluation responses for appraisal retrieved successfully.";
+        public const string RetrievedByTemplate = "Evaluation responses for template retrieved successfully.";
+        public const string RetrievedByQuestion = "Evaluation responses for question retrieved successfully.";
+        public static string NotFound(long id) => $"Evaluation response with ID '{id}' was not found.";
+        public static string NotFoundByAppraisal(long appraisalId) => $"Evaluation response for appraisal with ID '{appraisalId}' was not found.";
+    }
 }

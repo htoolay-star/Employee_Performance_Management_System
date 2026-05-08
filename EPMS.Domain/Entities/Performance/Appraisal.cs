@@ -130,5 +130,20 @@ public void SubmitManagerReview(string? comment, TimeProvider timeProvider)
 
             _recommendations.Add(recommendation);
         }
+
+        public void UpdateDetails(string? status, string? employeeComment, string? managerComment, string? ratingLabel)
+        {
+            if (!string.IsNullOrWhiteSpace(status))
+                Status = status.Trim();
+
+            if (employeeComment != null)
+                EmployeeComment = employeeComment.Trim();
+
+            if (managerComment != null)
+                ManagerComment = managerComment.Trim();
+
+            if (!string.IsNullOrWhiteSpace(ratingLabel))
+                RatingLabel = ratingLabel.Trim();
+        }
     }
 }
