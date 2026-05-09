@@ -8,26 +8,43 @@ using EPMS.Shared.DTOs.AuthDTOs.PermissionDTOS;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.PositionDTOs;
 using EPMS.Shared.Enums;
+using EPMS.Shared.Features.Positions;
+using Mapster;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 namespace EPMS.Domain.Services.Hr;
 
 public class PositionService : IPositionService
 {
-    private readonly IMapper _mapper;
     private readonly IUnitOfWork _uow;
 
-    public PositionService(IMapper mapper, IUnitOfWork uow)
+    public PositionService(IUnitOfWork uow)
     {
-        _mapper = mapper;
         _uow = uow;
     }
 
     public async Task<SuccessResponse<IEnumerable<PositionDto>>> GetAllAsync()
     {
         var positions = await _uow.HR.Positions.GetAllWithLevelAsync();
-        var dtos = _mapper.Map<IEnumerable<PositionDto>>(positions);
+        var dtos = positions.Adapt<IEnumerable<PositionDto>>();
         return SuccessResponse<IEnumerable<PositionDto>>.Ok(dtos, ServiceResponseMessages.PositionMsg.RetrievedAll);
+    }
+
+    public async Task<SuccessResponse<PaginatedResponse<PositionGridItemDto>>> GetPagedAsync(PositionQueryParameters parameters)
+    {
+        var entitySortColumn = GetMappedSortColumn(parameters.OrderBy);
+
+        var (items, totalCount) = await _uow.HR.Positions.GetPagedAsync(parameters, entitySortColumn);
+
+        var paginatedResponse = new PaginatedResponse<PositionGridItemDto>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            PageNumber = parameters.PageNumber,
+            PageSize = parameters.PageSize
+        };
+
+        return SuccessResponse<PaginatedResponse<PositionGridItemDto>>.Ok(paginatedResponse, ServiceResponseMessages.PositionMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<PositionDto>> GetByIdAsync(long id)
@@ -37,7 +54,7 @@ public class PositionService : IPositionService
         if (position is null)
             return SuccessResponse<PositionDto>.Fail(ServiceResponseMessages.PositionMsg.NotFound(id), ErrorType.NotFound);
 
-        var dto = _mapper.Map<PositionDto>(position);
+        var dto = position.Adapt<PositionDto>();
         return SuccessResponse<PositionDto>.Ok(dto, ServiceResponseMessages.PositionMsg.Retrieved);
     }
 
@@ -97,7 +114,7 @@ public class PositionService : IPositionService
             return SuccessResponse<IEnumerable<PermissionDto>>.Fail(ServiceResponseMessages.PositionMsg.NotFound(positionId), ErrorType.NotFound);
 
         var permissions = await _uow.Auth.PositionPermissions.GetPermissionsForPositionAsync(positionId);
-        var dtos = _mapper.Map<IEnumerable<PermissionDto>>(permissions);
+        var dtos = permissions.Adapt<IEnumerable<PermissionDto>>();
         return SuccessResponse<IEnumerable<PermissionDto>>.Ok(dtos, PermissionMsg.RetrievedAll);
     }
 
@@ -132,5 +149,19 @@ public class PositionService : IPositionService
         _uow.Auth.PositionPermissions.Delete(positionPermission);
         await _uow.CompleteAsync();
         return SuccessResponse.Ok(ServiceResponseMessages.PositionMsg.PermissionRemoved);
+    }
+
+    private string GetMappedSortColumn(string? sortByFromDto)
+    {
+        if (string.IsNullOrWhiteSpace(sortByFromDto)) return "Title";
+
+        var columnMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+    {
+        { "Title", "Title" },
+        { "LevelName", "Level.Name" },
+        { "IsActive", "IsActive" }
+    };
+
+        return columnMap.TryGetValue(sortByFromDto, out var mappedColumn) ? mappedColumn : "Title";
     }
 }

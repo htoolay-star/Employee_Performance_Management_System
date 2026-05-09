@@ -36,9 +36,6 @@ public class MappingProfile : Profile
         CreateMap<Department, DepartmentDto>();
         CreateMap<Level, LevelDto>();
         CreateMap<Team, TeamDto>();
-        CreateMap<Position, PositionDto>()
-            .ForMember(dest => dest.LevelCode, opt => opt.MapFrom(src => src.Level.Code))
-            .ForMember(dest => dest.LevelName, opt => opt.MapFrom(src => src.Level.Name));
 
         // Auth Entities
         CreateMap<Permission, PermissionDto>();

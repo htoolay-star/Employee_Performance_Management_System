@@ -23,7 +23,7 @@ namespace EPMS.Shared.Validators.ValidationMessages
             public const string TitleRequired = "Position title is required.";
             public const string TitleMaxLength = "Position title cannot exceed 100 characters.";
             public const string LevelIdRequired = "Level is required.";
-            public const string LevelIdInvalid = "Level ID must be greater than 0.";
+            public const string LevelIdInvalid = "Please select a valid level.";
         }
 
         public static class Level

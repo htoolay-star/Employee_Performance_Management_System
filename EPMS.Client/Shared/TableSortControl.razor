@@ -1,0 +1,50 @@
+﻿@using MudBlazor
+
+<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+    <MudSelect T="string"
+               Label="Sort By"
+               Value="@SortBy"
+               ValueChanged="OnSortByChanged"
+               Variant="Variant.Outlined"
+               Margin="Margin.Dense"
+               Style="width: 150px;">
+        @foreach (var col in SortColumns)
+        {
+            <MudSelectItem Value="@col.Key">@col.Value</MudSelectItem>
+        }
+    </MudSelect>
+
+    <MudIconButton Icon="@(SortDirection == "asc" ? Icons.Material.Filled.ArrowUpward : Icons.Material.Filled.ArrowDownward)"
+                   Color="Color.Primary"
+                   Variant="Variant.Outlined"
+                   Size="Size.Small"
+                   OnClick="ToggleDirection" />
+</MudStack>
+
+@code {
+    [Parameter] public string SortBy { get; set; } = string.Empty;
+    [Parameter] public string SortDirection { get; set; } = "asc";
+    [Parameter] public Dictionary<string, string> SortColumns { get; set; } = new();
+
+    [Parameter] public EventCallback<(string SortBy, string SortDirection)> OnSortChanged { get; set; }
+
+    private async Task OnSortByChanged(string newValue)
+    {
+        SortBy = newValue;
+        await NotifyChanged();
+    }
+
+    private async Task ToggleDirection()
+    {
+        SortDirection = SortDirection == "asc" ? "desc" : "asc";
+        await NotifyChanged();
+    }
+
+    private async Task NotifyChanged()
+    {
+        if (OnSortChanged.HasDelegate)
+        {
+            await OnSortChanged.InvokeAsync((SortBy, SortDirection));
+        }
+    }
+}

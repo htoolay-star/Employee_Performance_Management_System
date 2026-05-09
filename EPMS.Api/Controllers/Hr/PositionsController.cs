@@ -3,12 +3,15 @@ using EPMS.Domain.Interfaces;
 using EPMS.Shared.DTOs.AuthDTOs.PermissionDTOS;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.PositionDTOs;
+using EPMS.Shared.Features.Positions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EPMS.Api.Controllers.Hr;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class PositionsController : ApiControllerBase
 {
     private readonly IPositionService _service;
@@ -22,6 +25,13 @@ public class PositionsController : ApiControllerBase
     public async Task<ActionResult<SuccessResponse<IEnumerable<PositionDto>>>> GetAll()
     {
         var result = await _service.GetAllAsync();
+        return HandleResult(result);
+    }
+
+    [HttpGet("paged")]
+    public async Task<ActionResult<SuccessResponse<PaginatedResponse<PositionGridItemDto>>>> GetPaged([FromQuery] PositionQueryParameters parameters)
+    {
+        var result = await _service.GetPagedAsync(parameters);
         return HandleResult(result);
     }
 

@@ -2,7 +2,7 @@
 @using EPMS.Client.Services
 @using EPMS.Shared.DTOs.Auth
 @using MudBlazor
-@inject AuthApiClient AuthApiClient
+@inject IAuthApiClient AuthApiClient
 @inject TokenStorage TokenStorage
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -27,7 +27,7 @@
                     <MudTextField T="string" Label="Password" @bind-Value="_loginModel.Password" For="@(() => _loginModel.Password)" Required="true" RequiredError="Password is required!" InputType="@(showPassword ? InputType.Text : InputType.Password)" Variant="Variant.Outlined" Adornment="Adornment.End" AdornmentIcon="@(showPassword ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)" OnAdornmentClick="TogglePasswordVisibility" Class="mb-4"></MudTextField>
                 </MudItem>
                 <MudItem xs="12" Class="d-flex justify-space-between align-center">
-                    <MudCheckBox T="bool" @bind-Checked="_loginModel.RememberMe" Color="Color.Primary" Label="Remember me" />
+                    <MudCheckBox T="bool" @bind-Value="_loginModel.RememberMe" Color="Color.Primary" Label="Remember me" />
                     <MudLink Href="#" Typo="Typo.body2">Forgot password?</MudLink>
                 </MudItem>
                 <MudItem xs="12" Class="mt-4">

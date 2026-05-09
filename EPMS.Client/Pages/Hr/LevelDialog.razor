@@ -1,0 +1,140 @@
+@using EPMS.Client.Services
+@using EPMS.Shared.DTOs.LevelDTOs
+@using EPMS.Shared.DTOs.Common
+@using MudBlazor
+@using static EPMS.Shared.Constants.ServiceResponseMessages
+@inject ILevelApiClient LevelApiClient
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="_form">
+            <MudStack Spacing="3">
+                @if (!IsEdit)
+                {
+                    <MudTextField @bind-Value="_code"
+                                  Label="Level Code"
+                                  Required="true"
+                                  RequiredError="Code is required!"
+                                  Variant="Variant.Outlined" />
+                }
+
+                <MudTextField @bind-Value="_name"
+                              Label="Level Name"
+                              Required="true"
+                              RequiredError="Name is required!"
+                              Variant="Variant.Outlined" />
+
+                <MudTextField @bind-Value="_description"
+                              Label="Description"
+                              Variant="Variant.Outlined"
+                              Lines="3" />
+            </MudStack>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary"
+                   OnClick="Submit"
+                   Disabled="@_saving">
+            @if (_saving)
+            {
+                <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @(IsEdit ? "Update" : "Create")
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance? MudDialog { get; set; }
+
+    [Parameter]
+    public LevelDto? Level { get; set; }
+
+    private bool IsEdit => Level != null;
+    private MudForm? _form;
+    private bool _saving;
+
+    private string _code = string.Empty;
+    private string _name = string.Empty;
+    private string? _description;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (IsEdit && Level != null)
+        {
+            _name = Level.Name;
+            _description = Level.Description;
+        }
+        await base.OnInitializedAsync();
+    }
+
+    private async Task Submit()
+    {
+        await _form!.Validate();
+        if (!_form.IsValid)
+        {
+            Snackbar.Add("Please fill all required fields", Severity.Warning);
+            return;
+        }
+
+        _saving = true;
+        try
+        {
+            if (IsEdit && Level != null)
+            {
+                var updateDto = new UpdateLevelDto
+                {
+                    Name = _name,
+                    Description = _description
+                };
+                var response = await LevelApiClient.UpdateAsync(Level.Id, updateDto);
+                if (response.Success)
+                {
+                    Snackbar.Add(LevelMsg.Updated, Severity.Success);
+                    MudDialog?.Close(DialogResult.Ok(true));
+                }
+                else
+                {
+                    Snackbar.Add(response.Message ?? "Failed to update level", Severity.Error);
+                }
+            }
+            else
+            {
+                var createDto = new CreateLevelDto
+                {
+                    Code = _code,
+                    Name = _name,
+                    Description = _description
+                };
+                var response = await LevelApiClient.CreateAsync(createDto);
+                if (response.Success)
+                {
+                    Snackbar.Add(LevelMsg.Created, Severity.Success);
+                    MudDialog?.Close(DialogResult.Ok(true));
+                }
+                else
+                {
+                    Snackbar.Add(response.Message ?? "Failed to create level", Severity.Error);
+                }
+            }
+        }
+        catch (Refit.ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "An error occurred", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void Cancel() => MudDialog?.Cancel();
+}
