@@ -1,0 +1,187 @@
+@using EPMS.Client.Constants
+@using EPMS.Client.Extensions
+@using EPMS.Client.Models.Hr
+@using EPMS.Client.Services
+@using EPMS.Shared.DTOs.PositionDTOs
+@using EPMS.Shared.DTOs.LevelDTOs
+@using EPMS.Shared.DTOs.Common
+@using Mapster
+@using MudBlazor
+@using FluentValidation
+@using EPMS.Shared.Validators.PositionDTOs
+@using MudSeverity = MudBlazor.Severity
+
+@inject IPositionApiClient PositionApiClient
+@inject ILevelApiClient LevelApiClient
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="_form" Model="@_model" Validation="@ValidateField">
+            <MudStack Spacing="3">
+                <MudTextField @bind-Value="_model.Title"
+                              Label=@UIConstants.Position.TitleLabel
+                              For="@(() => _model.Title)"
+                              Variant="Variant.Outlined" />
+                
+                <MudSelect T="long?"
+                           @bind-Value="_model.LevelId"
+                           Label=@UIConstants.Position.LevelLabel
+                           Placeholder="@UIConstants.Position.SelectLevelPlaceholder"
+                           For="@(() => _model.LevelId)"
+                           Variant="Variant.Outlined"
+                           Clearable="true"> @foreach (var level in _levels)
+                    {
+                        <MudSelectItem T="long?" Value="@level.Id">
+                            @level.Name
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+
+                <MudSwitch @bind-Value="_model.IsActive"
+                           Label=@UIConstants.Common.Active
+                           Color="Color.Success" />
+            </MudStack>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary"
+                   OnClick="Submit"
+                   Disabled="@(!_form.IsValid || _saving)">
+            @if (_saving)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+            }
+            @(IsEdit ? UIConstants.Common.Update : UIConstants.Common.Create)
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance? _mudDialog { get; set; }
+
+    [Parameter]
+    public bool IsEdit { get; set; }
+
+    [Parameter]
+    public PositionDto? Position { get; set; }
+
+    private MudForm _form = new();
+    private bool _saving;
+    private List<LevelDto> _levels = new();
+    
+    private CreatePositionDtoValidator _createValidator = new();
+    private UpdatePositionDtoValidator _updateValidator = new();
+    
+    private PositionFormModel _model = new();
+    private Dictionary<string, string> _serverErrors = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLevelsAsync();
+        
+        if (IsEdit && Position != null)
+        {
+            _model.Id = Position.Id;
+            _model.Title = Position.Title ?? string.Empty;
+            _model.LevelId = Position.LevelId;
+            _model.IsActive = Position.IsActive;
+        }
+    }
+
+    private async Task LoadLevelsAsync()
+    {
+        try
+        {
+            var response = await LevelApiClient.GetAllAsync();
+            if (response.Success && response.Data != null)
+            {
+                _levels = response.Data.ToList();
+            }
+            else
+            {
+                Snackbar.Add(UIConstants.Common.LoadFailed, MudSeverity.Error);
+            }
+        }
+        catch (Refit.ApiException)
+        {
+            Snackbar.Add(UIConstants.Common.LoadFailed, MudSeverity.Error);
+        }
+    }
+
+    private async Task Submit()
+    {
+        await _form.Validate();
+        if (!_form.IsValid)
+        {
+            Snackbar.Add(UIConstants.Common.ValidationFailed, MudSeverity.Warning);
+            return;
+        }
+
+        _serverErrors.Clear();
+
+        _saving = true;
+        try
+        {
+            if (IsEdit && Position != null)
+            {
+                var updateDto = _model.Adapt<UpdatePositionDto>();
+                
+                var response = await PositionApiClient.UpdateAsync(Position.Id, updateDto);
+                if (response.Success)
+                    _mudDialog?.Close(DialogResult.Ok(true));
+                else
+                    Snackbar.Add(response.Message ?? UIConstants.Common.UpdateFailed, MudSeverity.Error);
+            }
+            else
+            {
+                var createDto = _model.Adapt<CreatePositionDto>();
+                
+                var response = await PositionApiClient.CreateAsync(createDto);
+                if (response.Success)
+                    _mudDialog?.Close(DialogResult.Ok(true));
+                else
+                    Snackbar.Add(response.Message ?? UIConstants.Common.CreateFailed, MudSeverity.Error);
+            }
+        }
+        catch (Refit.ApiException ex)
+        {
+            if (ex.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                var error = await ex.GetContentAsAsync<SuccessResponse>();
+                Snackbar.Add(error?.Message ?? UIConstants.Common.ValidationFailed, MudSeverity.Error);
+            }
+            else if (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
+            {
+                var error = await ex.GetContentAsAsync<SuccessResponse>();
+                _serverErrors["Title"] = error?.Message ?? UIConstants.Common.DuplicateEntry;
+                await _form.Validate();
+            }
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        _mudDialog?.Cancel();
+    }
+
+    private async Task<IEnumerable<string>> ValidateField(object model, string propertyName)
+    {
+        if (IsEdit)
+        {
+            var validatorFunc = _updateValidator.ValidateMappedValue<PositionFormModel, UpdatePositionDto>(_model, _serverErrors);
+            return await validatorFunc(model, propertyName);
+        }
+        else
+        {
+            var validatorFunc = _createValidator.ValidateMappedValue<PositionFormModel, CreatePositionDto>(_model, _serverErrors);
+            return await validatorFunc(model, propertyName);
+        }
+    }
+}

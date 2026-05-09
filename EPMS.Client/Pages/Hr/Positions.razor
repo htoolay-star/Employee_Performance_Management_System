@@ -1,0 +1,282 @@
+@page "/hr/positions"
+@using EPMS.Client.Constants
+@using EPMS.Client.Services
+@using static EPMS.Shared.Constants.ServiceResponseMessages
+
+<style>
+    .loading-overlay {
+        position: relative;
+        margin-bottom: -8px;
+    }
+</style>
+@using EPMS.Shared.DTOs.PositionDTOs
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.LevelDTOs
+@using EPMS.Shared.Features.Positions
+@using MudBlazor
+@using Refit
+@inject IPositionApiClient PositionApiClient
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<PageTitle>@UIConstants.Position.PageTitle - EPMS</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.Position.PageTitle</MudText>
+
+    <MudPaper Elevation="2" Class="pa-4">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+            <MudTextField T="string"
+                          Value="@_searchString"
+                          ValueChanged="@(async (string val) => { 
+                              _searchString = val; 
+                              if (val != _lastSearchTerm) {
+                                  _lastSearchTerm = val;
+                                  await RefreshDataAsync();
+                              }
+                          })"
+                          Immediate="true"
+                          DebounceInterval="500"
+                          Placeholder="@UIConstants.Position.SearchPlaceholder"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Variant="Variant.Outlined"
+                          Style="max-width: 300px;" />
+
+            <TableSortControl SortBy="@_sortBy"
+                      SortDirection="@_sortDirection"
+                      SortColumns="@_sortableColumns"
+                      OnSortChanged="HandleSortChanged" />
+
+            <MudButton Variant="Variant.Filled" 
+                       Color="Color.Primary" 
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenCreateDialog">
+                @UIConstants.Position.AddButton
+            </MudButton>
+        </MudStack>
+
+        @if (_isLoading)
+        {
+            <div class="loading-overlay">
+                <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+            </div>
+        }
+
+        <MudDataGrid @ref="_dataGrid"
+                     T="PositionGridItemDto"
+                     ServerData="LoadPositionsServerData"
+                     SortMode="SortMode.None"
+                     Hover="true"
+                     Striped="true"
+                     Dense="true"
+                     RowsPerPage="10">
+            <Columns>
+                <TemplateColumn Title="@UIConstants.Common.ColumnNo" Sortable="false">
+                    <CellTemplate>
+                        @context.Item.RowIndex
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.Title" Title="@UIConstants.Position.ColumnTitle" />
+                <PropertyColumn Property="x => x.LevelName" Title="@UIConstants.Position.ColumnLevel" />
+                <TemplateColumn Title="@UIConstants.Common.Actions">
+                    <CellTemplate>
+                        <MudChip Color="@(context.Item.IsActive ? Color.Success : Color.Default)" 
+                                 Size="Size.Small">
+                            @(context.Item.IsActive ? UIConstants.Common.Active : UIConstants.Common.Inactive)
+                        </MudChip>
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="Actions">
+                    <CellTemplate>
+                        <MudStack Row="true" Spacing="1">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" 
+                                           Color="Color.Primary" 
+                                           Size="Size.Small"
+                                           OnClick="@(() => OpenEditDialog(context.Item))" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                           Color="Color.Error" 
+                                           Size="Size.Small"
+                                           OnClick="@(() => ConfirmDelete(context.Item))" />
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+            <NoRecordsContent>
+                <MudText>@UIConstants.Common.NoRecords</MudText>
+            </NoRecordsContent>
+            <LoadingContent>
+                <MudText>@UIConstants.Common.Loading</MudText>
+            </LoadingContent>
+            <PagerContent>
+                <MudDataGridPager T="PositionGridItemDto" />
+            </PagerContent>
+        </MudDataGrid>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private string _searchString = "";
+    private string _lastSearchTerm = "";
+    private MudDataGrid<PositionGridItemDto> _dataGrid = null!;
+    private List<PositionGridItemDto> _cachedItems = new();
+    private int _currentPage = 0;
+    private bool _isLoading = false;
+    private string _sortBy = "Title";
+    private string _sortDirection = "asc";
+
+    private Dictionary<string, string> _sortableColumns = new()
+    {
+        { "Title", "Title" },
+        { "LevelName", "Level" },
+        { "IsActive", "Status" }
+    };
+
+    private async Task HandleSortChanged((string SortBy, string SortDirection) sortData)
+    {
+        _sortBy = sortData.SortBy;
+        _sortDirection = sortData.SortDirection;
+        await RefreshDataAsync(); 
+    }
+
+    private async Task RefreshDataAsync()
+    {
+        if (_dataGrid != null)
+        {
+            await _dataGrid.ReloadServerData();
+        }
+    }
+
+    private async Task<GridData<PositionGridItemDto>> LoadPositionsServerData(GridState<PositionGridItemDto> state)
+    {
+        _isLoading = true;
+
+        try
+        {
+            var parameters = new PositionQueryParameters
+            {
+                PageNumber = state.Page + 1,
+                PageSize = state.PageSize,
+                SearchTerm = string.IsNullOrWhiteSpace(_searchString) ? null : _searchString.Trim(),
+                OrderBy = _sortBy,
+                SortDirection = _sortDirection
+            };
+
+            var response = await PositionApiClient.GetPagedAsync(parameters);
+        
+            if (response.Success && response.Data != null)
+            {
+                _cachedItems = response.Data.Items.ToList();
+                return new GridData<PositionGridItemDto>
+                {
+                    Items = _cachedItems,
+                    TotalItems = response.Data.TotalCount
+                };
+            }
+            
+            Snackbar.Add(response.Message ?? UIConstants.Common.LoadFailed, Severity.Error);
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+
+        return new GridData<PositionGridItemDto>
+        {
+            Items = new List<PositionGridItemDto>(),
+            TotalItems = 0
+        };
+    }
+
+    private async Task OpenCreateDialog()
+    {
+        var parameters = new DialogParameters<PositionDialog> 
+        { 
+            { x => x.IsEdit, false },
+            { x => x.Position, new PositionDto() }
+        };
+        
+        var options = new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<PositionDialog>(UIConstants.Position.CreateDialogTitle, parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            Snackbar.Add(PositionMsg.Created, Severity.Success);
+            await RefreshDataAsync();
+        }
+    }
+
+    private async Task OpenEditDialog(PositionDto position)
+    {
+        var parameters = new DialogParameters<PositionDialog> 
+        { 
+            { x => x.IsEdit, true },
+            { x => x.Position, position }
+        };
+        
+        var options = new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<PositionDialog>(UIConstants.Position.EditDialogTitle, parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            Snackbar.Add(PositionMsg.Updated, Severity.Success);
+            await RefreshDataAsync();
+        }
+    }
+
+    private async Task ConfirmDelete(PositionDto position)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, string.Format(UIConstants.Common.DeleteConfirmationFormat, position.Title) },
+            { x => x.ButtonText, UIConstants.Common.Delete },
+            { x => x.Color, Color.Error }
+        };
+        
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(UIConstants.Position.DeleteDialogTitle, parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await DeletePositionAsync(position.Id);
+        }
+    }
+
+    private async Task DeletePositionAsync(long id)
+    {
+        try
+        {
+            var response = await PositionApiClient.DeleteAsync(id);
+            if (response.Success)
+            {
+                Snackbar.Add(PositionMsg.Deleted, Severity.Success);
+                await RefreshDataAsync();
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? UIConstants.Common.DeleteFailed, Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+    }
+}

@@ -338,6 +338,7 @@ namespace EPMS.Domain.Services.Auth
 
         /// <summary>
         /// Gets user roles from cache or database. Cached for 1 hour.
+        /// Includes both direct user role and position-based roles.
         /// </summary>
         public async Task<List<string>> GetUserRolesAsync(long userId)
         {
@@ -351,7 +352,36 @@ namespace EPMS.Domain.Services.Auth
             if (user == null)
                 return new List<string>();
 
-            var roles = new List<string> { user.Role.Name };
+            var roles = new List<string>();
+
+            // 1. Get user's direct role (fallback)
+            if (!string.IsNullOrEmpty(user.Role?.Name))
+            {
+                roles.Add(user.Role.Name);
+            }
+
+            // 2. Get position-based roles (primary - if user has a profile with employment)
+            if (user.Profile != null)
+            {
+                var employment = await _unitOfWork.Info.EmployeeEmployments.GetByEmployeeIdAsync(user.Profile.Id);
+                if (employment != null)
+                {
+                    var positionRoles = await _unitOfWork.Auth.PositionRoles.GetByPositionIdAsync(employment.PositionId);
+                    foreach (var pr in positionRoles.Where(pr => pr.IsActive))
+                    {
+                        if (!string.IsNullOrEmpty(pr.Role?.Name) && !roles.Contains(pr.Role.Name))
+                        {
+                            roles.Add(pr.Role.Name);
+                        }
+                    }
+                }
+            }
+
+            // Ensure at least one role exists (fallback to User if nothing found)
+            if (roles.Count == 0)
+            {
+                roles.Add(RoleConstants.User);
+            }
 
             // Cache roles
             await _cacheService.SetAsync(cacheKey, roles, RolesCacheTtl);

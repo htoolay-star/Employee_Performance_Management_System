@@ -299,6 +299,61 @@ namespace EPMS.Domain.Data.Migrations
                     b.ToTable("PositionPermissions", "auth");
                 });
 
+            modelBuilder.Entity("EPMS.Domain.Entities.Auth.PositionRole", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<long>("PositionId")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("PublicId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("RoleId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<byte[]>("Version")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PublicId")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.HasIndex("RoleId");
+
+                    b.HasIndex("PositionId", "RoleId")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("PositionRoles", "auth");
+                });
+
             modelBuilder.Entity("EPMS.Domain.Entities.Auth.Role", b =>
                 {
                     b.Property<long>("Id")
@@ -3064,6 +3119,25 @@ namespace EPMS.Domain.Data.Migrations
                     b.Navigation("Position");
                 });
 
+            modelBuilder.Entity("EPMS.Domain.Entities.Auth.PositionRole", b =>
+                {
+                    b.HasOne("EPMS.Domain.Entities.Hr.Position", "Position")
+                        .WithMany("PositionRoles")
+                        .HasForeignKey("PositionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EPMS.Domain.Entities.Auth.Role", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Position");
+
+                    b.Navigation("Role");
+                });
+
             modelBuilder.Entity("EPMS.Domain.Entities.Auth.User", b =>
                 {
                     b.HasOne("EPMS.Domain.Entities.Auth.Role", "Role")
@@ -3691,6 +3765,8 @@ namespace EPMS.Domain.Data.Migrations
                     b.Navigation("PositionPIPTemplates");
 
                     b.Navigation("PositionPermissions");
+
+                    b.Navigation("PositionRoles");
                 });
 
             modelBuilder.Entity("EPMS.Domain.Entities.Performance.Appraisal", b =>

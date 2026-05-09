@@ -1,7 +1,10 @@
 using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Performance;
+using EPMS.Domain.Interface.IService.App;
+using EPMS.Domain.Interface.IService.Auth;
 using EPMS.Domain.Interface.IService.Performance;
+using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.PerformanceDTOs.PIPDTOs;
 using EPMS.Shared.Enums;
@@ -14,11 +17,19 @@ namespace EPMS.Domain.Services.Performance
     {
         private readonly IUnitOfWork _uow;
         private readonly IMapper _mapper;
+        private readonly ICurrentEmployeeContextService _currentEmployee;
+        private readonly IPositionPermissionChecker _permissionChecker;
 
-        public PIPService(IUnitOfWork uow, IMapper mapper)
+        public PIPService(
+            IUnitOfWork uow,
+            IMapper mapper,
+            ICurrentEmployeeContextService currentEmployee,
+            IPositionPermissionChecker permissionChecker)
         {
             _uow = uow;
             _mapper = mapper;
+            _currentEmployee = currentEmployee;
+            _permissionChecker = permissionChecker;
         }
 
         public async Task<SuccessResponse<IEnumerable<PIPDto>>> GetAllAsync()
@@ -62,6 +73,14 @@ namespace EPMS.Domain.Services.Performance
 
         public async Task<SuccessResponse<long>> CreateAsync(CreatePIPDto dto)
         {
+            var positionId = await _currentEmployee.GetPositionIdAsync();
+            if (!positionId.HasValue)
+                return SuccessResponse<long>.Fail("User position is required.", ErrorType.Forbidden);
+
+            var canCreate = await _permissionChecker.HasPermissionAsync(positionId.Value, PermissionCodes.PerfPipCreate);
+            if (!canCreate)
+                return SuccessResponse<long>.Fail("Permission denied.", ErrorType.Forbidden);
+
             var pip = new PIP(dto.EmployeeId, dto.ManagerId, dto.StartDate, dto.EndDate, dto.Reason, dto.AppraisalId);
 
             _uow.Perf.PIPs.Add(pip);
@@ -103,6 +122,14 @@ namespace EPMS.Domain.Services.Performance
 
         public async Task<SuccessResponse> ConcludeAsync(long id, bool isSuccessful, string? notes)
         {
+            var positionId = await _currentEmployee.GetPositionIdAsync();
+            if (!positionId.HasValue)
+                return SuccessResponse.Fail("User position is required.", ErrorType.Forbidden);
+
+            var canConclude = await _permissionChecker.HasPermissionAsync(positionId.Value, PermissionCodes.PerfPipConclude);
+            if (!canConclude)
+                return SuccessResponse.Fail("Permission denied.", ErrorType.Forbidden);
+
             var pip = await _uow.Perf.PIPs.GetByIdAsync(id);
 
             if (pip == null)

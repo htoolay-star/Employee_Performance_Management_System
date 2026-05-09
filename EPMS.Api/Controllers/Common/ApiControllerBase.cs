@@ -17,6 +17,7 @@ namespace EPMS.Api.Controllers.Common
             {
                 ErrorType.NotFound => NotFound(response),
                 ErrorType.Unauthorized => Unauthorized(response),
+                ErrorType.Forbidden => StatusCode(StatusCodes.Status403Forbidden, response),
                 ErrorType.Conflict => Conflict(response),
                 ErrorType.Validation => BadRequest(response),
                 _ => BadRequest(response)
@@ -36,6 +37,7 @@ namespace EPMS.Api.Controllers.Common
             {
                 ErrorType.NotFound => NotFound(response),
                 ErrorType.Unauthorized => Unauthorized(response),
+                ErrorType.Forbidden => StatusCode(StatusCodes.Status403Forbidden, response),
                 ErrorType.Conflict => Conflict(response),
                 ErrorType.Validation => BadRequest(response),
                 _ => BadRequest(response)
