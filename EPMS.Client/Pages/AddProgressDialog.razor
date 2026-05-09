@@ -1,0 +1,55 @@
+﻿@using EPMS.Shared.DTOs
+@using EPMS.Shared.DTOs.PerformanceImprovementPlan
+@using MudBlazor
+
+<MudDialog>
+
+    <MudDialogContent>
+
+        <MudTextField @bind-Value="dto.Feedback"
+                      Label="Feedback"
+                      Variant="Variant.Outlined" />
+
+        <MudSelect T="string"
+                   @bind-Value="dto.ProgressStatus"
+                   Label="Status"
+                   Variant="Variant.Outlined">
+
+            <MudSelectItem Value="@("Improving")">Improving</MudSelectItem>
+            <MudSelectItem Value="@("No Change")">No Change</MudSelectItem>
+            <MudSelectItem Value="@("Worsening")">Worsening</MudSelectItem>
+
+        </MudSelect>
+
+    </MudDialogContent>
+
+    <MudDialogActions>
+        <MudButton OnClick="Submit" Color="Color.Primary">Save</MudButton>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+    </MudDialogActions>
+
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    public IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter] public Guid PIPId { get; set; }
+
+    [Inject] HttpClient Http { get; set; } = default!;
+
+    private AddPIPProgressDto dto = new();
+
+    protected override void OnInitialized()
+    {
+        dto.PIPId = PIPId;
+    }
+
+    private async Task Submit()
+    {
+        await Http.PostAsJsonAsync("api/PIP/progress", dto);
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

@@ -1,0 +1,140 @@
+﻿@page "/pip"
+
+@using EPMS.Shared.DTOs
+@using EPMS.Shared.DTOs.PerformanceImprovementPlan
+@using MudBlazor
+@using MudBlazor.Services
+
+@inject HttpClient Http
+@inject IDialogService Dialog
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+
+    <MudText Typo="Typo.h4" GutterBottom="true">
+        Performance Improvement Plans (PIP)
+    </MudText>
+
+    <!-- 🔷 Create PIP -->
+    <MudPaper Class="pa-4 mb-4">
+
+        <MudGrid>
+            <MudItem xs="12" md="4">
+                <MudTextField @bind-Value="createDto.EmployeeId"
+                              Label="Employee Id"
+                              Variant="Variant.Outlined" />
+            </MudItem>
+
+            <MudItem xs="12" md="4">
+                <MudTextField @bind-Value="createDto.Objectives"
+                              Label="Objectives"
+                              Variant="Variant.Outlined" />
+            </MudItem>
+
+            <MudItem xs="12" md="4">
+                <MudDatePicker @bind-Date="createDto.EndDate"
+                               Label="End Date"
+                               Variant="Variant.Outlined" />
+            </MudItem>
+        </MudGrid>
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Class="mt-3"
+                   OnClick="CreatePIP">
+            Create PIP
+        </MudButton>
+
+    </MudPaper>
+
+    <!-- 🔷 Table -->
+    <MudPaper Class="pa-4">
+
+        <MudTable Items="pips" Hover="true" Dense="true">
+
+            <HeaderContent>
+                <MudTh>Employee</MudTh>
+                <MudTh>Objectives</MudTh>
+                <MudTh>Start</MudTh>
+                <MudTh>End</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd>@context.EmployeeId</MudTd>
+                <MudTd>@context.Objectives</MudTd>
+                <MudTd>@context.StartDate.ToShortDateString()</MudTd>
+                <MudTd>@context.EndDate.ToShortDateString()</MudTd>
+
+                <MudTd>
+                    <MudChip T="string"
+                             Color="Color.Primary"
+                             Variant="Variant.Outlined">
+                        @context.Status
+                    </MudChip>
+                </MudTd>
+
+                <MudTd>
+                    <MudButton Size="Size.Small"
+                               Variant="Variant.Outlined"
+                               OnClick="@(() => OpenProgressDialog(context.Id))">
+                        Add Progress
+                    </MudButton>
+                </MudTd>
+            </RowTemplate>
+
+        </MudTable>
+
+    </MudPaper>
+
+</MudContainer>
+
+@code {
+    private List<PIPDto> pips = new();
+    private CreatePIPDto createDto = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPIPs();
+    }
+
+    private async Task LoadPIPs()
+    {
+        var result = await Http.GetFromJsonAsync<List<PIPDto>>("api/PIP");
+        pips = result ?? new List<PIPDto>();
+    }
+
+    private async Task CreatePIP()
+    {
+        if (createDto.EmployeeId == Guid.Empty || string.IsNullOrWhiteSpace(createDto.Objectives))
+        {
+            Snackbar.Add("Please fill all fields", Severity.Warning);
+            return;
+        }
+
+        await Http.PostAsJsonAsync("api/PIP", createDto);
+
+        Snackbar.Add("PIP Created Successfully", Severity.Success);
+
+        createDto = new();
+        await LoadPIPs();
+    }
+
+    private async Task OpenProgressDialog(Guid pipId)
+    {
+        var parameters = new DialogParameters
+        {
+            ["PIPId"] = pipId
+        };
+
+        var dialog = await Dialog.ShowAsync<AddProgressDialog>("Add Progress", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            Snackbar.Add("Progress Added", Severity.Success);
+            await LoadPIPs();
+        }
+    }
+}
