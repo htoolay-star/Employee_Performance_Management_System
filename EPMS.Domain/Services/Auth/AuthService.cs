@@ -50,7 +50,7 @@ namespace EPMS.Domain.Services.Auth
         /// </summary>
         private async Task<User?> GetCachedUserByEmailAsync(string email)
         {
-            var cacheKey = CacheKeys.UserByEmail(email);
+            var cacheKey = CacheKeys.Auth.UserByEmail(email);
 
             // Try cache first
             var cached = await _cacheService.GetAsync<CachedUserInfo>(cacheKey);
@@ -98,7 +98,7 @@ namespace EPMS.Domain.Services.Auth
         /// </summary>
         private async Task UpdateUserCacheAsync(User user)
         {
-            var cacheKey = CacheKeys.UserByEmail(user.Email);
+            var cacheKey = CacheKeys.Auth.UserByEmail(user.Email);
             var userInfo = new CachedUserInfo
             {
                 Id = user.Id,
@@ -117,7 +117,7 @@ namespace EPMS.Domain.Services.Auth
         {
             // Use cache for fast credential validation, then load a tracked entity for updates.
             // Reconstructing EF entities from cache is fragile (missing navigation properties, tracking, etc.).
-            var cachedUser = await _cacheService.GetAsync<CachedUserInfo>(CacheKeys.UserByEmail(request.Email));
+            var cachedUser = await _cacheService.GetAsync<CachedUserInfo>(CacheKeys.Auth.UserByEmail(request.Email));
 
             if (cachedUser != null)
             {
@@ -342,7 +342,7 @@ namespace EPMS.Domain.Services.Auth
         /// </summary>
         public async Task<List<string>> GetUserRolesAsync(long userId)
         {
-            var cacheKey = CacheKeys.UserRoles(userId);
+            var cacheKey = CacheKeys.Auth.UserRoles(userId);
 
             var cachedRoles = await _cacheService.GetAsync<List<string>>(cacheKey);
             if (cachedRoles != null)
@@ -395,10 +395,10 @@ namespace EPMS.Domain.Services.Auth
         /// </summary>
         public async Task InvalidateUserCacheAsync(long userId, string email)
         {
-            await _cacheService.RemoveAsync(CacheKeys.UserById(userId));
-            await _cacheService.RemoveAsync(CacheKeys.UserByEmail(email));
-            await _cacheService.RemoveAsync(CacheKeys.UserRoles(userId));
-            await _cacheService.RemoveAsync(CacheKeys.UserPermissions(userId));
+            await _cacheService.RemoveAsync(CacheKeys.Auth.UserById(userId));
+            await _cacheService.RemoveAsync(CacheKeys.Auth.UserByEmail(email));
+            await _cacheService.RemoveAsync(CacheKeys.Auth.UserRoles(userId));
+            await _cacheService.RemoveAsync(CacheKeys.Auth.UserPermissions(userId));
         }
 
         /// <summary>
@@ -406,7 +406,7 @@ namespace EPMS.Domain.Services.Auth
         /// </summary>
         public async Task BlacklistTokenAsync(string token, TimeSpan expiration)
         {
-            var cacheKey = CacheKeys.AuthTokenBlacklist(token);
+            var cacheKey = CacheKeys.Auth.TokenBlacklist(token);
             await _cacheService.SetAsync(cacheKey, true, expiration);
         }
 
@@ -415,7 +415,7 @@ namespace EPMS.Domain.Services.Auth
         /// </summary>
         public async Task<bool> IsTokenBlacklistedAsync(string token)
         {
-            var cacheKey = CacheKeys.AuthTokenBlacklist(token);
+            var cacheKey = CacheKeys.Auth.TokenBlacklist(token);
             return await _cacheService.GetAsync<bool>(cacheKey);
         }
     }

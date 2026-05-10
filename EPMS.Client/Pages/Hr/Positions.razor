@@ -1,23 +1,28 @@
 @page "/hr/positions"
+@* ═══════════════════════════════════════════════════════════════════════════
+   PATTERN: ServerData + Prefetch
+   Use this pattern when the dataset is large (hundreds to millions of rows).
+   - Paging, filtering, and sorting are delegated to the server.
+   - Dropdown data (Levels) is prefetched in the background on init so dialogs
+     open instantly without waiting for a second API call.
+   - After every CUD operation, calls RefreshDataAsync() which reloads only
+     the current page from the server (no full list reload).
+   ═══════════════════════════════════════════════════════════════════════════ *@
 @using EPMS.Client.Constants
 @using EPMS.Client.Services
-@using static EPMS.Shared.Constants.ServiceResponseMessages
-
-<style>
-    .loading-overlay {
-        position: relative;
-        margin-bottom: -8px;
-    }
-</style>
-@using EPMS.Shared.DTOs.PositionDTOs
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.LevelDTOs
+@using EPMS.Shared.DTOs.PositionDTOs
 @using EPMS.Shared.Features.Positions
+@using Mapster
 @using MudBlazor
 @using Refit
+@using static EPMS.Shared.Constants.ServiceResponseMessages
+
+@inject IDialogService DialogService
+@inject ILevelApiClient LevelApiClient
 @inject IPositionApiClient PositionApiClient
 @inject ISnackbar Snackbar
-@inject IDialogService DialogService
 
 <PageTitle>@UIConstants.Position.PageTitle - EPMS</PageTitle>
 
@@ -25,16 +30,12 @@
     <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.Position.PageTitle</MudText>
 
     <MudPaper Elevation="2" Class="pa-4">
+
+        @* ── Toolbar ──────────────────────────────────────────────────── *@
         <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
             <MudTextField T="string"
                           Value="@_searchString"
-                          ValueChanged="@(async (string val) => { 
-                              _searchString = val; 
-                              if (val != _lastSearchTerm) {
-                                  _lastSearchTerm = val;
-                                  await RefreshDataAsync();
-                              }
-                          })"
+                          ValueChanged="@OnSearchChanged"
                           Immediate="true"
                           DebounceInterval="500"
                           Placeholder="@UIConstants.Position.SearchPlaceholder"
@@ -44,60 +45,59 @@
                           Style="max-width: 300px;" />
 
             <TableSortControl SortBy="@_sortBy"
-                      SortDirection="@_sortDirection"
-                      SortColumns="@_sortableColumns"
-                      OnSortChanged="HandleSortChanged" />
+                              SortDirection="@_sortDirection"
+                              SortColumns="@_sortableColumns"
+                              OnSortChanged="OnSortChanged" />
 
-            <MudButton Variant="Variant.Filled" 
-                       Color="Color.Primary" 
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
                        StartIcon="@Icons.Material.Filled.Add"
                        OnClick="OpenCreateDialog">
                 @UIConstants.Position.AddButton
             </MudButton>
         </MudStack>
 
+        @* {{!-- ── Inline loading bar (sits above the grid during server calls) --}} *@
         @if (_isLoading)
         {
-            <div class="loading-overlay">
-                <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
-            </div>
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="mb-n2" />
         }
 
+        @* {{!-- ── Data Grid (server-side paging/sorting) ───────────────────── --}} *@
         <MudDataGrid @ref="_dataGrid"
                      T="PositionGridItemDto"
-                     ServerData="LoadPositionsServerData"
+                     ServerData="LoadServerDataAsync"
                      SortMode="SortMode.None"
                      Hover="true"
                      Striped="true"
                      Dense="true"
                      RowsPerPage="10">
             <Columns>
+                @* {{!-- RowIndex is computed server-side: (page - 1) * pageSize + rowNum --}} *@
                 <TemplateColumn Title="@UIConstants.Common.ColumnNo" Sortable="false">
-                    <CellTemplate>
-                        @context.Item.RowIndex
-                    </CellTemplate>
+                    <CellTemplate>@context.Item.RowIndex</CellTemplate>
                 </TemplateColumn>
                 <PropertyColumn Property="x => x.Title" Title="@UIConstants.Position.ColumnTitle" />
                 <PropertyColumn Property="x => x.LevelName" Title="@UIConstants.Position.ColumnLevel" />
-                <TemplateColumn Title="@UIConstants.Common.Actions">
+                <TemplateColumn Title="@UIConstants.Common.Status" Sortable="false">
                     <CellTemplate>
-                        <MudChip Color="@(context.Item.IsActive ? Color.Success : Color.Default)" 
+                        <MudChip Color="@(context.Item.IsActive ? Color.Success : Color.Default)"
                                  Size="Size.Small">
                             @(context.Item.IsActive ? UIConstants.Common.Active : UIConstants.Common.Inactive)
                         </MudChip>
                     </CellTemplate>
                 </TemplateColumn>
-                <TemplateColumn Title="Actions">
+                <TemplateColumn Title="@UIConstants.Common.Actions" Sortable="false">
                     <CellTemplate>
                         <MudStack Row="true" Spacing="1">
-                            <MudIconButton Icon="@Icons.Material.Filled.Edit" 
-                                           Color="Color.Primary" 
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                           Color="Color.Primary"
                                            Size="Size.Small"
                                            OnClick="@(() => OpenEditDialog(context.Item))" />
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" 
-                                           Color="Color.Error" 
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                           Color="Color.Error"
                                            Size="Size.Small"
-                                           OnClick="@(() => ConfirmDelete(context.Item))" />
+                                           OnClick="@(() => OpenDeleteDialog(context.Item))" />
                         </MudStack>
                     </CellTemplate>
                 </TemplateColumn>
@@ -112,48 +112,79 @@
                 <MudDataGridPager T="PositionGridItemDto" />
             </PagerContent>
         </MudDataGrid>
+
     </MudPaper>
 </MudContainer>
 
 @code {
-    private string _searchString = "";
-    private string _lastSearchTerm = "";
+
+    // ── Dialog options (static: created once, reused for every dialog open) ──
+    private static readonly DialogOptions _formDialogOptions = new()
+    {
+        CloseOnEscapeKey = true,
+        MaxWidth = MaxWidth.Small,
+        FullWidth = true
+    };
+    private static readonly DialogOptions _confirmDialogOptions = new()
+    {
+        CloseOnEscapeKey = true
+    };
+
+    // ── Grid state ────────────────────────────────────────────────────────────
     private MudDataGrid<PositionGridItemDto> _dataGrid = null!;
-    private List<PositionGridItemDto> _cachedItems = new();
-    private int _currentPage = 0;
     private bool _isLoading = false;
+
+    // ── Search / sort state ───────────────────────────────────────────────────
+    private string _searchString = string.Empty;
     private string _sortBy = "Title";
     private string _sortDirection = "asc";
 
-    private Dictionary<string, string> _sortableColumns = new()
+    private readonly Dictionary<string, string> _sortableColumns = new()
     {
-        { "Title", "Title" },
-        { "LevelName", "Level" },
-        { "IsActive", "Status" }
+        { "Title",     "Title"  },
+        { "LevelName", "Level"  },
+        { "IsActive",  "Status" }
     };
 
-    private async Task HandleSortChanged((string SortBy, string SortDirection) sortData)
+    // ── Prefetched dropdown data ───────────────────────────────────────────────
+    // Loaded in background on init so dialogs can open instantly.
+    private List<LevelDto>? _prefetchedLevels;
+
+    // ── Lifecycle ─────────────────────────────────────────────────────────────
+    protected override void OnInitialized()
     {
-        _sortBy = sortData.SortBy;
-        _sortDirection = sortData.SortDirection;
-        await RefreshDataAsync(); 
+        // Fire-and-forget: prefetch runs in background while the grid loads its first page.
+        // If it fails, dialogs fall back to loading levels themselves.
+        _ = PrefetchLevelsAsync();
     }
 
-    private async Task RefreshDataAsync()
+    // ── Prefetch ──────────────────────────────────────────────────────────────
+
+    private async Task PrefetchLevelsAsync()
     {
-        if (_dataGrid != null)
+        try
         {
-            await _dataGrid.ReloadServerData();
+            var response = await LevelApiClient.GetAllAsync();
+            if (response.Success && response.Data != null)
+                _prefetchedLevels = response.Data.ToList();
+            // Soft failure: dialogs handle the null case by fetching themselves.
+        }
+        catch (ApiException)
+        {
+            // Intentional silent failure for prefetch.
+            // The dialog's own LoadLevelsAsync will run as fallback.
         }
     }
 
-    private async Task<GridData<PositionGridItemDto>> LoadPositionsServerData(GridState<PositionGridItemDto> state)
+    // ── Server data callback (called by MudDataGrid on every page/sort change) ─
+
+    private async Task<GridData<PositionGridItemDto>> LoadServerDataAsync(
+        GridState<PositionGridItemDto> state)
     {
         _isLoading = true;
-
         try
         {
-            var parameters = new PositionQueryParameters
+            var query = new PositionQueryParameters
             {
                 PageNumber = state.Page + 1,
                 PageSize = state.PageSize,
@@ -162,18 +193,15 @@
                 SortDirection = _sortDirection
             };
 
-            var response = await PositionApiClient.GetPagedAsync(parameters);
-        
+            var response = await PositionApiClient.GetPagedAsync(query);
+
             if (response.Success && response.Data != null)
-            {
-                _cachedItems = response.Data.Items.ToList();
                 return new GridData<PositionGridItemDto>
                 {
-                    Items = _cachedItems,
+                    Items = response.Data.Items,
                     TotalItems = response.Data.TotalCount
                 };
-            }
-            
+
             Snackbar.Add(response.Message ?? UIConstants.Common.LoadFailed, Severity.Error);
         }
         catch (ApiException ex)
@@ -190,68 +218,83 @@
             _isLoading = false;
         }
 
-        return new GridData<PositionGridItemDto>
-        {
-            Items = new List<PositionGridItemDto>(),
-            TotalItems = 0
-        };
+        return new GridData<PositionGridItemDto> { Items = [], TotalItems = 0 };
     }
+
+    // ── Toolbar event handlers ─────────────────────────────────────────────────
+
+    private async Task OnSearchChanged(string value)
+    {
+        _searchString = value;
+        await RefreshDataAsync();
+    }
+
+    private async Task OnSortChanged((string SortBy, string SortDirection) sort)
+    {
+        _sortBy = sort.SortBy;
+        _sortDirection = sort.SortDirection;
+        await RefreshDataAsync();
+    }
+
+    /// <summary>Reloads the current page from the server. Lighter than a full page reload.</summary>
+    private async Task RefreshDataAsync()
+    {
+        if (_dataGrid is not null)
+            await _dataGrid.ReloadServerData();
+    }
+
+    // ── Dialogs ───────────────────────────────────────────────────────────────
 
     private async Task OpenCreateDialog()
     {
-        var parameters = new DialogParameters<PositionDialog> 
-        { 
-            { x => x.IsEdit, false },
-            { x => x.Position, new PositionDto() }
+        var parameters = new DialogParameters<PositionDialog>
+        {
+            { x => x.PreloadedLevels, _prefetchedLevels }
         };
-        
-        var options = new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true };
-        var dialog = await DialogService.ShowAsync<PositionDialog>(UIConstants.Position.CreateDialogTitle, parameters, options);
-        var result = await dialog.Result;
 
-        if (result != null && !result.Canceled)
+        var dialog = await DialogService.ShowAsync<PositionDialog>(
+            UIConstants.Position.CreateDialogTitle, parameters, _formDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
         {
             Snackbar.Add(PositionMsg.Created, Severity.Success);
             await RefreshDataAsync();
         }
     }
 
-    private async Task OpenEditDialog(PositionDto position)
+    private async Task OpenEditDialog(PositionGridItemDto item)
     {
-        var parameters = new DialogParameters<PositionDialog> 
-        { 
-            { x => x.IsEdit, true },
-            { x => x.Position, position }
+        // Map the grid row DTO to the full PositionDto expected by the dialog.
+        var parameters = new DialogParameters<PositionDialog>
+        {
+            { x => x.Position,        item.Adapt<PositionDto>() },
+            { x => x.PreloadedLevels, _prefetchedLevels         }
         };
-        
-        var options = new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true };
-        var dialog = await DialogService.ShowAsync<PositionDialog>(UIConstants.Position.EditDialogTitle, parameters, options);
-        var result = await dialog.Result;
 
-        if (result != null && !result.Canceled)
+        var dialog = await DialogService.ShowAsync<PositionDialog>(
+            UIConstants.Position.EditDialogTitle, parameters, _formDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
         {
             Snackbar.Add(PositionMsg.Updated, Severity.Success);
             await RefreshDataAsync();
         }
     }
 
-    private async Task ConfirmDelete(PositionDto position)
+    private async Task OpenDeleteDialog(PositionGridItemDto position)
     {
         var parameters = new DialogParameters<ConfirmDialog>
         {
             { x => x.ContentText, string.Format(UIConstants.Common.DeleteConfirmationFormat, position.Title) },
-            { x => x.ButtonText, UIConstants.Common.Delete },
-            { x => x.Color, Color.Error }
+            { x => x.ButtonText,  UIConstants.Common.Delete },
+            { x => x.Color,       Color.Error }
         };
-        
-        var options = new DialogOptions { CloseOnEscapeKey = true };
-        var dialog = await DialogService.ShowAsync<ConfirmDialog>(UIConstants.Position.DeleteDialogTitle, parameters, options);
-        var result = await dialog.Result;
 
-        if (result != null && !result.Canceled)
-        {
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(
+            UIConstants.Position.DeleteDialogTitle, parameters, _confirmDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
             await DeletePositionAsync(position.Id);
-        }
     }
 
     private async Task DeletePositionAsync(long id)

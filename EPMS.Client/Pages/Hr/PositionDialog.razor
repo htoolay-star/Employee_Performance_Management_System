@@ -1,54 +1,77 @@
+@* ═══════════════════════════════════════════════════════════════════════════
+   PositionDialog — Create / Edit dialog for the Position entity.
+   Supports PreloadedLevels passed from the parent page (Positions.razor).
+   If PreloadedLevels is null or empty, falls back to loading levels itself.
+   ═══════════════════════════════════════════════════════════════════════════ *@
 @using EPMS.Client.Constants
 @using EPMS.Client.Extensions
 @using EPMS.Client.Models.Hr
 @using EPMS.Client.Services
-@using EPMS.Shared.DTOs.PositionDTOs
-@using EPMS.Shared.DTOs.LevelDTOs
 @using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.LevelDTOs
+@using EPMS.Shared.DTOs.PositionDTOs
+@using EPMS.Shared.Validators.PositionDTOs
 @using Mapster
 @using MudBlazor
-@using FluentValidation
-@using EPMS.Shared.Validators.PositionDTOs
-@using MudSeverity = MudBlazor.Severity
 
-@inject IPositionApiClient PositionApiClient
 @inject ILevelApiClient LevelApiClient
+@inject IPositionApiClient PositionApiClient
 @inject ISnackbar Snackbar
 
 <MudDialog>
     <DialogContent>
         <MudForm @ref="_form" Model="@_model" Validation="@ValidateField">
             <MudStack Spacing="3">
+
                 <MudTextField @bind-Value="_model.Title"
-                              Label=@UIConstants.Position.TitleLabel
+                              Label="@UIConstants.Position.TitleLabel"
                               For="@(() => _model.Title)"
                               Variant="Variant.Outlined" />
-                
+
+                @* {{!-- Level select: shows a spinner while levels are loading --}} *@
                 <MudSelect T="long?"
                            @bind-Value="_model.LevelId"
-                           Label=@UIConstants.Position.LevelLabel
+                           Label="@UIConstants.Position.LevelLabel"
                            Placeholder="@UIConstants.Position.SelectLevelPlaceholder"
                            For="@(() => _model.LevelId)"
                            Variant="Variant.Outlined"
-                           Clearable="true"> @foreach (var level in _levels)
+                           Clearable="true"
+                           Disabled="@_loadingLevels"
+                           AdornmentIcon="@(_loadingLevels ? Icons.Material.Filled.HourglassTop : Icons.Material.Filled.ArrowDropDown)">
+                    @if (_loadingLevels)
                     {
-                        <MudSelectItem T="long?" Value="@level.Id">
-                            @level.Name
+                        <MudSelectItem T="long?" Value="null">
+                            <div class="d-flex align-center">
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                <MudText Typo="Typo.body2">@UIConstants.Common.Loading</MudText>
+                            </div>
                         </MudSelectItem>
+                    }
+                    else
+                    {
+                        @foreach (var level in _levels)
+                        {
+                            <MudSelectItem T="long?" Value="@level.Id">@level.Name</MudSelectItem>
+                        }
                     }
                 </MudSelect>
 
-                <MudSwitch @bind-Value="_model.IsActive"
-                           Label=@UIConstants.Common.Active
-                           Color="Color.Success" />
+                @* {{!-- IsActive toggle: only shown on Edit --}} *@
+                @if (IsEdit)
+                {
+                    <MudSwitch @bind-Value="_model.IsActive"
+                               Label="@UIConstants.Common.Active"
+                               Color="Color.Success" />
+                }
+
             </MudStack>
         </MudForm>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton OnClick="Cancel">@UIConstants.Common.Cancel</MudButton>
         <MudButton Color="Color.Primary"
                    OnClick="Submit"
-                   Disabled="@(!_form.IsValid || _saving)">
+                   Disabled="@(_saving || !HasChanged())">
             @if (_saving)
             {
                 <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
@@ -59,37 +82,58 @@
 </MudDialog>
 
 @code {
-    [CascadingParameter]
-    private IMudDialogInstance? _mudDialog { get; set; }
 
-    [Parameter]
-    public bool IsEdit { get; set; }
+    // ── Parameters ────────────────────────────────────────────────────────────
+    [CascadingParameter] private IMudDialogInstance? _mudDialog { get; set; }
 
-    [Parameter]
-    public PositionDto? Position { get; set; }
+    /// <summary>Pass a PositionDto to open in Edit mode. Leave null for Create mode.</summary>
+    [Parameter] public PositionDto? Position { get; set; }
 
-    private MudForm _form = new();
+    /// <summary>
+    /// Levels prefetched by the parent page.
+    /// When provided (non-null, non-empty), the dialog skips its own level API call,
+    /// so it opens instantly. When null, the dialog fetches levels itself as fallback.
+    /// </summary>
+    [Parameter] public List<LevelDto>? PreloadedLevels { get; set; }
+
+    // ── Computed ──────────────────────────────────────────────────────────────
+    private bool IsEdit => Position is not null;
+
+    // ── State ─────────────────────────────────────────────────────────────────
+    private MudForm? _form;
     private bool _saving;
+    private bool _loadingLevels = true;
     private List<LevelDto> _levels = new();
-    
-    private CreatePositionDtoValidator _createValidator = new();
-    private UpdatePositionDtoValidator _updateValidator = new();
-    
     private PositionFormModel _model = new();
     private Dictionary<string, string> _serverErrors = new();
 
+    // Validators instantiated once; no need to recreate per render.
+    private readonly CreatePositionDtoValidator _createValidator = new();
+    private readonly UpdatePositionDtoValidator _updateValidator = new();
+
+    // ── Lifecycle ─────────────────────────────────────────────────────────────
     protected override async Task OnInitializedAsync()
     {
-        await LoadLevelsAsync();
-        
-        if (IsEdit && Position != null)
+        if (Position is not null)
+            _model = Position.Adapt<PositionFormModel>();
+
+        if (PreloadedLevels is { Count: > 0 })
         {
-            _model.Id = Position.Id;
-            _model.Title = Position.Title ?? string.Empty;
-            _model.LevelId = Position.LevelId;
-            _model.IsActive = Position.IsActive;
+            // Fast path: parent already loaded levels; use them directly.
+            _levels = PreloadedLevels;
+            _loadingLevels = false;
         }
+        else
+        {
+            // Fallback: load levels in background so dialog renders immediately.
+            // StateHasChanged() inside LoadLevelsAsync updates the UI when done.
+            _ = LoadLevelsAsync();
+        }
+
+        await base.OnInitializedAsync();
     }
+
+    // ── Data ──────────────────────────────────────────────────────────────────
 
     private async Task LoadLevelsAsync()
     {
@@ -97,68 +141,72 @@
         {
             var response = await LevelApiClient.GetAllAsync();
             if (response.Success && response.Data != null)
-            {
                 _levels = response.Data.ToList();
-            }
             else
-            {
-                Snackbar.Add(UIConstants.Common.LoadFailed, MudSeverity.Error);
-            }
+                Snackbar.Add(UIConstants.Common.LoadFailed, Severity.Error);
         }
         catch (Refit.ApiException)
         {
-            Snackbar.Add(UIConstants.Common.LoadFailed, MudSeverity.Error);
+            Snackbar.Add(UIConstants.Common.LoadFailed, Severity.Error);
+        }
+        finally
+        {
+            _loadingLevels = false;
+            StateHasChanged(); // Required: this runs outside the normal render cycle (fire-and-forget).
         }
     }
 
+    // ── Actions ───────────────────────────────────────────────────────────────
+
     private async Task Submit()
     {
-        await _form.Validate();
+        // 1. Clear previous server errors so stale messages don't block submission.
+        _serverErrors.Clear();
+
+        // 2. Run client-side validation.
+        await _form!.Validate();
         if (!_form.IsValid)
         {
-            Snackbar.Add(UIConstants.Common.ValidationFailed, MudSeverity.Warning);
+            Snackbar.Add(UIConstants.Common.ValidationFailed, Severity.Warning);
             return;
         }
-
-        _serverErrors.Clear();
 
         _saving = true;
         try
         {
-            if (IsEdit && Position != null)
+            if (IsEdit)
             {
-                var updateDto = _model.Adapt<UpdatePositionDto>();
-                
-                var response = await PositionApiClient.UpdateAsync(Position.Id, updateDto);
+                var dto = _model.Adapt<UpdatePositionDto>();
+                var response = await PositionApiClient.UpdateAsync(Position!.Id, dto);
+
                 if (response.Success)
                     _mudDialog?.Close(DialogResult.Ok(true));
                 else
-                    Snackbar.Add(response.Message ?? UIConstants.Common.UpdateFailed, MudSeverity.Error);
+                    Snackbar.Add(response.Message ?? UIConstants.Common.UpdateFailed, Severity.Error);
             }
             else
             {
-                var createDto = _model.Adapt<CreatePositionDto>();
-                
-                var response = await PositionApiClient.CreateAsync(createDto);
+                var dto = _model.Adapt<CreatePositionDto>();
+                var response = await PositionApiClient.CreateAsync(dto);
+
                 if (response.Success)
                     _mudDialog?.Close(DialogResult.Ok(true));
                 else
-                    Snackbar.Add(response.Message ?? UIConstants.Common.CreateFailed, MudSeverity.Error);
+                    Snackbar.Add(response.Message ?? UIConstants.Common.CreateFailed, Severity.Error);
             }
         }
-        catch (Refit.ApiException ex)
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.BadRequest)
         {
-            if (ex.StatusCode == System.Net.HttpStatusCode.BadRequest)
-            {
-                var error = await ex.GetContentAsAsync<SuccessResponse>();
-                Snackbar.Add(error?.Message ?? UIConstants.Common.ValidationFailed, MudSeverity.Error);
-            }
-            else if (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
-            {
-                var error = await ex.GetContentAsAsync<SuccessResponse>();
-                _serverErrors["Title"] = error?.Message ?? UIConstants.Common.DuplicateEntry;
-                await _form.Validate();
-            }
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ValidationFailed, Severity.Error);
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
+        {
+            // Surface the conflict as an inline field error, not just a snackbar.
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            _serverErrors[nameof(_model.Title)] = error?.Message ?? UIConstants.Common.DuplicateEntry;
+            await _form!.Validate(); // re-run so the field picks up the server error
+            // No extra StateHasChanged() needed: _form.Validate() already triggers a re-render.
         }
         finally
         {
@@ -166,22 +214,45 @@
         }
     }
 
-    private void Cancel()
-    {
-        _mudDialog?.Cancel();
-    }
+    private void Cancel() => _mudDialog?.Cancel();
 
+    // ── Validation ────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Bridges MudForm's field-level validation callback to the appropriate
+    /// FluentValidation validator, mapping through the form model → DTO.
+    /// </summary>
     private async Task<IEnumerable<string>> ValidateField(object model, string propertyName)
     {
+        IEnumerable<string> fluentErrors;
+
         if (IsEdit)
         {
-            var validatorFunc = _updateValidator.ValidateMappedValue<PositionFormModel, UpdatePositionDto>(_model, _serverErrors);
-            return await validatorFunc(model, propertyName);
+            var fn = _updateValidator.ValidateMappedValue<PositionFormModel, UpdatePositionDto>(_model, _serverErrors);
+            fluentErrors = await fn(model, propertyName);
         }
         else
         {
-            var validatorFunc = _createValidator.ValidateMappedValue<PositionFormModel, CreatePositionDto>(_model, _serverErrors);
-            return await validatorFunc(model, propertyName);
+            var fn = _createValidator.ValidateMappedValue<PositionFormModel, CreatePositionDto>(_model, _serverErrors);
+            fluentErrors = await fn(model, propertyName);
         }
+
+        var errorList = fluentErrors.ToList();
+
+        if (_serverErrors.TryGetValue(propertyName, out var serverError))
+        {
+            errorList.Add(serverError);
+        }
+
+        return errorList;
+    }
+
+    private bool HasChanged()
+    {
+        if (!IsEdit) return true;
+
+        return _model.Title != Position!.Title ||
+               _model.LevelId != Position.LevelId ||
+               _model.IsActive != Position.IsActive;
     }
 }

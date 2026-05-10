@@ -22,27 +22,6 @@ namespace EPMS.Domain.Repository.Base
         public async Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken = default)
             => await _dbSet.AsNoTracking().ToListAsync(cancellationToken);
 
-        public async Task<(IEnumerable<T> Items, int TotalCount)> GetPagedListAsync(
-            int page,
-            int pageSize,
-            Expression<Func<T, object>> orderBy,
-            bool descending = false,
-            CancellationToken cancellationToken = default)
-        {
-            var totalCount = await _dbSet.CountAsync(cancellationToken);
-
-            var query = _dbSet.AsNoTracking();
-
-            query = descending ? query.OrderByDescending(orderBy) : query.OrderBy(orderBy);
-
-            var items = await query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync(cancellationToken);
-
-            return (items, totalCount);
-        }
-
         public async Task<T?> FindAsync(
             Expression<Func<T, bool>> predicate,
             bool trackChanges = true,

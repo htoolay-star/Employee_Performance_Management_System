@@ -13,13 +13,6 @@ namespace EPMS.Domain.Contracts
 
         Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken = default);
 
-        Task<(IEnumerable<T> Items, int TotalCount)> GetPagedListAsync(
-            int page,
-            int pageSize,
-            Expression<Func<T, object>> orderBy,
-            bool descending = false,
-            CancellationToken cancellationToken = default);
-
         Task<T?> FindAsync(
             Expression<Func<T, bool>> predicate,
             bool trackChanges = true,

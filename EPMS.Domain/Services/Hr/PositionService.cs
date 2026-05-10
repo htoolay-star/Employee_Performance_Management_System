@@ -60,7 +60,7 @@ public class PositionService : IPositionService
 
     public async Task<SuccessResponse<long>> CreateAsync(CreatePositionDto dto)
     {
-        if (!await _uow.HR.Positions.LevelExistsAsync(dto.LevelId))
+        if (!await _uow.HR.Levels.AnyAsync(l => l.Id == dto.LevelId))
             return SuccessResponse<long>.Fail(ServiceResponseMessages.PositionMsg.LevelNotFound(dto.LevelId), ErrorType.NotFound);
 
         if (await _uow.HR.Positions.ExistsByTitleAsync(dto.Title))
@@ -79,7 +79,7 @@ public class PositionService : IPositionService
         if (position is null)
             return SuccessResponse.Fail(ServiceResponseMessages.PositionMsg.NotFound(id), ErrorType.NotFound);
 
-        if (!await _uow.HR.Positions.LevelExistsAsync(dto.LevelId))
+        if (!await _uow.HR.Levels.AnyAsync(l => l.Id == dto.LevelId))
             return SuccessResponse.Fail(ServiceResponseMessages.PositionMsg.LevelNotFound(dto.LevelId), ErrorType.NotFound);
 
         if (position.Title != dto.Title.Trim() && await _uow.HR.Positions.ExistsByTitleAsync(dto.Title, id))
