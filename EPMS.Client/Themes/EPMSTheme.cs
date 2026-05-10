@@ -1,4 +1,5 @@
 using MudBlazor;
+using static MudBlazor.CategoryTypes;
 
 namespace EPMS.Client.Themes
 {
@@ -11,7 +12,9 @@ namespace EPMS.Client.Themes
                 PaletteLight = new PaletteLight()
                 {
                     Primary = "#0066CC",
-                    Secondary = "#E63946",
+                    PrimaryDarken = "#004499",
+                    PrimaryLighten = "#E6F0FF",
+                    Secondary = "#9AA0A6",
                     AppbarBackground = Colors.Shades.White,
                     AppbarText = Colors.Shades.Black,
                     Background = Colors.Gray.Lighten5,
@@ -46,6 +49,27 @@ namespace EPMS.Client.Themes
                     GrayDarker = Colors.Gray.Darken2,
                     OverlayDark = "#000000B3",
                     OverlayLight = "#00000080",
+                },
+
+                Typography = new Typography()
+                {
+                    Default = new DefaultTypography()
+                    {
+                        FontFamily = new[] { "Inter", "Roboto", "Pyidaungsu", "sans-serif" },
+                        FontSize = "14px",
+                        FontWeight = "400",
+                    },
+                    Button = new ButtonTypography()
+                    {
+                        TextTransform = "none",
+                        FontWeight = "500",
+                        FontSize = "14px"
+                    }
+                },
+
+                LayoutProperties = new LayoutProperties()
+                {
+                    DefaultBorderRadius = "8px",
                 }
             };
         }
