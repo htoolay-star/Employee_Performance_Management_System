@@ -29,6 +29,7 @@ public static class ServiceResponseMessages
         public const string DuplicateName = "Department with name '{0}' already exists.";
         public const string DuplicateNameOther = "Another department with name '{0}' already exists.";
         public static string NotFound(long id) => $"Department with ID '{id}' was not found.";
+        public static string InUse(long id) => $"Department with ID '{id}' cannot be deleted because it has associated teams.";
     }
 
     public static class TeamMsg

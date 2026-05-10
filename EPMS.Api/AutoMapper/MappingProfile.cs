@@ -32,8 +32,6 @@ public class MappingProfile : Profile
 {
     public MappingProfile()
     {
-        // HR Entities
-        CreateMap<Department, DepartmentDto>();
         CreateMap<Team, TeamDto>();
 
         // Auth Entities

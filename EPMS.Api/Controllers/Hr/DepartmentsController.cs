@@ -21,6 +21,20 @@ public class DepartmentsController : ApiControllerBase
         _service = service;
     }
 
+    [HttpGet("lookup")]
+    public async Task<ActionResult<SuccessResponse<IEnumerable<DepartmentLookupDto>>>> GetLookup()
+    {
+        var result = await _service.GetLookupAsync();
+        return HandleResult(result);
+    }
+
+    [HttpGet("with-teams")]
+    public async Task<ActionResult<SuccessResponse<IEnumerable<DepartmentDto>>>> GetWithTeams([FromQuery] long? teamId = null)
+    {
+        var result = await _service.GetDepartmentWithTeamsAsync(teamId ?? 0);
+        return HandleResult(result);
+    }
+
     [HttpGet]
     public async Task<ActionResult<SuccessResponse<IEnumerable<DepartmentDto>>>> GetAll()
     {

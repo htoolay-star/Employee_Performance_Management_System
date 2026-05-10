@@ -26,6 +26,33 @@ public class DepartmentService : IDepartmentService
         _cacheService = cacheService;
     }
 
+    public async Task<SuccessResponse<IEnumerable<DepartmentLookupDto>>> GetLookupAsync()
+    {
+        var cachedAllDepts = await _cacheService.GetAsync<IEnumerable<DepartmentDto>>(CacheKeys.Hr.AllDepartments());
+
+        if (cachedAllDepts != null)
+        {
+            var lookupFromCache = cachedAllDepts.Select(x => new DepartmentLookupDto
+            {
+                Id = x.Id,
+                Name = x.Name,
+                IsActive = x.IsActive
+            });
+            return SuccessResponse<IEnumerable<DepartmentLookupDto>>.Ok(lookupFromCache, DeptMsg.RetrievedAll);
+        }
+
+        var tuples = await _uow.HR.Departments.GetLookupAsync();
+
+        var dtos = tuples.Select(t => new DepartmentLookupDto
+        {
+            Id = t.Id,
+            Name = t.Name,
+            IsActive = t.IsActive
+        }).ToList();
+
+        return SuccessResponse<IEnumerable<DepartmentLookupDto>>.Ok(dtos, DeptMsg.RetrievedAll);
+    }
+
     public async Task<SuccessResponse<IEnumerable<DepartmentDto>>> GetDepartmentWithTeamsAsync(long teamId)
     {
         var departments = await _uow.HR.Departments.GetDepartmentWithTeamsAsync(teamId);
@@ -35,8 +62,11 @@ public class DepartmentService : IDepartmentService
 
     public async Task<SuccessResponse<IEnumerable<DepartmentDto>>> GetAllAsync()
     {
-        var departments = await _uow.HR.Departments.GetAllAsync();
-        var dtos = departments.Adapt<IEnumerable<DepartmentDto>>();
+        var dtos = await _cacheService.GetOrCreateAsync(CacheKeys.Hr.AllDepartments(), async () =>
+        {
+            var departments = await _uow.HR.Departments.GetAllAsync();
+            return departments.Adapt<IEnumerable<DepartmentDto>>();
+        });
         return SuccessResponse<IEnumerable<DepartmentDto>>.Ok(dtos, DeptMsg.RetrievedAll);
     }
 
@@ -62,6 +92,7 @@ public class DepartmentService : IDepartmentService
         var entity = new Department(dto.Code, dto.Name);
         _uow.HR.Departments.Add(entity);
         await _uow.CompleteAsync();
+        await _cacheService.RemoveAsync(CacheKeys.Hr.AllDepartments());
         return SuccessResponse<long>.Ok(entity.Id, DeptMsg.Created);
     }
 
@@ -81,6 +112,7 @@ public class DepartmentService : IDepartmentService
         else department.Deactivate();
 
         await _uow.CompleteAsync();
+        await _cacheService.RemoveAsync(CacheKeys.Hr.AllDepartments());
         return SuccessResponse.Ok(DeptMsg.Updated);
     }
 
@@ -91,8 +123,12 @@ public class DepartmentService : IDepartmentService
         if (department == null)
             return SuccessResponse.Fail(DeptMsg.NotFound(id), ErrorType.NotFound);
 
+        if (await _uow.HR.Teams.AnyAsync(t => t.DepartmentId == id))
+            return SuccessResponse.Fail(DeptMsg.InUse(id), ErrorType.Conflict);
+
         _uow.HR.Departments.Delete(department);
         await _uow.CompleteAsync();
+        await _cacheService.RemoveAsync(CacheKeys.Hr.AllDepartments());
         return SuccessResponse.Ok(DeptMsg.Deleted);
     }
 }
