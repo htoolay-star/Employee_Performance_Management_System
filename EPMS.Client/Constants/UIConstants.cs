@@ -44,6 +44,7 @@
             public const string ColumnLevel = "Level";
 
             public const string SelectLevelPlaceholder = "-- Select a Level --";
+            public const string NoDataFound = "Try adjusting your search or add a new position.";
         }
 
         public static class Level
@@ -58,6 +59,8 @@
             public const string NameLabel = "Level Name";
             public const string ColumnCode = "Code";
             public const string ColumnName = "Name";
+
+            public const string NoDataFound = "Try adjusting your search or add a new level.";
         }
     }
 }

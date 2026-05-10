@@ -9,5 +9,6 @@ namespace EPMS.Shared.DTOs.PositionDTOs
     public record PositionGridItemDto : PositionDto
     {
         public int RowIndex { get; init; }
+        public bool LevelIsActive { get; set; }
     }
 }

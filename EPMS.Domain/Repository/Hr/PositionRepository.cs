@@ -53,6 +53,11 @@ public class PositionRepository : GenericRepository<Position>, IPositionReposito
             baseQuery = baseQuery.Where(p => p.Title.Contains(search));
         }
 
+        if (parameters.IsActive.HasValue)
+        {
+            baseQuery = baseQuery.Where(p => p.IsActive == parameters.IsActive.Value);
+        }
+
         baseQuery = baseQuery.OrderByDynamic(entitySortColumn, parameters.SortDirection);
 
         var totalCount = await baseQuery.CountAsync(cancellationToken);

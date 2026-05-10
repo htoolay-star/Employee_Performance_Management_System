@@ -38,6 +38,15 @@
                           Immediate="true"
                           Style="max-width: 300px;" />
 
+            <MudSelect T="bool"
+                       Value="@_statusFilter"
+                       ValueChanged="OnStatusFilterChanged"
+                       Variant="Variant.Outlined"
+                       Style="max-width: 180px;">
+                <MudSelectItem T="bool" Value="@(true)">@UIConstants.Common.Active</MudSelectItem>
+                <MudSelectItem T="bool" Value="@(false)">@UIConstants.Common.Inactive</MudSelectItem>
+            </MudSelect>
+
             <TableSortControl SortBy="@_sortBy"
                               SortDirection="@_sortDirection"
                               SortColumns="@_sortableColumns"
@@ -104,7 +113,7 @@
                 <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
                     <MudIcon Icon="@Icons.Material.Outlined.Inbox" Style="font-size: 4rem;" Color="Color.Default" />
                     <MudText Typo="Typo.h6" Color="Color.Default">@UIConstants.Common.NoRecords</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">Try adjusting your search or add a new level.</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">@UIConstants.Level.NoDataFound</MudText>
                 </MudStack>
             </NoRecordsContent>
             <LoadingContent>
@@ -141,6 +150,7 @@
     private bool _loading = true;
     private string _searchString = string.Empty;
     private Dictionary<long, int> _rowNumbers = new();
+    private bool _statusFilter = true;
 
     private string _sortBy = "Code";
     private string _sortDirection = "asc";
@@ -161,7 +171,12 @@
     // Declared as a method, not a Func property, to avoid delegate allocation on every render.
     private bool QuickFilter(LevelDto x)
     {
-        if (string.IsNullOrWhiteSpace(_searchString)) return true;
+        if (x.IsActive != _statusFilter)
+            return false;
+
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+
         return x.Code.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
           || x.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
           || (x.Description?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false);
@@ -294,5 +309,10 @@
         _rowNumbers = _levels
           .Select((x, i) => (x.Id, Index: i + 1))
           .ToDictionary(x => x.Id, x => x.Index);
+    }
+
+    private void OnStatusFilterChanged(bool value)
+    {
+        _statusFilter = value;
     }
 }

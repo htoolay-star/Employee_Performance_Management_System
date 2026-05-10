@@ -26,4 +26,11 @@ public class TeamRepository : GenericRepository<Team>, ITeamRepository
     {
         return await _dbSet.AnyAsync(t => t.Id == id);
     }
+
+    public async Task<IEnumerable<(long Id, string Name, bool IsActive)>> GetLookupAsync()
+    {
+        return await _dbSet
+            .Select(x => new ValueTuple<long, string, bool>(x.Id, x.Name, x.IsActive))
+            .ToListAsync();
+    }
 }

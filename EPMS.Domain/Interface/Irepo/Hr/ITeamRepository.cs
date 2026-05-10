@@ -8,4 +8,5 @@ public interface ITeamRepository : IGenericRepository<Team>
     Task<IEnumerable<Team>> GetTeamsByDepartmentAsync(long departmentId);
     Task<bool> ExistsByNameInDepartmentAsync(string name, long departmentId);
     Task<bool> ExistsByIdAsync(long id);
+    Task<IEnumerable<(long Id, string Name, bool IsActive)>> GetLookupAsync();
 }

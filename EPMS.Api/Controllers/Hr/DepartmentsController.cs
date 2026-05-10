@@ -55,26 +55,4 @@ public class DepartmentsController : ApiControllerBase
         var result = await _service.DeleteAsync(id);
         return HandleResult(result);
     }
-
-    // Team management endpoints
-    [HttpGet("{departmentId:long}/teams")]
-    public async Task<ActionResult<SuccessResponse<IEnumerable<TeamDto>>>> GetTeams(long departmentId)
-    {
-        var result = await _service.GetTeamsForDepartmentAsync(departmentId);
-        return HandleResult(result);
-    }
-
-    [HttpPost("{departmentId:long}/teams")]
-    public async Task<ActionResult<SuccessResponse>> AddTeam(long departmentId, [FromBody] string teamName)
-    {
-        var result = await _service.AddTeamToDepartmentAsync(departmentId, teamName);
-        return HandleResult(result);
-    }
-
-    [HttpDelete("{departmentId:long}/teams/{teamId:long}")]
-    public async Task<ActionResult<SuccessResponse>> RemoveTeam(long departmentId, long teamId)
-    {
-        var result = await _service.RemoveTeamFromDepartmentAsync(departmentId, teamId);
-        return HandleResult(result);
-    }
 }

@@ -7,25 +7,33 @@ using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.TeamDTOs;
 using EPMS.Shared.Enums;
+using Mapster;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 namespace EPMS.Domain.Services.Hr;
 
 public class TeamService : ITeamService
 {
-    private readonly IMapper _mapper;
     private readonly IUnitOfWork _uow;
 
-    public TeamService(IMapper mapper, IUnitOfWork uow)
+    public TeamService(IUnitOfWork uow)
     {
-        _mapper = mapper;
         _uow = uow;
+    }
+
+    public async Task<SuccessResponse<IEnumerable<TeamDto>>> GetTeamsByDepartmentIdAsync(long departmentId)
+    {
+        var teams = await _uow.HR.Teams.GetTeamsByDepartmentAsync(departmentId);
+
+        var dtos = teams.Adapt<IEnumerable<TeamDto>>();
+
+        return SuccessResponse<IEnumerable<TeamDto>>.Ok(dtos, TeamMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<IEnumerable<TeamDto>>> GetAllAsync()
     {
         var teams = await _uow.HR.Teams.GetAllAsync();
-        var dtos = _mapper.Map<IEnumerable<TeamDto>>(teams);
+        var dtos = teams.Adapt<IEnumerable<TeamDto>>();
         return SuccessResponse<IEnumerable<TeamDto>>.Ok(dtos, TeamMsg.RetrievedAll);
     }
 
@@ -36,7 +44,7 @@ public class TeamService : ITeamService
         if (team == null)
             return SuccessResponse<TeamDto>.Fail(TeamMsg.NotFound(id), ErrorType.NotFound);
 
-        var dto = _mapper.Map<TeamDto>(team);
+        var dto = team.Adapt<TeamDto>();
         return SuccessResponse<TeamDto>.Ok(dto, TeamMsg.Retrieved);
     }
 
