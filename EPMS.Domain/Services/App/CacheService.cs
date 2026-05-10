@@ -20,6 +20,20 @@ namespace EPMS.Domain.Services.App
             PropertyNameCaseInsensitive = true
         };
 
+        public async Task<T?> GetOrCreateAsync<T>(string key, Func<Task<T>> factory, TimeSpan? absoluteExpireTime = null, CancellationToken cancellationToken = default)
+        {
+            var cachedData = await GetAsync<T>(key, cancellationToken);
+            if (cachedData != null)
+                return cachedData;
+
+            var freshData = await factory();
+
+            if (freshData != null)
+                await SetAsync(key, freshData, absoluteExpireTime, cancellationToken);
+
+            return freshData;
+        }
+
         public async Task SetAsync<T>(string key, T data, TimeSpan? absoluteExpireTime = null, CancellationToken cancellationToken = default)
         {
             var options = new DistributedCacheEntryOptions

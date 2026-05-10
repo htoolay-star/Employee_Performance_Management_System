@@ -5,6 +5,8 @@
         public static class Common
         {
             public const string ColumnNo = "No.";
+            public const string ColumnName = "Name";
+            public const string Description = "Description";
             public const string Cancel = "Cancel";
             public const string Create = "Create";
             public const string Update = "Update";
@@ -42,6 +44,20 @@
             public const string ColumnLevel = "Level";
 
             public const string SelectLevelPlaceholder = "-- Select a Level --";
+        }
+
+        public static class Level
+        {
+            public const string PageTitle = "Level Management";
+            public const string SearchPlaceholder = "Search by name...";
+            public const string AddButton = "Add Level";
+            public const string CreateDialogTitle = "Create Level";
+            public const string EditDialogTitle = "Edit Level";
+            public const string DeleteDialogTitle = "Delete Level";
+            public const string CodeLabel = "Level Code";
+            public const string NameLabel = "Level Name";
+            public const string ColumnCode = "Code";
+            public const string ColumnName = "Name";
         }
     }
 }

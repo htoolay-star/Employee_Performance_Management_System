@@ -1,30 +1,35 @@
 using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Hr;
+using EPMS.Domain.Interface.IService.App;
 using EPMS.Domain.Interfaces;
 using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.LevelDTOs;
 using EPMS.Shared.Enums;
+using Mapster;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 namespace EPMS.Domain.Services.Hr;
 
 public class LevelService : ILevelService
 {
-    private readonly IMapper _mapper;
     private readonly IUnitOfWork _uow;
+    private readonly ICacheService _cacheService;
 
-    public LevelService(IMapper mapper, IUnitOfWork uow)
+    public LevelService(IUnitOfWork uow, ICacheService cacheService)
     {
-        _mapper = mapper;
         _uow = uow;
+        _cacheService = cacheService;
     }
 
     public async Task<SuccessResponse<IEnumerable<LevelDto>>> GetAllAsync()
     {
-        var levels = await _uow.HR.Levels.GetAllAsync();
-        var dtos = _mapper.Map<IEnumerable<LevelDto>>(levels);
+        var dtos = await _cacheService.GetOrCreateAsync(CacheKeys.Hr.AllLevels(), async () =>
+        {
+            var levels = await _uow.HR.Levels.GetAllAsync();
+            return levels.Adapt<IEnumerable<LevelDto>>();
+        });
         return SuccessResponse<IEnumerable<LevelDto>>.Ok(dtos, ServiceResponseMessages.LevelMsg.RetrievedAll);
     }
 
@@ -35,7 +40,7 @@ public class LevelService : ILevelService
         if (level is null)
             return SuccessResponse<LevelDto>.Fail(ServiceResponseMessages.LevelMsg.NotFound(id), ErrorType.NotFound);
 
-        var dto = _mapper.Map<LevelDto>(level);
+        var dto = level.Adapt<LevelDto>();
         return SuccessResponse<LevelDto>.Ok(dto, ServiceResponseMessages.LevelMsg.Retrieved);
     }
 
@@ -44,9 +49,13 @@ public class LevelService : ILevelService
         if (await _uow.HR.Levels.ExistsByCodeAsync(dto.Code))
             return SuccessResponse<long>.Fail(string.Format(ServiceResponseMessages.LevelMsg.DuplicateCode, dto.Code.Trim().ToUpperInvariant()), ErrorType.Conflict);
 
+        if (await _uow.HR.Levels.ExistsByNameAsync(dto.Name))
+            return SuccessResponse<long>.Fail(string.Format(ServiceResponseMessages.LevelMsg.DuplicateName, dto.Name.Trim()), ErrorType.Conflict);
+
         var entity = new Level(dto.Code, dto.Name, dto.Description);
         _uow.HR.Levels.Add(entity);
         await _uow.CompleteAsync();
+        await _cacheService.RemoveAsync(CacheKeys.Hr.AllLevels());
         return SuccessResponse<long>.Ok(entity.Id, ServiceResponseMessages.LevelMsg.Created);
     }
 
@@ -57,12 +66,16 @@ public class LevelService : ILevelService
         if (level is null)
             return SuccessResponse.Fail(ServiceResponseMessages.LevelMsg.NotFound(id), ErrorType.NotFound);
 
+        if (await _uow.HR.Levels.ExistsByNameAsync(dto.Name, id))
+            return SuccessResponse.Fail(string.Format(ServiceResponseMessages.LevelMsg.DuplicateName, dto.Name.Trim()), ErrorType.Conflict);
+
         level.Update(dto.Name, dto.Description);
 
         if (dto.IsActive) level.Reactivate();
         else level.Deactivate();
 
         await _uow.CompleteAsync();
+        await _cacheService.RemoveAsync(CacheKeys.Hr.AllLevels());
         return SuccessResponse.Ok(ServiceResponseMessages.LevelMsg.Updated);
     }
 
@@ -73,11 +86,12 @@ public class LevelService : ILevelService
         if (level is null)
             return SuccessResponse.Fail(ServiceResponseMessages.LevelMsg.NotFound(id), ErrorType.NotFound);
 
-        if (await _uow.HR.Levels.HasPositionsAsync(id))
-            return SuccessResponse.Fail(ServiceResponseMessages.LevelMsg.NotFound(id), ErrorType.Conflict);
+        if (await _uow.HR.Positions.AnyAsync(p => p.LevelId == id))
+            return SuccessResponse.Fail(ServiceResponseMessages.LevelMsg.InUse(id), ErrorType.Conflict);
 
         _uow.HR.Levels.Delete(level);
         await _uow.CompleteAsync();
+        await _cacheService.RemoveAsync(CacheKeys.Hr.AllLevels());
         return SuccessResponse.Ok(ServiceResponseMessages.LevelMsg.Deleted);
     }
 }

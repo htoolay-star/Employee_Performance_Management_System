@@ -2,25 +2,33 @@ namespace EPMS.Shared.Constants
 {
     public static class CacheKeys
     {
-        // User-related cache keys
-        public static string UserByEmail(string email) => $"user:email:{email.ToLower()}";
-        public static string UserById(long id) => $"user:id:{id}";
-        public static string UserRoles(long userId) => $"user:{userId}:roles";
-        public static string UserPermissions(long userId) => $"user:{userId}:permissions";
+        public static class Auth
+        {
+            public static string UserByEmail(string email) => $"auth:user:email:{email.ToLower()}";
+            public static string UserById(long id) => $"auth:user:id:{id}";
+            public static string UserRoles(long userId) => $"auth:user:{userId}:roles";
+            public static string UserPermissions(long userId) => $"auth:user:{userId}:permissions";
 
-        // Role-related cache keys
-        public static string RoleById(int roleId) => $"role:{roleId}";
-        public static string AllRoles() => "roles:all";
+            public static string RoleById(int roleId) => $"auth:role:{roleId}";
+            public static string AllRoles() => "auth:roles:all";
 
-        // Permission-related cache keys
-        public static string PermissionById(int permissionId) => $"permission:{permissionId}";
-        public static string AllPermissions() => "permissions:all";
+            public static string PermissionById(int permissionId) => $"auth:permission:{permissionId}";
+            public static string AllPermissions() => "auth:permissions:all";
 
-        // System settings cache keys
-        public static string SystemSetting(string key) => $"setting:{key}";
-        public static string DefaultPassword() => "setting:defaultpassword";
+            public static string TokenBlacklist(string token) => $"auth:blacklist:{token}";
+        }
 
-        // General auth cache keys
-        public static string AuthTokenBlacklist(string token) => $"auth:blacklist:{token}";
+        public static class Hr
+        {
+            public static string AllLevels() => "hr:levels:all";
+            public static string AllDepartments() => "hr:departments:all";
+            public static string EmployeeById(long id) => $"hr:employee:id:{id}";
+        }
+
+        public static class System
+        {
+            public static string Setting(string key) => $"system:setting:{key.ToLower()}";
+            public static string DefaultPassword() => "system:setting:defaultpassword";
+        }
     }
 }

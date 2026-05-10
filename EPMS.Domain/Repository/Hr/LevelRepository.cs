@@ -19,8 +19,12 @@ public class LevelRepository : GenericRepository<Level>, ILevelRepository
         return await query.AnyAsync(cancellationToken);
     }
 
-    public async Task<bool> HasPositionsAsync(long levelId, CancellationToken cancellationToken = default)
+    public async Task<bool> ExistsByNameAsync(string name, long? excludeLevelId = null, CancellationToken cancellationToken = default)
     {
-        return await _context.Positions.AnyAsync(p => p.LevelId == levelId, cancellationToken);
+        var normalized = name.Trim().ToUpperInvariant();
+        var query = _dbSet.Where(l => l.Name == normalized);
+        if (excludeLevelId.HasValue)
+            query = query.Where(l => l.Id != excludeLevelId.Value);
+        return await query.AnyAsync(cancellationToken);
     }
 }

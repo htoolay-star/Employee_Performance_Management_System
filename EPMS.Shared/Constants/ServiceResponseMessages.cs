@@ -70,6 +70,7 @@ public static class ServiceResponseMessages
         public const string DuplicateCode = "Level with code '{0}' already exists.";
         public const string DuplicateName = "Level with name '{0}' already exists.";
         public static string NotFound(long id) => $"Level with ID '{id}' was not found.";
+        public static string InUse(long id) => $"Level with ID '{id}' cannot be deleted because it is assigned to one or more positions.";
     }
 
     public static class EmployeeProfileMsg

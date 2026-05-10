@@ -1,134 +1,168 @@
+@* ═══════════════════════════════════════════════════════════════════════════
+   LevelDialog — Create / Edit dialog for the Level entity.
+   Shared by both OpenCreateDialog (Level == null) and OpenEditDialog (Level != null).
+   Determines mode via the IsEdit computed property.
+   ═══════════════════════════════════════════════════════════════════════════ *@
+@using EPMS.Client.Constants
+@using EPMS.Client.Extensions
+@using EPMS.Client.Models.Hr
 @using EPMS.Client.Services
-@using EPMS.Shared.DTOs.LevelDTOs
 @using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.LevelDTOs
+@using EPMS.Shared.Validators.LevelDTOs
+@using Mapster
 @using MudBlazor
-@using static EPMS.Shared.Constants.ServiceResponseMessages
+
 @inject ILevelApiClient LevelApiClient
 @inject ISnackbar Snackbar
 
 <MudDialog>
     <DialogContent>
-        <MudForm @ref="_form">
+        <MudForm @ref="_form" Model="@_model" Validation="@ValidateField">
             <MudStack Spacing="3">
+
+                @* {{!-- Code: only shown on Create; read-only/hidden on Edit --}} *@
                 @if (!IsEdit)
                 {
-                    <MudTextField @bind-Value="_code"
-                                  Label="Level Code"
-                                  Required="true"
-                                  RequiredError="Code is required!"
+                    <MudTextField @bind-Value="_model.Code"
+                                  Label="@UIConstants.Level.CodeLabel"
+                                  For="@(() => _model.Code)"
                                   Variant="Variant.Outlined" />
                 }
 
-                <MudTextField @bind-Value="_name"
-                              Label="Level Name"
-                              Required="true"
-                              RequiredError="Name is required!"
+                <MudTextField @bind-Value="_model.Name"
+                              Label="@UIConstants.Level.NameLabel"
+                              For="@(() => _model.Name)"
                               Variant="Variant.Outlined" />
 
-                <MudTextField @bind-Value="_description"
-                              Label="Description"
+                <MudTextField @bind-Value="_model.Description"
+                              Label="@UIConstants.Common.Description"
+                              For="@(() => _model.Description)"
                               Variant="Variant.Outlined"
                               Lines="3" />
+
+                @* {{!-- IsActive toggle: only shown on Edit --}} *@
+                @if (IsEdit)
+                {
+                    <MudSwitch @bind-Value="_model.IsActive"
+                               Label="@UIConstants.Common.Active"
+                               Color="Color.Success" />
+                }
+
             </MudStack>
         </MudForm>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton OnClick="Cancel">@UIConstants.Common.Cancel</MudButton>
         <MudButton Color="Color.Primary"
                    OnClick="Submit"
-                   Disabled="@_saving">
+                   Disabled="@(_saving || !HasChanged())">
             @if (_saving)
             {
                 <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
             }
-            @(IsEdit ? "Update" : "Create")
+            @(IsEdit ? UIConstants.Common.Update : UIConstants.Common.Create)
         </MudButton>
     </DialogActions>
 </MudDialog>
 
 @code {
-    [CascadingParameter]
-    private IMudDialogInstance? MudDialog { get; set; }
 
-    [Parameter]
-    public LevelDto? Level { get; set; }
+    // ── Parameters ────────────────────────────────────────────────────────────
+    [CascadingParameter] private IMudDialogInstance? _mudDialog { get; set; }
 
-    private bool IsEdit => Level != null;
+    /// <summary>Pass a LevelDto to open in Edit mode. Leave null for Create mode.</summary>
+    [Parameter] public LevelDto? Level { get; set; }
+
+    // ── Computed ──────────────────────────────────────────────────────────────
+    private bool IsEdit => Level is not null;
+
+    // ── State ─────────────────────────────────────────────────────────────────
     private MudForm? _form;
     private bool _saving;
+    private LevelFormModel _model = new();
+    private Dictionary<string, string> _serverErrors = new();
 
-    private string _code = string.Empty;
-    private string _name = string.Empty;
-    private string? _description;
+    // Validators instantiated once; no need to recreate per render.
+    private readonly CreateLevelDtoValidator _createValidator = new();
+    private readonly UpdateLevelDtoValidator _updateValidator = new();
 
+    // ── Lifecycle ─────────────────────────────────────────────────────────────
     protected override async Task OnInitializedAsync()
     {
-        if (IsEdit && Level != null)
-        {
-            _name = Level.Name;
-            _description = Level.Description;
-        }
+        if (Level is not null)
+            _model = Level.Adapt<LevelFormModel>();
+
         await base.OnInitializedAsync();
     }
 
+    // ── Actions ───────────────────────────────────────────────────────────────
+
     private async Task Submit()
     {
+        // 1. Clear previous server errors so stale messages don't block submission.
+        _serverErrors.Clear();
+
+        // 2. Run client-side validation.
         await _form!.Validate();
         if (!_form.IsValid)
         {
-            Snackbar.Add("Please fill all required fields", Severity.Warning);
+            Snackbar.Add(UIConstants.Common.ValidationFailed, Severity.Warning);
             return;
         }
 
         _saving = true;
         try
         {
-            if (IsEdit && Level != null)
+            if (IsEdit)
             {
-                var updateDto = new UpdateLevelDto
-                {
-                    Name = _name,
-                    Description = _description
-                };
-                var response = await LevelApiClient.UpdateAsync(Level.Id, updateDto);
+                var dto = _model.Adapt<UpdateLevelDto>();
+                var response = await LevelApiClient.UpdateAsync(Level!.Id, dto);
+
                 if (response.Success)
-                {
-                    Snackbar.Add(LevelMsg.Updated, Severity.Success);
-                    MudDialog?.Close(DialogResult.Ok(true));
-                }
+                    _mudDialog?.Close(DialogResult.Ok(true));
                 else
-                {
-                    Snackbar.Add(response.Message ?? "Failed to update level", Severity.Error);
-                }
+                    Snackbar.Add(response.Message ?? UIConstants.Common.UpdateFailed, Severity.Error);
             }
             else
             {
-                var createDto = new CreateLevelDto
-                {
-                    Code = _code,
-                    Name = _name,
-                    Description = _description
-                };
-                var response = await LevelApiClient.CreateAsync(createDto);
+                var dto = _model.Adapt<CreateLevelDto>();
+                var response = await LevelApiClient.CreateAsync(dto);
+
                 if (response.Success)
-                {
-                    Snackbar.Add(LevelMsg.Created, Severity.Success);
-                    MudDialog?.Close(DialogResult.Ok(true));
-                }
+                    _mudDialog?.Close(DialogResult.Ok(true));
                 else
-                {
-                    Snackbar.Add(response.Message ?? "Failed to create level", Severity.Error);
-                }
+                    Snackbar.Add(response.Message ?? UIConstants.Common.CreateFailed, Severity.Error);
             }
         }
-        catch (Refit.ApiException ex)
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.BadRequest)
         {
             var error = await ex.GetContentAsAsync<SuccessResponse>();
-            Snackbar.Add(error?.Message ?? "An error occurred", Severity.Error);
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ValidationFailed, Severity.Error);
         }
-        catch (Exception ex)
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
         {
-            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+            // Surface the conflict as an inline field error, not just a snackbar.
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            var errorMessage = error?.Message ?? UIConstants.Common.DuplicateEntry;
+
+            if (errorMessage.Contains(nameof(_model.Code), StringComparison.OrdinalIgnoreCase))
+            {
+                _serverErrors[nameof(_model.Code)] = errorMessage;
+            }
+
+            else if (errorMessage.Contains(nameof(_model.Name), StringComparison.OrdinalIgnoreCase))
+            {
+                _serverErrors[nameof(_model.Name)] = errorMessage;
+            }
+
+            else
+            {
+                _serverErrors[nameof(_model.Code)] = errorMessage;
+                _serverErrors[nameof(_model.Name)] = errorMessage;
+            }
+
+            await _form!.Validate();
         }
         finally
         {
@@ -136,5 +170,46 @@
         }
     }
 
-    private void Cancel() => MudDialog?.Cancel();
+    private void Cancel() => _mudDialog?.Cancel();
+
+    // ── Validation ────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Bridges MudForm's field-level validation callback to the appropriate
+    /// FluentValidation validator, mapping through the form model → DTO.
+    /// </summary>
+    private async Task<IEnumerable<string>> ValidateField(object model, string propertyName)
+    {
+        IEnumerable<string> fluentErrors;
+
+        if (IsEdit)
+        {
+            var fn = _updateValidator.ValidateMappedValue<LevelFormModel, UpdateLevelDto>(_model, _serverErrors);
+            fluentErrors = await fn(model, propertyName);
+        }
+        else
+        {
+            var fn = _createValidator.ValidateMappedValue<LevelFormModel, CreateLevelDto>(_model, _serverErrors);
+            fluentErrors = await fn(model, propertyName);
+        }
+
+        var errorList = fluentErrors.ToList();
+
+        if (_serverErrors.TryGetValue(propertyName, out var serverError))
+        {
+            errorList.Add(serverError);
+        }
+
+        return errorList;
+    }
+
+    private bool HasChanged()
+    {
+        if (!IsEdit) return true;
+
+        return _model.Code != Level!.Code ||
+               _model.Name != Level.Name ||
+               _model.Description != Level.Description ||
+               _model.IsActive != Level.IsActive;
+    }
 }
