@@ -1,0 +1,588 @@
+@page "/hr/departments"
+@* ═══════════════════════════════════════════════════════════════════════════
+   PATTERN: GetAll + Client-side QuickFilter + Client-side Sorting + Full Page Drawer
+   Use this pattern when the dataset is small.
+   - Load all departments on init.
+   - Filter/search via client-side QuickFilter.
+   - Sorting via TableSortControl + client-side.
+   - Click on blue Department name → opens full page side drawer with teams.
+   ═══════════════════════════════════════════════════════════════════════════ *@
+@using EPMS.Client.Constants
+@using EPMS.Client.Services
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.DepartmentDTOs
+@using EPMS.Shared.DTOs.TeamDTOs
+@using Mapster
+@using MudBlazor
+@using Refit
+@using static EPMS.Shared.Constants.ServiceResponseMessages
+@using DeptMsg = EPMS.Shared.Constants.ServiceResponseMessages.DepartmentMsg
+@using TeamMsg = EPMS.Shared.Constants.ServiceResponseMessages.TeamMsg
+
+@inject IDepartmentApiClient DepartmentApiClient
+@inject ITeamApiClient TeamApiClient
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>@UIConstants.Department.PageTitle - EPMS</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.Department.PageTitle</MudText>
+
+    <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+
+        @* ── Toolbar ──────────────────────────────────────────────────── *@
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+            <MudTextField @bind-Value="_searchString"
+                          Placeholder="@UIConstants.Department.SearchPlaceholder"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          IconSize="Size.Medium"
+                          Variant="Variant.Outlined"
+                          Clearable="true"
+                          Immediate="true"
+                          DebounceInterval="500"
+                          Style="max-width: 300px;" />
+
+            <MudSelect T="bool"
+                       Value="@_statusFilter"
+                       ValueChanged="OnStatusFilterChanged"
+                       Variant="Variant.Outlined"
+                       Style="max-width: 150px;">
+                <MudSelectItem T="bool" Value="@(true)">@UIConstants.Common.Active</MudSelectItem>
+                <MudSelectItem T="bool" Value="@(false)">@UIConstants.Common.Inactive</MudSelectItem>
+            </MudSelect>
+
+            <TableSortControl SortBy="@_sortBy"
+                              SortDirection="@_sortDirection"
+                              SortColumns="@_sortableColumns"
+                              OnSortChanged="HandleSortChanged" />
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenCreateDialog">
+                @UIConstants.Department.AddButton
+            </MudButton>
+        </MudStack>
+
+        @* ── Data Grid ────────────────────────────────────────────────── *@
+        <MudDataGrid Items="@_departments"
+                     QuickFilter="@QuickFilter"
+                     Loading="@_loading"
+                     SortMode="SortMode.None"
+                     Hover="true"
+                     Elevation="0">
+            <Columns>
+                <TemplateColumn Title="@UIConstants.Common.ColumnNo" Sortable="false">
+                    <CellTemplate>
+                        @_rowNumbers.GetValueOrDefault(context.Item.Id)
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.Code" Title="@UIConstants.Department.ColumnCode" />
+                <TemplateColumn Title="@UIConstants.Department.ColumnName" SortBy="@(x => x.Name)">
+                    <CellTemplate>
+                        <MudText>@context.Item.Name</MudText>
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="@UIConstants.Common.Status" SortBy="@(x => x.IsActive)">
+                    <CellTemplate>
+                        <MudChip T="bool" Color="@(context.Item.IsActive ? Color.Success : Color.Default)"
+                                 Size="Size.Small">
+                            @(context.Item.IsActive ? UIConstants.Common.Active : UIConstants.Common.Inactive)
+                        </MudChip>
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="@UIConstants.Common.Actions" Sortable="false">
+                    <CellTemplate>
+                        <MudStack Row="true" Spacing="0">
+                            <MudTooltip Text="Edit Department" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Color="Color.Primary"
+                                               Size="Size.Small"
+                                               OnClick="@(() => OpenEditDialog(context.Item))" />
+                            </MudTooltip>
+                            <MudTooltip Text="View Teams" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                               Color="Color.Info"
+                                               Size="Size.Small"
+                                               OnClick="@(() => OpenTeamsDrawer(context.Item))" />
+                            </MudTooltip>
+                            <MudTooltip Text="Delete Department" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Color="Color.Error"
+                                               Size="Size.Small"
+                                               OnClick="@(() => OpenDeleteDialog(context.Item))" />
+                            </MudTooltip>
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+            <NoRecordsContent>
+                <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
+                    <MudIcon Icon="@Icons.Material.Outlined.Inbox" Style="font-size: 4rem;" Color="Color.Default" />
+                    <MudText Typo="Typo.h6" Color="Color.Default">@UIConstants.Common.NoRecords</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">@UIConstants.Department.NoDataFound</MudText>
+                </MudStack>
+            </NoRecordsContent>
+            <LoadingContent>
+                <MudStack Spacing="3" Class="w-100">
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                </MudStack>
+            </LoadingContent>
+            <PagerContent>
+                <MudDataGridPager T="DepartmentDto" />
+            </PagerContent>
+        </MudDataGrid>
+
+    </MudPaper>
+</MudContainer>
+
+@* ── Teams Drawer (Full Page) ──────────────────────────────────────────────────── *@
+<MudDrawer @bind-Open="_drawerOpen" Anchor="Anchor.End" Elevation="2" Variant="DrawerVariant.Temporary"
+           Width="100%">
+    <DrawerContent>
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-6">
+            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" 
+                                   OnClick="CloseDrawer" />
+                    <MudText Typo="Typo.h5">Teams - @_selectedDepartment?.Name</MudText>
+                    <MudTextField @bind-Value="_drawerSearchString"
+                                  Placeholder="Search by name..."
+                                  Variant="Variant.Outlined"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  Style="max-width: 200px;" />
+                    <MudSelect T="bool"
+                               Value="@_drawerStatusFilter"
+                               ValueChanged="OnDrawerStatusFilterChanged"
+                               Variant="Variant.Outlined"
+                               Style="max-width: 150px;">
+                        <MudSelectItem T="bool" Value="@(true)">@UIConstants.Common.Active</MudSelectItem>
+                        <MudSelectItem T="bool" Value="@(false)">@UIConstants.Common.Inactive</MudSelectItem>
+                    </MudSelect>
+                    <MudSelect T="string"
+                               @bind-Value="_drawerSortBy"
+                               Variant="Variant.Outlined"
+                               Style="max-width: 120px;">
+                        <MudSelectItem T="string" Value="@("Name")">Name</MudSelectItem>
+                    </MudSelect>
+                </MudStack>
+                <MudStack Row="true" Spacing="2">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Add"
+                               OnClick="AddTeam">
+                        @UIConstants.Team.AddButton
+                    </MudButton>
+                    <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="CloseDrawer" />
+                </MudStack>
+            </MudStack>
+
+            @if (_drawerLoading)
+            {
+                <MudProgressLinear Indeterminate="true" />
+            }
+            else if (_teamsInDepartment.Count == 0)
+            {
+                <MudText Color="Color.Secondary">No teams in this department.</MudText>
+            }
+            else if (!FilteredTeams.Any())
+            {
+                <MudText Color="Color.Secondary">No @(_drawerStatusFilter ? "active" : "inactive") teams found.</MudText>
+            }
+            else
+            {
+                <div style="height: 70vh; overflow-y: auto;">
+                    <MudSimpleTable Dense="true" Hover="true" Striped="true" FixedHeader="true">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">@UIConstants.Common.ColumnNo</th>
+                                <th>@UIConstants.Team.ColumnName</th>
+                                <th>@UIConstants.Common.Status</th>
+                                <th style="width: 100px;">@UIConstants.Common.Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            
+                            <Virtualize Items="@FilteredTeams" Context="team" OverscanCount="10">
+                                <tr>
+                                    <td>@(FilteredTeams.IndexOf(team) + 1)</td>
+                                    <td>@team.Name</td>
+                                    <td>
+                                        <MudChip T="string" Color="@(team.IsActive ? Color.Success : Color.Default)"
+                                                 Size="Size.Small">
+                                            @(team.IsActive ? UIConstants.Common.Active : UIConstants.Common.Inactive)
+                                        </MudChip>
+                                    </td>
+                                    <td>
+                                        <MudStack Row="true" Spacing="1">
+                                            <MudTooltip Text="Edit Team" Placement="Placement.Top">
+                                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                               Color="Color.Primary"
+                                                               Size="Size.Small"
+                                                               OnClick="@(() => EditTeam(team))" />
+                                            </MudTooltip>
+                                            <MudTooltip Text="Delete Team" Placement="Placement.Top">
+                                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                               Color="Color.Error"
+                                                               Size="Size.Small"
+                                                               OnClick="@(() => DeleteTeam(team))" />
+                                            </MudTooltip>
+                                        </MudStack>
+                                    </td>
+                                </tr>
+                            </Virtualize>
+            
+                        </tbody>
+                    </MudSimpleTable>
+                </div>
+            }
+        </MudContainer>
+    </DrawerContent>
+</MudDrawer>
+
+@code {
+
+    private static readonly DialogOptions _formDialogOptions = new()
+    {
+        CloseOnEscapeKey = true,
+        MaxWidth = MaxWidth.Small,
+        FullWidth = true
+    };
+
+    private static readonly DialogOptions _confirmDialogOptions = new()
+    {
+        CloseOnEscapeKey = true
+    };
+
+    private List<DepartmentDto> _departments = new();
+    private bool _loading = true;
+    private string _searchString = string.Empty;
+    private bool _statusFilter = true;
+    private Dictionary<long, int> _rowNumbers = new();
+
+    private string _sortBy = "Code";
+    private string _sortDirection = "asc";
+    private Dictionary<string, string> _sortableColumns = new()
+    {
+        { "Code", "Code" },
+        { "Name", "Name" }
+    };
+
+    private bool _drawerOpen = false;
+    private DepartmentDto? _selectedDepartment;
+    private List<TeamDto> _teamsInDepartment = new();
+    private bool _drawerLoading = false;
+    private bool _drawerStatusFilter = true;
+    private string _drawerSearchString = string.Empty;
+    private string _drawerSortBy = "Name";
+
+    private long? _lastLoadedDepartmentId;
+    private bool _drawerDataStale = true;
+
+    private List<DepartmentLookupDto> _prefetchedDepartments = new();
+
+    private List<TeamDto> FilteredTeams =>
+        _teamsInDepartment
+            .Where(t => t.IsActive == _drawerStatusFilter)
+            .Where(t => string.IsNullOrWhiteSpace(_drawerSearchString) || 
+                        t.Name.Contains(_drawerSearchString, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(t => t.Name)
+            .ToList();
+
+    private bool QuickFilter(DepartmentDto x)
+    {
+        if (x.IsActive != _statusFilter)
+            return false;
+
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+
+        return x.Code.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
+            || x.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDepartmentsAsync();
+    }
+
+    private async Task LoadDepartmentsAsync()
+    {
+        _loading = true;
+        try
+        {
+            var response = await DepartmentApiClient.GetAllAsync();
+            if (response.Success && response.Data != null)
+            {
+                _departments = response.Data.ToList();
+                UpdateRowNumbers();
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? UIConstants.Common.LoadFailed, Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void UpdateRowNumbers()
+    {
+        var filtered = _departments
+            .Where(d => d.IsActive == _statusFilter)
+            .ToList();
+
+        _rowNumbers = filtered.Select((d, idx) => new { d.Id, idx = idx + 1 })
+            .ToDictionary(x => x.Id, x => x.idx);
+    }
+
+    private void HandleSortChanged((string SortBy, string SortDirection) sortData)
+    {
+        _sortBy = sortData.SortBy;
+        _sortDirection = sortData.SortDirection;
+    }
+
+    private void OnStatusFilterChanged(bool value)
+    {
+        _statusFilter = value;
+    }
+
+    private async Task OpenCreateDialog()
+    {
+        var dialog = await DialogService.ShowAsync<DepartmentDialog>(
+            UIConstants.Department.CreateDialogTitle, _formDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+        {
+            Snackbar.Add(DeptMsg.Created, Severity.Success);
+            await LoadDepartmentsAsync();
+        }
+    }
+
+    private async Task OpenEditDialog(DepartmentDto dept)
+    {
+        var parameters = new DialogParameters<DepartmentDialog>
+        {
+            { x => x.IsEdit, true },
+            { x => x.Department, dept }
+        };
+
+        var dialog = await DialogService.ShowAsync<DepartmentDialog>(
+            UIConstants.Department.EditDialogTitle, parameters, _formDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+        {
+            Snackbar.Add(DeptMsg.Updated, Severity.Success);
+            await LoadDepartmentsAsync();
+        }
+    }
+
+    private async Task OpenDeleteDialog(DepartmentDto dept)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, string.Format(UIConstants.Common.DeleteConfirmationFormat, dept.Name) },
+            { x => x.ButtonText, UIConstants.Common.Delete },
+            { x => x.Color, Color.Error }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(
+            UIConstants.Department.DeleteDialogTitle, parameters, _confirmDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+            await DeleteDepartmentAsync(dept.Id);
+    }
+
+    private async Task DeleteDepartmentAsync(long id)
+    {
+        try
+        {
+            var response = await DepartmentApiClient.DeleteAsync(id);
+            if (response.Success)
+            {
+                Snackbar.Add(DeptMsg.Deleted, Severity.Success);
+                await LoadDepartmentsAsync();
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? UIConstants.Common.DeleteFailed, Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+    }
+
+    private async Task OpenTeamsDrawer(DepartmentDto dept)
+    {
+        _selectedDepartment = dept;
+        _drawerOpen = true;
+
+        if (_lastLoadedDepartmentId != dept.Id || _drawerDataStale)
+        {
+            await RefreshTeamsInDrawer();
+            _lastLoadedDepartmentId = dept.Id;
+            _drawerDataStale = false;
+        }
+    }
+
+    private void CloseDrawer()
+    {
+        _drawerOpen = false;
+        _selectedDepartment = null;
+    }
+
+    private async Task RefreshTeamsInDrawer()
+    {
+        if (_selectedDepartment == null) return;
+
+        _drawerLoading = true;
+        try
+        {
+            var response = await TeamApiClient.GetByDepartmentAsync(_selectedDepartment.Id);
+            if (response.Success && response.Data != null)
+                _teamsInDepartment = response.Data.ToList();
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        finally
+        {
+            _drawerLoading = false;
+        }
+    }
+
+    private void OnDrawerStatusFilterChanged(bool value)
+    {
+        _drawerStatusFilter = value;
+    }
+
+    private async Task AddTeam()
+    {
+        if (_prefetchedDepartments.Count == 0)
+        {
+            try
+            {
+                var response = await DepartmentApiClient.GetLookupAsync();
+                if (response.Success && response.Data != null)
+                    _prefetchedDepartments = response.Data.ToList();
+            }
+            catch (ApiException)
+            {
+            }
+        }
+
+        var parameters = new DialogParameters<TeamDialog>
+        {
+            { x => x.PreloadedDepartments, _prefetchedDepartments },
+            { x => x.ShowDepartment, false },
+            { x => x.SelectedDepartmentId, _selectedDepartment?.Id }
+        };
+
+        var dialog = await DialogService.ShowAsync<TeamDialog>(
+            UIConstants.Team.CreateDialogTitle, parameters, _formDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+        {
+            Snackbar.Add(TeamMsg.Created, Severity.Success);
+            _drawerDataStale = true;
+            await RefreshTeamsInDrawer();
+        }
+    }
+
+    private async Task EditTeam(TeamDto team)
+    {
+        if (_prefetchedDepartments.Count == 0)
+        {
+            try
+            {
+                var response = await DepartmentApiClient.GetLookupAsync();
+                if (response.Success && response.Data != null)
+                    _prefetchedDepartments = response.Data.ToList();
+            }
+            catch (ApiException)
+            {
+            }
+        }
+
+        var parameters = new DialogParameters<TeamDialog>
+        {
+            { x => x.IsEdit, true },
+            { x => x.Team, team },
+            { x => x.PreloadedDepartments, _prefetchedDepartments }
+        };
+
+        var dialog = await DialogService.ShowAsync<TeamDialog>(
+            UIConstants.Team.EditDialogTitle, parameters, _formDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+        {
+            Snackbar.Add(TeamMsg.Updated, Severity.Success);
+            _drawerDataStale = true;
+            await RefreshTeamsInDrawer();
+        }
+    }
+
+    private async Task DeleteTeam(TeamDto team)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, string.Format(UIConstants.Common.DeleteConfirmationFormat, team.Name) },
+            { x => x.ButtonText, UIConstants.Common.Delete },
+            { x => x.Color, Color.Error }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(
+            UIConstants.Team.DeleteDialogTitle, parameters, _confirmDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+            await DeleteTeamAsync(team.Id);
+    }
+
+    private async Task DeleteTeamAsync(long id)
+    {
+        try
+        {
+            var response = await TeamApiClient.DeleteAsync(id);
+            if (response.Success)
+            {
+                Snackbar.Add(TeamMsg.Deleted, Severity.Success);
+                _drawerDataStale = true;
+                await RefreshTeamsInDrawer();
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? UIConstants.Common.DeleteFailed, Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+    }
+}

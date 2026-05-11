@@ -37,6 +37,13 @@ namespace EPMS.Domain.Entities.Hr
             Name = newName.Trim();
         }
 
+        public void ReassignToDepartment(long newDepartmentId)
+        {
+            if (newDepartmentId <= 0)
+                throw new ArgumentException("Invalid Department Id.");
+            DepartmentId = newDepartmentId;
+        }
+
         public void Deactivate() => IsActive = false;
         public void Reactivate() => IsActive = true;
     }

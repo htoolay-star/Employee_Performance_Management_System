@@ -1,0 +1,260 @@
+@using EPMS.Client.Constants
+@using EPMS.Client.Extensions
+@using EPMS.Client.Models.Hr
+@using EPMS.Client.Services
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.DepartmentDTOs
+@using EPMS.Shared.DTOs.TeamDTOs
+@using EPMS.Shared.Validators.TeamDTOs
+@using Mapster
+@using MudBlazor
+
+@inject ITeamApiClient TeamApiClient
+@inject IDepartmentApiClient DepartmentApiClient
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="_form" Model="@_model" Validation="@ValidateField">
+            <MudStack Spacing="3">
+
+                <MudTextField @bind-Value="_model.Name"
+                              Label="@UIConstants.Team.NameLabel"
+                              For="@(() => _model.Name)"
+                              Variant="Variant.Outlined" />
+
+                @if (ShowDepartment)
+                {
+                    <MudSelect T="long?"
+                               @bind-Value="_model.DepartmentId"
+                               Label="@UIConstants.Team.DepartmentLabel"
+                               Placeholder="@UIConstants.Team.SelectDepartmentPlaceholder"
+                               For="@(() => _model.DepartmentId)"
+                               Variant="Variant.Outlined"
+                               Clearable="true"
+                               Disabled="@_loadingDepartments"
+                               AdornmentIcon="@(_loadingDepartments ? Icons.Material.Filled.HourglassEmpty : Icons.Material.Filled.ArrowDropDown)">
+                        @if (_loadingDepartments)
+                        {
+                            <MudSelectItem T="long?" Value="null">
+                                <div class="d-flex align-center">
+                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                    <MudText Typo="Typo.body2">@UIConstants.Common.Loading</MudText>
+                                </div>
+                            </MudSelectItem>
+                        }
+                        else
+                        {
+                            @foreach (var dept in AvailableDepartments)
+                            {
+                                <MudSelectItem T="long?" Value="@((long?)dept.Id)">
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                        <MudText>@dept.Name</MudText>
+                                        @if (!dept.IsActive)
+                                        {
+                                            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Text" Class="ml-auto">
+                                                Inactive
+                                            </MudChip>
+                                        }
+                                    </MudStack>
+                                </MudSelectItem>
+                            }
+                        }
+                    </MudSelect>
+                }
+
+                @if (IsEdit)
+                {
+                    <MudSwitch @bind-Value="_model.IsActive"
+                               Label="@UIConstants.Common.Active"
+                               Color="Color.Success" />
+                }
+
+            </MudStack>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@UIConstants.Common.Cancel</MudButton>
+        <MudButton Color="Color.Primary"
+                   OnClick="Submit"
+                   Disabled="@(_saving || !HasChanged())">
+            @if (_saving)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+            }
+            @(IsEdit ? UIConstants.Common.Update : UIConstants.Common.Create)
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance? _mudDialog { get; set; }
+
+    [Parameter]
+    public bool IsEdit { get; set; }
+
+    [Parameter]
+    public TeamDto? Team { get; set; }
+
+    [Parameter]
+    public List<DepartmentLookupDto>? PreloadedDepartments { get; set; }
+
+    [Parameter]
+    public bool ShowDepartment { get; set; } = true;
+
+    [Parameter]
+    public long? SelectedDepartmentId { get; set; }
+
+    private MudForm? _form;
+    private bool _saving;
+    private bool _loadingDepartments = true;
+    private List<DepartmentLookupDto> _departments = new();
+    private Dictionary<string, string> _serverErrors = new();
+
+    private readonly CreateTeamDtoValidator _createValidator = new();
+    private readonly UpdateTeamDtoValidator _updateValidator = new();
+
+    // Filter departments: show active only, or include current if editing and it's inactive
+    private IEnumerable<DepartmentLookupDto> AvailableDepartments =>
+        _departments.Where(x => x.IsActive || (IsEdit && x.Id == Team!.DepartmentId));
+
+    private TeamFormModel _model = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Team is not null)
+            _model = Team.Adapt<TeamFormModel>();
+
+        if (PreloadedDepartments is { Count: > 0 })
+        {
+            _departments = PreloadedDepartments;
+            _loadingDepartments = false;
+            
+            if (!ShowDepartment && SelectedDepartmentId.HasValue)
+            {
+                _model.DepartmentId = SelectedDepartmentId.Value;
+            }
+        }
+        else
+        {
+            _ = LoadDepartmentsAsync();
+        }
+
+        await base.OnInitializedAsync();
+    }
+
+    private async Task LoadDepartmentsAsync()
+    {
+        try
+        {
+            var response = await DepartmentApiClient.GetLookupAsync();
+            if (response.Success && response.Data != null)
+                _departments = response.Data.ToList();
+            else
+                Snackbar.Add(UIConstants.Common.LoadFailed, Severity.Error);
+        }
+        catch (Refit.ApiException)
+        {
+            Snackbar.Add(UIConstants.Common.LoadFailed, Severity.Error);
+        }
+        finally
+        {
+            _loadingDepartments = false;
+            await Task.Delay(1); // Small delay to ensure UI updates
+            StateHasChanged();
+            
+            // Force UI refresh to ensure dropdown displays properly
+            await Task.Yield();
+        }
+    }
+
+    private async Task Submit()
+    {
+        _serverErrors.Clear();
+
+        await _form!.Validate();
+        if (!_form.IsValid)
+        {
+            Snackbar.Add(UIConstants.Common.ValidationFailed, Severity.Warning);
+            return;
+        }
+
+        _saving = true;
+        try
+        {
+            if (IsEdit && Team is not null)
+            {
+                var dto = _model.Adapt<UpdateTeamDto>();
+                var response = await TeamApiClient.UpdateAsync(Team.Id, dto);
+
+                if (response.Success)
+                    _mudDialog?.Close(DialogResult.Ok(true));
+                else
+                    Snackbar.Add(response.Message ?? UIConstants.Common.UpdateFailed, Severity.Error);
+            }
+            else
+            {
+                var dto = _model.Adapt<CreateTeamDto>();
+                var response = await TeamApiClient.CreateAsync(dto);
+
+                if (response.Success)
+                    _mudDialog?.Close(DialogResult.Ok(true));
+                else
+                    Snackbar.Add(response.Message ?? UIConstants.Common.CreateFailed, Severity.Error);
+            }
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.BadRequest)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ValidationFailed, Severity.Error);
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            _serverErrors[nameof(_model.Name)] = error?.Message ?? UIConstants.Common.DuplicateEntry;
+            await _form!.Validate();
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void Cancel() => _mudDialog?.Cancel();
+
+    private async Task<IEnumerable<string>> ValidateField(object model, string propertyName)
+    {
+        IEnumerable<string> fluentErrors;
+
+        if (IsEdit)
+        {
+            var fn = _updateValidator.ValidateMappedValue<TeamFormModel, UpdateTeamDto>(_model, _serverErrors);
+            fluentErrors = await fn(model, propertyName);
+        }
+        else
+        {
+            var fn = _createValidator.ValidateMappedValue<TeamFormModel, CreateTeamDto>(_model, _serverErrors);
+            fluentErrors = await fn(model, propertyName);
+        }
+
+        var errorList = fluentErrors.ToList();
+
+        if (_serverErrors.TryGetValue(propertyName, out var serverError))
+        {
+            errorList.Add(serverError);
+        }
+
+        return errorList;
+    }
+
+    private bool HasChanged()
+    {
+        if (!IsEdit || Team == null) return true;
+
+        return _model.Name != Team.Name ||
+               _model.DepartmentId != Team.DepartmentId ||
+               _model.IsActive != Team.IsActive;
+    }
+}

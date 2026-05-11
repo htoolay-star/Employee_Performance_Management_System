@@ -22,6 +22,7 @@ namespace EPMS.Shared.Constants
         {
             public static string AllLevels() => "hr:levels:all";
             public static string AllDepartments() => "hr:departments:all";
+            public static string AllTeams() => "hr:teams:all";
             public static string EmployeeById(long id) => $"hr:employee:id:{id}";
         }
 

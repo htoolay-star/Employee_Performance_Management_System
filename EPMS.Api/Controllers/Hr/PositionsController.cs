@@ -11,7 +11,6 @@ namespace EPMS.Api.Controllers.Hr;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
 public class PositionsController : ApiControllerBase
 {
     private readonly IPositionService _service;

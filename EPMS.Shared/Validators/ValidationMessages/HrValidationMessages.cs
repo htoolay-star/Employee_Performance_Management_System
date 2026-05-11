@@ -15,7 +15,7 @@ namespace EPMS.Shared.Validators.ValidationMessages
             public const string NameRequired = "Team name is required.";
             public const string NameMaxLength = "Team name cannot exceed 100 characters.";
             public const string DepartmentIdRequired = "Department is required.";
-            public const string DepartmentIdInvalid = "Department ID must be greater than 0.";
+            public const string DepartmentIdInvalid = "Please select a valid department.";
         }
 
         public static class Position

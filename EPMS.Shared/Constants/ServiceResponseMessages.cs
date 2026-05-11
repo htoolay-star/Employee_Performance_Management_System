@@ -45,6 +45,7 @@ public static class ServiceResponseMessages
         public static string NotFound(long id) => $"Team with ID '{id}' was not found.";
         public static string NotFoundInDepartment(long teamId, long departmentId) => $"Team '{teamId}' does not belong to department '{departmentId}'.";
         public static string NotFoundForDepartment(long departmentId) => $"Department with ID '{departmentId}' was not found.";
+        public static string InUse(long id) => $"Team with ID '{id}' cannot be deleted because it has assigned employees.";
     }
 
     public static class PositionMsg

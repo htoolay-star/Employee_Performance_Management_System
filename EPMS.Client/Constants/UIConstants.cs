@@ -62,5 +62,36 @@
 
             public const string NoDataFound = "Try adjusting your search or add a new level.";
         }
+
+        public static class Team
+        {
+            public const string PageTitle = "Team Management";
+            public const string SearchPlaceholder = "Search by team name...";
+            public const string AddButton = "Add Team";
+            public const string CreateDialogTitle = "Create Team";
+            public const string EditDialogTitle = "Edit Team";
+            public const string DeleteDialogTitle = "Delete Team";
+            public const string NameLabel = "Team Name";
+            public const string DepartmentLabel = "Department";
+            public const string ColumnName = "Team Name";
+            public const string ColumnDepartment = "Department";
+            public const string SelectDepartmentPlaceholder = "-- Select a Department --";
+            public const string NoDataFound = "Try adjusting your search or add a new team.";
+        }
+
+        public static class Department
+        {
+            public const string PageTitle = "Department Management";
+            public const string SearchPlaceholder = "Search by code or name...";
+            public const string AddButton = "Add Department";
+            public const string CreateDialogTitle = "Create Department";
+            public const string EditDialogTitle = "Edit Department";
+            public const string DeleteDialogTitle = "Delete Department";
+            public const string CodeLabel = "Department Code";
+            public const string NameLabel = "Department Name";
+            public const string ColumnCode = "Code";
+            public const string ColumnName = "Name";
+            public const string NoDataFound = "Try adjusting your search or add a new department.";
+        }
     }
 }

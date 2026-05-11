@@ -11,7 +11,6 @@ namespace EPMS.Api.Controllers.Hr;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = RoleConstants.Admin)]
 public class DepartmentsController : ApiControllerBase
 {
     private readonly IDepartmentService _service;

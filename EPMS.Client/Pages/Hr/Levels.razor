@@ -36,13 +36,14 @@
                           Variant="Variant.Outlined"
                           Clearable="true"
                           Immediate="true"
+                          DebounceInterval="500"
                           Style="max-width: 300px;" />
 
             <MudSelect T="bool"
                        Value="@_statusFilter"
                        ValueChanged="OnStatusFilterChanged"
                        Variant="Variant.Outlined"
-                       Style="max-width: 180px;">
+                       Style="max-width: 150px;">
                 <MudSelectItem T="bool" Value="@(true)">@UIConstants.Common.Active</MudSelectItem>
                 <MudSelectItem T="bool" Value="@(false)">@UIConstants.Common.Inactive</MudSelectItem>
             </MudSelect>
@@ -82,7 +83,7 @@
                 <PropertyColumn Property="x => x.Name" Title="@UIConstants.Level.ColumnName" />
                 <PropertyColumn Property="x => x.Description" Title="@UIConstants.Common.Description" />
                 @* {{!-- TemplateColumns need an explicit SortBy expression; PropertyColumns get it automatically. --}} *@
-                <TemplateColumn Title="@UIConstants.Common.Status" SortBy="@(x => x.IsActive)">
+                <TemplateColumn Title="@UIConstants.Common.Status">
                     <CellTemplate>
                         <MudChip Color="@(context.Item.IsActive ? Color.Success : Color.Default)"
                                  Size="Size.Small">
@@ -157,8 +158,7 @@
     private Dictionary<string, string> _sortableColumns = new()
   {
     { "Code", "Code" },
-    { "Name", "Name" },
-    { "IsActive", "Status" }
+    { "Name", "Name" }
   };
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
@@ -299,14 +299,21 @@
     {
         if (!_levels.Any()) return;
 
-        _levels = _sortBy switch
+        // Step 1: Filter by status first
+        var filteredList = _levels.Where(x => x.IsActive == _statusFilter).ToList();
+
+        // Step 2: Sort filtered list
+        filteredList = _sortBy switch
         {
-            "Name" => _sortDirection == "asc" ? _levels.OrderBy(x => x.Name).ToList() : _levels.OrderByDescending(x => x.Name).ToList(),
-            "IsActive" => _sortDirection == "asc" ? _levels.OrderBy(x => x.IsActive).ToList() : _levels.OrderByDescending(x => x.IsActive).ToList(),
-            _ => _sortDirection == "asc" ? _levels.OrderBy(x => x.Code).ToList() : _levels.OrderByDescending(x => x.Code).ToList(),
+            "Name" => _sortDirection == "asc" ? filteredList.OrderBy(x => x.Name).ToList() : filteredList.OrderByDescending(x => x.Name).ToList(),
+            _ => _sortDirection == "asc" ? filteredList.OrderBy(x => x.Code).ToList() : filteredList.OrderByDescending(x => x.Code).ToList(),
         };
 
-        _rowNumbers = _levels
+        // Update the main list with sorted/filtered data
+        _levels = filteredList;
+
+        // Step 3: Calculate row numbers from FILTERED list (no gaps!)
+        _rowNumbers = filteredList
           .Select((x, i) => (x.Id, Index: i + 1))
           .ToDictionary(x => x.Id, x => x.Index);
     }

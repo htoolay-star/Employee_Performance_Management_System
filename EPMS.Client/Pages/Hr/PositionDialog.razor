@@ -34,7 +34,8 @@
                            Label="@UIConstants.Position.LevelLabel"
                            Placeholder="@UIConstants.Position.SelectLevelPlaceholder"
                            For="@(() => _model.LevelId)"
-                           Variant="Variant.Outlined">
+                           Variant="Variant.Outlined"
+                           Clearable="true">
                     @foreach (var level in AvailableLevels)
                     {
                         long? currentLevelId = level.Id;

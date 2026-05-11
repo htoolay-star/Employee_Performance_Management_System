@@ -26,7 +26,7 @@ public static class EmployeeInfoValidationMessages
     public static class EmployeeEmployment
     {
         public const string EmployeeIdInvalid = "Employee ID must be greater than 0.";
-        public const string DepartmentIdInvalid = "Department ID must be greater than 0.";
+        public const string DepartmentIdInvalid = "Please select a valid department.";
         public const string PositionIdInvalid = "Position ID must be greater than 0.";
         public const string EmploymentStatusRequired = "Employment status is required.";
         public const string EmploymentStatusMaxLength = "Employment status cannot exceed 50 characters.";
