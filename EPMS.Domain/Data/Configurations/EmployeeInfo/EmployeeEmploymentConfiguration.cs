@@ -33,7 +33,7 @@ namespace EPMS.Domain.Data.Configurations.EmployeeInfo
 
             entity.HasOne(e => e.Department).WithMany().HasForeignKey(e => e.DepartmentId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne(e => e.ParentDepartment).WithMany().HasForeignKey(e => e.ParentDepartmentId).OnDelete(DeleteBehavior.Restrict);
-            entity.HasOne(e => e.Team).WithMany().HasForeignKey(e => e.TeamId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(e => e.Team).WithMany(t => t.Members).HasForeignKey(e => e.TeamId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne(e => e.Position).WithMany().HasForeignKey(e => e.PositionId).OnDelete(DeleteBehavior.Restrict);
 
             entity.Property(e => e.EmploymentStatus).HasMaxLength(50).IsRequired();
