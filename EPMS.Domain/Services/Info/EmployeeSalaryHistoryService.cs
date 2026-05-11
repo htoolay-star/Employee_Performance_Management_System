@@ -1,6 +1,5 @@
 using AutoMapper;
 using EPMS.Domain.Contracts;
-using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Domain.Interface.IService.Info;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
@@ -45,33 +44,5 @@ public class EmployeeSalaryHistoryService : IEmployeeSalaryHistoryService
         var histories = await _uow.Info.EmployeeSalaryHistories.GetByEmployeeIdAsync(employeeId);
         var dtos = _mapper.Map<IEnumerable<EmployeeSalaryHistoryDto>>(histories);
         return SuccessResponse<IEnumerable<EmployeeSalaryHistoryDto>>.Ok(dtos, EmployeeSalaryHistoryMsg.RetrievedAll);
-    }
-
-    public async Task<SuccessResponse<long>> CreateAsync(CreateEmployeeSalaryHistoryDto dto)
-    {
-        // Check if profile exists
-        var profile = await _uow.Info.EmployeeProfiles.GetByIdAsync(dto.EmployeeId);
-        if (profile == null)
-            return SuccessResponse<long>.Fail(EmployeeProfileMsg.NotFound(dto.EmployeeId), ErrorType.NotFound);
-
-        if (dto.PreviousAmount < 0 || dto.NewAmount < 0)
-            return SuccessResponse<long>.Fail(EmployeeSalaryHistoryMsg.SalaryNegative, ErrorType.Validation);
-
-        if (string.IsNullOrWhiteSpace(dto.ChangeReason))
-            return SuccessResponse<long>.Fail(EmployeeSalaryHistoryMsg.ChangeReasonRequired, ErrorType.Validation);
-
-        var history = new EmployeeSalaryHistory(
-            dto.EmployeeId,
-            dto.PreviousAmount,
-            dto.NewAmount,
-            dto.EffectiveDate,
-            dto.ChangeReason,
-            _timeProvider,
-            dto.ApprovedById);
-
-        _uow.Info.EmployeeSalaryHistories.Add(history);
-        await _uow.CompleteAsync();
-
-        return SuccessResponse<long>.Ok(history.Id, EmployeeSalaryHistoryMsg.Created);
     }
 }

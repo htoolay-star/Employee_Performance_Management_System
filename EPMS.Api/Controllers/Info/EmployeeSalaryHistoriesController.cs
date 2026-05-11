@@ -40,11 +40,4 @@ public class EmployeeSalaryHistoriesController : ApiControllerBase
         var result = await _historyService.GetByEmployeeIdAsync(employeeId);
         return HandleResult(result);
     }
-
-    [HttpPost]
-    public async Task<ActionResult<SuccessResponse<long>>> Create(CreateEmployeeSalaryHistoryDto dto)
-    {
-        var result = await _historyService.CreateAsync(dto);
-        return HandleResult(result);
-    }
 }

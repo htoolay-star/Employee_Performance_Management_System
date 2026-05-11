@@ -133,17 +133,13 @@ public static class ServiceResponseMessages
 
     public static class EmployeeSalaryHistoryMsg
     {
-        public const string Created = "Employee salary history created successfully.";
         public const string Retrieved = "Employee salary history retrieved successfully.";
         public const string RetrievedAll = "Employee salary histories retrieved successfully.";
-        public const string SalaryNegative = "Salary amounts cannot be negative.";
-        public const string ChangeReasonRequired = "Change reason is required.";
         public static string NotFound(long id) => $"Employee salary history with ID '{id}' was not found.";
     }
 
     public static class EmployeeEmploymentHistoryMsg
     {
-        public const string Created = "Employee employment history created successfully.";
         public const string Retrieved = "Employee employment history retrieved successfully.";
         public const string RetrievedAll = "Employee employment histories retrieved successfully.";
         public static string NotFound(long id) => $"Employee employment history with ID '{id}' was not found.";

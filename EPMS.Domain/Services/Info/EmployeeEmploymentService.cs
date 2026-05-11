@@ -5,7 +5,6 @@ using EPMS.Domain.Interface.IService.Info;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using EPMS.Shared.Enums;
-using Microsoft.EntityFrameworkCore;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 namespace EPMS.Domain.Services.Info;
@@ -14,11 +13,13 @@ public class EmployeeEmploymentService : IEmployeeEmploymentService
 {
     private readonly IUnitOfWork _uow;
     private readonly IMapper _mapper;
+    private readonly TimeProvider _timeProvider;
 
-    public EmployeeEmploymentService(IUnitOfWork uow, IMapper mapper)
+    public EmployeeEmploymentService(IUnitOfWork uow, IMapper mapper, TimeProvider timeProvider)
     {
         _uow = uow;
         _mapper = mapper;
+        _timeProvider = timeProvider;
     }
 
     public async Task<SuccessResponse<IEnumerable<EmployeeEmploymentDto>>> GetAllAsync()
@@ -89,17 +90,49 @@ public class EmployeeEmploymentService : IEmployeeEmploymentService
         if (employment == null)
             return SuccessResponse.Fail(EmployeeEmploymentMsg.NotFound(id), ErrorType.NotFound);
 
-        // Note: The entity doesn't have direct update methods, so we'd need to handle this differently
-        // For now, we'll use the existing methods or add new ones to the entity
-        
+        // Capture old values before update for history
+        var oldDepartmentId = employment.DepartmentId;
+        var oldPositionId = employment.PositionId;
+        var oldManagerId = employment.DirectManagerId;
+        var oldStatus = employment.EmploymentStatus;
+
+        // Update main employment details
+        employment.UpdateDetails(
+            dto.DepartmentId, dto.ParentDepartmentId, dto.PositionId,
+            dto.TeamId, dto.DirectManagerId, dto.EmploymentStatus,
+            dto.StaffType, dto.ProbationMonth,
+            dto.Shift, dto.FingerPrintId, dto.MobileAttendance);
+
+        // Handle date-related updates
         if (dto.DateOfConfirmation.HasValue)
             employment.ConfirmEmployment(dto.DateOfConfirmation.Value);
-        
+
         if (!string.IsNullOrEmpty(dto.ProductProject))
             employment.AssignProject(dto.ProductProject);
-        
+
         if (dto.DateOfIncrement.HasValue)
             employment.LogIncrement(dto.DateOfIncrement.Value);
+
+        // Auto-create employment history record when key fields change
+        bool keyFieldsChanged = oldDepartmentId != employment.DepartmentId
+            || oldPositionId != employment.PositionId
+            || oldManagerId != employment.DirectManagerId
+            || !string.Equals(oldStatus, employment.EmploymentStatus, StringComparison.Ordinal);
+
+        if (keyFieldsChanged)
+        {
+            var history = new EmployeeEmploymentHistory(
+                employment.EmployeeId,
+                employment.DepartmentId,
+                employment.PositionId,
+                employment.DirectManagerId,
+                employment.EmploymentStatus,
+                DateOnly.FromDateTime(_timeProvider.GetUtcNow().DateTime),
+                _timeProvider,
+                "Employment details updated");
+
+            _uow.Info.EmployeeEmploymentHistories.Add(history);
+        }
 
         await _uow.CompleteAsync();
         return SuccessResponse.Ok(EmployeeEmploymentMsg.Updated);

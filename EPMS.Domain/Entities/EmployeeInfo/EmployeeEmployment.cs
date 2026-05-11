@@ -78,5 +78,26 @@ namespace EPMS.Domain.Entities.EmployeeInfo
         {
             DateOfIncrement = incrementDate;
         }
+
+        public void UpdateDetails(
+            long departmentId, long parentDepartmentId, long positionId,
+            long? teamId, long? directManagerId, string employmentStatus,
+            string? staffType, int? probationMonth,
+            string? shift, string? fingerPrintId, bool mobileAttendance)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(employmentStatus);
+
+            DepartmentId = departmentId;
+            ParentDepartmentId = parentDepartmentId;
+            PositionId = positionId;
+            TeamId = teamId;
+            DirectManagerId = directManagerId;
+            EmploymentStatus = employmentStatus.Trim();
+            StaffType = staffType?.Trim();
+            ProbationMonth = probationMonth;
+            Shift = shift?.Trim();
+            FingerPrintId = fingerPrintId?.Trim();
+            MobileAttendance = mobileAttendance;
+        }
     }
 }

@@ -1,6 +1,5 @@
 using AutoMapper;
 using EPMS.Domain.Contracts;
-using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Domain.Interface.IService.Info;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
@@ -45,37 +44,5 @@ public class EmployeeEmploymentHistoryService : IEmployeeEmploymentHistoryServic
         var histories = await _uow.Info.EmployeeEmploymentHistories.GetByEmployeeIdAsync(employeeId);
         var dtos = _mapper.Map<IEnumerable<EmployeeEmploymentHistoryDto>>(histories);
         return SuccessResponse<IEnumerable<EmployeeEmploymentHistoryDto>>.Ok(dtos, EmployeeEmploymentHistoryMsg.RetrievedAll);
-    }
-
-    public async Task<SuccessResponse<long>> CreateAsync(CreateEmployeeEmploymentHistoryDto dto)
-    {
-        // Check if profile exists
-        var profile = await _uow.Info.EmployeeProfiles.GetByIdAsync(dto.EmployeeId);
-        if (profile == null)
-            return SuccessResponse<long>.Fail(EmployeeProfileMsg.NotFound(dto.EmployeeId), ErrorType.NotFound);
-
-        // Validate department exists
-        if (!await _uow.HR.Departments.ExistsByIdAsync(dto.DepartmentId))
-            return SuccessResponse<long>.Fail(DepartmentMsg.NotFound(dto.DepartmentId), ErrorType.NotFound);
-
-        // Validate position exists
-        if (!await _uow.HR.Positions.ExistsByIdAsync(dto.PositionId))
-            return SuccessResponse<long>.Fail(PositionMsg.NotFound(dto.PositionId), ErrorType.NotFound);
-
-        var history = new EmployeeEmploymentHistory(
-            dto.EmployeeId,
-            dto.DepartmentId,
-            dto.PositionId,
-            dto.ManagerId,
-            dto.EmploymentStatus,
-            dto.EffectiveDate,
-            _timeProvider,
-            dto.ChangeReason,
-            dto.ChangedById);
-
-        _uow.Info.EmployeeEmploymentHistories.Add(history);
-        await _uow.CompleteAsync();
-
-        return SuccessResponse<long>.Ok(history.Id, EmployeeEmploymentHistoryMsg.Created);
     }
 }
