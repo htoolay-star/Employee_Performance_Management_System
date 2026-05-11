@@ -1,6 +1,6 @@
-namespace EPMS.Shared.DTOs.DepartmentDTOs
+namespace EPMS.Shared.DTOs.Common
 {
-    public record DepartmentLookupDto
+    public record LookUpDto
     {
         public long Id { get; init; }
         public string Name { get; init; } = string.Empty;

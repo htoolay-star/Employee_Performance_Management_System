@@ -21,7 +21,7 @@ public class TeamsController : ApiControllerBase
     }
 
     [HttpGet("lookup")]
-    public async Task<ActionResult<SuccessResponse<IEnumerable<TeamLookupDto>>>> GetLookup()
+    public async Task<ActionResult<SuccessResponse<IEnumerable<LookUpDto>>>> GetLookup()
     {
         var result = await _teamService.GetLookupAsync();
         return HandleResult(result);

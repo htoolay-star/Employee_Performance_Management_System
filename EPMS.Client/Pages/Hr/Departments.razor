@@ -284,7 +284,7 @@
     private long? _lastLoadedDepartmentId;
     private bool _drawerDataStale = true;
 
-    private List<DepartmentLookupDto> _prefetchedDepartments = new();
+    private List<LookUpDto> _prefetchedDepartments = new();
 
     private List<TeamDto> FilteredTeams =>
         _teamsInDepartment

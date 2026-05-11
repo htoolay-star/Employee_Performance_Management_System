@@ -26,31 +26,31 @@ public class DepartmentService : IDepartmentService
         _cacheService = cacheService;
     }
 
-    public async Task<SuccessResponse<IEnumerable<DepartmentLookupDto>>> GetLookupAsync()
+    public async Task<SuccessResponse<IEnumerable<LookUpDto>>> GetLookupAsync()
     {
         var cachedAllDepts = await _cacheService.GetAsync<IEnumerable<DepartmentDto>>(CacheKeys.Hr.AllDepartments());
 
         if (cachedAllDepts != null)
         {
-            var lookupFromCache = cachedAllDepts.Select(x => new DepartmentLookupDto
+            var lookupFromCache = cachedAllDepts.Select(x => new LookUpDto
             {
                 Id = x.Id,
                 Name = x.Name,
                 IsActive = x.IsActive
             });
-            return SuccessResponse<IEnumerable<DepartmentLookupDto>>.Ok(lookupFromCache, DeptMsg.RetrievedAll);
+            return SuccessResponse<IEnumerable<LookUpDto>>.Ok(lookupFromCache, DeptMsg.RetrievedAll);
         }
 
         var tuples = await _uow.HR.Departments.GetLookupAsync();
 
-        var dtos = tuples.Select(t => new DepartmentLookupDto
+        var dtos = tuples.Select(t => new LookUpDto
         {
             Id = t.Id,
             Name = t.Name,
             IsActive = t.IsActive
         }).ToList();
 
-        return SuccessResponse<IEnumerable<DepartmentLookupDto>>.Ok(dtos, DeptMsg.RetrievedAll);
+        return SuccessResponse<IEnumerable<LookUpDto>>.Ok(dtos, DeptMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<IEnumerable<DepartmentDto>>> GetDepartmentWithTeamsAsync(long teamId)

@@ -18,7 +18,7 @@ public class LevelsController : ApiControllerBase
     }
 
     [HttpGet("lookup")]
-    public async Task<ActionResult<SuccessResponse<IEnumerable<LevelLookupDto>>>> GetLookup()
+    public async Task<ActionResult<SuccessResponse<IEnumerable<LookUpDto>>>> GetLookup()
     {
         var result = await _service.GetLookupAsync();
         return HandleResult(result);

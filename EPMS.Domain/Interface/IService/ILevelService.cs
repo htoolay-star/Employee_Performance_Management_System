@@ -5,7 +5,7 @@ namespace EPMS.Domain.Interfaces;
 
 public interface ILevelService
 {
-    Task<SuccessResponse<IEnumerable<LevelLookupDto>>> GetLookupAsync();
+    Task<SuccessResponse<IEnumerable<LookUpDto>>> GetLookupAsync();
     Task<SuccessResponse<IEnumerable<LevelDto>>> GetAllAsync();
     Task<SuccessResponse<LevelDto>> GetByIdAsync(long id);
     Task<SuccessResponse<long>> CreateAsync(CreateLevelDto dto);

@@ -6,7 +6,7 @@ namespace EPMS.Domain.Interfaces;
 
 public interface ITeamService
 {
-    Task<SuccessResponse<IEnumerable<TeamLookupDto>>> GetLookupAsync();
+    Task<SuccessResponse<IEnumerable<LookUpDto>>> GetLookupAsync();
     Task<SuccessResponse<IEnumerable<TeamDto>>> GetTeamsByDepartmentIdAsync(long departmentId);
     Task<SuccessResponse<IEnumerable<TeamDto>>> GetAllAsync();
     Task<SuccessResponse<TeamDto>> GetByIdAsync(long id);

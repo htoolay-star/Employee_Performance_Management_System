@@ -54,31 +54,31 @@ public class TeamService : ITeamService
         };
     }
 
-    public async Task<SuccessResponse<IEnumerable<TeamLookupDto>>> GetLookupAsync()
+    public async Task<SuccessResponse<IEnumerable<LookUpDto>>> GetLookupAsync()
     {
         var cachedAllTeams = await _cacheService.GetAsync<IEnumerable<TeamDto>>(CacheKeys.Hr.AllTeams());
 
         if (cachedAllTeams != null)
         {
-            var lookupFromCache = cachedAllTeams.Select(x => new TeamLookupDto
+            var lookupFromCache = cachedAllTeams.Select(x => new LookUpDto
             {
                 Id = x.Id,
                 Name = x.Name,
                 IsActive = x.IsActive
             });
-            return SuccessResponse<IEnumerable<TeamLookupDto>>.Ok(lookupFromCache, TeamMsg.RetrievedAll);
+            return SuccessResponse<IEnumerable<LookUpDto>>.Ok(lookupFromCache, TeamMsg.RetrievedAll);
         }
 
         var tuples = await _uow.HR.Teams.GetLookupAsync();
 
-        var dtos = tuples.Select(t => new TeamLookupDto
+        var dtos = tuples.Select(t => new LookUpDto
         {
             Id = t.Id,
             Name = t.Name,
             IsActive = t.IsActive
         }).ToList();
 
-        return SuccessResponse<IEnumerable<TeamLookupDto>>.Ok(dtos, TeamMsg.RetrievedAll);
+        return SuccessResponse<IEnumerable<LookUpDto>>.Ok(dtos, TeamMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<IEnumerable<TeamDto>>> GetTeamsByDepartmentIdAsync(long departmentId)

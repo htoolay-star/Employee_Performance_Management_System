@@ -92,9 +92,9 @@
     // ── State ─────────────────────────────────────────────────────────────────
     private MudForm? _form;
     private bool _saving;
-    private List<LevelLookupDto> _levels = new();
+    private List<LookUpDto> _levels = new();
 
-    private IEnumerable<LevelLookupDto> AvailableLevels =>
+    private IEnumerable<LookUpDto> AvailableLevels =>
         _levels.Where(x => x.IsActive || (IsEdit && x.Id == Position!.LevelId));
 
     private PositionFormModel _model = new();

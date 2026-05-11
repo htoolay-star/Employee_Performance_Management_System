@@ -8,7 +8,7 @@ namespace EPMS.Client.Services;
 public interface ITeamApiClient
 {
     [Get("/api/teams/lookup")]
-    Task<SuccessResponse<IEnumerable<TeamLookupDto>>> GetLookupAsync();
+    Task<SuccessResponse<IEnumerable<LookUpDto>>> GetLookupAsync();
 
     [Get("/api/teams/by-department/{departmentId}")]
     Task<SuccessResponse<IEnumerable<TeamDto>>> GetByDepartmentAsync(long departmentId);

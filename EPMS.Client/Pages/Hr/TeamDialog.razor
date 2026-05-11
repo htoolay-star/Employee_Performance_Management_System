@@ -99,7 +99,7 @@
     public TeamDto? Team { get; set; }
 
     [Parameter]
-    public List<DepartmentLookupDto>? PreloadedDepartments { get; set; }
+    public List<LookUpDto>? PreloadedDepartments { get; set; }
 
     [Parameter]
     public bool ShowDepartment { get; set; } = true;
@@ -110,14 +110,14 @@
     private MudForm? _form;
     private bool _saving;
     private bool _loadingDepartments = true;
-    private List<DepartmentLookupDto> _departments = new();
+    private List<LookUpDto> _departments = new();
     private Dictionary<string, string> _serverErrors = new();
 
     private readonly CreateTeamDtoValidator _createValidator = new();
     private readonly UpdateTeamDtoValidator _updateValidator = new();
 
     // Filter departments: show active only, or include current if editing and it's inactive
-    private IEnumerable<DepartmentLookupDto> AvailableDepartments =>
+    private IEnumerable<LookUpDto> AvailableDepartments =>
         _departments.Where(x => x.IsActive || (IsEdit && x.Id == Team!.DepartmentId));
 
     private TeamFormModel _model = new();

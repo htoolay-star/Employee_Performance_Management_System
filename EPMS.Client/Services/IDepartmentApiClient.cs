@@ -7,7 +7,7 @@ namespace EPMS.Client.Services;
 public interface IDepartmentApiClient
 {
     [Get("/api/departments/lookup")]
-    Task<SuccessResponse<IEnumerable<DepartmentLookupDto>>> GetLookupAsync();
+    Task<SuccessResponse<IEnumerable<LookUpDto>>> GetLookupAsync();
 
     [Get("/api/departments/with-teams")]
     Task<SuccessResponse<IEnumerable<DepartmentDto>>> GetWithTeamsAsync();
