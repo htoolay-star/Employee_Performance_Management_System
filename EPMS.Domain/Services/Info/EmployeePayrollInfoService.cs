@@ -1,10 +1,10 @@
-using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Domain.Interface.IService.Info;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using EPMS.Shared.Enums;
+using Mapster;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 namespace EPMS.Domain.Services.Info;
@@ -12,20 +12,18 @@ namespace EPMS.Domain.Services.Info;
 public class EmployeePayrollInfoService : IEmployeePayrollInfoService
 {
     private readonly IUnitOfWork _uow;
-    private readonly IMapper _mapper;
     private readonly TimeProvider _timeProvider;
 
-    public EmployeePayrollInfoService(IUnitOfWork uow, IMapper mapper, TimeProvider timeProvider)
+    public EmployeePayrollInfoService(IUnitOfWork uow, TimeProvider timeProvider)
     {
         _uow = uow;
-        _mapper = mapper;
         _timeProvider = timeProvider;
     }
 
     public async Task<SuccessResponse<IEnumerable<EmployeePayrollInfoDto>>> GetAllAsync()
     {
         var payrolls = await _uow.Info.EmployeePayrollInfos.GetAllAsync();
-        var dtos = _mapper.Map<IEnumerable<EmployeePayrollInfoDto>>(payrolls);
+        var dtos = payrolls.Adapt<IEnumerable<EmployeePayrollInfoDto>>();
         return SuccessResponse<IEnumerable<EmployeePayrollInfoDto>>.Ok(dtos, EmployeePayrollInfoMsg.RetrievedAll);
     }
 
@@ -36,7 +34,7 @@ public class EmployeePayrollInfoService : IEmployeePayrollInfoService
         if (payroll == null)
             return SuccessResponse<EmployeePayrollInfoDto>.Fail(EmployeePayrollInfoMsg.NotFound(id), ErrorType.NotFound);
 
-        var dto = _mapper.Map<EmployeePayrollInfoDto>(payroll);
+        var dto = payroll.Adapt<EmployeePayrollInfoDto>();
         return SuccessResponse<EmployeePayrollInfoDto>.Ok(dto, EmployeePayrollInfoMsg.Retrieved);
     }
 
@@ -47,7 +45,7 @@ public class EmployeePayrollInfoService : IEmployeePayrollInfoService
         if (payroll == null)
             return SuccessResponse<EmployeePayrollInfoDto>.Fail(EmployeePayrollInfoMsg.NotFound(employeeId), ErrorType.NotFound);
 
-        var dto = _mapper.Map<EmployeePayrollInfoDto>(payroll);
+        var dto = payroll.Adapt<EmployeePayrollInfoDto>();
         return SuccessResponse<EmployeePayrollInfoDto>.Ok(dto, EmployeePayrollInfoMsg.Retrieved);
     }
 

@@ -1,7 +1,10 @@
 using EPMS.Api.Extensions;
+using EPMS.Api.Mapster;
 using EPMS.Domain.Contracts;
 
 var builder = WebApplication.CreateBuilder(args);
+
+MapsterConfig.Configure();
 
 builder.Services
     .AddAppConfiguration(builder.Configuration)

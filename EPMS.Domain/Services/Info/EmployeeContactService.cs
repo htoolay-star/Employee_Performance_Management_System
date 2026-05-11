@@ -1,4 +1,3 @@
-using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Auth;
 using EPMS.Domain.Entities.EmployeeInfo;
@@ -8,6 +7,7 @@ using EPMS.Domain.Interface.IService.Info;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using EPMS.Shared.Enums;
+using Mapster;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 namespace EPMS.Domain.Services.Info;
@@ -15,18 +15,15 @@ namespace EPMS.Domain.Services.Info;
 public class EmployeeContactService : IEmployeeContactService
 {
     private readonly IUnitOfWork _uow;
-    private readonly IMapper _mapper;
     private readonly IPasswordHasher _passwordHasher;
     private readonly ISystemSettingsService _settingsService;
 
     public EmployeeContactService(
         IUnitOfWork uow, 
-        IMapper mapper,
         IPasswordHasher passwordHasher,
         ISystemSettingsService settingsService)
     {
         _uow = uow;
-        _mapper = mapper;
         _passwordHasher = passwordHasher;
         _settingsService = settingsService;
     }
@@ -34,7 +31,7 @@ public class EmployeeContactService : IEmployeeContactService
     public async Task<SuccessResponse<IEnumerable<EmployeeContactDto>>> GetAllAsync()
     {
         var contacts = await _uow.Info.EmployeeContacts.GetAllAsync();
-        var dtos = _mapper.Map<IEnumerable<EmployeeContactDto>>(contacts);
+        var dtos = contacts.Adapt<IEnumerable<EmployeeContactDto>>();
         return SuccessResponse<IEnumerable<EmployeeContactDto>>.Ok(dtos, EmployeeContactMsg.RetrievedAll);
     }
 
@@ -45,7 +42,7 @@ public class EmployeeContactService : IEmployeeContactService
         if (contact == null)
             return SuccessResponse<EmployeeContactDto>.Fail(EmployeeContactMsg.NotFound(id), ErrorType.NotFound);
 
-        var dto = _mapper.Map<EmployeeContactDto>(contact);
+        var dto = contact.Adapt<EmployeeContactDto>();
         return SuccessResponse<EmployeeContactDto>.Ok(dto, EmployeeContactMsg.Retrieved);
     }
 
@@ -56,7 +53,7 @@ public class EmployeeContactService : IEmployeeContactService
         if (contact == null)
             return SuccessResponse<EmployeeContactDto>.Fail(EmployeeContactMsg.NotFound(employeeId), ErrorType.NotFound);
 
-        var dto = _mapper.Map<EmployeeContactDto>(contact);
+        var dto = contact.Adapt<EmployeeContactDto>();
         return SuccessResponse<EmployeeContactDto>.Ok(dto, EmployeeContactMsg.Retrieved);
     }
 

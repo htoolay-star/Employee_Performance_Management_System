@@ -1,4 +1,3 @@
-using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Domain.Interface.IService.App;
@@ -8,6 +7,7 @@ using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using EPMS.Shared.Enums;
+using Mapster;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 namespace EPMS.Domain.Services.Info;
@@ -15,18 +15,15 @@ namespace EPMS.Domain.Services.Info;
 public class EmployeeProfileService : IEmployeeProfileService
 {
     private readonly IUnitOfWork _uow;
-    private readonly IMapper _mapper;
     private readonly ICurrentEmployeeContextService _currentEmployee;
     private readonly IPositionPermissionChecker _permissionChecker;
 
     public EmployeeProfileService(
         IUnitOfWork uow,
-        IMapper mapper,
         ICurrentEmployeeContextService currentEmployee,
         IPositionPermissionChecker permissionChecker)
     {
         _uow = uow;
-        _mapper = mapper;
         _currentEmployee = currentEmployee;
         _permissionChecker = permissionChecker;
     }
@@ -34,7 +31,7 @@ public class EmployeeProfileService : IEmployeeProfileService
     public async Task<SuccessResponse<IEnumerable<EmployeeProfileDto>>> GetAllAsync()
     {
         var profiles = await _uow.Info.EmployeeProfiles.GetAllAsync();
-        var dtos = _mapper.Map<IEnumerable<EmployeeProfileDto>>(profiles);
+        var dtos = profiles.Adapt<IEnumerable<EmployeeProfileDto>>();
         return SuccessResponse<IEnumerable<EmployeeProfileDto>>.Ok(dtos, EmployeeProfileMsg.RetrievedAll);
     }
 
@@ -45,7 +42,7 @@ public class EmployeeProfileService : IEmployeeProfileService
         if (profile == null)
             return SuccessResponse<EmployeeProfileDto>.Fail(EmployeeProfileMsg.NotFound(id), ErrorType.NotFound);
 
-        var dto = _mapper.Map<EmployeeProfileDto>(profile);
+        var dto = profile.Adapt<EmployeeProfileDto>();
         return SuccessResponse<EmployeeProfileDto>.Ok(dto, EmployeeProfileMsg.Retrieved);
     }
 
@@ -64,20 +61,19 @@ public class EmployeeProfileService : IEmployeeProfileService
         if (profile == null)
             return SuccessResponse<EmployeeProfileDetailDto>.Fail(EmployeeProfileMsg.NotFound(id), ErrorType.NotFound);
 
-        var dto = _mapper.Map<EmployeeProfileDetailDto>(profile);
-        
-        // Load related data
+        var dto = profile.Adapt<EmployeeProfileDetailDto>();
+
         var employment = await _uow.Info.EmployeeEmployments.GetByEmployeeIdAsync(id);
-        dto = dto with { Employment = employment != null ? _mapper.Map<EmployeeEmploymentDto>(employment) : null };
+        dto = dto with { Employment = employment?.Adapt<EmployeeEmploymentDto>() };
 
         var contact = await _uow.Info.EmployeeContacts.GetByEmployeeIdAsync(id);
-        dto = dto with { Contact = contact != null ? _mapper.Map<EmployeeContactDto>(contact) : null };
+        dto = dto with { Contact = contact?.Adapt<EmployeeContactDto>() };
 
         var payroll = await _uow.Info.EmployeePayrollInfos.GetByEmployeeIdAsync(id);
-        dto = dto with { PayrollInfo = payroll != null ? _mapper.Map<EmployeePayrollInfoDto>(payroll) : null };
+        dto = dto with { PayrollInfo = payroll?.Adapt<EmployeePayrollInfoDto>() };
 
         var family = await _uow.Info.EmployeeFamilyInfos.GetByEmployeeIdAsync(id);
-        dto = dto with { FamilyInfo = family.FirstOrDefault() != null ? _mapper.Map<EmployeeFamilyInfoDto>(family.First()) : null };
+        dto = dto with { FamilyInfo = family.FirstOrDefault()?.Adapt<EmployeeFamilyInfoDto>() };
 
         return SuccessResponse<EmployeeProfileDetailDto>.Ok(dto, EmployeeProfileMsg.Retrieved);
     }
@@ -152,7 +148,7 @@ public class EmployeeProfileService : IEmployeeProfileService
         if (profile == null)
             return SuccessResponse<EmployeeProfileDto>.Fail(EmployeeProfileMsg.NotFound(0), ErrorType.NotFound);
 
-        var dto = _mapper.Map<EmployeeProfileDto>(profile);
+        var dto = profile.Adapt<EmployeeProfileDto>();
         return SuccessResponse<EmployeeProfileDto>.Ok(dto, EmployeeProfileMsg.Retrieved);
     }
 
@@ -163,7 +159,7 @@ public class EmployeeProfileService : IEmployeeProfileService
         if (profile == null)
             return SuccessResponse<EmployeeProfileDto>.Fail(EmployeeProfileMsg.NotFound(0), ErrorType.NotFound);
 
-        var dto = _mapper.Map<EmployeeProfileDto>(profile);
+        var dto = profile.Adapt<EmployeeProfileDto>();
         return SuccessResponse<EmployeeProfileDto>.Ok(dto, EmployeeProfileMsg.Retrieved);
     }
 }

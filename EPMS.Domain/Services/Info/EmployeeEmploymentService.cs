@@ -1,10 +1,10 @@
-using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Domain.Interface.IService.Info;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using EPMS.Shared.Enums;
+using Mapster;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 namespace EPMS.Domain.Services.Info;
@@ -12,20 +12,18 @@ namespace EPMS.Domain.Services.Info;
 public class EmployeeEmploymentService : IEmployeeEmploymentService
 {
     private readonly IUnitOfWork _uow;
-    private readonly IMapper _mapper;
     private readonly TimeProvider _timeProvider;
 
-    public EmployeeEmploymentService(IUnitOfWork uow, IMapper mapper, TimeProvider timeProvider)
+    public EmployeeEmploymentService(IUnitOfWork uow, TimeProvider timeProvider)
     {
         _uow = uow;
-        _mapper = mapper;
         _timeProvider = timeProvider;
     }
 
     public async Task<SuccessResponse<IEnumerable<EmployeeEmploymentDto>>> GetAllAsync()
     {
         var employments = await _uow.Info.EmployeeEmployments.GetAllAsync();
-        var dtos = _mapper.Map<IEnumerable<EmployeeEmploymentDto>>(employments);
+        var dtos = employments.Adapt<IEnumerable<EmployeeEmploymentDto>>();
         return SuccessResponse<IEnumerable<EmployeeEmploymentDto>>.Ok(dtos, EmployeeEmploymentMsg.RetrievedAll);
     }
 
@@ -36,7 +34,7 @@ public class EmployeeEmploymentService : IEmployeeEmploymentService
         if (employment == null)
             return SuccessResponse<EmployeeEmploymentDto>.Fail(EmployeeEmploymentMsg.NotFound(id), ErrorType.NotFound);
 
-        var dto = _mapper.Map<EmployeeEmploymentDto>(employment);
+        var dto = employment.Adapt<EmployeeEmploymentDto>();
         return SuccessResponse<EmployeeEmploymentDto>.Ok(dto, EmployeeEmploymentMsg.Retrieved);
     }
 
@@ -47,7 +45,7 @@ public class EmployeeEmploymentService : IEmployeeEmploymentService
         if (employment == null)
             return SuccessResponse<EmployeeEmploymentDto>.Fail(EmployeeEmploymentMsg.NotFound(employeeId), ErrorType.NotFound);
 
-        var dto = _mapper.Map<EmployeeEmploymentDto>(employment);
+        var dto = employment.Adapt<EmployeeEmploymentDto>();
         return SuccessResponse<EmployeeEmploymentDto>.Ok(dto, EmployeeEmploymentMsg.Retrieved);
     }
 
