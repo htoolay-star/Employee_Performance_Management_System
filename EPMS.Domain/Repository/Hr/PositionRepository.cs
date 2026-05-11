@@ -29,10 +29,19 @@ public class PositionRepository : GenericRepository<Position>, IPositionReposito
             .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
     }
 
-    public async Task<bool> ExistsByTitleAsync(string title, long? excludePositionId = null, CancellationToken cancellationToken = default)
+    public async Task<bool> ExistsByNameAsync(string name, long? excludePositionId = null, CancellationToken cancellationToken = default)
     {
-        var normalized = title.Trim();
-        var query = _dbSet.Where(p => p.Title == normalized);
+        var normalized = name.Trim();
+        var query = _dbSet.Where(p => p.Name == normalized);
+        if (excludePositionId.HasValue)
+            query = query.Where(p => p.Id != excludePositionId.Value);
+        return await query.AnyAsync(cancellationToken);
+    }
+
+    public async Task<bool> ExistsByCodeAsync(string code, long? excludePositionId = null, CancellationToken cancellationToken = default)
+    {
+        var normalized = code.Trim().ToUpperInvariant();
+        var query = _dbSet.Where(p => p.Code == normalized);
         if (excludePositionId.HasValue)
             query = query.Where(p => p.Id != excludePositionId.Value);
         return await query.AnyAsync(cancellationToken);
@@ -50,7 +59,7 @@ public class PositionRepository : GenericRepository<Position>, IPositionReposito
         if (!string.IsNullOrWhiteSpace(parameters.SearchTerm))
         {
             var search = parameters.SearchTerm.Trim();
-            baseQuery = baseQuery.Where(p => p.Title.Contains(search));
+            baseQuery = baseQuery.Where(p => p.Name.Contains(search));
         }
 
         if (parameters.IsActive.HasValue)
@@ -68,6 +77,7 @@ public class PositionRepository : GenericRepository<Position>, IPositionReposito
         }
 
         var items = await baseQuery
+            .Include(p => p.Level)
             .Skip((parameters.PageNumber - 1) * parameters.PageSize)
             .Take(parameters.PageSize)
             .ProjectToType<PositionGridItemDto>()

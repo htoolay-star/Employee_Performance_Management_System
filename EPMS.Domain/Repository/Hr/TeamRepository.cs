@@ -31,15 +31,26 @@ public class TeamRepository : GenericRepository<Team>, ITeamRepository
         return await query.AnyAsync();
     }
 
+    public async Task<bool> ExistsByCodeAsync(string code, long? excludeId = null)
+    {
+        var normalized = code.Trim().ToUpperInvariant();
+        var query = _dbSet.Where(t => t.Code == normalized);
+        
+        if (excludeId.HasValue)
+            query = query.Where(t => t.Id != excludeId.Value);
+        
+        return await query.AnyAsync();
+    }
+
     public async Task<bool> ExistsByIdAsync(long id)
     {
         return await _dbSet.AnyAsync(t => t.Id == id);
     }
 
-    public async Task<IEnumerable<(long Id, string Name, bool IsActive)>> GetLookupAsync()
+    public async Task<IEnumerable<(long Id, string Code, bool IsActive)>> GetLookupAsync()
     {
         return await _dbSet
-            .Select(x => new ValueTuple<long, string, bool>(x.Id, x.Name, x.IsActive))
+            .Select(x => new ValueTuple<long, string, bool>(x.Id, x.Code, x.IsActive))
             .ToListAsync();
     }
 

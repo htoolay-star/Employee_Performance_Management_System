@@ -7,6 +7,7 @@ namespace EPMS.Domain.Interfaces;
 
 public interface IPositionService
 {
+    Task<SuccessResponse<IEnumerable<LookUpDto>>> GetLookupAsync();
     Task<SuccessResponse<IEnumerable<PositionDto>>> GetAllAsync();
     Task<SuccessResponse<PositionDto>> GetByIdAsync(long id);
     Task<SuccessResponse<long>> CreateAsync(CreatePositionDto dto);

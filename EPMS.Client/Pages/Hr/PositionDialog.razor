@@ -23,10 +23,24 @@
         <MudForm @ref="_form" Model="@_model" Validation="@ValidateField">
             <MudStack Spacing="3">
 
-                <MudTextField @bind-Value="_model.Title"
+                @if (!IsEdit)
+                {
+                    <MudTextField @bind-Value="_model.Code"
+                                  Label="@UIConstants.Position.CodeLabel"
+                                  For="@(() => _model.Code)"
+                                  Variant="Variant.Outlined" />
+                }
+
+                <MudTextField @bind-Value="_model.Name"
                               Label="@UIConstants.Position.TitleLabel"
-                              For="@(() => _model.Title)"
+                              For="@(() => _model.Name)"
                               Variant="Variant.Outlined" />
+
+                <MudTextField @bind-Value="_model.Description"
+                              Label="@UIConstants.Common.Description"
+                              For="@(() => _model.Description)"
+                              Variant="Variant.Outlined"
+                              Lines="3" />
 
                 @* {{!-- Level select: shows a spinner while levels are loading --}} *@
                 <MudSelect T="long?"
@@ -41,7 +55,7 @@
                         long? currentLevelId = level.Id;
                         <MudSelectItem T="long?" Value="@currentLevelId">
                             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                                <MudText>@level.Name</MudText>
+                                <MudText>@level.Code</MudText>
                                 @if (!level.IsActive)
                                 {
                                     <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Text" Class="ml-auto">
@@ -183,11 +197,17 @@
         }
         catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
         {
-            // Surface the conflict as an inline field error, not just a snackbar.
             var error = await ex.GetContentAsAsync<SuccessResponse>();
-            _serverErrors[nameof(_model.Title)] = error?.Message ?? UIConstants.Common.DuplicateEntry;
-            await _form!.Validate(); // re-run so the field picks up the server error
-            // No extra StateHasChanged() needed: _form.Validate() already triggers a re-render.
+            var errorMessage = error?.Message ?? UIConstants.Common.DuplicateEntry;
+
+            if (errorMessage.Contains(nameof(_model.Code), StringComparison.OrdinalIgnoreCase))
+                _serverErrors[nameof(_model.Code)] = errorMessage;
+            else if (errorMessage.Contains(nameof(_model.Name), StringComparison.OrdinalIgnoreCase))
+                _serverErrors[nameof(_model.Name)] = errorMessage;
+            else
+                _serverErrors[nameof(_model.Code)] = errorMessage;
+
+            await _form!.Validate();
         }
         finally
         {
@@ -232,7 +252,9 @@
     {
         if (!IsEdit) return true;
 
-        return _model.Title != Position!.Title ||
+        return _model.Code != Position!.Code ||
+               _model.Name != Position.Name ||
+               _model.Description != Position.Description ||
                _model.LevelId != Position.LevelId ||
                _model.IsActive != Position.IsActive;
     }

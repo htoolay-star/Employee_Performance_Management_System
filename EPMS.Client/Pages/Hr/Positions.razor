@@ -87,11 +87,12 @@
                 <TemplateColumn Title="@UIConstants.Common.ColumnNo" Sortable="false">
                     <CellTemplate>@context.Item.RowIndex</CellTemplate>
                 </TemplateColumn>
-                <PropertyColumn Property="x => x.Title" Title="@UIConstants.Position.ColumnTitle" />
+                <PropertyColumn Property="x => x.Code" Title="@UIConstants.Position.CodeLabel" />
+                <PropertyColumn Property="x => x.Name" Title="@UIConstants.Position.ColumnTitle" />
                 <TemplateColumn Title="@UIConstants.Position.ColumnLevel">
                     <CellTemplate>
                         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                            <MudText Typo="Typo.body2">@context.Item.LevelName</MudText>
+                            <MudText Typo="Typo.body2">@context.Item.LevelCode</MudText>
                 
                             @if (!context.Item.LevelIsActive)
                             {
@@ -102,6 +103,7 @@
                         </MudStack>
                     </CellTemplate>
                 </TemplateColumn>
+                <PropertyColumn Property="x => x.Description" Title="@UIConstants.Common.Description" />
                 <TemplateColumn Title="@UIConstants.Common.Status" Sortable="false">
                     <CellTemplate>
                         <MudChip Color="@(context.Item.IsActive ? Color.Success : Color.Default)"
@@ -168,13 +170,14 @@
 
     // ── Search / sort state ───────────────────────────────────────────────────
     private string _searchString = string.Empty;
-    private string _sortBy = "Title";
+    private string _sortBy = "Name";
     private string _sortDirection = "asc";
 
     private readonly Dictionary<string, string> _sortableColumns = new()
     {
-        { "Title",     "Title"  },
-        { "LevelName", "Level"  }
+        { "Name",      "Name"   },
+        { "Code",      "Code"   },
+        { "LevelCode", "Level"  }
     };
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
@@ -293,7 +296,7 @@
     {
         var parameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.ContentText, string.Format(UIConstants.Common.DeleteConfirmationFormat, position.Title) },
+            { x => x.ContentText, string.Format(UIConstants.Common.DeleteConfirmationFormat, position.Name) },
             { x => x.ButtonText,  UIConstants.Common.Delete },
             { x => x.Color,       Color.Error }
         };

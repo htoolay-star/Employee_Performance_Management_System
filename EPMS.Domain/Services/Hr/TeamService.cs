@@ -47,8 +47,9 @@ public class TeamService : ITeamService
     {
         return orderBy switch
         {
+            "Code" => "Code",
             "Name" => "Name",
-            "Department" => "Department.Name",
+            "DepartmentCode" => "Department.Code",
             "IsActive" => "IsActive",
             _ => "Name"
         };
@@ -63,7 +64,7 @@ public class TeamService : ITeamService
             var lookupFromCache = cachedAllTeams.Select(x => new LookUpDto
             {
                 Id = x.Id,
-                Name = x.Name,
+                Code = x.Code,
                 IsActive = x.IsActive
             });
             return SuccessResponse<IEnumerable<LookUpDto>>.Ok(lookupFromCache, TeamMsg.RetrievedAll);
@@ -74,7 +75,7 @@ public class TeamService : ITeamService
         var dtos = tuples.Select(t => new LookUpDto
         {
             Id = t.Id,
-            Name = t.Name,
+            Code = t.Code,
             IsActive = t.IsActive
         }).ToList();
 
@@ -113,10 +114,13 @@ public class TeamService : ITeamService
 
     public async Task<SuccessResponse<long>> CreateAsync(CreateTeamDto dto)
     {
+        if (await _uow.HR.Teams.ExistsByCodeAsync(dto.Code))
+            return SuccessResponse<long>.Fail(string.Format(TeamMsg.DuplicateCode, dto.Code.Trim().ToUpperInvariant()), ErrorType.Conflict);
+
         if (await _uow.HR.Teams.ExistsByNameInDepartmentAsync(dto.Name, dto.DepartmentId))
             return SuccessResponse<long>.Fail(string.Format(TeamMsg.DuplicateName, dto.Name), ErrorType.Conflict);
 
-        var entity = new Team(dto.Name, dto.DepartmentId);
+        var entity = new Team(dto.Code, dto.Name, dto.DepartmentId, dto.Description, dto.LeadTeamId);
         _uow.HR.Teams.Add(entity);
         await _uow.CompleteAsync();
         await _cacheService.RemoveAsync(CacheKeys.Hr.AllTeams());
@@ -130,13 +134,16 @@ public class TeamService : ITeamService
         if (team == null)
             return SuccessResponse.Fail(TeamMsg.NotFound(id), ErrorType.NotFound);
 
+        if (team.Code != dto.Code.Trim().ToUpperInvariant() && await _uow.HR.Teams.ExistsByCodeAsync(dto.Code, id))
+            return SuccessResponse.Fail(string.Format(TeamMsg.DuplicateCode, dto.Code.Trim().ToUpperInvariant()), ErrorType.Conflict);
+
         // Validate name uniqueness in the target department (current or new)
         var targetDepartmentId = dto.DepartmentId ?? team.DepartmentId;
         if (team.Name != dto.Name && await _uow.HR.Teams.ExistsByNameInDepartmentAsync(dto.Name, targetDepartmentId, id))
             return SuccessResponse.Fail(string.Format(TeamMsg.DuplicateName, dto.Name), ErrorType.Conflict);
 
-        team.Rename(dto.Name);
-        
+        team.Update(dto.Code, dto.Name, dto.Description, dto.LeadTeamId);
+
         // Handle DepartmentId change
         if (dto.DepartmentId.HasValue && dto.DepartmentId.Value != team.DepartmentId)
         {

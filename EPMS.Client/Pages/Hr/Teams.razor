@@ -52,7 +52,7 @@
                        Style="max-width: 200px;">
                 @foreach (var dept in _departments)
                 {
-                    <MudSelectItem T="long?" Value="@dept.Id">@dept.Name</MudSelectItem>
+                    <MudSelectItem T="long?" Value="@dept.Id">@dept.Code</MudSelectItem>
                 }
             </MudSelect>
 
@@ -99,11 +99,12 @@
                 <TemplateColumn Title="@UIConstants.Common.ColumnNo" Sortable="false">
                     <CellTemplate>@context.Item.RowIndex</CellTemplate>
                 </TemplateColumn>
+                <PropertyColumn Property="x => x.Code" Title="@UIConstants.Team.ColumnCode" />
                 <PropertyColumn Property="x => x.Name" Title="@UIConstants.Team.ColumnName" />
                 <TemplateColumn Title="@UIConstants.Team.ColumnDepartment">
                     <CellTemplate>
                         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                            <MudText Typo="Typo.body2">@context.Item.DepartmentName</MudText>
+                            <MudText Typo="Typo.body2">@context.Item.DepartmentCode</MudText>
                             
                             @if (!context.Item.DepartmentIsActive)
                             {
@@ -114,6 +115,7 @@
                         </MudStack>
                     </CellTemplate>
                 </TemplateColumn>
+                <PropertyColumn Property="x => x.Description" Title="@UIConstants.Common.Description" />
                 <TemplateColumn Title="@UIConstants.Common.Status" Sortable="false">
                     <CellTemplate>
                         <MudChip Color="@(context.Item.IsActive ? Color.Success : Color.Default)"
@@ -186,8 +188,9 @@
 
     private readonly Dictionary<string, string> _sortableColumns = new()
     {
+        { "Code", "Code" },
         { "Name", "Name" },
-        { "Department", "DepartmentName" }
+        { "DepartmentCode", "Department" }
     };
 
     // Prefetched data

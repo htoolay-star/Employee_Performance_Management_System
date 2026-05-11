@@ -85,6 +85,7 @@
                         <MudText>@context.Item.Name</MudText>
                     </CellTemplate>
                 </TemplateColumn>
+                <PropertyColumn Property="x => x.Description" Title="@UIConstants.Common.Description" />
                 <TemplateColumn Title="@UIConstants.Common.Status" SortBy="@(x => x.IsActive)">
                     <CellTemplate>
                         <MudChip T="bool" Color="@(context.Item.IsActive ? Color.Success : Color.Default)"

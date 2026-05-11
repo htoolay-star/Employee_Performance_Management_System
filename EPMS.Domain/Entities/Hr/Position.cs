@@ -13,17 +13,21 @@ namespace EPMS.Domain.Entities.Hr
     {
         private Position() { }
 
-        public Position(string title, long levelId)
+        public Position(string code, string name, long levelId, string? description = null)
         {
-            ArgumentException.ThrowIfNullOrWhiteSpace(title);
+            ArgumentException.ThrowIfNullOrWhiteSpace(code);
+            ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
-            Title = title.Trim();
-
+            Code = code.Trim().ToUpperInvariant();
+            Name = name.Trim();
+            Description = description;
             LevelId = levelId;
             IsActive = true;
         }
 
-        public string Title { get; private set; } = string.Empty;
+        public string Code { get; private set; } = string.Empty;
+        public string Name { get; private set; } = string.Empty;
+        public string? Description { get; private set; }
 
         public long LevelId { get; private set; }
         public virtual Level Level { get; private set; } = null!;
@@ -38,11 +42,20 @@ namespace EPMS.Domain.Entities.Hr
         public void Deactivate() => IsActive = false;
         public void Reactivate() => IsActive = true;
 
-        public void Update(string title, long levelId)
+        public void Update(string code, string name, long levelId, string? description)
         {
-            ArgumentException.ThrowIfNullOrWhiteSpace(title);
-            Title = title.Trim();
+            ArgumentException.ThrowIfNullOrWhiteSpace(code);
+            ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
+            Code = code.Trim().ToUpperInvariant();
+            Name = name.Trim();
+            Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
             LevelId = levelId;
+        }
+
+        public void SetDescription(string? description)
+        {
+            Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
         }
 
         private readonly List<PositionPermission> _positionPermissions = new();

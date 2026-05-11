@@ -35,7 +35,7 @@ public class DepartmentService : IDepartmentService
             var lookupFromCache = cachedAllDepts.Select(x => new LookUpDto
             {
                 Id = x.Id,
-                Name = x.Name,
+                Code = x.Code,
                 IsActive = x.IsActive
             });
             return SuccessResponse<IEnumerable<LookUpDto>>.Ok(lookupFromCache, DeptMsg.RetrievedAll);
@@ -46,7 +46,7 @@ public class DepartmentService : IDepartmentService
         var dtos = tuples.Select(t => new LookUpDto
         {
             Id = t.Id,
-            Name = t.Name,
+            Code = t.Code,
             IsActive = t.IsActive
         }).ToList();
 
@@ -89,7 +89,7 @@ public class DepartmentService : IDepartmentService
         if (await _uow.HR.Departments.ExistsByNameAsync(dto.Name))
             return SuccessResponse<long>.Fail(string.Format(DeptMsg.DuplicateName, dto.Name), ErrorType.Conflict);
 
-        var entity = new Department(dto.Code, dto.Name);
+        var entity = new Department(dto.Code, dto.Name, dto.Description, dto.DeptHeadId);
         _uow.HR.Departments.Add(entity);
         await _uow.CompleteAsync();
         await _cacheService.RemoveAsync(CacheKeys.Hr.AllDepartments());
@@ -103,10 +103,8 @@ public class DepartmentService : IDepartmentService
         if (department == null)
             return SuccessResponse.Fail(DeptMsg.NotFound(id), ErrorType.NotFound);
 
-        if (department.Name != dto.Name && await _uow.HR.Departments.ExistsByNameAsync(dto.Name))
-            return SuccessResponse.Fail(string.Format(DeptMsg.DuplicateNameOther, dto.Name), ErrorType.Conflict);
-
-        department.Rename(dto.Name);
+        department.SetDescription(dto.Description);
+        department.SetDeptHead(dto.DeptHeadId);
         
         if (dto.IsActive) department.Reactivate();
         else department.Deactivate();

@@ -23,6 +23,11 @@
                               For="@(() => _model.Name)"
                               Variant="Variant.Outlined" />
 
+                <MudTextField @bind-Value="_model.Code"
+                              Label="@UIConstants.Team.CodeLabel"
+                              For="@(() => _model.Code)"
+                              Variant="Variant.Outlined" />
+
                 @if (ShowDepartment)
                 {
                     <MudSelect T="long?"
@@ -49,7 +54,7 @@
                             {
                                 <MudSelectItem T="long?" Value="@((long?)dept.Id)">
                                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                                        <MudText>@dept.Name</MudText>
+                                        <MudText>@dept.Code</MudText>
                                         @if (!dept.IsActive)
                                         {
                                             <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Text" Class="ml-auto">
@@ -253,8 +258,10 @@
     {
         if (!IsEdit || Team == null) return true;
 
-        return _model.Name != Team.Name ||
+        return _model.Code != Team.Code ||
+               _model.Name != Team.Name ||
                _model.DepartmentId != Team.DepartmentId ||
+               _model.Description != Team.Description ||
                _model.IsActive != Team.IsActive;
     }
 }

@@ -49,7 +49,7 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.DepartmentName, opt => opt.MapFrom(src => src.Department.Name))
             .ForMember(dest => dest.ParentDepartmentName, opt => opt.MapFrom(src => src.ParentDepartment.Name))
             .ForMember(dest => dest.TeamName, opt => opt.MapFrom(src => src.Team != null ? src.Team.Name : null))
-            .ForMember(dest => dest.PositionTitle, opt => opt.MapFrom(src => src.Position.Title))
+            .ForMember(dest => dest.PositionTitle, opt => opt.MapFrom(src => src.Position.Name))
             .ForMember(dest => dest.DirectManagerName, opt => opt.MapFrom(src => src.DirectManager != null ? src.DirectManager.FirstName + " " + src.DirectManager.LastName : null));
 
         CreateMap<EmployeeContact, EmployeeContactDto>();
@@ -59,7 +59,7 @@ public class MappingProfile : Profile
         
         CreateMap<EmployeeEmploymentHistory, EmployeeEmploymentHistoryDto>()
             .ForMember(dest => dest.DepartmentName, opt => opt.MapFrom(src => src.Department.Name))
-            .ForMember(dest => dest.PositionTitle, opt => opt.MapFrom(src => src.Position.Title))
+            .ForMember(dest => dest.PositionTitle, opt => opt.MapFrom(src => src.Position.Name))
             .ForMember(dest => dest.ManagerName, opt => opt.MapFrom(src => src.Manager != null ? src.Manager.FirstName + " " + src.Manager.LastName : null))
             .ForMember(dest => dest.ChangedByName, opt => opt.MapFrom(src =>
                 src.ChangedBy != null && src.ChangedBy.Profile != null
@@ -104,7 +104,7 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.PriorityName, opt => opt.MapFrom(src => src.Priority != null ? src.Priority.LevelName : string.Empty));
 
         CreateMap<PositionPermission, PositionPermissionDto>()
-            .ForMember(dest => dest.PositionTitle, opt => opt.MapFrom(src => src.Position != null ? src.Position.Title : null))
+            .ForMember(dest => dest.PositionTitle, opt => opt.MapFrom(src => src.Position != null ? src.Position.Name : null))
             .ForMember(dest => dest.PermissionName, opt => opt.MapFrom(src => src.Permission != null ? src.Permission.Name : null))
             .ForMember(dest => dest.PermissionCode, opt => opt.MapFrom(src => src.Permission != null ? src.Permission.Code : null));
 

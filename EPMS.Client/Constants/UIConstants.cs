@@ -31,16 +31,16 @@
         public static class Position
         {
             public const string PageTitle = "Position Management";
-            public const string SearchPlaceholder = "Search by title...";
+            public const string SearchPlaceholder = "Search by name...";
             public const string AddButton = "Add Position";
             public const string CreateDialogTitle = "Create Position";
             public const string EditDialogTitle = "Edit Position";
             public const string DeleteDialogTitle = "Delete Position";
-
-            public const string TitleLabel = "Position Title";
+            public const string CodeLabel = "Position Code";
+            public const string TitleLabel = "Position Name";
             public const string LevelLabel = "Level";
 
-            public const string ColumnTitle = "Title";
+            public const string ColumnTitle = "Name";
             public const string ColumnLevel = "Level";
 
             public const string SelectLevelPlaceholder = "-- Select a Level --";
@@ -71,8 +71,10 @@
             public const string CreateDialogTitle = "Create Team";
             public const string EditDialogTitle = "Edit Team";
             public const string DeleteDialogTitle = "Delete Team";
+            public const string CodeLabel = "Team Code";
             public const string NameLabel = "Team Name";
             public const string DepartmentLabel = "Department";
+            public const string ColumnCode = "Code";
             public const string ColumnName = "Team Name";
             public const string ColumnDepartment = "Department";
             public const string SelectDepartmentPlaceholder = "-- Select a Department --";

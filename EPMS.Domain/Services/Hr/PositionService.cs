@@ -2,6 +2,7 @@ using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Auth;
 using EPMS.Domain.Entities.Hr;
+using EPMS.Domain.Interface.IService.App;
 using EPMS.Domain.Interfaces;
 using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.AuthDTOs.PermissionDTOS;
@@ -17,17 +18,51 @@ namespace EPMS.Domain.Services.Hr;
 public class PositionService : IPositionService
 {
     private readonly IUnitOfWork _uow;
+    private readonly ICacheService _cacheService;
 
-    public PositionService(IUnitOfWork uow)
+    public PositionService(IUnitOfWork uow, ICacheService cacheService)
     {
         _uow = uow;
+        _cacheService = cacheService;
+    }
+
+    public async Task<SuccessResponse<IEnumerable<LookUpDto>>> GetLookupAsync()
+    {
+        var cachedAllPositions = await _cacheService.GetAsync<IEnumerable<PositionDto>>(CacheKeys.Hr.AllPositions());
+
+        if (cachedAllPositions != null)
+        {
+            var lookupFromCache = cachedAllPositions.Select(x => new LookUpDto
+            {
+                Id = x.Id,
+                Code = x.Code,
+                IsActive = x.IsActive
+            });
+
+            return SuccessResponse<IEnumerable<LookUpDto>>.Ok(lookupFromCache, PositionMsg.RetrievedAll);
+        }
+
+        var positions = await _uow.HR.Positions.GetAllWithLevelAsync();
+        var dtos = positions.Adapt<IEnumerable<PositionDto>>();
+
+        var lookup = dtos.Select(x => new LookUpDto
+        {
+            Id = x.Id,
+            Code = x.Code,
+            IsActive = x.IsActive
+        }).ToList();
+
+        return SuccessResponse<IEnumerable<LookUpDto>>.Ok(lookup, PositionMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<IEnumerable<PositionDto>>> GetAllAsync()
     {
-        var positions = await _uow.HR.Positions.GetAllWithLevelAsync();
-        var dtos = positions.Adapt<IEnumerable<PositionDto>>();
-        return SuccessResponse<IEnumerable<PositionDto>>.Ok(dtos, ServiceResponseMessages.PositionMsg.RetrievedAll);
+        var dtos = await _cacheService.GetOrCreateAsync(CacheKeys.Hr.AllPositions(), async () =>
+        {
+            var positions = await _uow.HR.Positions.GetAllWithLevelAsync();
+            return positions.Adapt<IEnumerable<PositionDto>>();
+        });
+        return SuccessResponse<IEnumerable<PositionDto>>.Ok(dtos, PositionMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<PaginatedResponse<PositionGridItemDto>>> GetPagedAsync(PositionQueryParameters parameters)
@@ -63,13 +98,17 @@ public class PositionService : IPositionService
         if (!await _uow.HR.Levels.AnyAsync(l => l.Id == dto.LevelId))
             return SuccessResponse<long>.Fail(ServiceResponseMessages.PositionMsg.LevelNotFound(dto.LevelId), ErrorType.NotFound);
 
-        if (await _uow.HR.Positions.ExistsByTitleAsync(dto.Title))
-            return SuccessResponse<long>.Fail(string.Format(ServiceResponseMessages.PositionMsg.DuplicateTitle, dto.Title.Trim()), ErrorType.Conflict);
+        if (await _uow.HR.Positions.ExistsByNameAsync(dto.Name))
+            return SuccessResponse<long>.Fail(string.Format(ServiceResponseMessages.PositionMsg.DuplicateName, dto.Name.Trim()), ErrorType.Conflict);
 
-        var entity = new Position(dto.Title, dto.LevelId);
+        if (await _uow.HR.Positions.ExistsByCodeAsync(dto.Code))
+            return SuccessResponse<long>.Fail(string.Format(ServiceResponseMessages.PositionMsg.DuplicateCode, dto.Code.Trim().ToUpperInvariant()), ErrorType.Conflict);
+
+        var entity = new Position(dto.Code, dto.Name, dto.LevelId, dto.Description);
         _uow.HR.Positions.Add(entity);
         await _uow.CompleteAsync();
-        return SuccessResponse<long>.Ok(entity.Id, ServiceResponseMessages.PositionMsg.Created);
+        await _cacheService.RemoveAsync(CacheKeys.Hr.AllPositions());
+        return SuccessResponse<long>.Ok(entity.Id, PositionMsg.Created);
     }
 
     public async Task<SuccessResponse> UpdateAsync(long id, UpdatePositionDto dto)
@@ -82,16 +121,20 @@ public class PositionService : IPositionService
         if (!await _uow.HR.Levels.AnyAsync(l => l.Id == dto.LevelId))
             return SuccessResponse.Fail(ServiceResponseMessages.PositionMsg.LevelNotFound(dto.LevelId), ErrorType.NotFound);
 
-        if (position.Title != dto.Title.Trim() && await _uow.HR.Positions.ExistsByTitleAsync(dto.Title, id))
-            return SuccessResponse.Fail(string.Format(ServiceResponseMessages.PositionMsg.DuplicateTitle, dto.Title.Trim()), ErrorType.Conflict);
+        if (await _uow.HR.Positions.ExistsByCodeAsync(dto.Code, id))
+            return SuccessResponse.Fail(string.Format(ServiceResponseMessages.PositionMsg.DuplicateCode, dto.Code.Trim().ToUpperInvariant()), ErrorType.Conflict);
 
-        position.Update(dto.Title, dto.LevelId);
+        if (position.Name != dto.Name.Trim() && await _uow.HR.Positions.ExistsByNameAsync(dto.Name, id))
+            return SuccessResponse.Fail(string.Format(ServiceResponseMessages.PositionMsg.DuplicateName, dto.Name.Trim()), ErrorType.Conflict);
+
+        position.Update(dto.Code, dto.Name, dto.LevelId, dto.Description);
 
         if (dto.IsActive) position.Reactivate();
         else position.Deactivate();
 
         await _uow.CompleteAsync();
-        return SuccessResponse.Ok(ServiceResponseMessages.PositionMsg.Updated);
+        await _cacheService.RemoveAsync(CacheKeys.Hr.AllPositions());
+        return SuccessResponse.Ok(PositionMsg.Updated);
     }
 
     public async Task<SuccessResponse> DeleteAsync(long id)
@@ -103,7 +146,8 @@ public class PositionService : IPositionService
 
         _uow.HR.Positions.Delete(position);
         await _uow.CompleteAsync();
-        return SuccessResponse.Ok(ServiceResponseMessages.PositionMsg.Deleted);
+        await _cacheService.RemoveAsync(CacheKeys.Hr.AllPositions());
+        return SuccessResponse.Ok(PositionMsg.Deleted);
     }
 
     public async Task<SuccessResponse<IEnumerable<PermissionDto>>> GetPermissionsForPositionAsync(long positionId)
@@ -153,15 +197,16 @@ public class PositionService : IPositionService
 
     private string GetMappedSortColumn(string? sortByFromDto)
     {
-        if (string.IsNullOrWhiteSpace(sortByFromDto)) return "Title";
+        if (string.IsNullOrWhiteSpace(sortByFromDto)) return "Name";
 
         var columnMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
     {
-        { "Title", "Title" },
-        { "LevelName", "Level.Name" },
+        { "Name", "Name" },
+        { "Code", "Code" },
+        { "LevelCode", "Level.Code" },
         { "IsActive", "IsActive" }
     };
 
-        return columnMap.TryGetValue(sortByFromDto, out var mappedColumn) ? mappedColumn : "Title";
+        return columnMap.TryGetValue(sortByFromDto, out var mappedColumn) ? mappedColumn : "Name";
     }
 }

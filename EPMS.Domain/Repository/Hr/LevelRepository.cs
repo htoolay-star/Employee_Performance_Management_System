@@ -28,10 +28,10 @@ public class LevelRepository : GenericRepository<Level>, ILevelRepository
         return await query.AnyAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<(long Id, string Name, bool IsActive)>> GetLookupAsync()
+    public async Task<IEnumerable<(long Id, string Code, bool IsActive)>> GetLookupAsync()
     {
         return await _dbSet
-            .Select(x => new ValueTuple<long, string, bool>(x.Id, x.Name, x.IsActive))
+            .Select(x => new ValueTuple<long, string, bool>(x.Id, x.Code, x.IsActive))
             .ToListAsync();
     }
 }

@@ -31,7 +31,7 @@ public class LevelService : ILevelService
             var lookupFromCache = cachedAllLevels.Select(x => new LookUpDto
             {
                 Id = x.Id,
-                Name = x.Name,
+                Code = x.Code,
                 IsActive = x.IsActive
             });
 
@@ -43,7 +43,7 @@ public class LevelService : ILevelService
         var dtos = tuples.Select(t => new LookUpDto
         {
             Id = t.Id,
-            Name = t.Name,
+            Code = t.Code,
             IsActive = t.IsActive
         }).ToList();
 
