@@ -40,7 +40,8 @@
             public const string TitleLabel = "Position Name";
             public const string LevelLabel = "Level";
 
-            public const string ColumnTitle = "Name";
+            public const string ColumnCode = "Position Code";
+            public const string ColumnName = "Position Name";
             public const string ColumnLevel = "Level";
 
             public const string SelectLevelPlaceholder = "-- Select a Level --";
@@ -57,8 +58,8 @@
             public const string DeleteDialogTitle = "Delete Level";
             public const string CodeLabel = "Level Code";
             public const string NameLabel = "Level Name";
-            public const string ColumnCode = "Code";
-            public const string ColumnName = "Name";
+            public const string ColumnCode = "Level Code";
+            public const string ColumnName = "Level Name";
 
             public const string NoDataFound = "Try adjusting your search or add a new level.";
         }
@@ -74,7 +75,7 @@
             public const string CodeLabel = "Team Code";
             public const string NameLabel = "Team Name";
             public const string DepartmentLabel = "Department";
-            public const string ColumnCode = "Code";
+            public const string ColumnCode = "Team Code";
             public const string ColumnName = "Team Name";
             public const string ColumnDepartment = "Department";
             public const string SelectDepartmentPlaceholder = "-- Select a Department --";
@@ -91,8 +92,8 @@
             public const string DeleteDialogTitle = "Delete Department";
             public const string CodeLabel = "Department Code";
             public const string NameLabel = "Department Name";
-            public const string ColumnCode = "Code";
-            public const string ColumnName = "Name";
+            public const string ColumnCode = "Department Code";
+            public const string ColumnName = "Department Name";
             public const string NoDataFound = "Try adjusting your search or add a new department.";
         }
     }

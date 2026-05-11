@@ -87,8 +87,8 @@
                 <TemplateColumn Title="@UIConstants.Common.ColumnNo" Sortable="false">
                     <CellTemplate>@context.Item.RowIndex</CellTemplate>
                 </TemplateColumn>
-                <PropertyColumn Property="x => x.Code" Title="@UIConstants.Position.CodeLabel" />
-                <PropertyColumn Property="x => x.Name" Title="@UIConstants.Position.ColumnTitle" />
+                <PropertyColumn Property="x => x.Code" Title="@UIConstants.Position.ColumnCode" />
+                <PropertyColumn Property="x => x.Name" Title="@UIConstants.Position.ColumnName" />
                 <TemplateColumn Title="@UIConstants.Position.ColumnLevel">
                     <CellTemplate>
                         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
