@@ -23,10 +23,12 @@ namespace EPMS.Domain.Data.Configurations.Hr
             entity.HasIndex(e => e.Code).IsUnique().HasFilter("[IsDeleted] = 0");
             entity.Property(e => e.Code).HasMaxLength(10).IsRequired();
 
+            entity.HasIndex(e => e.Name).IsUnique().HasFilter("[IsDeleted] = 0");
             entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
             entity.Property(e => e.Description).HasMaxLength(250);
 
             entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.HasIndex(e => e.IsActive).HasFilter("[IsActive] = 1");
 
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.Property(e => e.UpdatedAt).IsRequired();

@@ -6,6 +6,9 @@ namespace EPMS.Client.Services;
 
 public interface ILevelApiClient
 {
+    [Get("/api/levels/lookup")]
+    Task<SuccessResponse<IEnumerable<LookUpDto>>> GetLookupAsync();
+
     [Get("/api/levels")]
     Task<SuccessResponse<IEnumerable<LevelDto>>> GetAllAsync();
 

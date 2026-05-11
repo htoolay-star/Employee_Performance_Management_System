@@ -8,7 +8,6 @@ using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.LevelDTOs;
 using EPMS.Shared.Enums;
 using Mapster;
-using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 namespace EPMS.Domain.Services.Hr;
 
@@ -21,6 +20,34 @@ public class LevelService : ILevelService
     {
         _uow = uow;
         _cacheService = cacheService;
+    }
+
+    public async Task<SuccessResponse<IEnumerable<LookUpDto>>> GetLookupAsync()
+    {
+        var cachedAllLevels = await _cacheService.GetAsync<IEnumerable<LevelDto>>(CacheKeys.Hr.AllLevels());
+
+        if (cachedAllLevels != null)
+        {
+            var lookupFromCache = cachedAllLevels.Select(x => new LookUpDto
+            {
+                Id = x.Id,
+                Code = x.Code,
+                IsActive = x.IsActive
+            });
+
+            return SuccessResponse<IEnumerable<LookUpDto>>.Ok(lookupFromCache, ServiceResponseMessages.LevelMsg.RetrievedAll);
+        }
+
+        var tuples = await _uow.HR.Levels.GetLookupAsync();
+
+        var dtos = tuples.Select(t => new LookUpDto
+        {
+            Id = t.Id,
+            Code = t.Code,
+            IsActive = t.IsActive
+        }).ToList();
+
+        return SuccessResponse<IEnumerable<LookUpDto>>.Ok(dtos, ServiceResponseMessages.LevelMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<IEnumerable<LevelDto>>> GetAllAsync()

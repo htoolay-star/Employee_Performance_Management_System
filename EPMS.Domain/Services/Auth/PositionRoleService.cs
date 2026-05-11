@@ -36,7 +36,7 @@ public class PositionRoleService : IPositionRoleService
         {
             Id = pr.Id,
             PositionId = pr.PositionId,
-            PositionName = position.Title,
+            PositionName = position.Name,
             RoleId = pr.RoleId,
             RoleName = pr.Role?.Name ?? string.Empty,
             IsActive = pr.IsActive
@@ -90,7 +90,7 @@ public class PositionRoleService : IPositionRoleService
         {
             Id = pr.Id,
             PositionId = pr.PositionId,
-            PositionName = pr.Position?.Title ?? string.Empty,
+            PositionName = pr.Position?.Name ?? string.Empty,
             RoleId = pr.RoleId,
             RoleName = role.Name,
             IsActive = pr.IsActive

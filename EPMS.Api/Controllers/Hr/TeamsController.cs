@@ -3,6 +3,7 @@ using EPMS.Domain.Interfaces;
 using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.TeamDTOs;
+using EPMS.Shared.Features.Teams;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,7 +11,6 @@ namespace EPMS.Api.Controllers.Hr;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = RoleConstants.Admin)]
 public class TeamsController : ApiControllerBase
 {
     private readonly ITeamService _teamService;
@@ -18,6 +18,27 @@ public class TeamsController : ApiControllerBase
     public TeamsController(ITeamService teamService)
     {
         _teamService = teamService;
+    }
+
+    [HttpGet("lookup")]
+    public async Task<ActionResult<SuccessResponse<IEnumerable<LookUpDto>>>> GetLookup()
+    {
+        var result = await _teamService.GetLookupAsync();
+        return HandleResult(result);
+    }
+
+    [HttpGet("by-department/{departmentId:long}")]
+    public async Task<ActionResult<SuccessResponse<IEnumerable<TeamDto>>>> GetByDepartment(long departmentId)
+    {
+        var result = await _teamService.GetTeamsByDepartmentIdAsync(departmentId);
+        return HandleResult(result);
+    }
+
+    [HttpGet("paged")]
+    public async Task<ActionResult<SuccessResponse<PaginatedResponse<TeamGridItemDto>>>> GetPaged([FromQuery] TeamQueryParameters parameters)
+    {
+        var result = await _teamService.GetPagedAsync(parameters);
+        return HandleResult(result);
     }
 
     [HttpGet]

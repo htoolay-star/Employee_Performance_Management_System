@@ -32,6 +32,8 @@ public static class ServiceCollectionExtensions
         services.AddSecureRefitClient<IAuthApiClient>(refitSettings, baseUri);
         services.AddSecureRefitClient<IPositionApiClient>(refitSettings, baseUri);
         services.AddSecureRefitClient<ILevelApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IDepartmentApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<ITeamApiClient>(refitSettings, baseUri);
 
         return services;
     }

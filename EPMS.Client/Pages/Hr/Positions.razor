@@ -44,6 +44,16 @@
                           Variant="Variant.Outlined"
                           Style="max-width: 300px;" />
 
+            <MudSelect T="bool"
+                       Value="@_statusFilter"
+                       ValueChanged="OnStatusFilterChanged"
+                       Placeholder="All Status"
+                       Variant="Variant.Outlined"
+                       Style="max-width: 180px;">
+                <MudSelectItem T="bool" Value="@(true)">@UIConstants.Common.Active</MudSelectItem>
+                <MudSelectItem T="bool" Value="@(false)">@UIConstants.Common.Inactive</MudSelectItem>
+            </MudSelect>
+
             <TableSortControl SortBy="@_sortBy"
                               SortDirection="@_sortDirection"
                               SortColumns="@_sortableColumns"
@@ -77,8 +87,23 @@
                 <TemplateColumn Title="@UIConstants.Common.ColumnNo" Sortable="false">
                     <CellTemplate>@context.Item.RowIndex</CellTemplate>
                 </TemplateColumn>
-                <PropertyColumn Property="x => x.Title" Title="@UIConstants.Position.ColumnTitle" />
-                <PropertyColumn Property="x => x.LevelName" Title="@UIConstants.Position.ColumnLevel" />
+                <PropertyColumn Property="x => x.Code" Title="@UIConstants.Position.ColumnCode" />
+                <PropertyColumn Property="x => x.Name" Title="@UIConstants.Position.ColumnName" />
+                <TemplateColumn Title="@UIConstants.Position.ColumnLevel">
+                    <CellTemplate>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <MudText Typo="Typo.body2">@context.Item.LevelCode</MudText>
+                
+                            @if (!context.Item.LevelIsActive)
+                            {
+                                <MudTooltip Text="This Level is currently Inactive" Placement="Placement.Top">
+                                    <MudIcon Icon="@Icons.Material.Filled.WarningAmber" Color="Color.Warning" Size="Size.Small" />
+                                </MudTooltip>
+                            }
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.Description" Title="@UIConstants.Common.Description" />
                 <TemplateColumn Title="@UIConstants.Common.Status" Sortable="false">
                     <CellTemplate>
                         <MudChip Color="@(context.Item.IsActive ? Color.Success : Color.Default)"
@@ -103,10 +128,18 @@
                 </TemplateColumn>
             </Columns>
             <NoRecordsContent>
-                <MudText>@UIConstants.Common.NoRecords</MudText>
+                <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
+                    <MudIcon Icon="@Icons.Material.Outlined.Inbox" Style="font-size: 4rem;" Color="Color.Default" />
+                    <MudText Typo="Typo.h6" Color="Color.Default">@UIConstants.Common.NoRecords</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">@UIConstants.Position.NoDataFound</MudText>
+                </MudStack>
             </NoRecordsContent>
             <LoadingContent>
-                <MudText>@UIConstants.Common.Loading</MudText>
+                <MudStack Spacing="3" Class="w-100">
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                </MudStack>
             </LoadingContent>
             <PagerContent>
                 <MudDataGridPager T="PositionGridItemDto" />
@@ -133,47 +166,30 @@
     // ── Grid state ────────────────────────────────────────────────────────────
     private MudDataGrid<PositionGridItemDto> _dataGrid = null!;
     private bool _isLoading = false;
+    private bool _statusFilter = true;
 
     // ── Search / sort state ───────────────────────────────────────────────────
     private string _searchString = string.Empty;
-    private string _sortBy = "Title";
+    private string _sortBy = "Name";
     private string _sortDirection = "asc";
 
     private readonly Dictionary<string, string> _sortableColumns = new()
     {
-        { "Title",     "Title"  },
-        { "LevelName", "Level"  },
-        { "IsActive",  "Status" }
+        { "Name",      "Name"   },
+        { "Code",      "Code"   },
+        { "LevelCode", "Level"  }
     };
 
-    // ── Prefetched dropdown data ───────────────────────────────────────────────
-    // Loaded in background on init so dialogs can open instantly.
-    private List<LevelDto>? _prefetchedLevels;
-
     // ── Lifecycle ─────────────────────────────────────────────────────────────
-    protected override void OnInitialized()
+
+    private async Task OnStatusFilterChanged(bool value)
     {
-        // Fire-and-forget: prefetch runs in background while the grid loads its first page.
-        // If it fails, dialogs fall back to loading levels themselves.
-        _ = PrefetchLevelsAsync();
+        _statusFilter = value;
+        await RefreshDataAsync(); // DataGrid ကို Server ကနေ ပြန်ဆွဲခိုင်းမယ်
     }
 
-    // ── Prefetch ──────────────────────────────────────────────────────────────
-
-    private async Task PrefetchLevelsAsync()
+    protected override void OnInitialized()
     {
-        try
-        {
-            var response = await LevelApiClient.GetAllAsync();
-            if (response.Success && response.Data != null)
-                _prefetchedLevels = response.Data.ToList();
-            // Soft failure: dialogs handle the null case by fetching themselves.
-        }
-        catch (ApiException)
-        {
-            // Intentional silent failure for prefetch.
-            // The dialog's own LoadLevelsAsync will run as fallback.
-        }
     }
 
     // ── Server data callback (called by MudDataGrid on every page/sort change) ─
@@ -190,7 +206,8 @@
                 PageSize = state.PageSize,
                 SearchTerm = string.IsNullOrWhiteSpace(_searchString) ? null : _searchString.Trim(),
                 OrderBy = _sortBy,
-                SortDirection = _sortDirection
+                SortDirection = _sortDirection,
+                IsActive = _statusFilter
             };
 
             var response = await PositionApiClient.GetPagedAsync(query);
@@ -247,13 +264,8 @@
 
     private async Task OpenCreateDialog()
     {
-        var parameters = new DialogParameters<PositionDialog>
-        {
-            { x => x.PreloadedLevels, _prefetchedLevels }
-        };
-
         var dialog = await DialogService.ShowAsync<PositionDialog>(
-            UIConstants.Position.CreateDialogTitle, parameters, _formDialogOptions);
+            UIConstants.Position.CreateDialogTitle, _formDialogOptions);
 
         if (await dialog.Result is { Canceled: false })
         {
@@ -267,8 +279,7 @@
         // Map the grid row DTO to the full PositionDto expected by the dialog.
         var parameters = new DialogParameters<PositionDialog>
         {
-            { x => x.Position,        item.Adapt<PositionDto>() },
-            { x => x.PreloadedLevels, _prefetchedLevels         }
+            { x => x.Position, item.Adapt<PositionDto>() }
         };
 
         var dialog = await DialogService.ShowAsync<PositionDialog>(
@@ -285,7 +296,7 @@
     {
         var parameters = new DialogParameters<ConfirmDialog>
         {
-            { x => x.ContentText, string.Format(UIConstants.Common.DeleteConfirmationFormat, position.Title) },
+            { x => x.ContentText, string.Format(UIConstants.Common.DeleteConfirmationFormat, position.Name) },
             { x => x.ButtonText,  UIConstants.Common.Delete },
             { x => x.Color,       Color.Error }
         };

@@ -1,12 +1,12 @@
 @page "/hr/levels"
 @* ═══════════════════════════════════════════════════════════════════════════
-   PATTERN: GetAll + Client-side QuickFilter + Client-side Sorting
-   Use this pattern when the dataset is small (< ~500 rows).
-   - Loads all rows once into memory on page load.
-   - Filtering is done via MudDataGrid QuickFilter (client-side).
-   - Sorting is done via MudDataGrid built-in column headers (client-side, no API call).
-   - After every CUD operation, re-calls LoadAllAsync() to refresh the list.
-   ═══════════════════════════════════════════════════════════════════════════ *@
+   PATTERN: GetAll + Client-side QuickFilter + Client-side Sorting
+   Use this pattern when the dataset is small (< ~500 rows).
+   - Loads all rows once into memory on page load.
+   - Filtering is done via MudDataGrid QuickFilter (client-side).
+   - Sorting is done via MudDataGrid built-in column headers (client-side, no API call).
+   - After every CUD operation, re-calls LoadAllAsync() to refresh the list.
+   ═══════════════════════════════════════════════════════════════════════════ *@
 @using EPMS.Client.Constants
 @using EPMS.Client.Services
 @using EPMS.Shared.DTOs.Common
@@ -19,12 +19,12 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
-<PageTitle>@UIConstants.Level.PageTitle - EPMS</PageTitle>
+<PageTitle>@UIConstants.Level.PageTitle</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
     <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.Level.PageTitle</MudText>
 
-    <MudPaper Elevation="2" Class="pa-4">
+    <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
 
         @* {{!-- ── Toolbar ──────────────────────────────────────────────────── --}} *@
         <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
@@ -36,7 +36,17 @@
                           Variant="Variant.Outlined"
                           Clearable="true"
                           Immediate="true"
+                          DebounceInterval="500"
                           Style="max-width: 300px;" />
+
+            <MudSelect T="bool"
+                       Value="@_statusFilter"
+                       ValueChanged="OnStatusFilterChanged"
+                       Variant="Variant.Outlined"
+                       Style="max-width: 150px;">
+                <MudSelectItem T="bool" Value="@(true)">@UIConstants.Common.Active</MudSelectItem>
+                <MudSelectItem T="bool" Value="@(false)">@UIConstants.Common.Inactive</MudSelectItem>
+            </MudSelect>
 
             <TableSortControl SortBy="@_sortBy"
                               SortDirection="@_sortDirection"
@@ -52,20 +62,18 @@
         </MudStack>
 
         @* {{!-- ── Data Grid ────────────────────────────────────────────────── --}}
-        {{!-- SortMode.Multiple lets users hold Shift to sort by several columns at once. --}}
-        {{!-- Use SortMode.Single if you want simpler one-column-at-a-time behaviour.    --}} *@
+        {{!-- SortMode.Multiple lets users hold Shift to sort by several columns at once. --}}
+        {{!-- Use SortMode.Single if you want simpler one-column-at-a-time behaviour.    --}} *@
         <MudDataGrid Items="@_levels"
                      QuickFilter="@QuickFilter"
                      Loading="@_loading"
                      SortMode="SortMode.None"
                      Hover="true"
-                     Striped="true"
-                     Dense="true"
-                     Bordered="true">
+                     Elevation="0">
             <Columns>
                 @* {{!-- No. column is not sortable; it reflects original load order. --}}
-                {{!-- If you need a stable sorted row number, compute it server-side --}}
-                {{!-- (like Positions does with RowIndex) and switch to ServerData.  --}} *@
+                {{!-- If you need a stable sorted row number, compute it server-side --}}
+                {{!-- (like Positions does with RowIndex) and switch to ServerData.  --}} *@
                 <TemplateColumn Title="@UIConstants.Common.ColumnNo" Sortable="false">
                     <CellTemplate>
                         @_rowNumbers.GetValueOrDefault(context.Item.Id)
@@ -75,7 +83,7 @@
                 <PropertyColumn Property="x => x.Name" Title="@UIConstants.Level.ColumnName" />
                 <PropertyColumn Property="x => x.Description" Title="@UIConstants.Common.Description" />
                 @* {{!-- TemplateColumns need an explicit SortBy expression; PropertyColumns get it automatically. --}} *@
-                <TemplateColumn Title="@UIConstants.Common.Status" SortBy="@(x => x.IsActive)">
+                <TemplateColumn Title="@UIConstants.Common.Status">
                     <CellTemplate>
                         <MudChip Color="@(context.Item.IsActive ? Color.Success : Color.Default)"
                                  Size="Size.Small">
@@ -85,24 +93,36 @@
                 </TemplateColumn>
                 <TemplateColumn Title="@UIConstants.Common.Actions" Sortable="false">
                     <CellTemplate>
-                        <MudStack Row="true" Spacing="1">
-                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                           Color="Color.Primary"
-                                           Size="Size.Small"
-                                           OnClick="@(() => OpenEditDialog(context.Item))" />
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                           Color="Color.Error"
-                                           Size="Size.Small"
-                                           OnClick="@(() => OpenDeleteDialog(context.Item))" />
+                        <MudStack Row="true" Spacing="0">
+                            <MudTooltip Text="Edit Level" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Color="Color.Primary"
+                                               Size="Size.Small"
+                                               OnClick="@(() => OpenEditDialog(context.Item))" />
+                            </MudTooltip>
+                            <MudTooltip Text="Delete Level" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Color="Color.Error"
+                                               Size="Size.Small"
+                                               OnClick="@(() => OpenDeleteDialog(context.Item))" />
+                            </MudTooltip>
                         </MudStack>
                     </CellTemplate>
                 </TemplateColumn>
             </Columns>
             <NoRecordsContent>
-                <MudText>@UIConstants.Common.NoRecords</MudText>
+                <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
+                    <MudIcon Icon="@Icons.Material.Outlined.Inbox" Style="font-size: 4rem;" Color="Color.Default" />
+                    <MudText Typo="Typo.h6" Color="Color.Default">@UIConstants.Common.NoRecords</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">@UIConstants.Level.NoDataFound</MudText>
+                </MudStack>
             </NoRecordsContent>
             <LoadingContent>
-                <MudText>@UIConstants.Common.Loading</MudText>
+                <MudStack Spacing="3" Class="w-100">
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                </MudStack>
             </LoadingContent>
             <PagerContent>
                 <MudDataGridPager T="LevelDto" />
@@ -114,8 +134,8 @@
 
 @code {
 
-    // ── Dialog options (static: created once, reused for every dialog open) ──
-    private static readonly DialogOptions _formDialogOptions = new()
+    // ── Dialog options (static: created once, reused for every dialog open) ──
+    private static readonly DialogOptions _formDialogOptions = new()
     {
         CloseOnEscapeKey = true,
         MaxWidth = MaxWidth.Small,
@@ -126,48 +146,53 @@
         CloseOnEscapeKey = true
     };
 
-    // ── State ─────────────────────────────────────────────────────────────────
-    private List<LevelDto> _levels = new();
+    // ── State ─────────────────────────────────────────────────────────────────
+    private List<LevelDto> _levels = new();
     private bool _loading = true;
     private string _searchString = string.Empty;
     private Dictionary<long, int> _rowNumbers = new();
+    private bool _statusFilter = true;
 
     private string _sortBy = "Code";
     private string _sortDirection = "asc";
     private Dictionary<string, string> _sortableColumns = new()
-    {
-        { "Code", "Code" },
-        { "Name", "Name" },
-        { "IsActive", "Status" }
-    };
+  {
+    { "Code", "Code" },
+    { "Name", "Name" }
+  };
 
-    // ── Lifecycle ─────────────────────────────────────────────────────────────
-    protected override async Task OnInitializedAsync()
+    // ── Lifecycle ─────────────────────────────────────────────────────────────
+    protected override async Task OnInitializedAsync()
     {
         await LoadLevelsAsync();
     }
 
-    // ── QuickFilter (runs client-side on every keystroke) ─────────────────────
-    // Declared as a method, not a Func property, to avoid delegate allocation on every render.
-    private bool QuickFilter(LevelDto x)
+    // ── QuickFilter (runs client-side on every keystroke) ─────────────────────
+    // Declared as a method, not a Func property, to avoid delegate allocation on every render.
+    private bool QuickFilter(LevelDto x)
     {
-        if (string.IsNullOrWhiteSpace(_searchString)) return true;
+        if (x.IsActive != _statusFilter)
+            return false;
+
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+
         return x.Code.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
-            || x.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
-            || (x.Description?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false);
+          || x.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
+          || (x.Description?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false);
     }
 
-    // ── Data ──────────────────────────────────────────────────────────────────
+    // ── Data ──────────────────────────────────────────────────────────────────
 
-    private void HandleSortChanged((string SortBy, string SortDirection) sortData)
+    private void HandleSortChanged((string SortBy, string SortDirection) sortData)
     {
         _sortBy = sortData.SortBy;
         _sortDirection = sortData.SortDirection;
         SortData();
     }
 
-    /// <summary>Loads all levels from the API. Called on init and after every CUD operation.</summary>
-    private async Task LoadLevelsAsync()
+    /// <summary>Loads all levels from the API. Called on init and after every CUD operation.</summary>
+    private async Task LoadLevelsAsync()
     {
         _loading = true;
         try
@@ -223,12 +248,12 @@
         }
     }
 
-    // ── Dialogs ───────────────────────────────────────────────────────────────
+    // ── Dialogs ───────────────────────────────────────────────────────────────
 
-    private async Task OpenCreateDialog()
+    private async Task OpenCreateDialog()
     {
         var dialog = await DialogService.ShowAsync<LevelDialog>(
-            UIConstants.Level.CreateDialogTitle, _formDialogOptions);
+          UIConstants.Level.CreateDialogTitle, _formDialogOptions);
 
         if (await dialog.Result is { Canceled: false })
         {
@@ -240,12 +265,12 @@
     private async Task OpenEditDialog(LevelDto level)
     {
         var parameters = new DialogParameters<LevelDialog>
-        {
-            { x => x.Level, level }
-        };
+    {
+      { x => x.Level, level }
+    };
 
         var dialog = await DialogService.ShowAsync<LevelDialog>(
-            UIConstants.Level.EditDialogTitle, parameters, _formDialogOptions);
+          UIConstants.Level.EditDialogTitle, parameters, _formDialogOptions);
 
         if (await dialog.Result is { Canceled: false })
         {
@@ -257,14 +282,14 @@
     private async Task OpenDeleteDialog(LevelDto level)
     {
         var parameters = new DialogParameters<ConfirmDialog>
-        {
-            { x => x.ContentText, string.Format(UIConstants.Common.DeleteConfirmationFormat, level.Name) },
-            { x => x.ButtonText,  UIConstants.Common.Delete },
-            { x => x.Color,       Color.Error }
-        };
+    {
+      { x => x.ContentText, string.Format(UIConstants.Common.DeleteConfirmationFormat, level.Name) },
+      { x => x.ButtonText, UIConstants.Common.Delete },
+      { x => x.Color,   Color.Error }
+    };
 
         var dialog = await DialogService.ShowAsync<ConfirmDialog>(
-            UIConstants.Level.DeleteDialogTitle, parameters, _confirmDialogOptions);
+          UIConstants.Level.DeleteDialogTitle, parameters, _confirmDialogOptions);
 
         if (await dialog.Result is { Canceled: false })
             await DeleteLevelAsync(level.Id);
@@ -274,15 +299,27 @@
     {
         if (!_levels.Any()) return;
 
-        _levels = _sortBy switch
+        // Step 1: Filter by status first
+        var filteredList = _levels.Where(x => x.IsActive == _statusFilter).ToList();
+
+        // Step 2: Sort filtered list
+        filteredList = _sortBy switch
         {
-            "Name" => _sortDirection == "asc" ? _levels.OrderBy(x => x.Name).ToList() : _levels.OrderByDescending(x => x.Name).ToList(),
-            "IsActive" => _sortDirection == "asc" ? _levels.OrderBy(x => x.IsActive).ToList() : _levels.OrderByDescending(x => x.IsActive).ToList(),
-            _ => _sortDirection == "asc" ? _levels.OrderBy(x => x.Code).ToList() : _levels.OrderByDescending(x => x.Code).ToList(),
+            "Name" => _sortDirection == "asc" ? filteredList.OrderBy(x => x.Name).ToList() : filteredList.OrderByDescending(x => x.Name).ToList(),
+            _ => _sortDirection == "asc" ? filteredList.OrderBy(x => x.Code).ToList() : filteredList.OrderByDescending(x => x.Code).ToList(),
         };
 
-        _rowNumbers = _levels
-            .Select((x, i) => (x.Id, Index: i + 1))
-            .ToDictionary(x => x.Id, x => x.Index);
+        // Update the main list with sorted/filtered data
+        _levels = filteredList;
+
+        // Step 3: Calculate row numbers from FILTERED list (no gaps!)
+        _rowNumbers = filteredList
+          .Select((x, i) => (x.Id, Index: i + 1))
+          .ToDictionary(x => x.Id, x => x.Index);
+    }
+
+    private void OnStatusFilterChanged(bool value)
+    {
+        _statusFilter = value;
     }
 }

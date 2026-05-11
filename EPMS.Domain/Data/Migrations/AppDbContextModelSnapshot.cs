@@ -1144,6 +1144,13 @@ namespace EPMS.Domain.Data.Migrations
                     b.Property<DateTimeOffset?>("DeletedAt")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<long?>("DeptHeadId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -1176,6 +1183,13 @@ namespace EPMS.Domain.Data.Migrations
                     b.HasIndex("Code")
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
+
+                    b.HasIndex("DeptHeadId")
+                        .IsUnique()
+                        .HasFilter("[DeptHeadId] IS NOT NULL");
+
+                    b.HasIndex("IsActive")
+                        .HasFilter("[IsActive] = 1");
 
                     b.HasIndex("Name")
                         .IsUnique()
@@ -1244,6 +1258,13 @@ namespace EPMS.Domain.Data.Migrations
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
 
+                    b.HasIndex("IsActive")
+                        .HasFilter("[IsActive] = 1");
+
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
                     b.HasIndex("PublicId")
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
@@ -1259,11 +1280,20 @@ namespace EPMS.Domain.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
@@ -1278,13 +1308,13 @@ namespace EPMS.Domain.Data.Migrations
                     b.Property<long>("LevelId")
                         .HasColumnType("bigint");
 
-                    b.Property<Guid>("PublicId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Title")
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("PublicId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
@@ -1297,13 +1327,20 @@ namespace EPMS.Domain.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("LevelId");
-
-                    b.HasIndex("PublicId")
+                    b.HasIndex("Code")
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
 
-                    b.HasIndex("Title")
+                    b.HasIndex("IsActive")
+                        .HasFilter("[IsActive] = 1");
+
+                    b.HasIndex("LevelId");
+
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.HasIndex("PublicId")
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
 
@@ -1393,6 +1430,11 @@ namespace EPMS.Domain.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -1401,6 +1443,10 @@ namespace EPMS.Domain.Data.Migrations
 
                     b.Property<long>("DepartmentId")
                         .HasColumnType("bigint");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
@@ -1411,6 +1457,9 @@ namespace EPMS.Domain.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
+
+                    b.Property<long?>("LeadTeamId")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1430,6 +1479,17 @@ namespace EPMS.Domain.Data.Migrations
                         .HasColumnType("rowversion");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.HasIndex("IsActive")
+                        .HasFilter("[IsActive] = 1");
+
+                    b.HasIndex("LeadTeamId")
+                        .IsUnique()
+                        .HasFilter("[LeadTeamId] IS NOT NULL");
 
                     b.HasIndex("PublicId")
                         .IsUnique()
@@ -3309,6 +3369,16 @@ namespace EPMS.Domain.Data.Migrations
                     b.Navigation("Employee");
                 });
 
+            modelBuilder.Entity("EPMS.Domain.Entities.Hr.Department", b =>
+                {
+                    b.HasOne("EPMS.Domain.Entities.EmployeeInfo.EmployeeProfile", "DeptHead")
+                        .WithMany()
+                        .HasForeignKey("DeptHeadId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("DeptHead");
+                });
+
             modelBuilder.Entity("EPMS.Domain.Entities.Hr.Position", b =>
                 {
                     b.HasOne("EPMS.Domain.Entities.Hr.Level", "Level")
@@ -3328,7 +3398,14 @@ namespace EPMS.Domain.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("EPMS.Domain.Entities.EmployeeInfo.EmployeeProfile", "LeadTeam")
+                        .WithMany()
+                        .HasForeignKey("LeadTeamId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Department");
+
+                    b.Navigation("LeadTeam");
                 });
 
             modelBuilder.Entity("EPMS.Domain.Entities.Performance.Appraisal", b =>

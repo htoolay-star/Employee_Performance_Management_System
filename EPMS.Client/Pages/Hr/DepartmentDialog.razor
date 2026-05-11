@@ -1,0 +1,172 @@
+@using EPMS.Client.Constants
+@using EPMS.Client.Extensions
+@using EPMS.Client.Models.Hr
+@using EPMS.Client.Services
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.DepartmentDTOs
+@using EPMS.Shared.Validators.DepartmentDTOs
+@using Mapster
+@using MudBlazor
+
+@inject IDepartmentApiClient DepartmentApiClient
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="_form" Model="@_model" Validation="@ValidateField">
+            <MudStack Spacing="3">
+
+                @if (!IsEdit)
+                {
+                    <MudTextField @bind-Value="_model.Code"
+                                  Label="@UIConstants.Department.CodeLabel"
+                                  For="@(() => _model.Code)"
+                                  Variant="Variant.Outlined" />
+                }
+
+                <MudTextField @bind-Value="_model.Name"
+                              Label="@UIConstants.Department.NameLabel"
+                              For="@(() => _model.Name)"
+                              Variant="Variant.Outlined" />
+
+                @if (IsEdit)
+                {
+                    <MudSwitch @bind-Value="_model.IsActive"
+                               Label="@UIConstants.Common.Active"
+                               Color="Color.Success" />
+                }
+
+            </MudStack>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@UIConstants.Common.Cancel</MudButton>
+        <MudButton Color="Color.Primary"
+                   OnClick="Submit"
+                   Disabled="@(_saving || !HasChanged())">
+            @if (_saving)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+            }
+            @(IsEdit ? UIConstants.Common.Update : UIConstants.Common.Create)
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance? _mudDialog { get; set; }
+
+    [Parameter]
+    public bool IsEdit { get; set; }
+
+    [Parameter]
+    public DepartmentDto? Department { get; set; }
+
+    private MudForm? _form;
+    private bool _saving;
+    private Dictionary<string, string> _serverErrors = new();
+
+    private readonly CreateDepartmentDtoValidator _createValidator = new();
+    private readonly UpdateDepartmentDtoValidator _updateValidator = new();
+
+    private DepartmentFormModel _model = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Department is not null)
+            _model = Department.Adapt<DepartmentFormModel>();
+
+        await base.OnInitializedAsync();
+    }
+
+    private async Task Submit()
+    {
+        _serverErrors.Clear();
+
+        await _form!.Validate();
+        if (!_form.IsValid)
+        {
+            Snackbar.Add(UIConstants.Common.ValidationFailed, Severity.Warning);
+            return;
+        }
+
+        _saving = true;
+        try
+        {
+            if (IsEdit && Department is not null)
+            {
+                var dto = _model.Adapt<UpdateDepartmentDto>();
+                var response = await DepartmentApiClient.UpdateAsync(Department.Id, dto);
+
+                if (response.Success)
+                    _mudDialog?.Close(DialogResult.Ok(true));
+                else
+                    Snackbar.Add(response.Message ?? UIConstants.Common.UpdateFailed, Severity.Error);
+            }
+            else
+            {
+                var dto = _model.Adapt<CreateDepartmentDto>();
+                var response = await DepartmentApiClient.CreateAsync(dto);
+
+                if (response.Success)
+                    _mudDialog?.Close(DialogResult.Ok(true));
+                else
+                    Snackbar.Add(response.Message ?? UIConstants.Common.CreateFailed, Severity.Error);
+            }
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.BadRequest)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ValidationFailed, Severity.Error);
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            _serverErrors[nameof(_model.Name)] = error?.Message ?? UIConstants.Common.DuplicateEntry;
+            await _form!.Validate();
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void Cancel() => _mudDialog?.Cancel();
+
+    private async Task<IEnumerable<string>> ValidateField(object model, string propertyName)
+    {
+        IEnumerable<string> fluentErrors;
+
+        if (IsEdit)
+        {
+            var fn = _updateValidator.ValidateMappedValue<DepartmentFormModel, UpdateDepartmentDto>(_model, _serverErrors);
+            fluentErrors = await fn(model, propertyName);
+        }
+        else
+        {
+            var fn = _createValidator.ValidateMappedValue<DepartmentFormModel, CreateDepartmentDto>(_model, _serverErrors);
+            fluentErrors = await fn(model, propertyName);
+        }
+
+        var errorList = fluentErrors.ToList();
+
+        if (_serverErrors.TryGetValue(propertyName, out var serverError))
+        {
+            errorList.Add(serverError);
+        }
+
+        return errorList;
+    }
+
+    private bool HasChanged()
+    {
+        if (!IsEdit) return true;
+
+        return _model.Code != Department!.Code ||
+               _model.Name != Department.Name ||
+               _model.Description != Department.Description ||
+               _model.IsActive != Department.IsActive;
+    }
+}

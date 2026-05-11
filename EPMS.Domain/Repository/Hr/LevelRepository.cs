@@ -27,4 +27,11 @@ public class LevelRepository : GenericRepository<Level>, ILevelRepository
             query = query.Where(l => l.Id != excludeLevelId.Value);
         return await query.AnyAsync(cancellationToken);
     }
+
+    public async Task<IEnumerable<(long Id, string Code, bool IsActive)>> GetLookupAsync()
+    {
+        return await _dbSet
+            .Select(x => new ValueTuple<long, string, bool>(x.Id, x.Code, x.IsActive))
+            .ToListAsync();
+    }
 }

@@ -31,19 +31,21 @@
         public static class Position
         {
             public const string PageTitle = "Position Management";
-            public const string SearchPlaceholder = "Search by title...";
+            public const string SearchPlaceholder = "Search by name...";
             public const string AddButton = "Add Position";
             public const string CreateDialogTitle = "Create Position";
             public const string EditDialogTitle = "Edit Position";
             public const string DeleteDialogTitle = "Delete Position";
-
-            public const string TitleLabel = "Position Title";
+            public const string CodeLabel = "Position Code";
+            public const string TitleLabel = "Position Name";
             public const string LevelLabel = "Level";
 
-            public const string ColumnTitle = "Title";
+            public const string ColumnCode = "Position Code";
+            public const string ColumnName = "Position Name";
             public const string ColumnLevel = "Level";
 
             public const string SelectLevelPlaceholder = "-- Select a Level --";
+            public const string NoDataFound = "Try adjusting your search or add a new position.";
         }
 
         public static class Level
@@ -56,8 +58,43 @@
             public const string DeleteDialogTitle = "Delete Level";
             public const string CodeLabel = "Level Code";
             public const string NameLabel = "Level Name";
-            public const string ColumnCode = "Code";
-            public const string ColumnName = "Name";
+            public const string ColumnCode = "Level Code";
+            public const string ColumnName = "Level Name";
+
+            public const string NoDataFound = "Try adjusting your search or add a new level.";
+        }
+
+        public static class Team
+        {
+            public const string PageTitle = "Team Management";
+            public const string SearchPlaceholder = "Search by team name...";
+            public const string AddButton = "Add Team";
+            public const string CreateDialogTitle = "Create Team";
+            public const string EditDialogTitle = "Edit Team";
+            public const string DeleteDialogTitle = "Delete Team";
+            public const string CodeLabel = "Team Code";
+            public const string NameLabel = "Team Name";
+            public const string DepartmentLabel = "Department";
+            public const string ColumnCode = "Team Code";
+            public const string ColumnName = "Team Name";
+            public const string ColumnDepartment = "Department";
+            public const string SelectDepartmentPlaceholder = "-- Select a Department --";
+            public const string NoDataFound = "Try adjusting your search or add a new team.";
+        }
+
+        public static class Department
+        {
+            public const string PageTitle = "Department Management";
+            public const string SearchPlaceholder = "Search by code or name...";
+            public const string AddButton = "Add Department";
+            public const string CreateDialogTitle = "Create Department";
+            public const string EditDialogTitle = "Edit Department";
+            public const string DeleteDialogTitle = "Delete Department";
+            public const string CodeLabel = "Department Code";
+            public const string NameLabel = "Department Name";
+            public const string ColumnCode = "Department Code";
+            public const string ColumnName = "Department Name";
+            public const string NoDataFound = "Try adjusting your search or add a new department.";
         }
     }
 }

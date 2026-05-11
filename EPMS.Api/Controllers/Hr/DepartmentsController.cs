@@ -11,7 +11,6 @@ namespace EPMS.Api.Controllers.Hr;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = RoleConstants.Admin)]
 public class DepartmentsController : ApiControllerBase
 {
     private readonly IDepartmentService _service;
@@ -19,6 +18,20 @@ public class DepartmentsController : ApiControllerBase
     public DepartmentsController(IDepartmentService service)
     {
         _service = service;
+    }
+
+    [HttpGet("lookup")]
+    public async Task<ActionResult<SuccessResponse<IEnumerable<LookUpDto>>>> GetLookup()
+    {
+        var result = await _service.GetLookupAsync();
+        return HandleResult(result);
+    }
+
+    [HttpGet("with-teams")]
+    public async Task<ActionResult<SuccessResponse<IEnumerable<DepartmentDto>>>> GetWithTeams([FromQuery] long? teamId = null)
+    {
+        var result = await _service.GetDepartmentWithTeamsAsync(teamId ?? 0);
+        return HandleResult(result);
     }
 
     [HttpGet]
@@ -53,28 +66,6 @@ public class DepartmentsController : ApiControllerBase
     public async Task<ActionResult<SuccessResponse>> Delete(long id)
     {
         var result = await _service.DeleteAsync(id);
-        return HandleResult(result);
-    }
-
-    // Team management endpoints
-    [HttpGet("{departmentId:long}/teams")]
-    public async Task<ActionResult<SuccessResponse<IEnumerable<TeamDto>>>> GetTeams(long departmentId)
-    {
-        var result = await _service.GetTeamsForDepartmentAsync(departmentId);
-        return HandleResult(result);
-    }
-
-    [HttpPost("{departmentId:long}/teams")]
-    public async Task<ActionResult<SuccessResponse>> AddTeam(long departmentId, [FromBody] string teamName)
-    {
-        var result = await _service.AddTeamToDepartmentAsync(departmentId, teamName);
-        return HandleResult(result);
-    }
-
-    [HttpDelete("{departmentId:long}/teams/{teamId:long}")]
-    public async Task<ActionResult<SuccessResponse>> RemoveTeam(long departmentId, long teamId)
-    {
-        var result = await _service.RemoveTeamFromDepartmentAsync(departmentId, teamId);
         return HandleResult(result);
     }
 }

@@ -7,6 +7,9 @@ namespace EPMS.Client.Services;
 
 public interface IPositionApiClient
 {
+    [Get("/api/positions/lookup")]
+    Task<SuccessResponse<IEnumerable<LookUpDto>>> GetLookupAsync();
+
     [Get("/api/positions")]
     Task<SuccessResponse<IEnumerable<PositionDto>>> GetAllAsync();
 

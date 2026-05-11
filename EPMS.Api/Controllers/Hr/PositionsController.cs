@@ -11,7 +11,6 @@ namespace EPMS.Api.Controllers.Hr;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
 public class PositionsController : ApiControllerBase
 {
     private readonly IPositionService _service;
@@ -19,6 +18,13 @@ public class PositionsController : ApiControllerBase
     public PositionsController(IPositionService service)
     {
         _service = service;
+    }
+
+    [HttpGet("lookup")]
+    public async Task<ActionResult<SuccessResponse<IEnumerable<LookUpDto>>>> GetLookup()
+    {
+        var result = await _service.GetLookupAsync();
+        return HandleResult(result);
     }
 
     [HttpGet]

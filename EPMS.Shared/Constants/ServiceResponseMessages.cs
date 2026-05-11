@@ -29,6 +29,7 @@ public static class ServiceResponseMessages
         public const string DuplicateName = "Department with name '{0}' already exists.";
         public const string DuplicateNameOther = "Another department with name '{0}' already exists.";
         public static string NotFound(long id) => $"Department with ID '{id}' was not found.";
+        public static string InUse(long id) => $"Department with ID '{id}' cannot be deleted because it has associated teams.";
     }
 
     public static class TeamMsg
@@ -40,10 +41,12 @@ public static class ServiceResponseMessages
         public const string RetrievedAll = "Teams retrieved successfully.";
         public const string Added = "Team added successfully.";
         public const string Removed = "Team removed successfully.";
+        public const string DuplicateCode = "Team with code '{0}' already exists.";
         public const string DuplicateName = "Team with name '{0}' already exists in this department.";
         public static string NotFound(long id) => $"Team with ID '{id}' was not found.";
         public static string NotFoundInDepartment(long teamId, long departmentId) => $"Team '{teamId}' does not belong to department '{departmentId}'.";
         public static string NotFoundForDepartment(long departmentId) => $"Department with ID '{departmentId}' was not found.";
+        public static string InUse(long id) => $"Team with ID '{id}' cannot be deleted because it has assigned employees.";
     }
 
     public static class PositionMsg
@@ -53,7 +56,8 @@ public static class ServiceResponseMessages
         public const string Deleted = "Position deleted successfully.";
         public const string Retrieved = "Position retrieved successfully.";
         public const string RetrievedAll = "Positions retrieved successfully.";
-        public const string DuplicateTitle = "Position with title '{0}' already exists.";
+        public const string DuplicateCode = "Position with code '{0}' already exists.";
+        public const string DuplicateName = "Position with name '{0}' already exists.";
         public const string PermissionAssigned = "Permission assigned successfully.";
         public const string PermissionRemoved = "Permission removed successfully.";
         public static string NotFound(long id) => $"Position with ID '{id}' was not found.";

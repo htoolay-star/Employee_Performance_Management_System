@@ -20,5 +20,6 @@ namespace EPMS.Shared.Features
 
         public string? OrderBy { get; set; }
         public string SortDirection { get; set; } = "asc";
+        public bool? IsActive { get; set; }
     }
 }
