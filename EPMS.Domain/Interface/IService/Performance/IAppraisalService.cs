@@ -1,7 +1,7 @@
 ﻿using EPMS.Shared.DTOs.FormDTOs;
 using EPMS.Shared.DTOs.Common;
 
-namespace EPMS.Domain.Interface.IService;
+namespace EPMS.Domain.Interface.IService.Performance;
 
 public interface IAppraisalService
 {

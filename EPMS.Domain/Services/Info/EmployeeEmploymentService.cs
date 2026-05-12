@@ -38,12 +38,16 @@ public class EmployeeEmploymentService : IEmployeeEmploymentService
         return SuccessResponse<EmployeeEmploymentDto>.Ok(dto, EmployeeEmploymentMsg.Retrieved);
     }
 
-    public async Task<SuccessResponse<EmployeeEmploymentDto>> GetByEmployeeIdAsync(long employeeId)
+    public async Task<SuccessResponse<EmployeeEmploymentDto>> GetByEmployeeIdAsync(Guid employeePublicId)
     {
-        var employment = await _uow.Info.EmployeeEmployments.GetByEmployeeIdAsync(employeeId);
+        var employee = await _uow.Info.EmployeeProfiles.GetByPublicIdAsync(employeePublicId);
+        if (employee == null)
+            return SuccessResponse<EmployeeEmploymentDto>.Fail(EmployeeProfileMsg.NotFound(employeePublicId), ErrorType.NotFound);
+
+        var employment = await _uow.Info.EmployeeEmployments.GetByEmployeeIdAsync(employee.Id);
 
         if (employment == null)
-            return SuccessResponse<EmployeeEmploymentDto>.Fail(EmployeeEmploymentMsg.NotFound(employeeId), ErrorType.NotFound);
+            return SuccessResponse<EmployeeEmploymentDto>.Fail(EmployeeEmploymentMsg.NotFound(employeePublicId), ErrorType.NotFound);
 
         var dto = employment.Adapt<EmployeeEmploymentDto>();
         return SuccessResponse<EmployeeEmploymentDto>.Ok(dto, EmployeeEmploymentMsg.Retrieved);

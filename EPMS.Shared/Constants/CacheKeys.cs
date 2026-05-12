@@ -20,10 +20,10 @@ namespace EPMS.Shared.Constants
 
         public static class Hr
         {
-            public static string AllLevels() => "hr:levels:all";
-            public static string AllPositions() => "hr:positions:all";
-            public static string AllDepartments() => "hr:departments:all";
-            public static string AllTeams() => "hr:teams:all";
+            public static string LevelLookups() => "hr:levels:lookups";
+            public static string TeamLookups() => "hr:teams:lookups";
+            public static string PositionLookups() => "hr:positions:lookups";
+            public static string DepartmentLookups() => "hr:departments:lookups";
             public static string EmployeeById(long id) => $"hr:employee:id:{id}";
         }
 

@@ -38,12 +38,16 @@ public class EmployeePayrollInfoService : IEmployeePayrollInfoService
         return SuccessResponse<EmployeePayrollInfoDto>.Ok(dto, EmployeePayrollInfoMsg.Retrieved);
     }
 
-    public async Task<SuccessResponse<EmployeePayrollInfoDto>> GetByEmployeeIdAsync(long employeeId)
+    public async Task<SuccessResponse<EmployeePayrollInfoDto>> GetByEmployeeIdAsync(Guid employeePublicId)
     {
-        var payroll = await _uow.Info.EmployeePayrollInfos.GetByEmployeeIdAsync(employeeId);
+        var employee = await _uow.Info.EmployeeProfiles.GetByPublicIdAsync(employeePublicId);
+        if (employee == null)
+            return SuccessResponse<EmployeePayrollInfoDto>.Fail(EmployeeProfileMsg.NotFound(employeePublicId), ErrorType.NotFound);
+
+        var payroll = await _uow.Info.EmployeePayrollInfos.GetByEmployeeIdAsync(employee.Id);
 
         if (payroll == null)
-            return SuccessResponse<EmployeePayrollInfoDto>.Fail(EmployeePayrollInfoMsg.NotFound(employeeId), ErrorType.NotFound);
+            return SuccessResponse<EmployeePayrollInfoDto>.Fail(EmployeePayrollInfoMsg.NotFound(employeePublicId), ErrorType.NotFound);
 
         var dto = payroll.Adapt<EmployeePayrollInfoDto>();
         return SuccessResponse<EmployeePayrollInfoDto>.Ok(dto, EmployeePayrollInfoMsg.Retrieved);

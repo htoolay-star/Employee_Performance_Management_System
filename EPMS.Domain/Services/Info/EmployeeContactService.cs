@@ -9,6 +9,7 @@ using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using EPMS.Shared.Enums;
 using Mapster;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
+using EmployeeContact = EPMS.Domain.Entities.EmployeeInfo.EmployeeContact;
 
 namespace EPMS.Domain.Services.Info;
 
@@ -46,12 +47,17 @@ public class EmployeeContactService : IEmployeeContactService
         return SuccessResponse<EmployeeContactDto>.Ok(dto, EmployeeContactMsg.Retrieved);
     }
 
-    public async Task<SuccessResponse<EmployeeContactDto>> GetByEmployeeIdAsync(long employeeId)
+    public async Task<SuccessResponse<EmployeeContactDto>> GetByEmployeeIdAsync(Guid employeePublicId)
     {
-        var contact = await _uow.Info.EmployeeContacts.GetByEmployeeIdAsync(employeeId);
+        var employee = await _uow.Info.EmployeeProfiles.GetByPublicIdAsync(employeePublicId);
+
+        if (employee == null)
+            return SuccessResponse <EmployeeContactDto>.Fail(EmployeeProfileMsg.NotFound(employeePublicId), ErrorType.NotFound);
+
+        var contact = await _uow.Info.EmployeeContacts.GetByEmployeeIdAsync(employee.Id);
 
         if (contact == null)
-            return SuccessResponse<EmployeeContactDto>.Fail(EmployeeContactMsg.NotFound(employeeId), ErrorType.NotFound);
+            return SuccessResponse<EmployeeContactDto>.Fail(EmployeeContactMsg.NotFound(employeePublicId), ErrorType.NotFound);
 
         var dto = contact.Adapt<EmployeeContactDto>();
         return SuccessResponse<EmployeeContactDto>.Ok(dto, EmployeeContactMsg.Retrieved);

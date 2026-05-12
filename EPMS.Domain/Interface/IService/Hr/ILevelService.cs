@@ -1,7 +1,7 @@
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.LevelDTOs;
 
-namespace EPMS.Domain.Interfaces;
+namespace EPMS.Domain.Interface.IService.Hr;
 
 public interface ILevelService
 {

@@ -7,6 +7,7 @@ namespace EPMS.Domain.Interface.Irepo.Info
 {
     public interface IEmployeeProfileRepository : IGenericRepository<EmployeeProfile>
     {
+        Task<EmployeeProfile?> GetByPublicIdAsync(Guid publicId);
         Task<EmployeeProfile?> GetByStaffNoAsync(string code);
         Task<EmployeeProfile?> GetByUserIdAsync(long userId);
         Task<IEnumerable<EmployeeLookupDto>> GetLookupDtoAsync();

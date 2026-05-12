@@ -14,6 +14,9 @@ namespace EPMS.Domain.Repository.Info
     {
         public EmployeeProfileRepository(AppDbContext context) : base(context) { }
 
+        public async Task<EmployeeProfile?> GetByPublicIdAsync(Guid publicId) =>
+            await _dbSet.FirstOrDefaultAsync(p => p.PublicId == publicId);
+
         public async Task<EmployeeProfile?> GetByStaffNoAsync(string staffNo) =>
             await _dbSet.FirstOrDefaultAsync(p => p.StaffNo == staffNo);
 
@@ -29,9 +32,6 @@ namespace EPMS.Domain.Repository.Info
                     Id = p.Id,
                     StaffNo = p.StaffNo,
                     StaffName = p.StaffName,
-                    DepartmentName = p.Employment != null ? p.Employment.Department.Name : null,
-                    PositionTitle = p.Employment != null ? p.Employment.Position.Name : null,
-                    EmploymentStatus = p.Employment != null ? p.Employment.EmploymentStatus : null
                 })
                 .ToListAsync();
         }

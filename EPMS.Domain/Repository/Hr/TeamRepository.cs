@@ -3,6 +3,7 @@ using EPMS.Domain.Entities.Hr;
 using EPMS.Domain.Extensions;
 using EPMS.Domain.Interface.Irepo.Hr;
 using EPMS.Domain.Repository.Base;
+using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.TeamDTOs;
 using EPMS.Shared.Features.Teams;
 using Mapster;
@@ -47,10 +48,16 @@ public class TeamRepository : GenericRepository<Team>, ITeamRepository
         return await _dbSet.AnyAsync(t => t.Id == id);
     }
 
-    public async Task<IEnumerable<(long Id, string Code, bool IsActive)>> GetLookupAsync()
+    public async Task<IEnumerable<LookUpDto>> GetLookupDtoAsync()
     {
         return await _dbSet
-            .Select(x => new ValueTuple<long, string, bool>(x.Id, x.Code, x.IsActive))
+            .AsNoTracking()
+            .Select(p => new LookUpDto
+            {
+                Id = p.Id,
+                Code = p.Code,
+                IsActive = p.IsActive,
+            })
             .ToListAsync();
     }
 

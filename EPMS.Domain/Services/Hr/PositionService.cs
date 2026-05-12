@@ -3,7 +3,7 @@ using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Auth;
 using EPMS.Domain.Entities.Hr;
 using EPMS.Domain.Interface.IService.App;
-using EPMS.Domain.Interfaces;
+using EPMS.Domain.Interface.IService.Hr;
 using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.AuthDTOs.PermissionDTOS;
 using EPMS.Shared.DTOs.Common;
@@ -28,40 +28,19 @@ public class PositionService : IPositionService
 
     public async Task<SuccessResponse<IEnumerable<LookUpDto>>> GetLookupAsync()
     {
-        var cachedAllPositions = await _cacheService.GetAsync<IEnumerable<PositionDto>>(CacheKeys.Hr.AllPositions());
+        var dtos = await _cacheService.GetOrCreateAsync(
+            CacheKeys.Hr.PositionLookups(),
+            async () => await _uow.HR.Positions.GetLookupDtoAsync(),
+            TimeSpan.FromHours(12)
+        );
 
-        if (cachedAllPositions != null)
-        {
-            var lookupFromCache = cachedAllPositions.Select(x => new LookUpDto
-            {
-                Id = x.Id,
-                Code = x.Code,
-                IsActive = x.IsActive
-            });
-
-            return SuccessResponse<IEnumerable<LookUpDto>>.Ok(lookupFromCache, PositionMsg.RetrievedAll);
-        }
-
-        var positions = await _uow.HR.Positions.GetAllWithLevelAsync();
-        var dtos = positions.Adapt<IEnumerable<PositionDto>>();
-
-        var lookup = dtos.Select(x => new LookUpDto
-        {
-            Id = x.Id,
-            Code = x.Code,
-            IsActive = x.IsActive
-        }).ToList();
-
-        return SuccessResponse<IEnumerable<LookUpDto>>.Ok(lookup, PositionMsg.RetrievedAll);
+        return SuccessResponse<IEnumerable<LookUpDto>>.Ok(dtos ?? [], PositionMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<IEnumerable<PositionDto>>> GetAllAsync()
     {
-        var dtos = await _cacheService.GetOrCreateAsync(CacheKeys.Hr.AllPositions(), async () =>
-        {
-            var positions = await _uow.HR.Positions.GetAllWithLevelAsync();
-            return positions.Adapt<IEnumerable<PositionDto>>();
-        });
+        var positions = await _uow.HR.Positions.GetAllWithLevelAsync();
+        var dtos = positions.Adapt<IEnumerable<PositionDto>>();
         return SuccessResponse<IEnumerable<PositionDto>>.Ok(dtos, PositionMsg.RetrievedAll);
     }
 
@@ -107,7 +86,7 @@ public class PositionService : IPositionService
         var entity = new Position(dto.Code, dto.Name, dto.LevelId, dto.Description);
         _uow.HR.Positions.Add(entity);
         await _uow.CompleteAsync();
-        await _cacheService.RemoveAsync(CacheKeys.Hr.AllPositions());
+        await _cacheService.RemoveAsync(CacheKeys.Hr.PositionLookups());
         return SuccessResponse<long>.Ok(entity.Id, PositionMsg.Created);
     }
 
@@ -133,7 +112,7 @@ public class PositionService : IPositionService
         else position.Deactivate();
 
         await _uow.CompleteAsync();
-        await _cacheService.RemoveAsync(CacheKeys.Hr.AllPositions());
+        await _cacheService.RemoveAsync(CacheKeys.Hr.PositionLookups());
         return SuccessResponse.Ok(PositionMsg.Updated);
     }
 
@@ -146,7 +125,7 @@ public class PositionService : IPositionService
 
         _uow.HR.Positions.Delete(position);
         await _uow.CompleteAsync();
-        await _cacheService.RemoveAsync(CacheKeys.Hr.AllPositions());
+        await _cacheService.RemoveAsync(CacheKeys.Hr.PositionLookups());
         return SuccessResponse.Ok(PositionMsg.Deleted);
     }
 

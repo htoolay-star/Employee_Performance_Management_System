@@ -3,7 +3,7 @@ using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.PositionDTOs;
 using EPMS.Shared.Features.Positions;
 
-namespace EPMS.Domain.Interfaces;
+namespace EPMS.Domain.Interface.IService.Hr;
 
 public interface IPositionService
 {

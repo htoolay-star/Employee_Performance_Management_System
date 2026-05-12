@@ -46,6 +46,17 @@ public class EmployeeProfileService : IEmployeeProfileService
         return SuccessResponse<EmployeeProfileDto>.Ok(dto, EmployeeProfileMsg.Retrieved);
     }
 
+    public async Task<SuccessResponse<EmployeeProfileDto>> GetByPublicIdAsync(Guid publicId)
+    {
+        var profile = await _uow.Info.EmployeeProfiles.GetByPublicIdAsync(publicId);
+
+        if (profile == null)
+            return SuccessResponse<EmployeeProfileDto>.Fail(EmployeeProfileMsg.NotFound(publicId), ErrorType.NotFound);
+
+        var dto = profile.Adapt<EmployeeProfileDto>();
+        return SuccessResponse<EmployeeProfileDto>.Ok(dto, EmployeeProfileMsg.Retrieved);
+    }
+
     public async Task<SuccessResponse<long>> CreateAsync(CreateEmployeeProfileDto dto)
     {
         // Check for duplicate StaffNo

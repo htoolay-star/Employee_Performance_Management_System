@@ -47,6 +47,13 @@ public class EmployeeProfilesController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HttpGet("by-publicid/{publicId:guid}")]
+    public async Task<ActionResult<SuccessResponse<EmployeeProfileDto>>> GetByPublicId(Guid publicId)
+    {
+        var result = await _profileService.GetByPublicIdAsync(publicId);
+        return HandleResult(result);
+    }
+
     [HttpGet("by-staffno/{staffNo}")]
     public async Task<ActionResult<SuccessResponse<EmployeeProfileDto>>> GetByStaffNo(string staffNo)
     {

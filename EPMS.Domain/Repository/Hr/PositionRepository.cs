@@ -3,6 +3,7 @@ using EPMS.Domain.Entities.Hr;
 using EPMS.Domain.Extensions;
 using EPMS.Domain.Interface.Irepo.Hr;
 using EPMS.Domain.Repository.Base;
+using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.PositionDTOs;
 using EPMS.Shared.Features.Positions;
 using Mapster;
@@ -89,5 +90,18 @@ public class PositionRepository : GenericRepository<Position>, IPositionReposito
         }).ToList();
 
         return (finalItems, totalCount);
+    }
+
+    public async Task<IEnumerable<LookUpDto>> GetLookupDtoAsync()
+    {
+        return await _dbSet
+            .AsNoTracking()
+            .Select(p => new LookUpDto
+            {
+                Id = p.Id,
+                Code = p.Code,
+                IsActive = p.IsActive,
+            })
+            .ToListAsync();
     }
 }

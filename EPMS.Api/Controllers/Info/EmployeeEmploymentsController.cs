@@ -34,10 +34,10 @@ public class EmployeeEmploymentsController : ApiControllerBase
         return HandleResult(result);
     }
 
-    [HttpGet("by-employee/{employeeId:long}")]
-    public async Task<ActionResult<SuccessResponse<EmployeeEmploymentDto>>> GetByEmployeeId(long employeeId)
+    [HttpGet("by-employee/{employeePublicId:guid}")]
+    public async Task<ActionResult<SuccessResponse<EmployeeEmploymentDto>>> GetByEmployeeId(Guid employeePublicId)
     {
-        var result = await _employmentService.GetByEmployeeIdAsync(employeeId);
+        var result = await _employmentService.GetByEmployeeIdAsync(employeePublicId);
         return HandleResult(result);
     }
 

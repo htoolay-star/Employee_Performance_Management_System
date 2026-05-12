@@ -36,12 +36,16 @@ public class EmployeeFamilyInfoService : IEmployeeFamilyInfoService
         return SuccessResponse<EmployeeFamilyInfoDto>.Ok(dto, EmployeeFamilyInfoMsg.Retrieved);
     }
 
-    public async Task<SuccessResponse<EmployeeFamilyInfoDto>> GetByEmployeeIdAsync(long employeeId)
+    public async Task<SuccessResponse<EmployeeFamilyInfoDto>> GetByEmployeeIdAsync(Guid employeePublicId)
     {
-        var info = await _uow.Info.EmployeeFamilyInfos.GetByEmployeeIdAsync(employeeId);
+        var employee = await _uow.Info.EmployeeProfiles.GetByPublicIdAsync(employeePublicId);
+        if (employee == null)
+            return SuccessResponse<EmployeeFamilyInfoDto>.Fail(EmployeeProfileMsg.NotFound(employeePublicId), ErrorType.NotFound);
+
+        var info = await _uow.Info.EmployeeFamilyInfos.GetByEmployeeIdAsync(employee.Id);
 
         if (info == null)
-            return SuccessResponse<EmployeeFamilyInfoDto>.Fail($"Family info for employee ID '{employeeId}' was not found.", ErrorType.NotFound);
+            return SuccessResponse<EmployeeFamilyInfoDto>.Fail(EmployeeFamilyInfoMsg.NotFound(employeePublicId), ErrorType.NotFound);
 
         var dto = info.Adapt<EmployeeFamilyInfoDto>();
         return SuccessResponse<EmployeeFamilyInfoDto>.Ok(dto, EmployeeFamilyInfoMsg.Retrieved);

@@ -2,7 +2,7 @@ using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.TeamDTOs;
 using EPMS.Shared.Features.Teams;
 
-namespace EPMS.Domain.Interfaces;
+namespace EPMS.Domain.Interface.IService.Hr;
 
 public interface ITeamService
 {

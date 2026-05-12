@@ -88,6 +88,7 @@ public static class ServiceResponseMessages
         public const string DuplicateEmail = "Employee with email '{0}' already exists.";
         public const string DuplicateUserId = "Employee with user ID '{0}' already exists.";
         public static string NotFound(long id) => $"Employee profile with ID '{id}' was not found.";
+        public static string NotFound(Guid id) => $"Employee profile with ID '{id}' was not found.";
     }
 
     public static class EmployeeContactMsg
@@ -98,6 +99,7 @@ public static class ServiceResponseMessages
         public const string Retrieved = "Employee contact retrieved successfully.";
         public const string RetrievedAll = "Employee contacts retrieved successfully.";
         public static string NotFound(long id) => $"Employee contact with ID '{id}' was not found.";
+        public static string NotFound(Guid id) => $"Employee contact with ID '{id}' was not found.";
     }
 
     public static class EmployeeEmploymentMsg
@@ -108,6 +110,7 @@ public static class ServiceResponseMessages
         public const string Retrieved = "Employee employment retrieved successfully.";
         public const string RetrievedAll = "Employee employments retrieved successfully.";
         public static string NotFound(long id) => $"Employee employment with ID '{id}' was not found.";
+        public static string NotFound(Guid id) => $"Employment info for employee '{id}' was not found.";
     }
 
     public static class EmployeePayrollInfoMsg
@@ -119,6 +122,7 @@ public static class ServiceResponseMessages
         public const string RetrievedAll = "Employee payroll info retrieved successfully.";
         public const string SalaryNegative = "Salary cannot be negative.";
         public static string NotFound(long id) => $"Employee payroll info with ID '{id}' was not found.";
+        public static string NotFound(Guid id) => $"Employee payroll info for employee '{id}' was not found.";
     }
 
     public static class EmployeeFamilyInfoMsg
@@ -129,6 +133,7 @@ public static class ServiceResponseMessages
         public const string Retrieved = "Employee family info retrieved successfully.";
         public const string RetrievedAll = "Employee family info retrieved successfully.";
         public static string NotFound(long id) => $"Employee family info with ID '{id}' was not found.";
+        public static string NotFound(Guid id) => $"Family info for employee '{id}' was not found.";
     }
 
     public static class EmployeeSalaryHistoryMsg
