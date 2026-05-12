@@ -174,6 +174,10 @@
         { "LevelCode", "Level"  }
     };
 
+    // ── Prefetched dropdown data ───────────────────────────────────────────────
+    private List<LookUpDto>? _prefetchedLevels;
+    private List<LookUpDto> _levels = new();
+
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
     private async Task OnStatusFilterChanged(bool value)
@@ -184,6 +188,21 @@
 
     protected override void OnInitialized()
     {
+        _ = PrefetchLevelsAsync();
+    }
+
+    private async Task PrefetchLevelsAsync()
+    {
+        try
+        {
+            var response = await LevelApiClient.GetLookupAsync();
+            if (response.Success && response.Data != null)
+            {
+                _prefetchedLevels = response.Data.ToList();
+                _levels = _prefetchedLevels;
+            }
+        }
+        catch (ApiException) { }
     }
 
     // ── Server data callback (called by MudDataGrid on every page/sort change) ─
@@ -260,8 +279,13 @@
 
     private async Task OpenCreateDialog()
     {
+        var parameters = new DialogParameters<PositionDialog>
+        {
+            { x => x.PreloadedLevels, _prefetchedLevels }
+        };
+
         var dialog = await DialogService.ShowAsync<PositionDialog>(
-            UIConstants.Position.CreateDialogTitle, _formDialogOptions);
+            UIConstants.Position.CreateDialogTitle, parameters, _formDialogOptions);
 
         if (await dialog.Result is { Canceled: false })
         {
@@ -272,10 +296,10 @@
 
     private async Task OpenEditDialog(PositionGridItemDto item)
     {
-        // Map the grid row DTO to the full PositionDto expected by the dialog.
         var parameters = new DialogParameters<PositionDialog>
         {
-            { x => x.Position, item.Adapt<PositionDto>() }
+            { x => x.Position, item.Adapt<PositionDto>() },
+            { x => x.PreloadedLevels, _prefetchedLevels }
         };
 
         var dialog = await DialogService.ShowAsync<PositionDialog>(

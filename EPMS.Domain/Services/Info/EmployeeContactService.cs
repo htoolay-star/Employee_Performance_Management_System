@@ -98,11 +98,15 @@ public class EmployeeContactService : IEmployeeContactService
         }
 
         var contact = new EmployeeContact(dto.EmployeeId);
-        
+
         // Update contact with provided details
-        if (!string.IsNullOrWhiteSpace(dto.EmailAddress))
+        if (!string.IsNullOrWhiteSpace(dto.EmailAddress) ||
+            !string.IsNullOrWhiteSpace(dto.PhoneNo) ||
+            !string.IsNullOrWhiteSpace(dto.ContactAddress))
+        {
             contact.UpdatePrimaryContact(dto.EmailAddress, dto.PhoneNo, dto.ContactAddress);
-        
+        }
+
         if (!string.IsNullOrWhiteSpace(dto.PhoneNo) || !string.IsNullOrWhiteSpace(dto.PermanentPhoneNo) || 
             !string.IsNullOrWhiteSpace(dto.PresentPhoneNo) || !string.IsNullOrWhiteSpace(dto.InternalPhoneNo))
             contact.UpdatePhones(dto.PhoneNo, dto.PermanentPhoneNo, dto.PresentPhoneNo, dto.InternalPhoneNo);

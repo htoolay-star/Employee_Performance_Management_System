@@ -318,7 +318,7 @@
             if (response.Success && response.Data != null)
             {
                 _departments = response.Data.ToList();
-                UpdateRowNumbers();
+                SortData();
             }
             else
             {
@@ -341,25 +341,44 @@
         }
     }
 
-    private void UpdateRowNumbers()
+    private async Task HandleSortChanged((string SortBy, string SortDirection) sortData)
     {
-        var filtered = _departments
-            .Where(d => d.IsActive == _statusFilter)
-            .ToList();
+        _loading = true;
+        await Task.Yield();
 
-        _rowNumbers = filtered.Select((d, idx) => new { d.Id, idx = idx + 1 })
-            .ToDictionary(x => x.Id, x => x.idx);
-    }
-
-    private void HandleSortChanged((string SortBy, string SortDirection) sortData)
-    {
         _sortBy = sortData.SortBy;
         _sortDirection = sortData.SortDirection;
+
+        _loading = false;
+        SortData();
     }
 
     private void OnStatusFilterChanged(bool value)
     {
         _statusFilter = value;
+    }
+
+    private void SortData()
+    {
+        if (!_departments.Any()) return;
+
+        var filteredList = _departments.Where(x => x.IsActive == _statusFilter).ToList();
+
+        filteredList = _sortBy switch
+        {
+            "Name" => _sortDirection == "asc"
+                ? filteredList.OrderBy(x => x.Name).ToList()
+                : filteredList.OrderByDescending(x => x.Name).ToList(),
+            _ => _sortDirection == "asc"
+                ? filteredList.OrderBy(x => x.Code).ToList()
+                : filteredList.OrderByDescending(x => x.Code).ToList(),
+        };
+
+        _departments = filteredList;
+
+        _rowNumbers = filteredList
+          .Select((x, i) => (x.Id, Index: i + 1))
+          .ToDictionary(x => x.Id, x => x.Index);
     }
 
     private async Task OpenCreateDialog()

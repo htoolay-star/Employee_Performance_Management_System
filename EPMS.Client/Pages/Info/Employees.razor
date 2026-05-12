@@ -2,6 +2,7 @@
 @using EPMS.Client.Constants
 @using EPMS.Client.Services.Hr
 @using EPMS.Client.Services.Info
+@using EPMS.Shared.Constants
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.EmployeeInfoDTOs
 @using EPMS.Shared.Features.EmployeeProfiles
@@ -11,6 +12,8 @@
 
 @inject IEmployeeProfileApiClient EmployeeProfileApiClient
 @inject IDepartmentApiClient DepartmentApiClient
+@inject ITeamApiClient TeamApiClient
+@inject IPositionApiClient PositionApiClient
 @inject ISnackbar Snackbar
 
 <PageTitle>@UIConstants.Employee.PageTitle - EPMS</PageTitle>
@@ -46,6 +49,32 @@
                         <MudSelectItem T="long?" Value="@dept.Id">@dept.Code</MudSelectItem>
                     }
                 </MudSelect>
+
+                <MudSelect T="long?"
+                           Value="@_teamFilter"
+                           ValueChanged="OnTeamFilterChanged"
+                           Placeholder="All Teams"
+                           Variant="Variant.Outlined"
+                           Clearable="true"
+                           Style="max-width: 200px;">
+                    @foreach (var team in _teams)
+                    {
+                        <MudSelectItem T="long?" Value="@team.Id">@team.Code</MudSelectItem>
+                    }
+                </MudSelect>
+
+                <MudSelect T="long?"
+                           Value="@_positionFilter"
+                           ValueChanged="OnPositionFilterChanged"
+                           Placeholder="All Positions"
+                           Variant="Variant.Outlined"
+                           Clearable="true"
+                           Style="max-width: 200px;">
+                    @foreach (var pos in _positions)
+                    {
+                        <MudSelectItem T="long?" Value="@pos.Id">@pos.Code</MudSelectItem>
+                    }
+                </MudSelect>
             </MudStack>
 
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
@@ -66,26 +95,32 @@
                      Dense="true"
                      RowsPerPage="10">
             <Columns>
+                <TemplateColumn Title="No." Sortable="true" Class="text-center" HeaderClass="text-center" Style="width: 60px;">
+                    <CellTemplate>@context.Item.RowIndex</CellTemplate>
+                </TemplateColumn>
+
                 <PropertyColumn Property="x => x.StaffNo" Title="@UIConstants.Employee.ColumnStaffNo" />
                 <PropertyColumn Property="x => x.StaffName" Title="@UIConstants.Employee.ColumnName" />
 
                 <PropertyColumn Property="x => x.DepartmentName" Title="@UIConstants.Employee.ColumnDepartment" />
+                <PropertyColumn Property="x => x.TeamName" Title="Team" />
                 <PropertyColumn Property="x => x.PositionName" Title="@UIConstants.Employee.ColumnPosition" />
                 
                 <TemplateColumn Title="@UIConstants.Employee.ColumnStatus" Sortable="false">
                     <CellTemplate>
                         @{
-                            var color = context.Item.EmploymentStatus switch
+                            var status = context.Item.EmploymentStatus;
+                            var color = (status ?? EmploymentStatuses.Pending) switch
                             {
-                                "Permanent" => Color.Success,
-                                "Probation" => Color.Warning,
-                                "Resigned" => Color.Error,
-                                "Terminated" => Color.Error,
+                                EmploymentStatuses.Permanent => Color.Success,
+                                EmploymentStatuses.Probation => Color.Warning,
+                                EmploymentStatuses.Resigned => Color.Error,
+                                EmploymentStatuses.Pending => Color.Info,
                                 _ => Color.Default
                             };
                         }
                         <MudChip T="string" Color="@color" Size="Size.Small">
-                            @(string.IsNullOrEmpty(context.Item.EmploymentStatus) ? "Pending" : context.Item.EmploymentStatus)
+                            @(string.IsNullOrEmpty(status) ? EmploymentStatuses.Pending : status)
                         </MudChip>
                     </CellTemplate>
                 </TemplateColumn>
@@ -120,15 +155,20 @@
     // Filters
     private string _searchString = string.Empty;
     private long? _departmentFilter = null;
-    private string _sortBy = "StaffName";
+    private long? _teamFilter = null;
+    private long? _positionFilter = null;
+    private string _sortBy = "StaffNo";
     private string _sortDirection = "asc";
 
     private List<LookUpDto> _departments = [];
+    private List<LookUpDto> _teams = [];
+    private List<LookUpDto> _positions = [];
 
     private readonly Dictionary<string, string> _sortableColumns = new()
     {
-        { "StaffName", "Staff Name" },
-        { "StaffNo",   "Staff No" }
+        { "RowIndex",  "No." },
+        { "StaffNo",   "Staff No" },
+        { "StaffName", "Staff Name" }
     };
 
     protected override async Task OnInitializedAsync()
@@ -145,10 +185,22 @@
             {
                 _departments = deptResponse.Data.ToList();
             }
+
+            var teamResponse = await TeamApiClient.GetLookupAsync();
+            if (teamResponse.Success && teamResponse.Data != null)
+            {
+                _teams = teamResponse.Data.ToList();
+            }
+
+            var posResponse = await PositionApiClient.GetLookupAsync();
+            if (posResponse.Success && posResponse.Data != null)
+            {
+                _positions = posResponse.Data.ToList();
+            }
         }
         catch (Exception)
         {
-            Snackbar.Add("Failed to load departments lookup", Severity.Error);
+            Snackbar.Add("Failed to load lookup data", Severity.Error);
         }
     }
 
@@ -164,6 +216,8 @@
                 PageSize = state.PageSize,
                 SearchTerm = string.IsNullOrWhiteSpace(_searchString) ? null : _searchString.Trim(),
                 DepartmentId = _departmentFilter,
+                TeamId = _teamFilter,
+                PositionId = _positionFilter,
                 OrderBy = _sortBy,
                 SortDirection = _sortDirection
             };
@@ -172,9 +226,20 @@
 
             if (response.Success && response.Data != null)
             {
+                var items = response.Data.Items.ToList();
+
+                if (_sortBy == "RowIndex")
+                {
+                    var startIndex = state.Page * state.PageSize;
+                    for (int i = 0; i < items.Count; i++)
+                    {
+                        items[i] = items[i] with { RowIndex = startIndex + i + 1 };
+                    }
+                }
+
                 return new GridData<EmployeeProfileGridItemDto>
                 {
-                    Items = response.Data.Items,
+                    Items = items,
                     TotalItems = response.Data.TotalCount
                 };
             }
@@ -203,6 +268,18 @@
     private async Task OnDepartmentFilterChanged(long? value)
     {
         _departmentFilter = value;
+        await RefreshDataAsync();
+    }
+
+    private async Task OnTeamFilterChanged(long? value)
+    {
+        _teamFilter = value;
+        await RefreshDataAsync();
+    }
+
+    private async Task OnPositionFilterChanged(long? value)
+    {
+        _positionFilter = value;
         await RefreshDataAsync();
     }
 

@@ -43,18 +43,22 @@
                           Variant="Variant.Outlined"
                           Style="max-width: 300px;" />
 
-            <MudSelect T="long?"
+            <MudAutocomplete T="long?"
                        Value="@_departmentFilter"
                        ValueChanged="@OnDepartmentFilterChanged"
                        Placeholder="All Departments"
                        Clearable="true"
                        Variant="Variant.Outlined"
-                       Style="max-width: 200px;">
+                       Style="max-width: 200px;"
+                       SearchFunc="SearchFilterDepartments"
+                       ToStringFunc="GetFilterDepartmentDisplay"
+                       ResetValueOnEmptyText="true"
+                       OpenIcon="@Icons.Material.Filled.ArrowDropDown">
                 @foreach (var dept in _departments)
                 {
                     <MudSelectItem T="long?" Value="@dept.Id">@dept.Code</MudSelectItem>
                 }
-            </MudSelect>
+            </MudAutocomplete>
 
             <MudSelect T="bool"
                        Value="@_statusFilter"
@@ -206,6 +210,7 @@ private List<LookUpDto>? _prefetchedDepartments;
             {
                 _prefetchedDepartments = response.Data.ToList();
                 _departments = _prefetchedDepartments;
+                StateHasChanged();
             }
         }
         catch (ApiException)
@@ -371,5 +376,25 @@ private List<LookUpDto>? _prefetchedDepartments;
         {
             Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
         }
+    }
+
+
+    private Task<IEnumerable<long?>> SearchFilterDepartments(string value, CancellationToken token)
+    {
+        var query = _departments.AsQueryable();
+        
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+        }
+        
+        return Task.FromResult(query.Select(x => (long?)x.Id).AsEnumerable());
+    }
+
+    private string GetFilterDepartmentDisplay(long? id)
+    {
+        if (id == null) return string.Empty;
+        var dept = _departments.FirstOrDefault(x => x.Id == id);
+        return dept != null ? dept.Code : string.Empty;
     }
 }

@@ -28,6 +28,7 @@ public static class EmployeeInfoValidationMessages
         public const string PositionIdInvalid = "Position ID must be greater than 0.";
         public const string EmploymentStatusRequired = "Employment status is required.";
         public const string EmploymentStatusMaxLength = "Employment status cannot exceed 50 characters.";
+        public const string EmploymentStatusInvalid = "Employment status must be one of: Permanent, Probation, Resigned.";
         public const string ParentDepartmentIdInvalid = "Parent department ID must be greater than 0.";
         public const string TeamIdInvalid = "Team ID must be greater than 0.";
         public const string DirectManagerIdInvalid = "Direct manager ID must be greater than 0.";

@@ -184,10 +184,15 @@
 
     // ── Data ──────────────────────────────────────────────────────────────────
 
-    private void HandleSortChanged((string SortBy, string SortDirection) sortData)
+    private async Task HandleSortChanged((string SortBy, string SortDirection) sortData)
     {
+        _loading = true;
+        await Task.Yield();
+
         _sortBy = sortData.SortBy;
         _sortDirection = sortData.SortDirection;
+
+        _loading = false;
         SortData();
     }
 
