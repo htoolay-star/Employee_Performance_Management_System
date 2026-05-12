@@ -10,7 +10,6 @@ namespace EPMS.Api.Controllers.Info;
 
 [Route("api/employee-employment-histories")]
 [ApiController]
-[Authorize(Roles = RoleConstants.Admin)]
 public class EmployeeEmploymentHistoriesController : ApiControllerBase
 {
     private readonly IEmployeeEmploymentHistoryService _historyService;

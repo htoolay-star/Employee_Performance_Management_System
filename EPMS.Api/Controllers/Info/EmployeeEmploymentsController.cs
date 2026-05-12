@@ -10,7 +10,6 @@ namespace EPMS.Api.Controllers.Info;
 
 [Route("api/employee-employments")]
 [ApiController]
-[Authorize(Roles = RoleConstants.Admin)]
 public class EmployeeEmploymentsController : ApiControllerBase
 {
     private readonly IEmployeeEmploymentService _employmentService;

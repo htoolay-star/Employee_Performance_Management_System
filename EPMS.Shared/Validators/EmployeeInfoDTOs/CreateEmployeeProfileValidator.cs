@@ -42,5 +42,13 @@ public class CreateEmployeeProfileValidator : AbstractValidator<CreateEmployeePr
         RuleFor(x => x.ProfileThumbnailUrl)
             .Must(url => string.IsNullOrEmpty(url) || Uri.TryCreate(url, UriKind.Absolute, out _))
             .WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.ProfileThumbnailUrlInvalid);
+
+        RuleFor(x => x.EmailAddress)
+            .NotEmpty()
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.EmailAddressRequired)
+            .MaximumLength(100)
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.EmailAddressMaxLength)
+            .EmailAddress()
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.EmailAddressInvalid);
     }
 }

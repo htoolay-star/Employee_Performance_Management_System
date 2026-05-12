@@ -1,0 +1,93 @@
+@page "/hr/employees/{id:int}"
+@using EPMS.Client.Constants
+@using EPMS.Client.Pages.Info.Tabs
+@using EPMS.Client.Services.Info
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.EmployeeInfoDTOs
+@using MudBlazor
+@using Refit
+
+@inject IEmployeeProfileApiClient EmployeeProfileApiClient
+@inject ISnackbar Snackbar
+
+<PageTitle>Employee Detail - EPMS</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    @if (_loading)
+    {
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="300px" />
+    }
+    else if (_employee == null)
+    {
+        <MudAlert Severity="Severity.Error">Employee not found.</MudAlert>
+    }
+    else
+    {
+        <MudText Typo="Typo.h4" Class="mb-4">
+            @_employee.StaffName (@_employee.StaffNo)
+        </MudText>
+
+        <MudPaper Elevation="2" Class="pa-2">
+            <MudTabs ApplyEffectsToContainer="true" PanelClass="pa-4">
+                <MudTabPanel Text="Profile" Icon="@Icons.Material.Filled.Person">
+                    <EmployeeProfileTab EmployeeId="@Id" PublicId="@_employee.PublicId" />
+                </MudTabPanel>
+                <MudTabPanel Text="Employment" Icon="@Icons.Material.Filled.Work">
+                    <EmployeeEmploymentTab PublicId="@_employee.PublicId" />
+                </MudTabPanel>
+                <MudTabPanel Text="Contact" Icon="@Icons.Material.Filled.ContactPhone">
+                    <EmployeeContactTab PublicId="@_employee.PublicId" />
+                </MudTabPanel>
+                <MudTabPanel Text="Family" Icon="@Icons.Material.Filled.FamilyRestroom">
+                    <EmployeeFamilyTab PublicId="@_employee.PublicId" />
+                </MudTabPanel>
+                <MudTabPanel Text="Payroll" Icon="@Icons.Material.Filled.Payments">
+                    <EmployeePayrollTab PublicId="@_employee.PublicId" />
+                </MudTabPanel>
+            </MudTabs>
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private EmployeeProfileDto? _employee;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEmployeeAsync();
+    }
+
+    private async Task LoadEmployeeAsync()
+    {
+        _loading = true;
+        try
+        {
+            var response = await EmployeeProfileApiClient.GetByIdAsync(Id);
+            if (response.Success && response.Data != null)
+            {
+                _employee = response.Data;
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? "Failed to load employee", Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Error loading employee", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

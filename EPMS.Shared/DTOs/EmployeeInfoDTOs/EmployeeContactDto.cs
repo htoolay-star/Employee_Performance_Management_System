@@ -9,7 +9,6 @@ public record EmployeeContactDto
     public string? PhoneNo { get; init; }
     public string? PermanentPhoneNo { get; init; }
     public string? PresentPhoneNo { get; init; }
-    public string? EmailAddress { get; init; }
     public string? InternalPhoneNo { get; init; }
     public string? EmergencyMobileNo { get; init; }
     public string? RelationWithEmergencyContact { get; init; }

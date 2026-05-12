@@ -19,6 +19,9 @@ public static class EmployeeInfoValidationMessages
         public const string ProfilePictureUrlInvalid = "Profile picture URL must be a valid URL.";
         public const string ProfileThumbnailUrlInvalid = "Profile thumbnail URL must be a valid URL.";
         public const string AdditionalDataMaxLength = "Additional data cannot exceed 2000 characters.";
+        public const string EmailAddressMaxLength = "Email address cannot exceed 100 characters.";
+        public const string EmailAddressInvalid = "Email address format is invalid.";
+        public const string EmailAddressRequired = "Email address is required.";
     }
 
     public static class EmployeeEmployment

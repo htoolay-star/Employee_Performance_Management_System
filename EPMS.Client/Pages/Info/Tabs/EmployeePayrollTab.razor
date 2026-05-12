@@ -1,0 +1,248 @@
+@using EPMS.Client.Models.Info
+@using EPMS.Client.Services.Info
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.EmployeeInfoDTOs
+@using Mapster
+@using MudBlazor
+@using Refit
+
+@inject IEmployeePayrollInfoApiClient PayrollInfoApiClient
+@inject ISnackbar Snackbar
+
+@if (_loading)
+{
+    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="200px" />
+}
+else if (_payrollInfo == null)
+{
+    <MudAlert Severity="Severity.Info">No payroll data found.</MudAlert>
+}
+else
+{
+    <MudGrid>
+        <MudItem xs="12" sm="6">
+            <MudPaper Elevation="0" Class="border rounded pa-4">
+                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">Salary Information</MudText>
+                <MudStack Spacing="2">
+                    <MudText><strong>Salary:</strong> @_payrollInfo.Salary.ToString("N2")</MudText>
+                    <MudText><strong>Currency:</strong> @_payrollInfo.Currency ?? "-"</MudText>
+                    <MudText><strong>Pay Type:</strong> @_payrollInfo.PayType ?? "-"</MudText>
+                    <MudText><strong>Date of Pay Type Changed:</strong> @_payrollInfo.DateOfPayTypeChanged?.ToString("yyyy-MM-dd") ?? "-"</MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudPaper Elevation="0" Class="border rounded pa-4">
+                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">Additional Info</MudText>
+                <MudStack Spacing="2">
+                    <MudText><strong>Cost Allocate:</strong> @_payrollInfo.CostAllocate ?? "-"</MudText>
+                    <MudText><strong>Pay By Backlog:</strong> @_payrollInfo.PayByBacklog ?? "-"</MudText>
+                    <MudText><strong>Date of Salary Changed:</strong> @_payrollInfo.DateOfSalaryChanged?.ToString("yyyy-MM-dd") ?? "-"</MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudPaper Elevation="0" Class="border rounded pa-4">
+                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">Tax Information</MudText>
+                <MudStack Spacing="2">
+                    <MudText><strong>Tax Status:</strong> @_payrollInfo.TaxStatus ?? "-"</MudText>
+                    <MudText><strong>Tax No:</strong> @_payrollInfo.TaxNo ?? "-"</MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudPaper Elevation="0" Class="border rounded pa-4">
+                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">SSB / SOCSO</MudText>
+                <MudStack Spacing="2">
+                    <MudText><strong>SSB Status:</strong> @_payrollInfo.SSBStatus ?? "-"</MudText>
+                    <MudText><strong>SSCB No:</strong> @_payrollInfo.SSCBNo ?? "-"</MudText>
+                    <MudText><strong>Compliance Earned Points:</strong> @_payrollInfo.ComplianceEarnedPoints?.ToString() ?? "-"</MudText>
+                    <MudText><strong>Compliance Balance Points:</strong> @_payrollInfo.ComplianceBalancePoints?.ToString() ?? "-"</MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12">
+            <MudStack Row="true" Justify="Justify.FlexEnd">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Edit"
+                           OnClick="ToggleEdit">
+                    Edit Payroll
+                </MudButton>
+            </MudStack>
+        </MudItem>
+    </MudGrid>
+
+    @if (_editMode)
+    {
+        <MudDivider Class="my-4" />
+        <MudText Typo="Typo.h6" Class="mb-4">Edit Payroll</MudText>
+        <MudPaper Elevation="0" Class="border rounded pa-4">
+            <MudForm @ref="_form">
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField @bind-Value="_model.Salary"
+                                         Label="Salary"
+                                         Variant="Variant.Outlined"
+                                         Adornment="Adornment.Start"
+                                         AdornmentText="$" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.Currency"
+                                      Label="Currency"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.PayType"
+                                      Label="Pay Type"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.CostAllocate"
+                                      Label="Cost Allocate"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.PayByBacklog"
+                                      Label="Pay By Backlog"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.TaxStatus"
+                                      Label="Tax Status"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.TaxNo"
+                                      Label="Tax No"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.SSBStatus"
+                                      Label="SSB Status"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.SSCBNo"
+                                      Label="SSCB No"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField @bind-Value="_model.ComplianceEarnedPoints"
+                                         Label="Compliance Earned Points"
+                                         Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField @bind-Value="_model.ComplianceBalancePoints"
+                                         Label="Compliance Balance Points"
+                                         Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudStack Row="true" Spacing="2" Justify="Justify.FlexEnd">
+                            <MudButton Variant="Variant.Outlined" OnClick="CancelEdit">Cancel</MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SavePayrollInfo" Disabled="_saving">
+                                @if (_saving)
+                                {
+                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                }
+                                Save
+                            </MudButton>
+                        </MudStack>
+                    </MudItem>
+                </MudGrid>
+            </MudForm>
+        </MudPaper>
+    }
+}
+
+@code {
+    [Parameter]
+    public Guid PublicId { get; set; }
+
+    private EmployeePayrollInfoDto? _payrollInfo;
+    private bool _loading = true;
+    private bool _editMode = false;
+    private bool _saving = false;
+    private MudForm? _form;
+
+    private EmployeePayrollFormModel _model = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _loading = true;
+        try
+        {
+            var response = await PayrollInfoApiClient.GetByEmployeeIdAsync(PublicId);
+            if (response.Success && response.Data != null)
+            {
+                _payrollInfo = response.Data;
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Failed to load payroll data", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void ToggleEdit()
+    {
+        if (_payrollInfo == null) return;
+
+        _model = _payrollInfo.Adapt<EmployeePayrollFormModel>();
+        _editMode = true;
+    }
+
+    private void CancelEdit()
+    {
+        _editMode = false;
+    }
+
+    private async Task SavePayrollInfo()
+    {
+        if (_payrollInfo == null) return;
+
+        _saving = true;
+        try
+        {
+            var dto = _model.Adapt<UpdateEmployeePayrollInfoDto>();
+            var response = await PayrollInfoApiClient.UpdateAsync(_payrollInfo.Id, dto);
+            if (response.Success)
+            {
+                Snackbar.Add("Payroll info updated successfully", Severity.Success);
+                _editMode = false;
+                await LoadDataAsync();
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? "Failed to update payroll info", Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Failed to update payroll info", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+}

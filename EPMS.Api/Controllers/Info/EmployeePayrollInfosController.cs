@@ -10,7 +10,6 @@ namespace EPMS.Api.Controllers.Info;
 
 [Route("api/employee-payroll-infos")]
 [ApiController]
-[Authorize(Roles = RoleConstants.Admin)]
 public class EmployeePayrollInfosController : ApiControllerBase
 {
     private readonly IEmployeePayrollInfoService _payrollInfoService;

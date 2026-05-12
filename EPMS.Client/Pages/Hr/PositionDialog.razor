@@ -43,7 +43,7 @@
                               Lines="3" />
 
                 @* {{!-- Level select: shows a spinner while levels are loading --}} *@
-                <MudSelect T="long?"
+                <MudAutocomplete T="long?"
                            @bind-Value="_model.LevelId"
                            Label="@UIConstants.Position.LevelLabel"
                            Placeholder="@UIConstants.Position.SelectLevelPlaceholder"
@@ -51,7 +51,10 @@
                            Variant="Variant.Outlined"
                            Clearable="true"
                            Disabled="@_loadingLevels"
-                           AdornmentIcon="@(_loadingLevels ? Icons.Material.Filled.HourglassEmpty : Icons.Material.Filled.ArrowDropDown)">
+                           SearchFunc="SearchLevels"
+                           ToStringFunc="GetLevelDisplay"
+                           ResetValueOnEmptyText="true"
+                           OpenIcon="@(_loadingLevels ? Icons.Material.Filled.HourglassEmpty : Icons.Material.Filled.ArrowDropDown)">
                     @if (_loadingLevels)
                     {
                         <MudSelectItem T="long?" Value="null">
@@ -79,7 +82,7 @@
                             </MudSelectItem>
                         }
                     }
-                </MudSelect>
+                </MudAutocomplete>
 
                 @* {{!-- IsActive toggle: only shown on Edit --}} *@
                 @if (IsEdit)
@@ -290,5 +293,27 @@
                _model.Description != Position.Description ||
                _model.LevelId != Position.LevelId ||
                _model.IsActive != Position.IsActive;
+    }
+
+    private async Task<IEnumerable<long?>> SearchLevels(string value, CancellationToken token)
+    {
+        await Task.Yield();
+
+        if (string.IsNullOrWhiteSpace(value))
+            return AvailableLevels.Select(x => (long?)x.Id).ToList();
+
+        return AvailableLevels
+            .Where(x => x.Code != null && x.Code.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Select(x => (long?)x.Id)
+            .ToList();
+    }
+
+    private string GetLevelDisplay(long? id)
+    {
+        if (id == null) return string.Empty;
+        var level = AvailableLevels.FirstOrDefault(x => x.Id == id);
+        if (level == null) return string.Empty;
+
+        return level.IsActive ? level.Code : $"{level.Code} (Inactive)";
     }
 }

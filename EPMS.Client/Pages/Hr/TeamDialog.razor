@@ -18,15 +18,26 @@
         <MudForm @ref="_form" Model="@_model" Validation="@ValidateField">
             <MudStack Spacing="3">
 
+                @if (!IsEdit)
+                {
+                    
+                    <MudTextField @bind-Value="_model.Code"
+                                  Label="@UIConstants.Team.CodeLabel"
+                                  For="@(() => _model.Code)"
+                                  Variant="Variant.Outlined" />
+                }
+
                 <MudTextField @bind-Value="_model.Name"
                               Label="@UIConstants.Team.NameLabel"
                               For="@(() => _model.Name)"
                               Variant="Variant.Outlined" />
 
-                <MudTextField @bind-Value="_model.Code"
-                              Label="@UIConstants.Team.CodeLabel"
-                              For="@(() => _model.Code)"
-                              Variant="Variant.Outlined" />
+
+                <MudTextField @bind-Value="_model.Description"
+                              Label="@UIConstants.Common.Description"
+                              For="@(() => _model.Description)"
+                              Variant="Variant.Outlined"
+                              Lines="3" />
 
                 @if (ShowDepartment)
                 {

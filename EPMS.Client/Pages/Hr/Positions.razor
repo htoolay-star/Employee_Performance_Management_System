@@ -44,6 +44,23 @@
                           Variant="Variant.Outlined"
                           Style="max-width: 300px;" />
 
+            <MudAutocomplete T="long?"
+                       Value="@_levelFilter"
+                       ValueChanged="@OnLevelFilterChanged"
+                       Placeholder="All Levels"
+                       Clearable="true"
+                       Variant="Variant.Outlined"
+                       Style="max-width: 200px;"
+                       SearchFunc="SearchFilterLevels"
+                       ToStringFunc="GetFilterLevelDisplay"
+                       ResetValueOnEmptyText="true"
+                       OpenIcon="@Icons.Material.Filled.ArrowDropDown">
+                @foreach (var level in _levels)
+                {
+                    <MudSelectItem T="long?" Value="@level.Id">@level.Code</MudSelectItem>
+                }
+            </MudAutocomplete>
+
             <MudSelect T="bool"
                        Value="@_statusFilter"
                        ValueChanged="OnStatusFilterChanged"
@@ -161,6 +178,7 @@
     private MudDataGrid<PositionGridItemDto> _dataGrid = null!;
     private bool _isLoading = false;
     private bool _statusFilter = true;
+    private long? _levelFilter;
 
     // ── Search / sort state ───────────────────────────────────────────────────
     private string _searchString = string.Empty;
@@ -169,9 +187,8 @@
 
     private readonly Dictionary<string, string> _sortableColumns = new()
     {
-        { "Name",      "Name"   },
-        { "Code",      "Code"   },
-        { "LevelCode", "Level"  }
+        { "Name", "Name" },
+        { "Code", "Code" }
     };
 
     // ── Prefetched dropdown data ───────────────────────────────────────────────
@@ -184,6 +201,12 @@
     {
         _statusFilter = value;
         await RefreshDataAsync(); // DataGrid ကို Server ကနေ ပြန်ဆွဲခိုင်းမယ်
+    }
+
+    private async Task OnLevelFilterChanged(long? value)
+    {
+        _levelFilter = value;
+        await RefreshDataAsync();
     }
 
     protected override void OnInitialized()
@@ -219,6 +242,7 @@
                 PageNumber = state.Page + 1,
                 PageSize = state.PageSize,
                 SearchTerm = string.IsNullOrWhiteSpace(_searchString) ? null : _searchString.Trim(),
+                LevelId = _levelFilter,
                 OrderBy = _sortBy,
                 SortDirection = _sortDirection,
                 IsActive = _statusFilter
@@ -352,5 +376,24 @@
         {
             Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
         }
+    }
+
+    private Task<IEnumerable<long?>> SearchFilterLevels(string value, CancellationToken token)
+    {
+        var query = _levels.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return Task.FromResult(query.Select(x => (long?)x.Id).AsEnumerable());
+    }
+
+    private string GetFilterLevelDisplay(long? id)
+    {
+        if (id == null) return string.Empty;
+        var level = _levels.FirstOrDefault(x => x.Id == id);
+        return level != null ? level.Code : string.Empty;
     }
 }

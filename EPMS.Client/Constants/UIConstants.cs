@@ -107,6 +107,7 @@
             public const string ColumnDepartment = "Department";
             public const string ColumnPosition = "Position";
             public const string ColumnStatus = "Status";
+            public const string ColumnActions = "Actions";
             public const string NoDataFound = "Try adjusting your search or add a new employee.";
         }
     }

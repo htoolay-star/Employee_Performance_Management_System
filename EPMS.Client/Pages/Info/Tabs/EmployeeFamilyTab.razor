@@ -1,0 +1,213 @@
+@using EPMS.Client.Models.Info
+@using EPMS.Client.Services.Info
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.EmployeeInfoDTOs
+@using Mapster
+@using MudBlazor
+@using Refit
+
+@inject IEmployeeFamilyInfoApiClient FamilyInfoApiClient
+@inject ISnackbar Snackbar
+
+@if (_loading)
+{
+    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="200px" />
+}
+else if (_familyInfo == null)
+{
+    <MudAlert Severity="Severity.Info">No family info data found.</MudAlert>
+}
+else
+{
+    <MudGrid>
+        <MudItem xs="12" sm="6">
+            <MudPaper Elevation="0" Class="border rounded pa-4">
+                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">Marital Status</MudText>
+                <MudStack Spacing="2">
+                    <MudText><strong>Marital Status:</strong> @_familyInfo.MaritalStatus ?? "-"</MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudPaper Elevation="0" Class="border rounded pa-4">
+                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">Spouse</MudText>
+                <MudStack Spacing="2">
+                    <MudText><strong>Spouse Name:</strong> @_familyInfo.SpouseName ?? "-"</MudText>
+                    <MudText><strong>Spouse NRC No:</strong> @_familyInfo.SpouseNRCNo ?? "-"</MudText>
+                    <MudText><strong>Spouse Occupation:</strong> @_familyInfo.SpouseOccupation ?? "-"</MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudPaper Elevation="0" Class="border rounded pa-4">
+                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">Father</MudText>
+                <MudStack Spacing="2">
+                    <MudText><strong>Father Name:</strong> @_familyInfo.FatherName ?? "-"</MudText>
+                    <MudText><strong>Father NRC No:</strong> @_familyInfo.FatherNRCNo ?? "-"</MudText>
+                    <MudText><strong>Father Occupation:</strong> @_familyInfo.FatherOccupation ?? "-"</MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12">
+            <MudStack Row="true" Justify="Justify.FlexEnd">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Edit"
+                           OnClick="ToggleEdit">
+                    Edit Family Info
+                </MudButton>
+            </MudStack>
+        </MudItem>
+    </MudGrid>
+
+    @if (_editMode)
+    {
+        <MudDivider Class="my-4" />
+        <MudText Typo="Typo.h6" Class="mb-4">Edit Family Info</MudText>
+        <MudPaper Elevation="0" Class="border rounded pa-4">
+            <MudForm @ref="_form">
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.MaritalStatus"
+                                      Label="Marital Status"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.SpouseName"
+                                      Label="Spouse Name"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.SpouseNRCNo"
+                                      Label="Spouse NRC No"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.SpouseOccupation"
+                                      Label="Spouse Occupation"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.FatherName"
+                                      Label="Father Name"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.FatherNRCNo"
+                                      Label="Father NRC No"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.FatherOccupation"
+                                      Label="Father Occupation"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudStack Row="true" Spacing="2" Justify="Justify.FlexEnd">
+                            <MudButton Variant="Variant.Outlined" OnClick="CancelEdit">Cancel</MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveFamilyInfo" Disabled="_saving">
+                                @if (_saving)
+                                {
+                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                }
+                                Save
+                            </MudButton>
+                        </MudStack>
+                    </MudItem>
+                </MudGrid>
+            </MudForm>
+        </MudPaper>
+    }
+}
+
+@code {
+    [Parameter]
+    public Guid PublicId { get; set; }
+
+    private EmployeeFamilyInfoDto? _familyInfo;
+    private bool _loading = true;
+    private bool _editMode = false;
+    private bool _saving = false;
+    private MudForm? _form;
+
+    private EmployeeFamilyFormModel _model = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _loading = true;
+        try
+        {
+            var response = await FamilyInfoApiClient.GetByEmployeeIdAsync(PublicId);
+            if (response.Success && response.Data != null)
+            {
+                _familyInfo = response.Data;
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Failed to load family info", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void ToggleEdit()
+    {
+        if (_familyInfo == null) return;
+
+        _model = _familyInfo.Adapt<EmployeeFamilyFormModel>();
+        _editMode = true;
+    }
+
+    private void CancelEdit()
+    {
+        _editMode = false;
+    }
+
+    private async Task SaveFamilyInfo()
+    {
+        if (_familyInfo == null) return;
+
+        _saving = true;
+        try
+        {
+            var dto = _model.Adapt<UpdateEmployeeFamilyInfoDto>();
+            var response = await FamilyInfoApiClient.UpdateAsync(_familyInfo.Id, dto);
+            if (response.Success)
+            {
+                Snackbar.Add("Family info updated successfully", Severity.Success);
+                _editMode = false;
+                await LoadDataAsync();
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? "Failed to update family info", Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Failed to update family info", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+}

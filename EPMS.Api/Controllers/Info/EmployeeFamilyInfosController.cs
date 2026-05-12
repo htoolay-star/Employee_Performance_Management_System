@@ -10,7 +10,6 @@ namespace EPMS.Api.Controllers.Info;
 
 [Route("api/employee-family-infos")]
 [ApiController]
-[Authorize(Roles = RoleConstants.Admin)]
 public class EmployeeFamilyInfosController : ApiControllerBase
 {
     private readonly IEmployeeFamilyInfoService _familyInfoService;

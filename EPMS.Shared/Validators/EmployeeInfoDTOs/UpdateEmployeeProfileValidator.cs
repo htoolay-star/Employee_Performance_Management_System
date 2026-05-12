@@ -59,5 +59,12 @@ public class UpdateEmployeeProfileValidator : AbstractValidator<UpdateEmployeePr
         RuleFor(x => x.AdditionalData)
             .MaximumLength(2000)
             .WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.AdditionalDataMaxLength);
+
+        RuleFor(x => x.EmailAddress)
+            .MaximumLength(100)
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.EmailAddressMaxLength)
+            .EmailAddress()
+            .When(x => !string.IsNullOrEmpty(x.EmailAddress))
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.EmailAddressInvalid);
     }
 }

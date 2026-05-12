@@ -63,6 +63,11 @@ public class PositionRepository : GenericRepository<Position>, IPositionReposito
             baseQuery = baseQuery.Where(p => p.Name.Contains(search));
         }
 
+        if (parameters.LevelId.HasValue)
+        {
+            baseQuery = baseQuery.Where(p => p.LevelId == parameters.LevelId.Value);
+        }
+
         if (parameters.IsActive.HasValue)
         {
             baseQuery = baseQuery.Where(p => p.IsActive == parameters.IsActive.Value);

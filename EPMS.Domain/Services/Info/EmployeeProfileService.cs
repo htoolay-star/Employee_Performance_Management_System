@@ -1,4 +1,5 @@
 using EPMS.Domain.Contracts;
+using EPMS.Domain.Entities.Auth;
 using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Domain.Interface.IService.App;
 using EPMS.Domain.Interface.IService.Auth;
@@ -17,15 +18,21 @@ public class EmployeeProfileService : IEmployeeProfileService
     private readonly IUnitOfWork _uow;
     private readonly ICurrentEmployeeContextService _currentEmployee;
     private readonly IPositionPermissionChecker _permissionChecker;
+    private readonly IPasswordHasher _passwordHasher;
+    private readonly ISystemSettingsService _settingsService;
 
     public EmployeeProfileService(
         IUnitOfWork uow,
         ICurrentEmployeeContextService currentEmployee,
-        IPositionPermissionChecker permissionChecker)
+        IPositionPermissionChecker permissionChecker,
+        IPasswordHasher passwordHasher,
+        ISystemSettingsService settingsService)
     {
         _uow = uow;
         _currentEmployee = currentEmployee;
         _permissionChecker = permissionChecker;
+        _passwordHasher = passwordHasher;
+        _settingsService = settingsService;
     }
 
     public async Task<SuccessResponse<IEnumerable<EmployeeProfileDto>>> GetAllAsync()
@@ -72,15 +79,39 @@ public class EmployeeProfileService : IEmployeeProfileService
                 return SuccessResponse<long>.Fail(string.Format(EmployeeProfileMsg.DuplicateUserId, dto.UserId.Value), ErrorType.Conflict);
         }
 
-        var profile = new EmployeeProfile(dto.UserId, dto.StaffNo, dto.StaffName);
+        // Check for duplicate EmailAddress
+        if (!string.IsNullOrWhiteSpace(dto.EmailAddress))
+        {
+            var emailExists = await _uow.Info.EmployeeProfiles.ExistsByEmailAsync(dto.EmailAddress);
+            if (emailExists)
+                return SuccessResponse<long>.Fail(string.Format(EmployeeProfileMsg.DuplicateEmail, dto.EmailAddress), ErrorType.Conflict);
+        }
+
+        var profile = new EmployeeProfile(dto.UserId, dto.StaffNo, dto.StaffName, dto.EmailAddress);
         
         // Set additional properties using entity methods
         if (!string.IsNullOrEmpty(dto.OtherName)) profile.UpdateOtherName(dto.OtherName);
         if (!string.IsNullOrEmpty(dto.NRCNo)) profile.UpdateNRCNo(dto.NRCNo);
         if (!string.IsNullOrEmpty(dto.Gender)) profile.UpdateDemographics(dto.Gender, dto.DateOfBirth, dto.Nationality);
-        
+
         _uow.Info.EmployeeProfiles.Add(profile);
         await _uow.CompleteAsync();
+
+        // Create User if EmailAddress is provided and Employee has no linked User
+        if (!string.IsNullOrWhiteSpace(dto.EmailAddress))
+        {
+            var emailExists = await _uow.Auth.Users.ExistsAsync(dto.EmailAddress);
+            if (emailExists)
+                return SuccessResponse<long>.Fail(AuthMsg.EmailAlreadyRegistered, ErrorType.Conflict);
+
+            var defaultPassword = await _settingsService.GetDefaultPasswordAsync();
+            var hashedPassword = _passwordHasher.Hash(defaultPassword);
+            var newUser = new User(dto.EmailAddress, hashedPassword, UserRole.User);
+            _uow.Auth.Users.Add(newUser);
+
+            profile.LinkUser(newUser.Id);
+            await _uow.CompleteAsync();
+        }
         
         return SuccessResponse<long>.Ok(profile.Id, EmployeeProfileMsg.Created);
     }
@@ -97,6 +128,30 @@ public class EmployeeProfileService : IEmployeeProfileService
         
         profile.UpdateDemographics(dto.Gender, dto.DateOfBirth, dto.Nationality);
         
+        // Check for duplicate EmailAddress (excluding current profile)
+        if (dto.EmailAddress != null && dto.EmailAddress != profile.EmailAddress)
+        {
+            var emailExists = await _uow.Info.EmployeeProfiles.ExistsByEmailAsync(dto.EmailAddress, id);
+            if (emailExists)
+                return SuccessResponse.Fail(string.Format(EmployeeProfileMsg.DuplicateEmail, dto.EmailAddress), ErrorType.Conflict);
+        }
+
+        if (dto.EmailAddress != null) profile.UpdateEmail(dto.EmailAddress);
+        
+        // Sync email change to linked User account
+        if (dto.EmailAddress != null && profile.UserId != null)
+        {
+            var user = await _uow.Auth.Users.GetByIdAsync(profile.UserId.Value);
+            if (user != null && user.Email != dto.EmailAddress)
+            {
+                var emailExists = await _uow.Auth.Users.ExistsAsync(dto.EmailAddress);
+                if (emailExists)
+                    return SuccessResponse.Fail(AuthMsg.EmailAlreadyRegistered, ErrorType.Conflict);
+
+                user.UpdateEmail(dto.EmailAddress);
+            }
+        }
+
         if (!string.IsNullOrEmpty(dto.WorkPermitNo))
             profile.UpdateWorkPermit(dto.WorkPermitNo, dto.WorkPermitValidDate, dto.WorkPermitExpireDate);
         

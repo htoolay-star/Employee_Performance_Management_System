@@ -84,6 +84,10 @@ public class DepartmentService : IDepartmentService
         if (department == null)
             return SuccessResponse.Fail(DeptMsg.NotFound(id), ErrorType.NotFound);
 
+        if (department.Name != dto.Name && await _uow.HR.Departments.ExistsByNameAsync(dto.Name, id))
+            return SuccessResponse.Fail(string.Format(DeptMsg.DuplicateName, dto.Name), ErrorType.Conflict);
+
+        department.Rename(dto.Name);
         department.SetDescription(dto.Description);
         department.SetDeptHead(dto.DeptHeadId);
         

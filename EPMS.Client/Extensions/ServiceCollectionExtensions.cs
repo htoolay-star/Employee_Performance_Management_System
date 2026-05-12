@@ -31,12 +31,21 @@ public static class ServiceCollectionExtensions
             ContentSerializer = new SystemTextJsonContentSerializer(jsonOptions)
         };
 
+        // Auth
         services.AddSecureRefitClient<IAuthApiClient>(refitSettings, baseUri);
+
+        // Hr
         services.AddSecureRefitClient<IPositionApiClient>(refitSettings, baseUri);
         services.AddSecureRefitClient<ILevelApiClient>(refitSettings, baseUri);
         services.AddSecureRefitClient<IDepartmentApiClient>(refitSettings, baseUri);
         services.AddSecureRefitClient<ITeamApiClient>(refitSettings, baseUri);
+
+        // Info
         services.AddSecureRefitClient<IEmployeeProfileApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IEmployeeEmploymentApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IEmployeeContactApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IEmployeeFamilyInfoApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IEmployeePayrollInfoApiClient>(refitSettings, baseUri);
 
         return services;
     }

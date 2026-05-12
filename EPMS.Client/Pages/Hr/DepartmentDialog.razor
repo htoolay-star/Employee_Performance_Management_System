@@ -29,6 +29,12 @@
                               For="@(() => _model.Name)"
                               Variant="Variant.Outlined" />
 
+                <MudTextField @bind-Value="_model.Description"
+                              Label="@UIConstants.Common.Description"
+                              For="@(() => _model.Description)"
+                              Variant="Variant.Outlined"
+                              Lines="3" />
+
                 @if (IsEdit)
                 {
                     <MudSwitch @bind-Value="_model.IsActive"

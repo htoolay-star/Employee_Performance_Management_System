@@ -15,6 +15,7 @@
 @inject ITeamApiClient TeamApiClient
 @inject IPositionApiClient PositionApiClient
 @inject ISnackbar Snackbar
+@inject NavigationManager Navigation
 
 <PageTitle>@UIConstants.Employee.PageTitle - EPMS</PageTitle>
 
@@ -101,6 +102,7 @@
 
                 <PropertyColumn Property="x => x.StaffNo" Title="@UIConstants.Employee.ColumnStaffNo" />
                 <PropertyColumn Property="x => x.StaffName" Title="@UIConstants.Employee.ColumnName" />
+                <PropertyColumn Property="x => x.EmailAddress" Title="Email" />
 
                 <PropertyColumn Property="x => x.DepartmentName" Title="@UIConstants.Employee.ColumnDepartment" />
                 <PropertyColumn Property="x => x.TeamName" Title="Team" />
@@ -122,6 +124,17 @@
                         <MudChip T="string" Color="@color" Size="Size.Small">
                             @(string.IsNullOrEmpty(status) ? EmploymentStatuses.Pending : status)
                         </MudChip>
+                    </CellTemplate>
+                </TemplateColumn>
+
+                <TemplateColumn Title="@UIConstants.Employee.ColumnActions" Sortable="false">
+                    <CellTemplate>
+                        <MudTooltip Text="View Details" Placement="Placement.Top">
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                           Color="Color.Info"
+                                           Size="Size.Small"
+                                           OnClick="@(() => NavigateToDetail(context.Item.Id))" />
+                        </MudTooltip>
                     </CellTemplate>
                 </TemplateColumn>
 
@@ -166,8 +179,7 @@
 
     private readonly Dictionary<string, string> _sortableColumns = new()
     {
-        { "RowIndex",  "No." },
-        { "StaffNo",   "Staff No" },
+        { "StaffNo", "Staff No" },
         { "StaffName", "Staff Name" }
     };
 
@@ -294,5 +306,10 @@
     {
         if (_dataGrid is not null)
             await _dataGrid.ReloadServerData();
+    }
+
+    private void NavigateToDetail(long id)
+    {
+        Navigation.NavigateTo($"/hr/employees/{id}");
     }
 }

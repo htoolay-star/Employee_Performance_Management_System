@@ -10,7 +10,6 @@ namespace EPMS.Api.Controllers.Info;
 
 [Route("api/employee-contacts")]
 [ApiController]
-[Authorize(Roles = RoleConstants.Admin)]
 public class EmployeeContactsController : ApiControllerBase
 {
     private readonly IEmployeeContactService _contactService;

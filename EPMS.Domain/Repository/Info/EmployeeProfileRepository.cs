@@ -23,6 +23,14 @@ namespace EPMS.Domain.Repository.Info
         public async Task<EmployeeProfile?> GetByUserIdAsync(long userId) =>
             await _dbSet.FirstOrDefaultAsync(p => p.UserId == userId);
 
+        public async Task<bool> ExistsByEmailAsync(string email, long? excludeId = null)
+        {
+            var query = _dbSet.Where(p => p.EmailAddress == email);
+            if (excludeId.HasValue)
+                query = query.Where(p => p.Id != excludeId.Value);
+            return await query.AnyAsync();
+        }
+
         public async Task<IEnumerable<EmployeeLookupDto>> GetLookupDtoAsync()
         {
             return await _dbSet
@@ -47,7 +55,8 @@ namespace EPMS.Domain.Repository.Info
 
                 query = query.Where(p =>
                     p.StaffNo.Contains(searchTerm) ||
-                    p.StaffName.Contains(searchTerm));
+                    p.StaffName.Contains(searchTerm) ||
+                    (p.EmailAddress != null && p.EmailAddress.Contains(searchTerm)));
             }
 
             if (parameters.DepartmentId.HasValue)

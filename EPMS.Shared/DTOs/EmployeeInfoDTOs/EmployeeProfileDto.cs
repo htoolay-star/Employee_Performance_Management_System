@@ -16,6 +16,7 @@ public record EmployeeProfileDto
     public string? BirthPlace { get; init; }
     public string? PassportNo { get; init; }
     public string? LabourRegistrationNo { get; init; }
+    public string EmailAddress { get; init; } = string.Empty;
     public DateOnly? DateOfBirth { get; init; }
     public DateOnly? PassportExpireDate { get; init; }
     public string? WorkPermitNo { get; init; }

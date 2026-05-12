@@ -12,7 +12,7 @@ namespace EPMS.Domain.Entities.EmployeeInfo
     {
         private EmployeeProfile() { }
 
-        public EmployeeProfile(long? userId, string staffNo, string staffName)
+        public EmployeeProfile(long? userId, string staffNo, string staffName, string email)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(staffNo);
             ArgumentException.ThrowIfNullOrWhiteSpace(staffName);
@@ -20,6 +20,7 @@ namespace EPMS.Domain.Entities.EmployeeInfo
             UserId = userId;
             StaffNo = staffNo.Trim().ToUpperInvariant();
             StaffName = staffName.Trim();
+            EmailAddress = email.Trim();
         }
 
         public long? UserId { get; private set; }
@@ -37,6 +38,7 @@ namespace EPMS.Domain.Entities.EmployeeInfo
         public string? BirthPlace { get; private set; }
         public string? PassportNo { get; private set; }
         public string? LabourRegistrationNo { get; private set; }
+        public string EmailAddress { get; private set; } = string.Empty;
 
         public DateOnly? DateOfBirth { get; private set; }
         public DateOnly? PassportExpireDate { get; private set; }
@@ -88,6 +90,11 @@ namespace EPMS.Domain.Entities.EmployeeInfo
             WorkPermitNo = permitNo?.Trim().ToUpperInvariant();
             WorkPermitValidDate = validDate;
             WorkPermitExpireDate = expireDate;
+        }
+
+        public void UpdateEmail(string email)
+        {
+            EmailAddress = email.Trim();
         }
 
         public void UpdateProfilePicture(string? url, string? thumbnailUrl)

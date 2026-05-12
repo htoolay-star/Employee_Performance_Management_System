@@ -37,13 +37,6 @@ public class UpdateEmployeeContactValidator : AbstractValidator<UpdateEmployeeCo
             .When(x => !string.IsNullOrEmpty(x.PresentPhoneNo))
             .WithMessage(EmployeeInfoValidationMessages.EmployeeContact.PhoneNumberInvalid);
 
-        RuleFor(x => x.EmailAddress)
-            .MaximumLength(100)
-            .WithMessage(EmployeeInfoValidationMessages.EmployeeContact.EmailAddressMaxLength)
-            .EmailAddress()
-            .When(x => !string.IsNullOrEmpty(x.EmailAddress))
-            .WithMessage(EmployeeInfoValidationMessages.EmployeeContact.EmailAddressInvalid);
-
         RuleFor(x => x.InternalPhoneNo)
             .MaximumLength(20)
             .WithMessage(EmployeeInfoValidationMessages.EmployeeContact.InternalPhoneNoMaxLength);
