@@ -3,7 +3,7 @@ using EPMS.Shared.DTOs.TeamDTOs;
 using EPMS.Shared.Features.Teams;
 using Refit;
 
-namespace EPMS.Client.Services;
+namespace EPMS.Client.Services.Hr;
 
 public interface ITeamApiClient
 {

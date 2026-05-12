@@ -11,7 +11,7 @@ public record EmployeeEmploymentDto
     public long? TeamId { get; init; }
     public string? TeamName { get; init; }
     public long PositionId { get; init; }
-    public string PositionTitle { get; init; } = string.Empty;
+    public string PositionName { get; init; } = string.Empty;
     public long? DirectManagerId { get; init; }
     public string? DirectManagerName { get; init; }
     public string EmploymentStatus { get; init; } = string.Empty;

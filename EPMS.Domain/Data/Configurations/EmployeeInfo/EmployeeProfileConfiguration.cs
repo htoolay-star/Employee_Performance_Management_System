@@ -30,8 +30,7 @@ namespace EPMS.Domain.Data.Configurations.EmployeeInfo
             entity.HasIndex(e => e.StaffNo).IsUnique().HasFilter("[IsDeleted] = 0");
             entity.Property(e => e.StaffNo).HasMaxLength(50).IsRequired();
 
-            entity.Property(e => e.FirstName).HasMaxLength(100).IsRequired();
-            entity.Property(e => e.LastName).HasMaxLength(100);
+            entity.Property(e => e.StaffName).HasMaxLength(100).IsRequired();
             entity.Property(e => e.OtherName).HasMaxLength(100);
 
             entity.Property(e => e.NRCNo).HasMaxLength(50);

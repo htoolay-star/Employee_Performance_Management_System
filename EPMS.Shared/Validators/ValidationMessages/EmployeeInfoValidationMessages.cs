@@ -6,10 +6,8 @@ public static class EmployeeInfoValidationMessages
     {
         public const string StaffNoRequired = "Staff number is required.";
         public const string StaffNoMaxLength = "Staff number cannot exceed 20 characters.";
-        public const string FirstNameRequired = "First name is required.";
-        public const string FirstNameMaxLength = "First name cannot exceed 100 characters.";
-        public const string LastNameRequired = "Last name is required.";
-        public const string LastNameMaxLength = "Last name cannot exceed 100 characters.";
+        public const string StaffNameRequired = "Staff name is required.";
+        public const string StaffNameMaxLength = "Staff name cannot exceed 100 characters.";
         public const string OtherNameMaxLength = "Other name cannot exceed 100 characters.";
         public const string NRCMaxLength = "NRC number cannot exceed 50 characters.";
         public const string GenderInvalid = "Gender must be Male, Female, or Other.";

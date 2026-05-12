@@ -11,13 +11,9 @@ public class CreateEmployeeProfileValidator : AbstractValidator<CreateEmployeePr
         RuleFor(x => x.StaffNo)
             .ApplyStaffNoRules();
 
-        RuleFor(x => x.FirstName)
+        RuleFor(x => x.StaffName)
             .ApplyPersonNameRules()
-            .WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.FirstNameRequired);
-
-        RuleFor(x => x.LastName)
-            .ApplyPersonNameRules()
-            .WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.LastNameRequired);
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.StaffNameRequired);
 
         RuleFor(x => x.OtherName)
             .ApplyOptionalPersonNameRules()

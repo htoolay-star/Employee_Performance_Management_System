@@ -452,4 +452,12 @@ public static class PIPObjectiveMsg
         public static string NotFound(long id) => $"Evaluation response with ID '{id}' was not found.";
         public static string NotFoundByAppraisal(long appraisalId) => $"Evaluation response for appraisal with ID '{appraisalId}' was not found.";
     }
+
+    public static class ExcelMsg
+    {
+        public const string Exported = "Data exported successfully.";
+        public const string Imported = "Data imported successfully.";
+        public static string ExportFailed(string reason) => $"Export failed: {reason}";
+        public static string ImportFailed(string reason) => $"Import failed: {reason}";
+    }
 }

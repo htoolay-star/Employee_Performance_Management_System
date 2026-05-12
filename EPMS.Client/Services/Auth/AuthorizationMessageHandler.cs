@@ -5,7 +5,7 @@ using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace EPMS.Client.Services
+namespace EPMS.Client.Services.Auth
 {
     public class AuthorizationMessageHandler : DelegatingHandler
     {

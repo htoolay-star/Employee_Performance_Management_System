@@ -9,7 +9,7 @@
      the current page from the server (no full list reload).
    ═══════════════════════════════════════════════════════════════════════════ *@
 @using EPMS.Client.Constants
-@using EPMS.Client.Services
+@using EPMS.Client.Services.Hr
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.LevelDTOs
 @using EPMS.Shared.DTOs.PositionDTOs
@@ -66,12 +66,6 @@
                 @UIConstants.Position.AddButton
             </MudButton>
         </MudStack>
-
-        @* {{!-- ── Inline loading bar (sits above the grid during server calls) --}} *@
-        @if (_isLoading)
-        {
-            <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="mb-n2" />
-        }
 
         @* {{!-- ── Data Grid (server-side paging/sorting) ───────────────────── --}} *@
         <MudDataGrid @ref="_dataGrid"
@@ -198,6 +192,7 @@
         GridState<PositionGridItemDto> state)
     {
         _isLoading = true;
+        StateHasChanged();
         try
         {
             var query = new PositionQueryParameters
@@ -233,6 +228,7 @@
         finally
         {
             _isLoading = false;
+            StateHasChanged();
         }
 
         return new GridData<PositionGridItemDto> { Items = [], TotalItems = 0 };

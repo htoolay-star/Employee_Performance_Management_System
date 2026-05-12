@@ -91,8 +91,7 @@ namespace EPMS.Domain.Data.Seeding
                 var adminProfile = new EmployeeProfile(
                     userId: adminUser.Id,
                     staffNo: "SYS-001",
-                    firstName: "System",
-                    lastName: "Administrator"
+                    staffName: "System Administrator"
                     );
 
                 _uow.Info.EmployeeProfiles.Add(adminProfile);

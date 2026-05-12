@@ -6,7 +6,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
 
-namespace EPMS.Client.Services
+namespace EPMS.Client.Services.Auth
 {
     public class JwtAuthenticationStateProvider : AuthenticationStateProvider
     {

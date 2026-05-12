@@ -12,22 +12,20 @@ namespace EPMS.Domain.Entities.EmployeeInfo
     {
         private EmployeeProfile() { }
 
-        public EmployeeProfile(long? userId, string staffNo, string firstName, string? lastName)
+        public EmployeeProfile(long? userId, string staffNo, string staffName)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(staffNo);
-            ArgumentException.ThrowIfNullOrWhiteSpace(firstName);
+            ArgumentException.ThrowIfNullOrWhiteSpace(staffName);
 
             UserId = userId;
             StaffNo = staffNo.Trim().ToUpperInvariant();
-            FirstName = firstName.Trim();
-            LastName = lastName?.Trim();
+            StaffName = staffName.Trim();
         }
 
         public long? UserId { get; private set; }
 
         public string StaffNo { get; private set; } = string.Empty;
-        public string FirstName { get; private set; } = string.Empty;
-        public string? LastName { get; private set; }
+        public string StaffName { get; private set; } = string.Empty;
         public string? OtherName { get; private set; }
 
         public string? NRCNo { get; private set; }
@@ -72,6 +70,12 @@ namespace EPMS.Domain.Entities.EmployeeInfo
         public void UpdateOtherName(string? otherName)
         {
             OtherName = otherName?.Trim();
+        }
+
+        public void UpdateStaffName(string staffName)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(staffName);
+            StaffName = staffName.Trim();
         }
 
         public void UpdateNRCNo(string? nrcNo)

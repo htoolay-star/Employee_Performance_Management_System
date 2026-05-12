@@ -6,8 +6,7 @@ public record EmployeeProfileDto
     public Guid PublicId { get; init; }
     public long? UserId { get; init; }
     public string StaffNo { get; init; } = string.Empty;
-    public string FirstName { get; init; } = string.Empty;
-    public string? LastName { get; init; }
+    public string StaffName { get; init; } = string.Empty;
     public string? OtherName { get; init; }
     public string? NRCNo { get; init; }
     public string? Gender { get; init; }

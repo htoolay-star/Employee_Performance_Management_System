@@ -8,7 +8,7 @@
    - After every CUD operation, re-calls LoadAllAsync() to refresh the list.
    ═══════════════════════════════════════════════════════════════════════════ *@
 @using EPMS.Client.Constants
-@using EPMS.Client.Services
+@using EPMS.Client.Services.Hr
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.LevelDTOs
 @using MudBlazor
@@ -195,6 +195,7 @@
     private async Task LoadLevelsAsync()
     {
         _loading = true;
+        StateHasChanged();
         try
         {
             var response = await LevelApiClient.GetAllAsync();
@@ -219,6 +220,7 @@
         finally
         {
             _loading = false;
+            StateHasChanged();
         }
     }
 

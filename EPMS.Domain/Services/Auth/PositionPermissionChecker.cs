@@ -17,10 +17,7 @@ public class PositionPermissionChecker : IPositionPermissionChecker
         if (positionId <= 0) return false;
         if (string.IsNullOrWhiteSpace(permissionCode)) return false;
 
-        var normalizedCode = permissionCode.Trim().ToUpperInvariant();
-
-        var permissions = await _uow.Auth.Permissions.GetAllAsync();
-        var permission = permissions.FirstOrDefault(p => p.Code == normalizedCode && p.IsActive && !p.IsDeleted);
+        var permission = await _uow.Auth.Permissions.GetByCodeAsync(permissionCode);
 
         if (permission == null) return false;
 

@@ -2,7 +2,7 @@ using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.DepartmentDTOs;
 using Refit;
 
-namespace EPMS.Client.Services;
+namespace EPMS.Client.Services.Hr;
 
 public interface IDepartmentApiClient
 {

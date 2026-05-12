@@ -1,7 +1,7 @@
 using Blazored.LocalStorage;
 using System.Threading.Tasks;
 
-namespace EPMS.Client.Services
+namespace EPMS.Client.Services.Auth
 {
     public class TokenStorage
     {

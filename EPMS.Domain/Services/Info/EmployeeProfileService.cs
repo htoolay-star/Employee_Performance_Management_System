@@ -46,38 +46,6 @@ public class EmployeeProfileService : IEmployeeProfileService
         return SuccessResponse<EmployeeProfileDto>.Ok(dto, EmployeeProfileMsg.Retrieved);
     }
 
-    public async Task<SuccessResponse<EmployeeProfileDetailDto>> GetFullProfileAsync(long id)
-    {
-        var positionId = await _currentEmployee.GetPositionIdAsync();
-        if (!positionId.HasValue)
-            return SuccessResponse<EmployeeProfileDetailDto>.Fail("User position is required.", ErrorType.Forbidden);
-
-        var canView = await _permissionChecker.HasPermissionAsync(positionId.Value, PermissionCodes.InfoEmployeeFullProfileView);
-        if (!canView)
-            return SuccessResponse<EmployeeProfileDetailDto>.Fail("Permission denied.", ErrorType.Forbidden);
-
-        var profile = await _uow.Info.EmployeeProfiles.GetByIdAsync(id);
-
-        if (profile == null)
-            return SuccessResponse<EmployeeProfileDetailDto>.Fail(EmployeeProfileMsg.NotFound(id), ErrorType.NotFound);
-
-        var dto = profile.Adapt<EmployeeProfileDetailDto>();
-
-        var employment = await _uow.Info.EmployeeEmployments.GetByEmployeeIdAsync(id);
-        dto = dto with { Employment = employment?.Adapt<EmployeeEmploymentDto>() };
-
-        var contact = await _uow.Info.EmployeeContacts.GetByEmployeeIdAsync(id);
-        dto = dto with { Contact = contact?.Adapt<EmployeeContactDto>() };
-
-        var payroll = await _uow.Info.EmployeePayrollInfos.GetByEmployeeIdAsync(id);
-        dto = dto with { PayrollInfo = payroll?.Adapt<EmployeePayrollInfoDto>() };
-
-        var family = await _uow.Info.EmployeeFamilyInfos.GetByEmployeeIdAsync(id);
-        dto = dto with { FamilyInfo = family.FirstOrDefault()?.Adapt<EmployeeFamilyInfoDto>() };
-
-        return SuccessResponse<EmployeeProfileDetailDto>.Ok(dto, EmployeeProfileMsg.Retrieved);
-    }
-
     public async Task<SuccessResponse<long>> CreateAsync(CreateEmployeeProfileDto dto)
     {
         // Check for duplicate StaffNo
@@ -93,7 +61,7 @@ public class EmployeeProfileService : IEmployeeProfileService
                 return SuccessResponse<long>.Fail(string.Format(EmployeeProfileMsg.DuplicateUserId, dto.UserId.Value), ErrorType.Conflict);
         }
 
-        var profile = new EmployeeProfile(dto.UserId, dto.StaffNo, dto.FirstName, dto.LastName);
+        var profile = new EmployeeProfile(dto.UserId, dto.StaffNo, dto.StaffName);
         
         // Set additional properties using entity methods
         if (!string.IsNullOrEmpty(dto.OtherName)) profile.UpdateOtherName(dto.OtherName);
@@ -113,6 +81,9 @@ public class EmployeeProfileService : IEmployeeProfileService
         if (profile == null)
             return SuccessResponse.Fail(EmployeeProfileMsg.NotFound(id), ErrorType.NotFound);
 
+        profile.UpdateStaffName(dto.StaffName);
+        if (dto.OtherName != null) profile.UpdateOtherName(dto.OtherName);
+        
         profile.UpdateDemographics(dto.Gender, dto.DateOfBirth, dto.Nationality);
         
         if (!string.IsNullOrEmpty(dto.WorkPermitNo))
@@ -161,5 +132,40 @@ public class EmployeeProfileService : IEmployeeProfileService
 
         var dto = profile.Adapt<EmployeeProfileDto>();
         return SuccessResponse<EmployeeProfileDto>.Ok(dto, EmployeeProfileMsg.Retrieved);
+    }
+
+    public async Task<SuccessResponse<IEnumerable<EmployeeLookupDto>>> GetLookupAsync()
+    {
+        var dtos = await _uow.Info.EmployeeProfiles.GetLookupDtoAsync();
+        return SuccessResponse<IEnumerable<EmployeeLookupDto>>.Ok(dtos, EmployeeProfileMsg.RetrievedAll);
+    }
+
+    public async Task<SuccessResponse<PaginatedResponse<EmployeeProfileGridItemDto>>> GetPagedAsync(EPMS.Shared.Features.EmployeeProfiles.EmployeeProfileQueryParameters parameters)
+    {
+        var entitySortColumn = GetMappedSortColumn(parameters.OrderBy);
+        var (dtos, totalCount) = await _uow.Info.EmployeeProfiles.GetPagedDtoAsync(parameters, entitySortColumn);
+
+        var response = new PaginatedResponse<EmployeeProfileGridItemDto>
+        {
+            Items = dtos.ToList(),
+            TotalCount = totalCount,
+            PageNumber = parameters.PageNumber,
+            PageSize = parameters.PageSize
+        };
+
+        return SuccessResponse<PaginatedResponse<EmployeeProfileGridItemDto>>.Ok(response, EmployeeProfileMsg.RetrievedAll);
+    }
+
+    private static string GetMappedSortColumn(string? orderBy)
+    {
+        if (string.IsNullOrWhiteSpace(orderBy)) return "StaffName";
+
+        var columnMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            { "StaffName", "StaffName" },
+            { "StaffNo", "StaffNo" }
+        };
+
+        return columnMap.TryGetValue(orderBy, out var mappedColumn) ? mappedColumn : "StaffName";
     }
 }

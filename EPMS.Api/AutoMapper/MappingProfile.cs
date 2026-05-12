@@ -49,8 +49,8 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.DepartmentName, opt => opt.MapFrom(src => src.Department.Name))
             .ForMember(dest => dest.ParentDepartmentName, opt => opt.MapFrom(src => src.ParentDepartment.Name))
             .ForMember(dest => dest.TeamName, opt => opt.MapFrom(src => src.Team != null ? src.Team.Name : null))
-            .ForMember(dest => dest.PositionTitle, opt => opt.MapFrom(src => src.Position.Name))
-            .ForMember(dest => dest.DirectManagerName, opt => opt.MapFrom(src => src.DirectManager != null ? src.DirectManager.FirstName + " " + src.DirectManager.LastName : null));
+            .ForMember(dest => dest.PositionName, opt => opt.MapFrom(src => src.Position.Name))
+            .ForMember(dest => dest.DirectManagerName, opt => opt.MapFrom(src => src.DirectManager != null ? src.DirectManager.StaffName : null));
 
         CreateMap<EmployeeContact, EmployeeContactDto>();
         CreateMap<EmployeeFamilyInfo, EmployeeFamilyInfoDto>();
@@ -60,16 +60,16 @@ public class MappingProfile : Profile
         CreateMap<EmployeeEmploymentHistory, EmployeeEmploymentHistoryDto>()
             .ForMember(dest => dest.DepartmentName, opt => opt.MapFrom(src => src.Department.Name))
             .ForMember(dest => dest.PositionTitle, opt => opt.MapFrom(src => src.Position.Name))
-            .ForMember(dest => dest.ManagerName, opt => opt.MapFrom(src => src.Manager != null ? src.Manager.FirstName + " " + src.Manager.LastName : null))
+            .ForMember(dest => dest.ManagerName, opt => opt.MapFrom(src => src.Manager != null ? src.Manager.StaffName : null))
             .ForMember(dest => dest.ChangedByName, opt => opt.MapFrom(src =>
                 src.ChangedBy != null && src.ChangedBy.Profile != null
-                ? $"{src.ChangedBy.Profile.FirstName} {src.ChangedBy.Profile.LastName}"
+                ? src.ChangedBy.Profile.StaffName
                 : "System"));
 
         CreateMap<EmployeeSalaryHistory, EmployeeSalaryHistoryDto>()
             .ForMember(dest => dest.ApprovedByName, opt => opt.MapFrom(src =>
                 src.ApprovedBy != null && src.ApprovedBy.Profile != null
-                ? $"{src.ApprovedBy.Profile.FirstName} {src.ApprovedBy.Profile.LastName}"
+                ? src.ApprovedBy.Profile.StaffName
                 : "System"));
 
         // Performance Entities
@@ -80,8 +80,8 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category != null ? src.Category.Name : string.Empty));
 
         CreateMap<PIP, PIPDto>()
-            .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => src.Employee != null ? $"{src.Employee.FirstName} {src.Employee.LastName}" : string.Empty))
-            .ForMember(dest => dest.ManagerName, opt => opt.MapFrom(src => src.Manager != null ? $"{src.Manager.FirstName} {src.Manager.LastName}" : string.Empty));
+            .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => src.Employee != null ? src.Employee.StaffName : string.Empty))
+            .ForMember(dest => dest.ManagerName, opt => opt.MapFrom(src => src.Manager != null ? src.Manager.StaffName : string.Empty));
 
         CreateMap<FormTemplate, FormTemplateDto>();
 
@@ -91,12 +91,12 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags.Select(t => t.Name).ToList()));
 
         CreateMap<ContinuousFeedback, ContinuousFeedbackDto>()
-            .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => src.Employee != null ? $"{src.Employee.FirstName} {src.Employee.LastName}" : string.Empty))
-            .ForMember(dest => dest.GivenByName, opt => opt.MapFrom(src => src.GivenBy != null ? $"{src.GivenBy.FirstName} {src.GivenBy.LastName}" : string.Empty));
+            .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => src.Employee != null ? src.Employee.StaffName : string.Empty))
+            .ForMember(dest => dest.GivenByName, opt => opt.MapFrom(src => src.GivenBy != null ? src.GivenBy.StaffName : string.Empty));
 
         CreateMap<OneOnOneMeeting, OneOnOneMeetingDto>()
-            .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => src.Employee != null ? $"{src.Employee.FirstName} {src.Employee.LastName}" : string.Empty))
-            .ForMember(dest => dest.ManagerName, opt => opt.MapFrom(src => src.Manager != null ? $"{src.Manager.FirstName} {src.Manager.LastName}" : string.Empty));
+            .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => src.Employee != null ? src.Employee.StaffName : string.Empty))
+            .ForMember(dest => dest.ManagerName, opt => opt.MapFrom(src => src.Manager != null ? src.Manager.StaffName : string.Empty));
 
         CreateMap<PositionKPI, PositionKPIDto>()
             .ForMember(dest => dest.KPIName, opt => opt.MapFrom(src => src.KPI != null ? src.KPI.Name : string.Empty))
@@ -111,10 +111,10 @@ public class MappingProfile : Profile
         // Form DTOs - Appraisal Mappings
         CreateMap<Appraisal, AppraisalDto>()
             .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => 
-                src.Employee != null ? $"{src.Employee.FirstName} {src.Employee.LastName}" : null))
+                src.Employee != null ? src.Employee.StaffName : null))
             .ForMember(dest => dest.CycleName, opt => opt.MapFrom(src => src.Cycle != null ? src.Cycle.Name : null))
             .ForMember(dest => dest.AppraiserName, opt => opt.MapFrom(src => 
-                src.Appraiser != null ? $"{src.Appraiser.FirstName} {src.Appraiser.LastName}" : null));
+                src.Appraiser != null ? src.Appraiser.StaffName : null));
 
         CreateMap<AppraisalSubmissionDto, Appraisal>()
             .ForMember(dest => dest.AppraiserId, opt => opt.MapFrom(src => src.EvaluatorId))
@@ -128,17 +128,17 @@ public class MappingProfile : Profile
         // Form DTOs - AppraisalRecommendation Mappings
         CreateMap<AppraisalRecommendation, AppraisalRecommendationDto>()
             .ForMember(dest => dest.AppraisalEmployeeName, opt => opt.MapFrom(src => 
-                src.Appraisal != null && src.Appraisal.Employee != null ? $"{src.Appraisal.Employee.FirstName} {src.Appraisal.Employee.LastName}" : null))
+                src.Appraisal != null && src.Appraisal.Employee != null ? src.Appraisal.Employee.StaffName : null))
             .ForMember(dest => dest.ProcessedByName, opt => opt.MapFrom(src => 
-                src.ProcessedBy != null ? $"{src.ProcessedBy.FirstName} {src.ProcessedBy.LastName}" : null));
+                src.ProcessedBy != null ? src.ProcessedBy.StaffName : null));
 
         // Form DTOs - EvaluationResponse Mappings
         CreateMap<EvaluationResponse, EvaluationResponseDto>()
             .ForMember(dest => dest.AppraisalEmployeeName, opt => opt.MapFrom(src => 
-                src.Appraisal != null && src.Appraisal.Employee != null ? $"{src.Appraisal.Employee.FirstName} {src.Appraisal.Employee.LastName}" : null))
+                src.Appraisal != null && src.Appraisal.Employee != null ? src.Appraisal.Employee.StaffName : null))
             .ForMember(dest => dest.TemplateName, opt => opt.MapFrom(src => src.Template != null ? src.Template.Name : null))
             .ForMember(dest => dest.QuestionText, opt => opt.MapFrom(src => src.Question != null ? src.Question.QuestionText : null))
             .ForMember(dest => dest.EvaluatorName, opt => opt.MapFrom(src => 
-                src.Evaluator != null ? $"{src.Evaluator.FirstName} {src.Evaluator.LastName}" : null));
+                src.Evaluator != null ? src.Evaluator.StaffName : null));
     }
 }

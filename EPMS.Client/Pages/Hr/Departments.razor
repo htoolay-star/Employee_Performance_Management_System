@@ -8,7 +8,7 @@
    - Click on blue Department name → opens full page side drawer with teams.
    ═══════════════════════════════════════════════════════════════════════════ *@
 @using EPMS.Client.Constants
-@using EPMS.Client.Services
+@using EPMS.Client.Services.Hr
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.DepartmentDTOs
 @using EPMS.Shared.DTOs.TeamDTOs
@@ -183,11 +183,7 @@
                 </MudStack>
             </MudStack>
 
-            @if (_drawerLoading)
-            {
-                <MudProgressLinear Indeterminate="true" />
-            }
-            else if (_teamsInDepartment.Count == 0)
+            if (_teamsInDepartment.Count == 0)
             {
                 <MudText Color="Color.Secondary">No teams in this department.</MudText>
             }
@@ -315,6 +311,7 @@
     private async Task LoadDepartmentsAsync()
     {
         _loading = true;
+        StateHasChanged();
         try
         {
             var response = await DepartmentApiClient.GetAllAsync();
@@ -340,6 +337,7 @@
         finally
         {
             _loading = false;
+            StateHasChanged();
         }
     }
 

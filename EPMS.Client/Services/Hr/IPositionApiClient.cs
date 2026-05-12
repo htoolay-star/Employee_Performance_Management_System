@@ -3,7 +3,7 @@ using EPMS.Shared.DTOs.PositionDTOs;
 using EPMS.Shared.Features.Positions;
 using Refit;
 
-namespace EPMS.Client.Services;
+namespace EPMS.Client.Services.Hr;
 
 public interface IPositionApiClient
 {

@@ -8,6 +8,10 @@ public class UpdateEmployeeProfileValidator : AbstractValidator<UpdateEmployeePr
 {
     public UpdateEmployeeProfileValidator()
     {
+        RuleFor(x => x.StaffName)
+            .MaximumLength(100)
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.StaffNameMaxLength);
+
         RuleFor(x => x.OtherName)
             .MaximumLength(100)
             .WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.OtherNameMaxLength);
