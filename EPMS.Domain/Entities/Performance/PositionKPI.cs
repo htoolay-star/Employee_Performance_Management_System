@@ -41,5 +41,7 @@ namespace EPMS.Domain.Entities.Performance
         public virtual Position Position { get; private set; } = null!;
         public virtual KPIMaster KPI { get; private set; } = null!;
         public virtual KPIWeightPriority Priority { get; private set; } = null!;
+        public bool IsDeleted { get; internal set; }
+        public long Id { get; internal set; }
     }
 }

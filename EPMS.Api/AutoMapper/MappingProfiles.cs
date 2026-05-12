@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
 using EPMS.Domain.Common;
+using EPMS.Domain.Entities.Performance;
 using EPMS.Domain.Entities.PerformanceReview;
 using EPMS.Shared.DTOs;
+using EPMS.Shared.DTOs.KPI;
 
 namespace EPMS.Api.AutoMapper
 {
@@ -9,6 +11,22 @@ namespace EPMS.Api.AutoMapper
     {
         public MappingProfiles() 
         {
+            // KPI Profile
+
+            CreateMap<KPIMaster, KPIMasterDto>();
+
+            CreateMap<CreateKPIMasterDto, KPIMaster>();
+
+            CreateMap<PositionKPI, PositionKPIDto>()
+                .ForMember(
+                    dest => dest.KPIName,
+                    opt => opt.MapFrom(src => src.KPI.Name))
+                .ForMember(
+                    dest => dest.PriorityName,
+                    opt => opt.MapFrom(src => src.Priority.LevelName));
+
+            CreateMap<EmployeeKPIResult, EmployeeKPIResultDto>();
+
             // Entity → DTO
             CreateMap<PerformanceReview, PerformanceReviewDto>();
 

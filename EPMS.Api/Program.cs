@@ -1,3 +1,4 @@
+using EPMS.Api.Services.Implementations;
 using EPMS.Api.Services.Interfaces;
 using EPMS.Domain.Data;
 using EPMS.Domain.Data.Interceptors;
@@ -18,8 +19,22 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 // Repositories
 builder.Services.AddScoped<IPerformanceReviewRepository, PerformanceReviewRepository>();
 
+builder.Services.AddScoped<IKPIMasterRepository, KPIMasterRepository>();
+
+builder.Services.AddScoped<IPositionKPIRepository, PositionKPIRepository>();
+
+builder.Services.AddScoped<IEmployeeKPIResultRepository, EmployeeKPIResultRepository>();
+
 // Services
 builder.Services.AddScoped<IPerformanceReviewService, PerformanceReviewService>();
+
+builder.Services.AddScoped<IKPIService, KPIService>();
+
+builder.Services.AddScoped<IEmployeeKPIService, EmployeeKPIService>();
+
+
+
+//
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 

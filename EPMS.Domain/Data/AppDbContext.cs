@@ -42,12 +42,23 @@ namespace EPMS.Domain.Data
         public DbSet<Tag> Tags => Set<Tag>();
 
         // Performance Schema
-        public DbSet<KPIMaster> KPIMasters => Set<KPIMaster>();
-        public DbSet<PositionKPI> PositionKPIs => Set<PositionKPI>();
-        public DbSet<KPIWeightPriority> KPIWeightPriorities => Set<KPIWeightPriority>();
         public DbSet<AppraisalCycle> AppraisalCycles => Set<AppraisalCycle>();
         public DbSet<Appraisal> Appraisals => Set<Appraisal>();
         public DbSet<AppraisalDetail> AppraisalDetails => Set<AppraisalDetail>();
+
+        // KPI Performance
+        public DbSet<KPIMaster> KPIMasters => Set<KPIMaster>();
+
+        public DbSet<KPIWeightPriority> KPIWeightPriorities => Set<KPIWeightPriority>();
+
+        public DbSet<PositionKPI> PositionKPIs => Set<PositionKPI>();
+
+        public DbSet<PositionKPIHistory> PositionKPIHistories => Set<PositionKPIHistory>();
+
+        public DbSet<EmployeeKPIResult> EmployeeKPIResults => Set<EmployeeKPIResult>();
+
+        public DbSet<PerformanceCycle> PerformanceCycles => Set<PerformanceCycle>();
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
