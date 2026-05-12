@@ -6,7 +6,7 @@
 @using EPMS.Client.Constants
 @using EPMS.Client.Extensions
 @using EPMS.Client.Models.Hr
-@using EPMS.Client.Services
+@using EPMS.Client.Services.Hr
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.LevelDTOs
 @using EPMS.Shared.DTOs.PositionDTOs
@@ -43,29 +43,46 @@
                               Lines="3" />
 
                 @* {{!-- Level select: shows a spinner while levels are loading --}} *@
-                <MudSelect T="long?"
+                <MudAutocomplete T="long?"
                            @bind-Value="_model.LevelId"
                            Label="@UIConstants.Position.LevelLabel"
                            Placeholder="@UIConstants.Position.SelectLevelPlaceholder"
                            For="@(() => _model.LevelId)"
                            Variant="Variant.Outlined"
-                           Clearable="true">
-                    @foreach (var level in AvailableLevels)
+                           Clearable="true"
+                           Disabled="@_loadingLevels"
+                           SearchFunc="SearchLevels"
+                           ToStringFunc="GetLevelDisplay"
+                           ResetValueOnEmptyText="true"
+                           OpenIcon="@(_loadingLevels ? Icons.Material.Filled.HourglassEmpty : Icons.Material.Filled.ArrowDropDown)">
+                    @if (_loadingLevels)
                     {
-                        long? currentLevelId = level.Id;
-                        <MudSelectItem T="long?" Value="@currentLevelId">
-                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                                <MudText>@level.Code</MudText>
-                                @if (!level.IsActive)
-                                {
-                                    <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Text" Class="ml-auto">
-                                        Inactive
-                                    </MudChip>
-                                }
-                            </MudStack>
+                        <MudSelectItem T="long?" Value="null">
+                            <div class="d-flex align-center">
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                <MudText Typo="Typo.body2">@UIConstants.Common.Loading</MudText>
+                            </div>
                         </MudSelectItem>
                     }
-                </MudSelect>
+                    else
+                    {
+                        @foreach (var level in AvailableLevels)
+                        {
+                            long? currentLevelId = level.Id;
+                            <MudSelectItem T="long?" Value="@currentLevelId">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudText>@level.Code</MudText>
+                                    @if (!level.IsActive)
+                                    {
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Text" Class="ml-auto">
+                                            Inactive
+                                        </MudChip>
+                                    }
+                                </MudStack>
+                            </MudSelectItem>
+                        }
+                    }
+                </MudAutocomplete>
 
                 @* {{!-- IsActive toggle: only shown on Edit --}} *@
                 @if (IsEdit)
@@ -100,12 +117,20 @@
     /// <summary>Pass a PositionDto to open in Edit mode. Leave null for Create mode.</summary>
     [Parameter] public PositionDto? Position { get; set; }
 
+    /// <summary>
+    /// Levels prefetched by the parent page.
+    /// When provided (non-null, non-empty), the dialog skips its own level API call,
+    /// so it opens instantly. When null, the dialog fetches levels itself as fallback.
+    /// </summary>
+    [Parameter] public List<LookUpDto>? PreloadedLevels { get; set; }
+
     // ── Computed ──────────────────────────────────────────────────────────────
     private bool IsEdit => Position is not null;
 
     // ── State ─────────────────────────────────────────────────────────────────
     private MudForm? _form;
     private bool _saving;
+    private bool _loadingLevels = true;
     private List<LookUpDto> _levels = new();
 
     private IEnumerable<LookUpDto> AvailableLevels =>
@@ -124,7 +149,15 @@
         if (Position is not null)
             _model = Position.Adapt<PositionFormModel>();
 
-        await LoadLevelsAsync();
+        if (PreloadedLevels is { Count: > 0 })
+        {
+            _levels = PreloadedLevels;
+            _loadingLevels = false;
+        }
+        else
+        {
+            await LoadLevelsAsync();
+        }
 
         await base.OnInitializedAsync();
     }
@@ -147,7 +180,10 @@
         }
         finally
         {
-            StateHasChanged(); // Required: this runs outside the normal render cycle (fire-and-forget).
+            _loadingLevels = false;
+            await Task.Yield();
+            StateHasChanged();
+            await Task.Yield();
         }
     }
 
@@ -257,5 +293,27 @@
                _model.Description != Position.Description ||
                _model.LevelId != Position.LevelId ||
                _model.IsActive != Position.IsActive;
+    }
+
+    private async Task<IEnumerable<long?>> SearchLevels(string value, CancellationToken token)
+    {
+        await Task.Yield();
+
+        if (string.IsNullOrWhiteSpace(value))
+            return AvailableLevels.Select(x => (long?)x.Id).ToList();
+
+        return AvailableLevels
+            .Where(x => x.Code != null && x.Code.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Select(x => (long?)x.Id)
+            .ToList();
+    }
+
+    private string GetLevelDisplay(long? id)
+    {
+        if (id == null) return string.Empty;
+        var level = AvailableLevels.FirstOrDefault(x => x.Id == id);
+        if (level == null) return string.Empty;
+
+        return level.IsActive ? level.Code : $"{level.Code} (Inactive)";
     }
 }

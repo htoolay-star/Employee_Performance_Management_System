@@ -1,10 +1,10 @@
-using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Domain.Interface.IService.Info;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using EPMS.Shared.Enums;
+using Mapster;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 namespace EPMS.Domain.Services.Info;
@@ -12,18 +12,16 @@ namespace EPMS.Domain.Services.Info;
 public class EmployeeFamilyInfoService : IEmployeeFamilyInfoService
 {
     private readonly IUnitOfWork _uow;
-    private readonly IMapper _mapper;
 
-    public EmployeeFamilyInfoService(IUnitOfWork uow, IMapper mapper)
+    public EmployeeFamilyInfoService(IUnitOfWork uow)
     {
         _uow = uow;
-        _mapper = mapper;
     }
 
     public async Task<SuccessResponse<IEnumerable<EmployeeFamilyInfoDto>>> GetAllAsync()
     {
         var infos = await _uow.Info.EmployeeFamilyInfos.GetAllAsync();
-        var dtos = _mapper.Map<IEnumerable<EmployeeFamilyInfoDto>>(infos);
+        var dtos = infos.Adapt<IEnumerable<EmployeeFamilyInfoDto>>();
         return SuccessResponse<IEnumerable<EmployeeFamilyInfoDto>>.Ok(dtos, EmployeeFamilyInfoMsg.RetrievedAll);
     }
 
@@ -34,18 +32,22 @@ public class EmployeeFamilyInfoService : IEmployeeFamilyInfoService
         if (info == null)
             return SuccessResponse<EmployeeFamilyInfoDto>.Fail(EmployeeFamilyInfoMsg.NotFound(id), ErrorType.NotFound);
 
-        var dto = _mapper.Map<EmployeeFamilyInfoDto>(info);
+        var dto = info.Adapt<EmployeeFamilyInfoDto>();
         return SuccessResponse<EmployeeFamilyInfoDto>.Ok(dto, EmployeeFamilyInfoMsg.Retrieved);
     }
 
-    public async Task<SuccessResponse<EmployeeFamilyInfoDto>> GetByEmployeeIdAsync(long employeeId)
+    public async Task<SuccessResponse<EmployeeFamilyInfoDto>> GetByEmployeeIdAsync(Guid employeePublicId)
     {
-        var info = await _uow.Info.EmployeeFamilyInfos.GetByEmployeeIdAsync(employeeId);
+        var employee = await _uow.Info.EmployeeProfiles.GetByPublicIdAsync(employeePublicId);
+        if (employee == null)
+            return SuccessResponse<EmployeeFamilyInfoDto>.Fail(EmployeeProfileMsg.NotFound(employeePublicId), ErrorType.NotFound);
+
+        var info = await _uow.Info.EmployeeFamilyInfos.GetByEmployeeIdAsync(employee.Id);
 
         if (info == null)
-            return SuccessResponse<EmployeeFamilyInfoDto>.Fail($"Family info for employee ID '{employeeId}' was not found.", ErrorType.NotFound);
+            return SuccessResponse<EmployeeFamilyInfoDto>.Fail(EmployeeFamilyInfoMsg.NotFound(employeePublicId), ErrorType.NotFound);
 
-        var dto = _mapper.Map<EmployeeFamilyInfoDto>(info);
+        var dto = info.Adapt<EmployeeFamilyInfoDto>();
         return SuccessResponse<EmployeeFamilyInfoDto>.Ok(dto, EmployeeFamilyInfoMsg.Retrieved);
     }
 

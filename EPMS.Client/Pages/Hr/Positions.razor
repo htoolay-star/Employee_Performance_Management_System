@@ -9,7 +9,7 @@
      the current page from the server (no full list reload).
    ═══════════════════════════════════════════════════════════════════════════ *@
 @using EPMS.Client.Constants
-@using EPMS.Client.Services
+@using EPMS.Client.Services.Hr
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.LevelDTOs
 @using EPMS.Shared.DTOs.PositionDTOs
@@ -44,6 +44,23 @@
                           Variant="Variant.Outlined"
                           Style="max-width: 300px;" />
 
+            <MudAutocomplete T="long?"
+                       Value="@_levelFilter"
+                       ValueChanged="@OnLevelFilterChanged"
+                       Placeholder="All Levels"
+                       Clearable="true"
+                       Variant="Variant.Outlined"
+                       Style="max-width: 200px;"
+                       SearchFunc="SearchFilterLevels"
+                       ToStringFunc="GetFilterLevelDisplay"
+                       ResetValueOnEmptyText="true"
+                       OpenIcon="@Icons.Material.Filled.ArrowDropDown">
+                @foreach (var level in _levels)
+                {
+                    <MudSelectItem T="long?" Value="@level.Id">@level.Code</MudSelectItem>
+                }
+            </MudAutocomplete>
+
             <MudSelect T="bool"
                        Value="@_statusFilter"
                        ValueChanged="OnStatusFilterChanged"
@@ -66,12 +83,6 @@
                 @UIConstants.Position.AddButton
             </MudButton>
         </MudStack>
-
-        @* {{!-- ── Inline loading bar (sits above the grid during server calls) --}} *@
-        @if (_isLoading)
-        {
-            <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="mb-n2" />
-        }
 
         @* {{!-- ── Data Grid (server-side paging/sorting) ───────────────────── --}} *@
         <MudDataGrid @ref="_dataGrid"
@@ -167,6 +178,7 @@
     private MudDataGrid<PositionGridItemDto> _dataGrid = null!;
     private bool _isLoading = false;
     private bool _statusFilter = true;
+    private long? _levelFilter;
 
     // ── Search / sort state ───────────────────────────────────────────────────
     private string _searchString = string.Empty;
@@ -175,10 +187,13 @@
 
     private readonly Dictionary<string, string> _sortableColumns = new()
     {
-        { "Name",      "Name"   },
-        { "Code",      "Code"   },
-        { "LevelCode", "Level"  }
+        { "Name", "Name" },
+        { "Code", "Code" }
     };
+
+    // ── Prefetched dropdown data ───────────────────────────────────────────────
+    private List<LookUpDto>? _prefetchedLevels;
+    private List<LookUpDto> _levels = new();
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
@@ -188,8 +203,29 @@
         await RefreshDataAsync(); // DataGrid ကို Server ကနေ ပြန်ဆွဲခိုင်းမယ်
     }
 
+    private async Task OnLevelFilterChanged(long? value)
+    {
+        _levelFilter = value;
+        await RefreshDataAsync();
+    }
+
     protected override void OnInitialized()
     {
+        _ = PrefetchLevelsAsync();
+    }
+
+    private async Task PrefetchLevelsAsync()
+    {
+        try
+        {
+            var response = await LevelApiClient.GetLookupAsync();
+            if (response.Success && response.Data != null)
+            {
+                _prefetchedLevels = response.Data.ToList();
+                _levels = _prefetchedLevels;
+            }
+        }
+        catch (ApiException) { }
     }
 
     // ── Server data callback (called by MudDataGrid on every page/sort change) ─
@@ -198,6 +234,7 @@
         GridState<PositionGridItemDto> state)
     {
         _isLoading = true;
+        StateHasChanged();
         try
         {
             var query = new PositionQueryParameters
@@ -205,6 +242,7 @@
                 PageNumber = state.Page + 1,
                 PageSize = state.PageSize,
                 SearchTerm = string.IsNullOrWhiteSpace(_searchString) ? null : _searchString.Trim(),
+                LevelId = _levelFilter,
                 OrderBy = _sortBy,
                 SortDirection = _sortDirection,
                 IsActive = _statusFilter
@@ -233,6 +271,7 @@
         finally
         {
             _isLoading = false;
+            StateHasChanged();
         }
 
         return new GridData<PositionGridItemDto> { Items = [], TotalItems = 0 };
@@ -264,8 +303,13 @@
 
     private async Task OpenCreateDialog()
     {
+        var parameters = new DialogParameters<PositionDialog>
+        {
+            { x => x.PreloadedLevels, _prefetchedLevels }
+        };
+
         var dialog = await DialogService.ShowAsync<PositionDialog>(
-            UIConstants.Position.CreateDialogTitle, _formDialogOptions);
+            UIConstants.Position.CreateDialogTitle, parameters, _formDialogOptions);
 
         if (await dialog.Result is { Canceled: false })
         {
@@ -276,10 +320,10 @@
 
     private async Task OpenEditDialog(PositionGridItemDto item)
     {
-        // Map the grid row DTO to the full PositionDto expected by the dialog.
         var parameters = new DialogParameters<PositionDialog>
         {
-            { x => x.Position, item.Adapt<PositionDto>() }
+            { x => x.Position, item.Adapt<PositionDto>() },
+            { x => x.PreloadedLevels, _prefetchedLevels }
         };
 
         var dialog = await DialogService.ShowAsync<PositionDialog>(
@@ -332,5 +376,24 @@
         {
             Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
         }
+    }
+
+    private Task<IEnumerable<long?>> SearchFilterLevels(string value, CancellationToken token)
+    {
+        var query = _levels.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+        }
+
+        return Task.FromResult(query.Select(x => (long?)x.Id).AsEnumerable());
+    }
+
+    private string GetFilterLevelDisplay(long? id)
+    {
+        if (id == null) return string.Empty;
+        var level = _levels.FirstOrDefault(x => x.Id == id);
+        return level != null ? level.Code : string.Empty;
     }
 }

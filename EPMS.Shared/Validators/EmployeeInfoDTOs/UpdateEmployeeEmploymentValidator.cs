@@ -23,8 +23,7 @@ public class UpdateEmployeeEmploymentValidator : AbstractValidator<UpdateEmploye
             .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.DirectManagerIdInvalid);
 
         RuleFor(x => x.EmploymentStatus)
-            .MaximumLength(50)
-            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.EmploymentStatusMaxLength);
+            .ApplyEmploymentStatusRules();
 
         RuleFor(x => x.StaffType)
             .MaximumLength(50)

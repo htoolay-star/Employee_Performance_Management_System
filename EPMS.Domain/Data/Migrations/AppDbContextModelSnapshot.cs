@@ -569,10 +569,6 @@ namespace EPMS.Domain.Data.Migrations
                     b.Property<DateTimeOffset?>("DeletedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<string>("EmailAddress")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
                     b.Property<string>("EmergencyMobileNo")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
@@ -976,7 +972,7 @@ namespace EPMS.Domain.Data.Migrations
                     b.Property<DateTimeOffset?>("DeletedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<string>("FirstName")
+                    b.Property<string>("EmailAddress")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -993,10 +989,6 @@ namespace EPMS.Domain.Data.Migrations
                     b.Property<string>("LabourRegistrationNo")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("LastName")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("NRCNo")
                         .HasMaxLength(50)
@@ -1036,6 +1028,11 @@ namespace EPMS.Domain.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<string>("StaffName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<string>("StaffNo")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -1064,6 +1061,9 @@ namespace EPMS.Domain.Data.Migrations
                         .HasColumnType("date");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("EmailAddress")
+                        .HasFilter("[EmailAddress] IS NOT NULL");
 
                     b.HasIndex("PublicId")
                         .IsUnique()
@@ -3263,7 +3263,7 @@ namespace EPMS.Domain.Data.Migrations
                         .IsRequired();
 
                     b.HasOne("EPMS.Domain.Entities.Hr.Team", "Team")
-                        .WithMany()
+                        .WithMany("Members")
                         .HasForeignKey("TeamId")
                         .OnDelete(DeleteBehavior.Restrict);
 
@@ -3844,6 +3844,11 @@ namespace EPMS.Domain.Data.Migrations
                     b.Navigation("PositionPermissions");
 
                     b.Navigation("PositionRoles");
+                });
+
+            modelBuilder.Entity("EPMS.Domain.Entities.Hr.Team", b =>
+                {
+                    b.Navigation("Members");
                 });
 
             modelBuilder.Entity("EPMS.Domain.Entities.Performance.Appraisal", b =>

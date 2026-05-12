@@ -1,0 +1,245 @@
+@using EPMS.Client.Models.Info
+@using EPMS.Client.Services.Info
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.EmployeeInfoDTOs
+@using Mapster
+@using MudBlazor
+@using Refit
+
+@inject IEmployeeEmploymentApiClient EmploymentApiClient
+@inject ISnackbar Snackbar
+
+@if (_loading)
+{
+    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="200px" />
+}
+else if (_employment == null)
+{
+    <MudAlert Severity="Severity.Info">No employment data found.</MudAlert>
+}
+else
+{
+    <MudGrid>
+        <MudItem xs="12" sm="6">
+            <MudPaper Elevation="0" Class="border rounded pa-4">
+                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">Employment Details</MudText>
+                <MudStack Spacing="2">
+                    <MudText><strong>Employment Status:</strong> @_employment.EmploymentStatus</MudText>
+                    <MudText><strong>Staff Type:</strong> @_employment.StaffType ?? "-"</MudText>
+                    <MudText><strong>Probation Months:</strong> @_employment.ProbationMonth?.ToString() ?? "-"</MudText>
+                    <MudText><strong>Shift:</strong> @_employment.Shift ?? "-"</MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudPaper Elevation="0" Class="border rounded pa-4">
+                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">Dates</MudText>
+                <MudStack Spacing="2">
+                    <MudText><strong>Date of Appointment:</strong> @_employment.DateOfAppointment?.ToString("yyyy-MM-dd") ?? "-"</MudText>
+                    <MudText><strong>Date of Confirmation:</strong> @_employment.DateOfConfirmation?.ToString("yyyy-MM-dd") ?? "-"</MudText>
+                    <MudText><strong>Date of Promotion:</strong> @_employment.DateOfPromotion?.ToString("yyyy-MM-dd") ?? "-"</MudText>
+                    <MudText><strong>Mobile Attendance:</strong> @(_employment.MobileAttendance ? "Yes" : "No")</MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudPaper Elevation="0" Class="border rounded pa-4">
+                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">Work Information</MudText>
+                <MudStack Spacing="2">
+                    <MudText><strong>Department:</strong> @_employment.DepartmentName</MudText>
+                    <MudText><strong>Parent Department:</strong> @_employment.ParentDepartmentName</MudText>
+                    <MudText><strong>Team:</strong> @_employment.TeamName ?? "-"</MudText>
+                    <MudText><strong>Position:</strong> @_employment.PositionName</MudText>
+                    <MudText><strong>Product/Project:</strong> @_employment.ProductProject ?? "-"</MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudPaper Elevation="0" Class="border rounded pa-4">
+                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">Finger Print</MudText>
+                <MudStack Spacing="2">
+                    <MudText><strong>Finger Print ID:</strong> @_employment.FingerPrintId ?? "-"</MudText>
+                    <MudText><strong>Direct Manager:</strong> @_employment.DirectManagerName ?? "-"</MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12">
+            <MudStack Row="true" Justify="Justify.FlexEnd">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Edit"
+                           OnClick="ToggleEdit">
+                    Edit Employment
+                </MudButton>
+            </MudStack>
+        </MudItem>
+    </MudGrid>
+
+    @if (_editMode)
+    {
+        <MudDivider Class="my-4" />
+        <MudText Typo="Typo.h6" Class="mb-4">Edit Employment</MudText>
+        <MudPaper Elevation="0" Class="border rounded pa-4">
+            <MudForm @ref="_form">
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.EmploymentStatus"
+                                      Label="Employment Status"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.StaffType"
+                                      Label="Staff Type"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudNumericField @bind-Value="_model.ProbationMonth"
+                                         Label="Probation Months"
+                                         Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.Shift"
+                                      Label="Shift"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudDatePicker @bind-Date="_dateOfAppointment"
+                                       Label="Date of Appointment"
+                                       Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudDatePicker @bind-Date="_dateOfConfirmation"
+                                       Label="Date of Confirmation"
+                                       Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.ProductProject"
+                                      Label="Product/Project"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.FingerPrintId"
+                                      Label="Finger Print ID"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudSwitch @bind-Value="_model.MobileAttendance"
+                                   Label="Mobile Attendance"
+                                   Color="Color.Success" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudStack Row="true" Spacing="2" Justify="Justify.FlexEnd">
+                            <MudButton Variant="Variant.Outlined" OnClick="CancelEdit">Cancel</MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveEmployment" Disabled="_saving">
+                                @if (_saving)
+                                {
+                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                }
+                                Save
+                            </MudButton>
+                        </MudStack>
+                    </MudItem>
+                </MudGrid>
+            </MudForm>
+        </MudPaper>
+    }
+}
+
+@code {
+    [Parameter]
+    public Guid PublicId { get; set; }
+
+    private EmployeeEmploymentDto? _employment;
+    private bool _loading = true;
+    private bool _editMode = false;
+    private bool _saving = false;
+    private MudForm? _form;
+
+    private EmployeeEmploymentFormModel _model = new();
+    private DateTime? _dateOfAppointment;
+    private DateTime? _dateOfConfirmation;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _loading = true;
+        try
+        {
+            var response = await EmploymentApiClient.GetByEmployeeIdAsync(PublicId);
+            if (response.Success && response.Data != null)
+            {
+                _employment = response.Data;
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Failed to load employment data", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void ToggleEdit()
+    {
+        if (_employment == null) return;
+
+        _model = _employment.Adapt<EmployeeEmploymentFormModel>();
+        _dateOfAppointment = _employment.DateOfAppointment.HasValue ? _employment.DateOfAppointment.Value.ToDateTime(TimeOnly.MinValue) : null;
+        _dateOfConfirmation = _employment.DateOfConfirmation.HasValue ? _employment.DateOfConfirmation.Value.ToDateTime(TimeOnly.MinValue) : null;
+        _editMode = true;
+    }
+
+    private void CancelEdit()
+    {
+        _editMode = false;
+    }
+
+    private async Task SaveEmployment()
+    {
+        if (_employment == null) return;
+
+        _saving = true;
+        try
+        {
+            _model.DateOfAppointment = _dateOfAppointment.HasValue ? DateOnly.FromDateTime(_dateOfAppointment.Value) : null;
+            _model.DateOfConfirmation = _dateOfConfirmation.HasValue ? DateOnly.FromDateTime(_dateOfConfirmation.Value) : null;
+
+            var dto = _model.Adapt<UpdateEmployeeEmploymentDto>();
+            var response = await EmploymentApiClient.UpdateAsync(_employment.Id, dto);
+            if (response.Success)
+            {
+                Snackbar.Add("Employment updated successfully", Severity.Success);
+                _editMode = false;
+                await LoadDataAsync();
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? "Failed to update employment", Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Failed to update employment", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+}

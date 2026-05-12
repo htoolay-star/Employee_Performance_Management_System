@@ -1,3 +1,4 @@
+using EPMS.Shared.Constants;
 using EPMS.Shared.Validators.ValidationMessages;
 using FluentValidation;
 using System;
@@ -124,5 +125,14 @@ public static class EmployeeInfoValidationExtensions
             .LessThanOrEqualTo(x => DateOnly.FromDateTime(timeProvider.GetLocalNow().DateTime))
             .WithMessage(EmployeeInfoValidationMessages.Common.DateFuture)
             .When(x => propertySelector(x).HasValue);
+    }
+
+    public static IRuleBuilderOptions<T, string> ApplyEmploymentStatusRules<T>(this IRuleBuilder<T, string> ruleBuilder)
+    {
+        return ruleBuilder
+            .NotEmpty().WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.EmploymentStatusRequired)
+            .MaximumLength(50).WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.EmploymentStatusMaxLength)
+            .Must(status => EmploymentStatuses.All.Contains(status))
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.EmploymentStatusInvalid);
     }
 }

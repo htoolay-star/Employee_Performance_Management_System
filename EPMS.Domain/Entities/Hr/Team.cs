@@ -1,6 +1,7 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.EmployeeInfo;
 using System;
+using System.Collections.Generic;
 
 namespace EPMS.Domain.Entities.Hr
 {
@@ -38,6 +39,9 @@ namespace EPMS.Domain.Entities.Hr
         public DateTimeOffset? DeletedAt { get; set; }
 
         public byte[] Version { get; private set; } = Array.Empty<byte>();
+
+        private readonly List<EmployeeEmployment> _members = new();
+        public virtual IReadOnlyCollection<EmployeeEmployment> Members => _members.AsReadOnly();
 
         public void Rename(string newName)
         {

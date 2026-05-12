@@ -2,7 +2,7 @@ using Blazored.LocalStorage;
 using EPMS.Client;
 using EPMS.Client.Extensions;
 using EPMS.Client.Handlers;
-using EPMS.Client.Services;
+using EPMS.Client.Services.Auth;
 using Mapster;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;

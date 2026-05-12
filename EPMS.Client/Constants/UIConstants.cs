@@ -96,5 +96,19 @@
             public const string ColumnName = "Department Name";
             public const string NoDataFound = "Try adjusting your search or add a new department.";
         }
+
+        public static class Employee
+        {
+            public const string PageTitle = "Employee Directory";
+            public const string SearchPlaceholder = "Search by name or staff no...";
+            public const string AddButton = "Add Employee";
+            public const string ColumnStaffNo = "Staff No.";
+            public const string ColumnName = "Staff Name";
+            public const string ColumnDepartment = "Department";
+            public const string ColumnPosition = "Position";
+            public const string ColumnStatus = "Status";
+            public const string ColumnActions = "Actions";
+            public const string NoDataFound = "Try adjusting your search or add a new employee.";
+        }
     }
 }

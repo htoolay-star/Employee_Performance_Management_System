@@ -10,7 +10,6 @@ namespace EPMS.Api.Controllers.Info;
 
 [Route("api/employee-salary-histories")]
 [ApiController]
-[Authorize(Roles = RoleConstants.Admin)]
 public class EmployeeSalaryHistoriesController : ApiControllerBase
 {
     private readonly IEmployeeSalaryHistoryService _historyService;
@@ -38,13 +37,6 @@ public class EmployeeSalaryHistoriesController : ApiControllerBase
     public async Task<ActionResult<SuccessResponse<IEnumerable<EmployeeSalaryHistoryDto>>>> GetByEmployeeId(long employeeId)
     {
         var result = await _historyService.GetByEmployeeIdAsync(employeeId);
-        return HandleResult(result);
-    }
-
-    [HttpPost]
-    public async Task<ActionResult<SuccessResponse<long>>> Create(CreateEmployeeSalaryHistoryDto dto)
-    {
-        var result = await _historyService.CreateAsync(dto);
         return HandleResult(result);
     }
 }

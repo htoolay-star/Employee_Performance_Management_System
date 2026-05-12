@@ -1,0 +1,315 @@
+@page "/hr/employees"
+@using EPMS.Client.Constants
+@using EPMS.Client.Services.Hr
+@using EPMS.Client.Services.Info
+@using EPMS.Shared.Constants
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.EmployeeInfoDTOs
+@using EPMS.Shared.Features.EmployeeProfiles
+@using MudBlazor
+@using Refit
+@using static EPMS.Shared.Constants.ServiceResponseMessages
+
+@inject IEmployeeProfileApiClient EmployeeProfileApiClient
+@inject IDepartmentApiClient DepartmentApiClient
+@inject ITeamApiClient TeamApiClient
+@inject IPositionApiClient PositionApiClient
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>@UIConstants.Employee.PageTitle - EPMS</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.Employee.PageTitle</MudText>
+
+    <MudPaper Elevation="2" Class="pa-4">
+
+        @* ── Toolbar ──────────────────────────────────────────────────── *@
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4" Wrap="Wrap.Wrap">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <MudTextField T="string"
+                              Value="@_searchString"
+                              ValueChanged="@OnSearchChanged"
+                              Immediate="true"
+                              DebounceInterval="500"
+                              Placeholder="@UIConstants.Employee.SearchPlaceholder"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              Variant="Variant.Outlined"
+                              Style="max-width: 300px;" />
+
+                <MudSelect T="long?"
+                           Value="@_departmentFilter"
+                           ValueChanged="OnDepartmentFilterChanged"
+                           Placeholder="All Departments"
+                           Variant="Variant.Outlined"
+                           Clearable="true"
+                           Style="max-width: 200px;">
+                    @foreach (var dept in _departments)
+                    {
+                        <MudSelectItem T="long?" Value="@dept.Id">@dept.Code</MudSelectItem>
+                    }
+                </MudSelect>
+
+                <MudSelect T="long?"
+                           Value="@_teamFilter"
+                           ValueChanged="OnTeamFilterChanged"
+                           Placeholder="All Teams"
+                           Variant="Variant.Outlined"
+                           Clearable="true"
+                           Style="max-width: 200px;">
+                    @foreach (var team in _teams)
+                    {
+                        <MudSelectItem T="long?" Value="@team.Id">@team.Code</MudSelectItem>
+                    }
+                </MudSelect>
+
+                <MudSelect T="long?"
+                           Value="@_positionFilter"
+                           ValueChanged="OnPositionFilterChanged"
+                           Placeholder="All Positions"
+                           Variant="Variant.Outlined"
+                           Clearable="true"
+                           Style="max-width: 200px;">
+                    @foreach (var pos in _positions)
+                    {
+                        <MudSelectItem T="long?" Value="@pos.Id">@pos.Code</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <TableSortControl SortBy="@_sortBy"
+                                  SortDirection="@_sortDirection"
+                                  SortColumns="@_sortableColumns"
+                                  OnSortChanged="OnSortChanged" />
+            </MudStack>
+        </MudStack>
+
+        @* ── Data Grid ────────────────────────────────────────────────── *@
+        <MudDataGrid @ref="_dataGrid"
+                     T="EmployeeProfileGridItemDto"
+                     ServerData="LoadServerDataAsync"
+                     SortMode="SortMode.None"
+                     Hover="true"
+                     Striped="true"
+                     Dense="true"
+                     RowsPerPage="10">
+            <Columns>
+                <TemplateColumn Title="No." Sortable="true" Class="text-center" HeaderClass="text-center" Style="width: 60px;">
+                    <CellTemplate>@context.Item.RowIndex</CellTemplate>
+                </TemplateColumn>
+
+                <PropertyColumn Property="x => x.StaffNo" Title="@UIConstants.Employee.ColumnStaffNo" />
+                <PropertyColumn Property="x => x.StaffName" Title="@UIConstants.Employee.ColumnName" />
+                <PropertyColumn Property="x => x.EmailAddress" Title="Email" />
+
+                <PropertyColumn Property="x => x.DepartmentName" Title="@UIConstants.Employee.ColumnDepartment" />
+                <PropertyColumn Property="x => x.TeamName" Title="Team" />
+                <PropertyColumn Property="x => x.PositionName" Title="@UIConstants.Employee.ColumnPosition" />
+                
+                <TemplateColumn Title="@UIConstants.Employee.ColumnStatus" Sortable="false">
+                    <CellTemplate>
+                        @{
+                            var status = context.Item.EmploymentStatus;
+                            var color = (status ?? EmploymentStatuses.Pending) switch
+                            {
+                                EmploymentStatuses.Permanent => Color.Success,
+                                EmploymentStatuses.Probation => Color.Warning,
+                                EmploymentStatuses.Resigned => Color.Error,
+                                EmploymentStatuses.Pending => Color.Info,
+                                _ => Color.Default
+                            };
+                        }
+                        <MudChip T="string" Color="@color" Size="Size.Small">
+                            @(string.IsNullOrEmpty(status) ? EmploymentStatuses.Pending : status)
+                        </MudChip>
+                    </CellTemplate>
+                </TemplateColumn>
+
+                <TemplateColumn Title="@UIConstants.Employee.ColumnActions" Sortable="false">
+                    <CellTemplate>
+                        <MudTooltip Text="View Details" Placement="Placement.Top">
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                           Color="Color.Info"
+                                           Size="Size.Small"
+                                           OnClick="@(() => NavigateToDetail(context.Item.Id))" />
+                        </MudTooltip>
+                    </CellTemplate>
+                </TemplateColumn>
+
+            </Columns>
+            <NoRecordsContent>
+                <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
+                    <MudIcon Icon="@Icons.Material.Outlined.Inbox" Style="font-size: 4rem;" Color="Color.Default" />
+                    <MudText Typo="Typo.h6" Color="Color.Default">@UIConstants.Common.NoRecords</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">@UIConstants.Employee.NoDataFound</MudText>
+                </MudStack>
+            </NoRecordsContent>
+            <LoadingContent>
+                <MudStack Spacing="3" Class="w-100">
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                </MudStack>
+            </LoadingContent>
+            <PagerContent>
+                <MudDataGridPager T="EmployeeProfileGridItemDto" />
+            </PagerContent>
+        </MudDataGrid>
+
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private MudDataGrid<EmployeeProfileGridItemDto> _dataGrid = null!;
+    private bool _isLoading = false;
+    
+    // Filters
+    private string _searchString = string.Empty;
+    private long? _departmentFilter = null;
+    private long? _teamFilter = null;
+    private long? _positionFilter = null;
+    private string _sortBy = "StaffNo";
+    private string _sortDirection = "asc";
+
+    private List<LookUpDto> _departments = [];
+    private List<LookUpDto> _teams = [];
+    private List<LookUpDto> _positions = [];
+
+    private readonly Dictionary<string, string> _sortableColumns = new()
+    {
+        { "StaffNo", "Staff No" },
+        { "StaffName", "Staff Name" }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLookupsAsync();
+    }
+
+    private async Task LoadLookupsAsync()
+    {
+        try
+        {
+            var deptResponse = await DepartmentApiClient.GetLookupAsync();
+            if (deptResponse.Success && deptResponse.Data != null)
+            {
+                _departments = deptResponse.Data.ToList();
+            }
+
+            var teamResponse = await TeamApiClient.GetLookupAsync();
+            if (teamResponse.Success && teamResponse.Data != null)
+            {
+                _teams = teamResponse.Data.ToList();
+            }
+
+            var posResponse = await PositionApiClient.GetLookupAsync();
+            if (posResponse.Success && posResponse.Data != null)
+            {
+                _positions = posResponse.Data.ToList();
+            }
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Failed to load lookup data", Severity.Error);
+        }
+    }
+
+    private async Task<GridData<EmployeeProfileGridItemDto>> LoadServerDataAsync(GridState<EmployeeProfileGridItemDto> state)
+    {
+        _isLoading = true;
+        StateHasChanged();
+        try
+        {
+            var query = new EmployeeProfileQueryParameters
+            {
+                PageNumber = state.Page + 1,
+                PageSize = state.PageSize,
+                SearchTerm = string.IsNullOrWhiteSpace(_searchString) ? null : _searchString.Trim(),
+                DepartmentId = _departmentFilter,
+                TeamId = _teamFilter,
+                PositionId = _positionFilter,
+                OrderBy = _sortBy,
+                SortDirection = _sortDirection
+            };
+
+            var response = await EmployeeProfileApiClient.GetPagedAsync(query);
+
+            if (response.Success && response.Data != null)
+            {
+                var items = response.Data.Items.ToList();
+
+                if (_sortBy == "RowIndex")
+                {
+                    var startIndex = state.Page * state.PageSize;
+                    for (int i = 0; i < items.Count; i++)
+                    {
+                        items[i] = items[i] with { RowIndex = startIndex + i + 1 };
+                    }
+                }
+
+                return new GridData<EmployeeProfileGridItemDto>
+                {
+                    Items = items,
+                    TotalItems = response.Data.TotalCount
+                };
+            }
+
+            Snackbar.Add(response.Message ?? UIConstants.Common.LoadFailed, Severity.Error);
+        }
+        catch (Exception)
+        {
+            Snackbar.Add(UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+
+        return new GridData<EmployeeProfileGridItemDto> { Items = [], TotalItems = 0 };
+    }
+
+    private async Task OnSearchChanged(string value)
+    {
+        _searchString = value;
+        await RefreshDataAsync();
+    }
+
+    private async Task OnDepartmentFilterChanged(long? value)
+    {
+        _departmentFilter = value;
+        await RefreshDataAsync();
+    }
+
+    private async Task OnTeamFilterChanged(long? value)
+    {
+        _teamFilter = value;
+        await RefreshDataAsync();
+    }
+
+    private async Task OnPositionFilterChanged(long? value)
+    {
+        _positionFilter = value;
+        await RefreshDataAsync();
+    }
+
+    private async Task OnSortChanged((string SortBy, string SortDirection) sort)
+    {
+        _sortBy = sort.SortBy;
+        _sortDirection = sort.SortDirection;
+        await RefreshDataAsync();
+    }
+
+    private async Task RefreshDataAsync()
+    {
+        if (_dataGrid is not null)
+            await _dataGrid.ReloadServerData();
+    }
+
+    private void NavigateToDetail(long id)
+    {
+        Navigation.NavigateTo($"/hr/employees/{id}");
+    }
+}

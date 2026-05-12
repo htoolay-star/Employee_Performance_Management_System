@@ -4,7 +4,6 @@ using EPMS.Domain.Entities.Hr;
 using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Domain.Interface.Irepo.Hr;
 using EPMS.Domain.Interface.IService.App;
-using EPMS.Domain.Interfaces;
 using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.TeamDTOs;
@@ -12,6 +11,7 @@ using EPMS.Shared.Enums;
 using EPMS.Shared.Features.Teams;
 using Mapster;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
+using EPMS.Domain.Interface.IService.Hr;
 
 namespace EPMS.Domain.Services.Hr;
 
@@ -57,29 +57,13 @@ public class TeamService : ITeamService
 
     public async Task<SuccessResponse<IEnumerable<LookUpDto>>> GetLookupAsync()
     {
-        var cachedAllTeams = await _cacheService.GetAsync<IEnumerable<TeamDto>>(CacheKeys.Hr.AllTeams());
+        var dtos = await _cacheService.GetOrCreateAsync(
+            CacheKeys.Hr.TeamLookups(),
+            async () => await _uow.HR.Teams.GetLookupDtoAsync(),
+            TimeSpan.FromHours(12)
+        );
 
-        if (cachedAllTeams != null)
-        {
-            var lookupFromCache = cachedAllTeams.Select(x => new LookUpDto
-            {
-                Id = x.Id,
-                Code = x.Code,
-                IsActive = x.IsActive
-            });
-            return SuccessResponse<IEnumerable<LookUpDto>>.Ok(lookupFromCache, TeamMsg.RetrievedAll);
-        }
-
-        var tuples = await _uow.HR.Teams.GetLookupAsync();
-
-        var dtos = tuples.Select(t => new LookUpDto
-        {
-            Id = t.Id,
-            Code = t.Code,
-            IsActive = t.IsActive
-        }).ToList();
-
-        return SuccessResponse<IEnumerable<LookUpDto>>.Ok(dtos, TeamMsg.RetrievedAll);
+        return SuccessResponse<IEnumerable<LookUpDto>>.Ok(dtos ?? [], TeamMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<IEnumerable<TeamDto>>> GetTeamsByDepartmentIdAsync(long departmentId)
@@ -93,11 +77,8 @@ public class TeamService : ITeamService
 
     public async Task<SuccessResponse<IEnumerable<TeamDto>>> GetAllAsync()
     {
-        var dtos = await _cacheService.GetOrCreateAsync(CacheKeys.Hr.AllTeams(), async () =>
-        {
-            var teams = await _uow.HR.Teams.GetAllAsync();
-            return teams.Adapt<IEnumerable<TeamDto>>();
-        });
+        var teams = await _uow.HR.Teams.GetAllAsync();
+        var dtos = teams.Adapt<IEnumerable<TeamDto>>();
         return SuccessResponse<IEnumerable<TeamDto>>.Ok(dtos, TeamMsg.RetrievedAll);
     }
 
@@ -123,7 +104,7 @@ public class TeamService : ITeamService
         var entity = new Team(dto.Code, dto.Name, dto.DepartmentId, dto.Description, dto.LeadTeamId);
         _uow.HR.Teams.Add(entity);
         await _uow.CompleteAsync();
-        await _cacheService.RemoveAsync(CacheKeys.Hr.AllTeams());
+        await _cacheService.RemoveAsync(CacheKeys.Hr.TeamLookups());
         return SuccessResponse<long>.Ok(entity.Id, TeamMsg.Created);
     }
 
@@ -154,7 +135,7 @@ public class TeamService : ITeamService
         else team.Deactivate();
 
         await _uow.CompleteAsync();
-        await _cacheService.RemoveAsync(CacheKeys.Hr.AllTeams());
+        await _cacheService.RemoveAsync(CacheKeys.Hr.TeamLookups());
         return SuccessResponse.Ok(TeamMsg.Updated);
     }
 
@@ -170,7 +151,7 @@ public class TeamService : ITeamService
 
         _uow.HR.Teams.Delete(team);
         await _uow.CompleteAsync();
-        await _cacheService.RemoveAsync(CacheKeys.Hr.AllTeams());
+        await _cacheService.RemoveAsync(CacheKeys.Hr.TeamLookups());
         return SuccessResponse.Ok(TeamMsg.Deleted);
     }
 }

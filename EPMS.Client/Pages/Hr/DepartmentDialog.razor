@@ -1,7 +1,7 @@
 @using EPMS.Client.Constants
 @using EPMS.Client.Extensions
 @using EPMS.Client.Models.Hr
-@using EPMS.Client.Services
+@using EPMS.Client.Services.Hr
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.DepartmentDTOs
 @using EPMS.Shared.Validators.DepartmentDTOs
@@ -28,6 +28,12 @@
                               Label="@UIConstants.Department.NameLabel"
                               For="@(() => _model.Name)"
                               Variant="Variant.Outlined" />
+
+                <MudTextField @bind-Value="_model.Description"
+                              Label="@UIConstants.Common.Description"
+                              For="@(() => _model.Description)"
+                              Variant="Variant.Outlined"
+                              Lines="3" />
 
                 @if (IsEdit)
                 {

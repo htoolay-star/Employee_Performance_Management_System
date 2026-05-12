@@ -1,5 +1,6 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Hr;
+using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.PositionDTOs;
 using EPMS.Shared.Features.Positions;
 
@@ -13,4 +14,5 @@ public interface IPositionRepository : IGenericRepository<Position>
     Task<bool> ExistsByCodeAsync(string code, long? excludePositionId = null, CancellationToken cancellationToken = default);
     Task<bool> ExistsByIdAsync(long id);
     Task<(IEnumerable<PositionGridItemDto> Items, int TotalCount)> GetPagedAsync(PositionQueryParameters parameters, string entitySortColumn, CancellationToken cancellationToken = default);
+    Task<IEnumerable<LookUpDto>> GetLookupDtoAsync();
 }

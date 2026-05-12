@@ -2,8 +2,7 @@ namespace EPMS.Shared.DTOs.EmployeeInfoDTOs;
 
 public record UpdateEmployeeProfileDto
 {
-    public string FirstName { get; init; } = string.Empty;
-    public string? LastName { get; init; }
+    public string StaffName { get; init; } = string.Empty;
     public string? OtherName { get; init; }
     public string? NRCNo { get; init; }
     public string? Gender { get; init; }
@@ -13,6 +12,7 @@ public record UpdateEmployeeProfileDto
     public string? BirthPlace { get; init; }
     public string? PassportNo { get; init; }
     public string? LabourRegistrationNo { get; init; }
+    public string? EmailAddress { get; init; }
     public DateOnly? DateOfBirth { get; init; }
     public DateOnly? PassportExpireDate { get; init; }
     public string? WorkPermitNo { get; init; }

@@ -2,6 +2,8 @@ using EPMS.Domain.Data;
 using EPMS.Domain.Entities.Hr;
 using EPMS.Domain.Interface.Irepo.Hr;
 using EPMS.Domain.Repository.Base;
+using EPMS.Shared.DTOs.Common;
+using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using Microsoft.EntityFrameworkCore;
 
 namespace EPMS.Domain.Repository.Hr;
@@ -28,10 +30,16 @@ public class LevelRepository : GenericRepository<Level>, ILevelRepository
         return await query.AnyAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<(long Id, string Code, bool IsActive)>> GetLookupAsync()
+    public async Task<IEnumerable<LookUpDto>> GetLookupDtoAsync()
     {
         return await _dbSet
-            .Select(x => new ValueTuple<long, string, bool>(x.Id, x.Code, x.IsActive))
+            .AsNoTracking()
+            .Select(p => new LookUpDto
+            {
+                Id = p.Id,
+                Code = p.Code,
+                IsActive = p.IsActive,
+            })
             .ToListAsync();
     }
 }

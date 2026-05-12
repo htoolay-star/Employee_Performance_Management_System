@@ -8,7 +8,7 @@
    - After every CUD operation, calls RefreshDataAsync() to reload the page.
    ═══════════════════════════════════════════════════════════════════════════ *@
 @using EPMS.Client.Constants
-@using EPMS.Client.Services
+@using EPMS.Client.Services.Hr
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.DepartmentDTOs
 @using EPMS.Shared.DTOs.TeamDTOs
@@ -43,18 +43,22 @@
                           Variant="Variant.Outlined"
                           Style="max-width: 300px;" />
 
-            <MudSelect T="long?"
+            <MudAutocomplete T="long?"
                        Value="@_departmentFilter"
                        ValueChanged="@OnDepartmentFilterChanged"
                        Placeholder="All Departments"
                        Clearable="true"
                        Variant="Variant.Outlined"
-                       Style="max-width: 200px;">
+                       Style="max-width: 200px;"
+                       SearchFunc="SearchFilterDepartments"
+                       ToStringFunc="GetFilterDepartmentDisplay"
+                       ResetValueOnEmptyText="true"
+                       OpenIcon="@Icons.Material.Filled.ArrowDropDown">
                 @foreach (var dept in _departments)
                 {
                     <MudSelectItem T="long?" Value="@dept.Id">@dept.Code</MudSelectItem>
                 }
-            </MudSelect>
+            </MudAutocomplete>
 
             <MudSelect T="bool"
                        Value="@_statusFilter"
@@ -78,12 +82,6 @@
                 @UIConstants.Team.AddButton
             </MudButton>
         </MudStack>
-
-        @* ── Loading indicator ─────────────────────────────────────────── *@
-        @if (_isLoading)
-        {
-            <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="mb-n2" />
-        }
 
         @* ── Data Grid (server-side paging/sorting) ───────────────────── *@
         <MudDataGrid @ref="_dataGrid"
@@ -189,8 +187,7 @@
     private readonly Dictionary<string, string> _sortableColumns = new()
     {
         { "Code", "Code" },
-        { "Name", "Name" },
-        { "DepartmentCode", "Department" }
+        { "Name", "Name" }
     };
 
     // Prefetched data
@@ -212,6 +209,7 @@ private List<LookUpDto>? _prefetchedDepartments;
             {
                 _prefetchedDepartments = response.Data.ToList();
                 _departments = _prefetchedDepartments;
+                StateHasChanged();
             }
         }
         catch (ApiException)
@@ -223,6 +221,7 @@ private List<LookUpDto>? _prefetchedDepartments;
     private async Task<GridData<TeamGridItemDto>> LoadServerDataAsync(GridState<TeamGridItemDto> state)
     {
         _isLoading = true;
+        StateHasChanged();
         try
         {
             var query = new TeamQueryParameters
@@ -261,6 +260,7 @@ private List<LookUpDto>? _prefetchedDepartments;
         finally
         {
             _isLoading = false;
+            StateHasChanged();
         }
 
         return new GridData<TeamGridItemDto> { Items = [], TotalItems = 0 };
@@ -375,5 +375,25 @@ private List<LookUpDto>? _prefetchedDepartments;
         {
             Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
         }
+    }
+
+
+    private Task<IEnumerable<long?>> SearchFilterDepartments(string value, CancellationToken token)
+    {
+        var query = _departments.AsQueryable();
+        
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+        }
+        
+        return Task.FromResult(query.Select(x => (long?)x.Id).AsEnumerable());
+    }
+
+    private string GetFilterDepartmentDisplay(long? id)
+    {
+        if (id == null) return string.Empty;
+        var dept = _departments.FirstOrDefault(x => x.Id == id);
+        return dept != null ? dept.Code : string.Empty;
     }
 }
