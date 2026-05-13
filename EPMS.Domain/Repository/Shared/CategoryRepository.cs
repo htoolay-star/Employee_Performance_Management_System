@@ -2,6 +2,7 @@
 using EPMS.Domain.Entities.Shared;
 using EPMS.Domain.Interface.Irepo.Shared;
 using EPMS.Domain.Repository.Base;
+using EPMS.Shared.DTOs.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace EPMS.Domain.Repository.Shared;
@@ -10,7 +11,13 @@ public class CategoryRepository : GenericRepository<Category>, ICategoryReposito
 {
     public CategoryRepository(AppDbContext context) : base(context) { }
 
-    public async Task<bool> ExistsByCodeAsync(string code, string module, int? excludeId = null)
+    public async Task<IEnumerable<(long Id, string Code, bool IsActive)>> GetLookupAsync()
+    {
+        return await _dbSet
+            .Select(x => new ValueTuple<long, string, bool>(x.Id, x.Code, x.IsActive))
+            .ToListAsync();
+    }        
+    public async Task<bool> ExistsByCodeAsync(string code, string module, long? excludeId = null)
     {
         var query = _dbSet.Where(c => c.Code == code && c.Module == module);
         if (excludeId.HasValue)
@@ -18,7 +25,7 @@ public class CategoryRepository : GenericRepository<Category>, ICategoryReposito
         return await query.AnyAsync();
     }
 
-    public async Task<bool> ExistsByNameAsync(string name, string module, int? excludeId = null)
+    public async Task<bool> ExistsByNameAsync(string name, string module, long? excludeId = null)
     {
         var query = _dbSet.Where(c => c.Name == name && c.Module == module);
         if (excludeId.HasValue)
@@ -26,7 +33,7 @@ public class CategoryRepository : GenericRepository<Category>, ICategoryReposito
         return await query.AnyAsync();
     }
 
-    public async Task<bool> HasSubCategoriesAsync(int categoryId)
+    public async Task<bool> HasSubCategoriesAsync(long categoryId)
     {
         return await _dbSet.AnyAsync(c => c.ParentId == categoryId);
     }

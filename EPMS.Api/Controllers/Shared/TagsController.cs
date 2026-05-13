@@ -1,5 +1,6 @@
 ﻿using EPMS.Api.Controllers.Common;
 using EPMS.Domain.Interface.IService.Shared;
+using EPMS.Domain.Services.Shared;
 using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.TagDTOs;
@@ -10,7 +11,7 @@ namespace EPMS.Api.Controllers.Shared;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize(Roles = RoleConstants.Admin)]
+//[Authorize(Roles = RoleConstants.Admin)]
 public class TagsController : ApiControllerBase
 {
     private readonly ITagService _tagService;
@@ -19,7 +20,12 @@ public class TagsController : ApiControllerBase
     {
         _tagService = tagService;
     }
-
+    [HttpGet("lookup")]
+    public async Task<ActionResult<SuccessResponse<IEnumerable<LookUpDto>>>> GetLookup()
+    {
+        var result = await _tagService.GetLookupAsync();
+        return HandleResult(result);
+    }
     [HttpGet]
     public async Task<ActionResult<SuccessResponse<IEnumerable<TagDto>>>> GetAll()
     {
@@ -27,8 +33,8 @@ public class TagsController : ApiControllerBase
         return HandleResult(result);
     }
 
-    [HttpGet("{id:int}")]
-    public async Task<ActionResult<SuccessResponse<TagDto>>> GetById(int id)
+    [HttpGet("{id:long}")]
+    public async Task<ActionResult<SuccessResponse<TagDto>>> GetById(long id)
     {
         var result = await _tagService.GetTagByIdAsync(id);
         return HandleResult(result);
@@ -41,15 +47,15 @@ public class TagsController : ApiControllerBase
         return HandleResult(result);
     }
 
-    [HttpPut("{id:int}")]
-    public async Task<ActionResult<SuccessResponse>> Update(int id, UpdateTagDto dto)
+    [HttpPut("{id:long}")]
+    public async Task<ActionResult<SuccessResponse>> Update(long id, UpdateTagDto dto)
     {
         var result = await _tagService.UpdateTagAsync(id, dto);
         return HandleResult(result);
     }
 
-    [HttpDelete("{id:int}")]
-    public async Task<ActionResult<SuccessResponse>> Delete(int id)
+    [HttpDelete("{id:long}")]
+    public async Task<ActionResult<SuccessResponse>> Delete(long id)
     {
         var result = await _tagService.DeleteTagAsync(id);
         return HandleResult(result);

@@ -5,9 +5,10 @@ namespace EPMS.Domain.Interface.IService.Shared;
 
 public interface ITagService
 {
+    Task<SuccessResponse<IEnumerable<LookUpDto>>> GetLookupAsync();   
     Task<SuccessResponse<IEnumerable<TagDto>>> GetAllTagsAsync();
-    Task<SuccessResponse<TagDto>> GetTagByIdAsync(int id);
+    Task<SuccessResponse<TagDto>> GetTagByIdAsync(long id);
     Task<SuccessResponse<long>> CreateTagAsync(CreateTagDto dto);
-    Task<SuccessResponse> UpdateTagAsync(int id, UpdateTagDto dto);
-    Task<SuccessResponse> DeleteTagAsync(int id);
+    Task<SuccessResponse> UpdateTagAsync(long id, UpdateTagDto dto);
+    Task<SuccessResponse> DeleteTagAsync(long id);
 }

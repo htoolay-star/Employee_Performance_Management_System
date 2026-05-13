@@ -3,9 +3,12 @@ using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Shared;
 using EPMS.Domain.Interface.Irepo.Shared;
 using EPMS.Domain.Interface.IService.Shared;
+using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.CategoryDTOs;
 using EPMS.Shared.DTOs.Common;
+using EPMS.Shared.DTOs.LevelDTOs;
 using EPMS.Shared.Enums;
+using Microsoft.EntityFrameworkCore;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 namespace EPMS.Domain.Services.Shared;
@@ -20,15 +23,40 @@ public class CategoryService : ICategoryService
         _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
+    public async Task<SuccessResponse<IEnumerable<LookUpDto>>> GetLookupAsync()
+    {
+        var tuples = await _unitOfWork.Shared.Categories.GetLookupAsync();
 
+        var dtos = tuples.Select(t => new LookUpDto
+        {
+            Id = t.Id,
+            Code = t.Code,
+            IsActive = t.IsActive
+        }).ToList();
+
+        return SuccessResponse<IEnumerable<LookUpDto>>.Ok(dtos, CategoryMsg.RetrievedAll);
+    }
+    
     public async Task<SuccessResponse<IEnumerable<CategoryDto>>> GetAllCategoriesAsync()
     {
         var categories = await _unitOfWork.Shared.Categories.GetAllAsync();
-        var dtos = _mapper.Map<IEnumerable<CategoryDto>>(categories);
+
+        var dtos = categories.Select(x => new CategoryDto
+        {
+            Id = x.Id,
+            Code = x.Code,
+            Name = x.Name,
+            Module = x.Module,
+            Description = x.Description,
+            ParentId = x.ParentId,
+            IsActive = x.IsActive,
+            // Parent ရှိရင် Parent ရဲ့ Name ကို ထည့်ပေးပါ
+            ParentName = categories.FirstOrDefault(p => p.Id == x.ParentId)?.Name
+        });
         return SuccessResponse<IEnumerable<CategoryDto>>.Ok(dtos, CategoryMsg.RetrievedAll);
     }
 
-    public async Task<SuccessResponse<CategoryDto>> GetCategoryByIdAsync(int id)
+    public async Task<SuccessResponse<CategoryDto>> GetCategoryByIdAsync(long id)
     {
         var category = await _unitOfWork.Shared.Categories.GetByIdAsync(id);
 
@@ -64,7 +92,7 @@ public class CategoryService : ICategoryService
         return SuccessResponse<long>.Ok(category.Id, CategoryMsg.Created);
     }
 
-    public async Task<SuccessResponse> UpdateCategoryAsync(int id, UpdateCategoryDto dto)
+    public async Task<SuccessResponse> UpdateCategoryAsync(long id, UpdateCategoryDto dto)
     {
         var category = await _unitOfWork.Shared.Categories.GetByIdAsync(id);
 
@@ -101,7 +129,7 @@ public class CategoryService : ICategoryService
         return SuccessResponse.Ok(CategoryMsg.Updated);
     }
 
-    public async Task<SuccessResponse> DeleteCategoryAsync(int id)
+    public async Task<SuccessResponse> DeleteCategoryAsync(long id)
     {
         var category = await _unitOfWork.Shared.Categories.GetByIdAsync(id);
 
