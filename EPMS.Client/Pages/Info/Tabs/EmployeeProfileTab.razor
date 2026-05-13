@@ -1,7 +1,9 @@
+@using EPMS.Client.Extensions
 @using EPMS.Client.Models.Info
 @using EPMS.Client.Services.Info
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.EmployeeInfoDTOs
+@using EPMS.Shared.Validators.EmployeeInfoDTOs
 @using Mapster
 @using MudBlazor
 @using Refit
@@ -11,7 +13,7 @@
 
 @if (_loading)
 {
-    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="200px" />
+    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="400px" />
 }
 else if (_employee == null)
 {
@@ -19,154 +21,228 @@ else if (_employee == null)
 }
 else
 {
-    <MudGrid>
-        <MudItem xs="12" sm="6">
-            <MudPaper Elevation="0" Class="border rounded pa-4">
-                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">Basic Information</MudText>
-                <MudStack Spacing="2">
-                    <MudText><strong>Staff No:</strong> @_employee.StaffNo</MudText>
-                    <MudText><strong>Name:</strong> @_employee.StaffName</MudText>
-                    <MudText><strong>Other Name:</strong> @_employee.OtherName ?? "-"</MudText>
-                    <MudText><strong>Gender:</strong> @_employee.Gender ?? "-"</MudText>
-                    <MudText><strong>Date of Birth:</strong> @_employee.DateOfBirth?.ToString("yyyy-MM-dd") ?? "-"</MudText>
-                    <MudText><strong>Email:</strong> @_employee.EmailAddress</MudText>
-                </MudStack>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6">
-            <MudPaper Elevation="0" Class="border rounded pa-4">
-                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">Identification</MudText>
-                <MudStack Spacing="2">
-                    <MudText><strong>NRC No:</strong> @_employee.NRCNo ?? "-"</MudText>
-                    <MudText><strong>Passport No:</strong> @_employee.PassportNo ?? "-"</MudText>
-                    <MudText><strong>Passport Expiry:</strong> @_employee.PassportExpireDate?.ToString("yyyy-MM-dd") ?? "-"</MudText>
-                    <MudText><strong>Labour Reg No:</strong> @_employee.LabourRegistrationNo ?? "-"</MudText>
-                </MudStack>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6">
-            <MudPaper Elevation="0" Class="border rounded pa-4">
-                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">Personal Details</MudText>
-                <MudStack Spacing="2">
-                    <MudText><strong>Race:</strong> @_employee.Race ?? "-"</MudText>
-                    <MudText><strong>Religion:</strong> @_employee.Religion ?? "-"</MudText>
-                    <MudText><strong>Nationality:</strong> @_employee.Nationality ?? "-"</MudText>
-                    <MudText><strong>Birth Place:</strong> @_employee.BirthPlace ?? "-"</MudText>
-                </MudStack>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6">
-            <MudPaper Elevation="0" Class="border rounded pa-4">
-                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">Work Permit</MudText>
-                <MudStack Spacing="2">
-                    <MudText><strong>Work Permit No:</strong> @_employee.WorkPermitNo ?? "-"</MudText>
-                    <MudText><strong>Valid Date:</strong> @_employee.WorkPermitValidDate?.ToString("yyyy-MM-dd") ?? "-"</MudText>
-                    <MudText><strong>Expire Date:</strong> @_employee.WorkPermitExpireDate?.ToString("yyyy-MM-dd") ?? "-"</MudText>
-                </MudStack>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12">
-            <MudStack Row="true" Justify="Justify.FlexEnd">
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.Edit"
-                           OnClick="ToggleEdit">
-                    Edit Profile
-                </MudButton>
-            </MudStack>
-        </MudItem>
-    </MudGrid>
+    <MudPaper Elevation="0" Class="border rounded pa-4">
+        <MudForm @ref="_form" Model="@_model" Validation="@ValidateField">
+            <MudGrid>
+                
+                @* ── Basic Information ── *@
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6" Color="Color.Primary" Class="mb-2">Basic Information</MudText>
+                </MudItem>
 
-    @if (_editMode)
-    {
-        <MudDivider Class="my-4" />
-        <MudText Typo="Typo.h6" Class="mb-4">Edit Profile</MudText>
-        <MudPaper Elevation="0" Class="border rounded pa-4">
-            <MudForm @ref="_form">
-                <MudGrid>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.StaffName"
-                                      Label="Staff Name"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.OtherName"
-                                      Label="Other Name"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.NRCNo"
-                                      Label="NRC No"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudDatePicker @bind-Date="_dateOfBirth"
-                                       Label="Date of Birth"
-                                       Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.EmailAddress"
-                                      Label="Email Address"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudSelect T="string" @bind-Value="_model.Gender" Label="Gender" Variant="Variant.Outlined">
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Staff No</MudText>
+                    <MudText Typo="Typo.body1">@_employee.StaffNo</MudText>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Staff Name</MudText>
+                        <MudText Typo="Typo.body1">@(_employee.StaffName ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.StaffName" Label="Staff Name" Variant="Variant.Outlined" For="@(() => _model.StaffName)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Other Name</MudText>
+                        <MudText Typo="Typo.body1">@(_employee.OtherName ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.OtherName" Label="Other Name" Variant="Variant.Outlined" For="@(() => _model.OtherName)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Gender</MudText>
+                        <MudText Typo="Typo.body1">@(_employee.Gender ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudSelect T="string" @bind-Value="_model.Gender" Label="Gender" Variant="Variant.Outlined" For="@(() => _model.Gender)">
                             <MudSelectItem Value="@("Male")" />
                             <MudSelectItem Value="@("Female")" />
                         </MudSelect>
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.Race"
-                                      Label="Race"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.Religion"
-                                      Label="Religion"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.Nationality"
-                                      Label="Nationality"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.BirthPlace"
-                                      Label="Birth Place"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.PassportNo"
-                                      Label="Passport No"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudDatePicker @bind-Date="_passportExpiry"
-                                       Label="Passport Expiry"
-                                       Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.LabourRegistrationNo"
-                                      Label="Labour Registration No"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.WorkPermitNo"
-                                      Label="Work Permit No"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudDatePicker @bind-Date="_workPermitValid"
-                                       Label="Work Permit Valid Date"
-                                       Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudDatePicker @bind-Date="_workPermitExpire"
-                                       Label="Work Permit Expire Date"
-                                       Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12">
-                        <MudStack Row="true" Spacing="2" Justify="Justify.FlexEnd">
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Date of Birth</MudText>
+                        <MudText Typo="Typo.body1">@(_employee.DateOfBirth?.ToString("yyyy-MM-dd") ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudDatePicker @bind-Date="_model.DateOfBirthProxy" Label="Date of Birth" Variant="Variant.Outlined" For="@(() => _model.DateOfBirthProxy)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Email Address</MudText>
+                        <MudText Typo="Typo.body1">@(_employee.EmailAddress ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.EmailAddress" Label="Email Address" Variant="Variant.Outlined" For="@(() => _model.EmailAddress)" />
+                    }
+                </MudItem>
+
+                @* ── Identification ── *@
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6" Color="Color.Primary" Class="mt-4 mb-2">Identification</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">NRC No</MudText>
+                        <MudText Typo="Typo.body1">@(_employee.NRCNo ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.NRCNo" Label="NRC No" Variant="Variant.Outlined" For="@(() => _model.NRCNo)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Labour Registration No</MudText>
+                        <MudText Typo="Typo.body1">@(_employee.LabourRegistrationNo ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.LabourRegistrationNo" Label="Labour Registration No" Variant="Variant.Outlined" For="@(() => _model.LabourRegistrationNo)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Passport No</MudText>
+                        <MudText Typo="Typo.body1">@(_employee.PassportNo ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.PassportNo" Label="Passport No" Variant="Variant.Outlined" For="@(() => _model.PassportNo)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Passport Expiry</MudText>
+                        <MudText Typo="Typo.body1">@(_employee.PassportExpireDate?.ToString("yyyy-MM-dd") ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudDatePicker @bind-Date="_model.PassportExpireDateProxy" Label="Passport Expiry" Variant="Variant.Outlined" For="@(() => _model.PassportExpireDateProxy)" />
+                    }
+                </MudItem>
+
+                @* ── Personal Details ── *@
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6" Color="Color.Primary" Class="mt-4 mb-2">Personal Details</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Race</MudText>
+                        <MudText Typo="Typo.body1">@(_employee.Race ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.Race" Label="Race" Variant="Variant.Outlined" For="@(() => _model.Race)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Religion</MudText>
+                        <MudText Typo="Typo.body1">@(_employee.Religion ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.Religion" Label="Religion" Variant="Variant.Outlined" For="@(() => _model.Religion)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Nationality</MudText>
+                        <MudText Typo="Typo.body1">@(_employee.Nationality ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.Nationality" Label="Nationality" Variant="Variant.Outlined" For="@(() => _model.Nationality)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Birth Place</MudText>
+                        <MudText Typo="Typo.body1">@(_employee.BirthPlace ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.BirthPlace" Label="Birth Place" Variant="Variant.Outlined" For="@(() => _model.BirthPlace)" />
+                    }
+                </MudItem>
+
+                @* ── Work Permit ── *@
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6" Color="Color.Primary" Class="mt-4 mb-2">Work Permit</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Work Permit No</MudText>
+                        <MudText Typo="Typo.body1">@(_employee.WorkPermitNo ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.WorkPermitNo" Label="Work Permit No" Variant="Variant.Outlined" For="@(() => _model.WorkPermitNo)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Work Permit Valid Date</MudText>
+                        <MudText Typo="Typo.body1">@(_employee.WorkPermitValidDate?.ToString("yyyy-MM-dd") ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudDatePicker @bind-Date="_model.WorkPermitValidDateProxy" Label="Work Permit Valid Date" Variant="Variant.Outlined" For="@(() => _model.WorkPermitValidDateProxy)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Work Permit Expire Date</MudText>
+                        <MudText Typo="Typo.body1">@(_employee.WorkPermitExpireDate?.ToString("yyyy-MM-dd") ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudDatePicker @bind-Date="_model.WorkPermitExpireDateProxy" Label="Work Permit Expire Date" Variant="Variant.Outlined" For="@(() => _model.WorkPermitExpireDateProxy)" />
+                    }
+                </MudItem>
+
+                @* ── Action Buttons ── *@
+                <MudItem xs="12">
+                    <MudStack Row="true" Spacing="2" Justify="Justify.FlexEnd" Class="mt-4">
+                        @if (!_editMode)
+                        {
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit" OnClick="ToggleEdit">
+                                Edit Profile
+                            </MudButton>
+                        }
+                        else
+                        {
                             <MudButton Variant="Variant.Outlined" OnClick="CancelEdit">Cancel</MudButton>
                             <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveProfile" Disabled="_saving">
                                 @if (_saving)
@@ -175,20 +251,17 @@ else
                                 }
                                 Save
                             </MudButton>
-                        </MudStack>
-                    </MudItem>
-                </MudGrid>
-            </MudForm>
-        </MudPaper>
-    }
+                        }
+                    </MudStack>
+                </MudItem>
+
+            </MudGrid>
+        </MudForm>
+    </MudPaper>
 }
 
 @code {
-    [Parameter]
-    public long EmployeeId { get; set; }
-
-    [Parameter]
-    public Guid PublicId { get; set; }
+    [Parameter] public Guid PublicId { get; set; }
 
     private EmployeeProfileDto? _employee;
     private bool _loading = true;
@@ -197,10 +270,9 @@ else
     private MudForm? _form;
 
     private EmployeeProfileFormModel _model = new();
-    private DateTime? _dateOfBirth;
-    private DateTime? _passportExpiry;
-    private DateTime? _workPermitValid;
-    private DateTime? _workPermitExpire;
+    private Dictionary<string, string> _serverErrors = new();
+
+    private readonly UpdateEmployeeProfileValidator _validator = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -212,10 +284,11 @@ else
         _loading = true;
         try
         {
-            var response = await EmployeeProfileApiClient.GetByIdAsync(EmployeeId);
+            var response = await EmployeeProfileApiClient.GetByPublicIdAsync(PublicId);
             if (response.Success && response.Data != null)
             {
                 _employee = response.Data;
+                ResetFormModel(); 
             }
         }
         catch (ApiException ex)
@@ -233,40 +306,54 @@ else
         }
     }
 
-    private void ToggleEdit()
+    private void ResetFormModel()
     {
         if (_employee == null) return;
 
         _model = _employee.Adapt<EmployeeProfileFormModel>();
-        _dateOfBirth = _employee.DateOfBirth.HasValue ? _employee.DateOfBirth.Value.ToDateTime(TimeOnly.MinValue) : null;
-        _passportExpiry = _employee.PassportExpireDate.HasValue ? _employee.PassportExpireDate.Value.ToDateTime(TimeOnly.MinValue) : null;
-        _workPermitValid = _employee.WorkPermitValidDate.HasValue ? _employee.WorkPermitValidDate.Value.ToDateTime(TimeOnly.MinValue) : null;
-        _workPermitExpire = _employee.WorkPermitExpireDate.HasValue ? _employee.WorkPermitExpireDate.Value.ToDateTime(TimeOnly.MinValue) : null;
-        _editMode = true;
+    }
+
+    private async Task<IEnumerable<string>> ValidateField(object model, string propertyName)
+    {
+        var actualPropertyName = propertyName.EndsWith("Proxy") 
+                             ? propertyName.Replace("Proxy", "") 
+                             : propertyName;
+
+        return await _validator.ValidateMappedValue<EmployeeProfileFormModel, UpdateEmployeeProfileDto>(
+            _model, _serverErrors)(model, actualPropertyName);
+    }
+
+    private void ToggleEdit()
+    {
+        _editMode = true; 
     }
 
     private void CancelEdit()
     {
+        ResetFormModel(); 
         _editMode = false;
     }
 
     private async Task SaveProfile()
     {
+        await _form!.Validate();
+        if (!_form.IsValid)
+        {
+            Snackbar.Add("Please fill all required fields correctly.", Severity.Warning);
+            return;
+        }
+
         _saving = true;
         try
         {
-            _model.DateOfBirth = _dateOfBirth.HasValue ? DateOnly.FromDateTime(_dateOfBirth.Value) : null;
-            _model.PassportExpireDate = _passportExpiry.HasValue ? DateOnly.FromDateTime(_passportExpiry.Value) : null;
-            _model.WorkPermitValidDate = _workPermitValid.HasValue ? DateOnly.FromDateTime(_workPermitValid.Value) : null;
-            _model.WorkPermitExpireDate = _workPermitExpire.HasValue ? DateOnly.FromDateTime(_workPermitExpire.Value) : null;
-
             var dto = _model.Adapt<UpdateEmployeeProfileDto>();
-            var response = await EmployeeProfileApiClient.UpdateAsync(EmployeeId, dto);
+            var response = await EmployeeProfileApiClient.UpdateAsync(_employee!.Id, dto);
+            
             if (response.Success)
             {
                 Snackbar.Add("Profile updated successfully", Severity.Success);
                 _editMode = false;
-                await LoadDataAsync();
+                await LoadDataAsync(); 
             }
             else
             {

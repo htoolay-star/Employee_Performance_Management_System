@@ -43,6 +43,7 @@ builder.Services.Configure<JsonSerializerOptions>(options =>
 });
 
 builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthenticationStateProvider>();
+builder.Services.AddScoped<LookupStateService>();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddMudServices();
 

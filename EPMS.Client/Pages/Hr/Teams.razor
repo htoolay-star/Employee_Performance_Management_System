@@ -8,6 +8,7 @@
    - After every CUD operation, calls RefreshDataAsync() to reload the page.
    ═══════════════════════════════════════════════════════════════════════════ *@
 @using EPMS.Client.Constants
+@using EPMS.Client.Services.Auth
 @using EPMS.Client.Services.Hr
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.DepartmentDTOs
@@ -19,9 +20,9 @@
 @using static EPMS.Shared.Constants.ServiceResponseMessages
 
 @inject IDialogService DialogService
-@inject IDepartmentApiClient DepartmentApiClient
 @inject ITeamApiClient TeamApiClient
 @inject ISnackbar Snackbar
+@inject LookupStateService LookupState
 
 <PageTitle>@UIConstants.Team.PageTitle - EPMS</PageTitle>
 
@@ -190,32 +191,12 @@
         { "Name", "Name" }
     };
 
-    // Prefetched data
-private List<LookUpDto>? _prefetchedDepartments;
-
     private List<LookUpDto> _departments = new();
-    // Lifecycle
-    protected override void OnInitialized()
-    {
-        _ = PrefetchDepartmentsAsync();
-    }
 
-    private async Task PrefetchDepartmentsAsync()
+    protected override async Task OnInitializedAsync()
     {
-        try
-        {
-            var response = await DepartmentApiClient.GetLookupAsync();
-            if (response.Success && response.Data != null)
-            {
-                _prefetchedDepartments = response.Data.ToList();
-                _departments = _prefetchedDepartments;
-                StateHasChanged();
-            }
-        }
-        catch (ApiException)
-        {
-            // Silent failure - dialogs will load themselves
-        }
+        _departments = await LookupState.GetDepartmentsAsync();
+        await base.OnInitializedAsync();
     }
 
     private async Task<GridData<TeamGridItemDto>> LoadServerDataAsync(GridState<TeamGridItemDto> state)
@@ -301,13 +282,8 @@ private List<LookUpDto>? _prefetchedDepartments;
     // Dialogs
     private async Task OpenCreateDialog()
     {
-        var parameters = new DialogParameters<TeamDialog>
-        {
-            { x => x.PreloadedDepartments, _prefetchedDepartments }
-        };
-
         var dialog = await DialogService.ShowAsync<TeamDialog>(
-            UIConstants.Team.CreateDialogTitle, parameters, _formDialogOptions);
+            UIConstants.Team.CreateDialogTitle, _formDialogOptions);
 
         if (await dialog.Result is { Canceled: false })
         {
@@ -321,8 +297,7 @@ private List<LookUpDto>? _prefetchedDepartments;
         var parameters = new DialogParameters<TeamDialog>
         {
             { x => x.IsEdit, true },
-            { x => x.Team, item.Adapt<TeamDto>() },
-            { x => x.PreloadedDepartments, _prefetchedDepartments }
+            { x => x.Team, item.Adapt<TeamDto>() }
         };
 
         var dialog = await DialogService.ShowAsync<TeamDialog>(
@@ -358,6 +333,7 @@ private List<LookUpDto>? _prefetchedDepartments;
             var response = await TeamApiClient.DeleteAsync(id);
             if (response.Success)
             {
+                LookupState.ClearTeamCache();
                 Snackbar.Add(TeamMsg.Deleted, Severity.Success);
                 await RefreshDataAsync();
             }

@@ -1,7 +1,9 @@
+@using EPMS.Client.Extensions
 @using EPMS.Client.Models.Info
 @using EPMS.Client.Services.Info
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.EmployeeInfoDTOs
+@using EPMS.Shared.Validators.EmployeeInfoDTOs
 @using Mapster
 @using MudBlazor
 @using Refit
@@ -19,101 +21,127 @@ else if (_contact == null)
 }
 else
 {
-    <MudGrid>
-        <MudItem xs="12" sm="6">
-            <MudPaper Elevation="0" Class="border rounded pa-4">
-                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">Phone Numbers</MudText>
-                <MudStack Spacing="2">
-                    <MudText><strong>Phone No:</strong> @_contact.PhoneNo ?? "-"</MudText>
-                    <MudText><strong>Permanent Phone:</strong> @_contact.PermanentPhoneNo ?? "-"</MudText>
-                    <MudText><strong>Present Phone:</strong> @_contact.PresentPhoneNo ?? "-"</MudText>
-                    <MudText><strong>Internal Phone:</strong> @_contact.InternalPhoneNo ?? "-"</MudText>
-                </MudStack>
-            </MudPaper>
-        </MudItem>
+    <MudPaper Elevation="0" Class="border rounded pa-4">
+        <MudForm @ref="_form" Model="@_model" Validation="@ValidateField">
+            <MudGrid>
 
-        <MudItem xs="12" sm="6">
-            <MudPaper Elevation="0" Class="border rounded pa-4">
-                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">Addresses</MudText>
-                <MudStack Spacing="2">
-                    <MudText><strong>Contact Address:</strong> @_contact.ContactAddress ?? "-"</MudText>
-                    <MudText><strong>Permanent Address:</strong> @_contact.PermanentAddress ?? "-"</MudText>
-                </MudStack>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6">
-            <MudPaper Elevation="0" Class="border rounded pa-4">
-                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">Emergency Contact</MudText>
-                <MudStack Spacing="2">
-                    <MudText><strong>Emergency Mobile:</strong> @_contact.EmergencyMobileNo ?? "-"</MudText>
-                    <MudText><strong>Relationship:</strong> @_contact.RelationWithEmergencyContact ?? "-"</MudText>
-                </MudStack>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12">
-            <MudStack Row="true" Justify="Justify.FlexEnd">
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.Edit"
-                           OnClick="ToggleEdit">
-                    Edit Contact
-                </MudButton>
-            </MudStack>
-        </MudItem>
-    </MudGrid>
+                @* ── Phone Numbers ── *@
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6" Color="Color.Primary" Class="mb-2">Phone Numbers</MudText>
+                </MudItem>
 
-    @if (_editMode)
-    {
-        <MudDivider Class="my-4" />
-        <MudText Typo="Typo.h6" Class="mb-4">Edit Contact</MudText>
-        <MudPaper Elevation="0" Class="border rounded pa-4">
-            <MudForm @ref="_form">
-                <MudGrid>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.PhoneNo"
-                                      Label="Phone No"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.PermanentPhoneNo"
-                                      Label="Permanent Phone No"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.PresentPhoneNo"
-                                      Label="Present Phone No"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.InternalPhoneNo"
-                                      Label="Internal Phone No"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Phone No</MudText>
+                        <MudText Typo="Typo.body1">@(_contact.PhoneNo ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.PhoneNo" Label="Phone No" Variant="Variant.Outlined" For="@(() => _model.PhoneNo)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Permanent Phone</MudText>
+                        <MudText Typo="Typo.body1">@(_contact.PermanentPhoneNo ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.PermanentPhoneNo" Label="Permanent Phone No" Variant="Variant.Outlined" For="@(() => _model.PermanentPhoneNo)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Present Phone</MudText>
+                        <MudText Typo="Typo.body1">@(_contact.PresentPhoneNo ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.PresentPhoneNo" Label="Present Phone No" Variant="Variant.Outlined" For="@(() => _model.PresentPhoneNo)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Internal Phone</MudText>
+                        <MudText Typo="Typo.body1">@(_contact.InternalPhoneNo ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.InternalPhoneNo" Label="Internal Phone No" Variant="Variant.Outlined" For="@(() => _model.InternalPhoneNo)" />
+                    }
+                </MudItem>
 
-                    <MudItem xs="12">
-                        <MudTextField @bind-Value="_model.ContactAddress"
-                                      Label="Contact Address"
-                                      Variant="Variant.Outlined"
-                                      Lines="2" />
-                    </MudItem>
-                    <MudItem xs="12">
-                        <MudTextField @bind-Value="_model.PermanentAddress"
-                                      Label="Permanent Address"
-                                      Variant="Variant.Outlined"
-                                      Lines="2" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.EmergencyMobileNo"
-                                      Label="Emergency Mobile No"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.RelationWithEmergencyContact"
-                                      Label="Relation With Emergency Contact"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12">
-                        <MudStack Row="true" Spacing="2" Justify="Justify.FlexEnd">
+                @* ── Addresses ── *@
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6" Color="Color.Primary" Class="mt-4 mb-2">Addresses</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Contact Address</MudText>
+                        <MudText Typo="Typo.body1">@(_contact.ContactAddress ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.ContactAddress" Label="Contact Address" Variant="Variant.Outlined" Lines="2" For="@(() => _model.ContactAddress)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Permanent Address</MudText>
+                        <MudText Typo="Typo.body1">@(_contact.PermanentAddress ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.PermanentAddress" Label="Permanent Address" Variant="Variant.Outlined" Lines="2" For="@(() => _model.PermanentAddress)" />
+                    }
+                </MudItem>
+
+                @* ── Emergency Contact ── *@
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6" Color="Color.Primary" Class="mt-4 mb-2">Emergency Contact</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Emergency Mobile</MudText>
+                        <MudText Typo="Typo.body1">@(_contact.EmergencyMobileNo ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.EmergencyMobileNo" Label="Emergency Mobile No" Variant="Variant.Outlined" For="@(() => _model.EmergencyMobileNo)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Relationship</MudText>
+                        <MudText Typo="Typo.body1">@(_contact.RelationWithEmergencyContact ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.RelationWithEmergencyContact" Label="Relation With Emergency Contact" Variant="Variant.Outlined" For="@(() => _model.RelationWithEmergencyContact)" />
+                    }
+                </MudItem>
+
+                @* ── Action Buttons ── *@
+                <MudItem xs="12">
+                    <MudStack Row="true" Spacing="2" Justify="Justify.FlexEnd" Class="mt-4">
+                        @if (!_editMode)
+                        {
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit" OnClick="ToggleEdit">
+                                Edit Contact
+                            </MudButton>
+                        }
+                        else
+                        {
                             <MudButton Variant="Variant.Outlined" OnClick="CancelEdit">Cancel</MudButton>
                             <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveContact" Disabled="_saving">
                                 @if (_saving)
@@ -122,12 +150,13 @@ else
                                 }
                                 Save
                             </MudButton>
-                        </MudStack>
-                    </MudItem>
-                </MudGrid>
-            </MudForm>
-        </MudPaper>
-    }
+                        }
+                    </MudStack>
+                </MudItem>
+
+            </MudGrid>
+        </MudForm>
+    </MudPaper>
 }
 
 @code {
@@ -141,6 +170,9 @@ else
     private MudForm? _form;
 
     private EmployeeContactFormModel _model = new();
+    private Dictionary<string, string> _serverErrors = new();
+
+    private readonly UpdateEmployeeContactValidator _validator = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -156,6 +188,7 @@ else
             if (response.Success && response.Data != null)
             {
                 _contact = response.Data;
+                ResetFormModel();
             }
         }
         catch (ApiException ex)
@@ -173,28 +206,44 @@ else
         }
     }
 
-    private void ToggleEdit()
+    private void ResetFormModel()
     {
         if (_contact == null) return;
 
         _model = _contact.Adapt<EmployeeContactFormModel>();
+    }
+
+    private async Task<IEnumerable<string>> ValidateField(object model, string propertyName)
+    {
+        return await _validator.ValidateMappedValue<EmployeeContactFormModel, UpdateEmployeeContactDto>(
+            _model, _serverErrors)(model, propertyName);
+    }
+
+    private void ToggleEdit()
+    {
         _editMode = true;
     }
 
     private void CancelEdit()
     {
+        ResetFormModel();
         _editMode = false;
     }
 
     private async Task SaveContact()
     {
-        if (_contact == null) return;
+        await _form!.Validate();
+        if (!_form.IsValid)
+        {
+            Snackbar.Add("Please fill all required fields correctly.", Severity.Warning);
+            return;
+        }
 
         _saving = true;
         try
         {
             var dto = _model.Adapt<UpdateEmployeeContactDto>();
-            var response = await ContactApiClient.UpdateAsync(_contact.Id, dto);
+            var response = await ContactApiClient.UpdateAsync(_contact!.Id, dto);
             if (response.Success)
             {
                 Snackbar.Add("Contact updated successfully", Severity.Success);

@@ -1,6 +1,7 @@
 @using EPMS.Client.Constants
 @using EPMS.Client.Extensions
 @using EPMS.Client.Models.Hr
+@using EPMS.Client.Services.Auth
 @using EPMS.Client.Services.Hr
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.DepartmentDTOs
@@ -10,6 +11,7 @@
 
 @inject IDepartmentApiClient DepartmentApiClient
 @inject ISnackbar Snackbar
+@inject LookupStateService LookupState
 
 <MudDialog>
     <DialogContent>
@@ -107,7 +109,10 @@
                 var response = await DepartmentApiClient.UpdateAsync(Department.Id, dto);
 
                 if (response.Success)
+                {
+                    LookupState.ClearDepartmentCache();
                     _mudDialog?.Close(DialogResult.Ok(true));
+                }
                 else
                     Snackbar.Add(response.Message ?? UIConstants.Common.UpdateFailed, Severity.Error);
             }
@@ -117,7 +122,10 @@
                 var response = await DepartmentApiClient.CreateAsync(dto);
 
                 if (response.Success)
+                {
+                    LookupState.ClearDepartmentCache();
                     _mudDialog?.Close(DialogResult.Ok(true));
+                }
                 else
                     Snackbar.Add(response.Message ?? UIConstants.Common.CreateFailed, Severity.Error);
             }

@@ -19,5 +19,29 @@ namespace EPMS.Client.Models.Info
         public string? WorkPermitNo { get; set; }
         public DateOnly? WorkPermitValidDate { get; set; }
         public DateOnly? WorkPermitExpireDate { get; set; }
+
+        public DateTime? DateOfBirthProxy
+        {
+            get => DateOfBirth?.ToDateTime(TimeOnly.MinValue);
+            set => DateOfBirth = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
+        }
+
+        public DateTime? PassportExpireDateProxy
+        {
+            get => PassportExpireDate?.ToDateTime(TimeOnly.MinValue);
+            set => PassportExpireDate = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
+        }
+
+        public DateTime? WorkPermitValidDateProxy
+        {
+            get => WorkPermitValidDate?.ToDateTime(TimeOnly.MinValue);
+            set => WorkPermitValidDate = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
+        }
+
+        public DateTime? WorkPermitExpireDateProxy
+        {
+            get => WorkPermitExpireDate?.ToDateTime(TimeOnly.MinValue);
+            set => WorkPermitExpireDate = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
+        }
     }
 }

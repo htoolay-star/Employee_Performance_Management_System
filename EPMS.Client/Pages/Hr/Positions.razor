@@ -9,6 +9,7 @@
      the current page from the server (no full list reload).
    ═══════════════════════════════════════════════════════════════════════════ *@
 @using EPMS.Client.Constants
+@using EPMS.Client.Services.Auth
 @using EPMS.Client.Services.Hr
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.LevelDTOs
@@ -20,9 +21,9 @@
 @using static EPMS.Shared.Constants.ServiceResponseMessages
 
 @inject IDialogService DialogService
-@inject ILevelApiClient LevelApiClient
 @inject IPositionApiClient PositionApiClient
 @inject ISnackbar Snackbar
+@inject LookupStateService LookupState
 
 <PageTitle>@UIConstants.Position.PageTitle - EPMS</PageTitle>
 
@@ -192,7 +193,6 @@
     };
 
     // ── Prefetched dropdown data ───────────────────────────────────────────────
-    private List<LookUpDto>? _prefetchedLevels;
     private List<LookUpDto> _levels = new();
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
@@ -200,7 +200,7 @@
     private async Task OnStatusFilterChanged(bool value)
     {
         _statusFilter = value;
-        await RefreshDataAsync(); // DataGrid ကို Server ကနေ ပြန်ဆွဲခိုင်းမယ်
+        await RefreshDataAsync();
     }
 
     private async Task OnLevelFilterChanged(long? value)
@@ -209,23 +209,10 @@
         await RefreshDataAsync();
     }
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        _ = PrefetchLevelsAsync();
-    }
-
-    private async Task PrefetchLevelsAsync()
-    {
-        try
-        {
-            var response = await LevelApiClient.GetLookupAsync();
-            if (response.Success && response.Data != null)
-            {
-                _prefetchedLevels = response.Data.ToList();
-                _levels = _prefetchedLevels;
-            }
-        }
-        catch (ApiException) { }
+        _levels = await LookupState.GetLevelsAsync();
+        await base.OnInitializedAsync();
     }
 
     // ── Server data callback (called by MudDataGrid on every page/sort change) ─
@@ -303,13 +290,8 @@
 
     private async Task OpenCreateDialog()
     {
-        var parameters = new DialogParameters<PositionDialog>
-        {
-            { x => x.PreloadedLevels, _prefetchedLevels }
-        };
-
         var dialog = await DialogService.ShowAsync<PositionDialog>(
-            UIConstants.Position.CreateDialogTitle, parameters, _formDialogOptions);
+            UIConstants.Position.CreateDialogTitle, _formDialogOptions);
 
         if (await dialog.Result is { Canceled: false })
         {
@@ -322,8 +304,7 @@
     {
         var parameters = new DialogParameters<PositionDialog>
         {
-            { x => x.Position, item.Adapt<PositionDto>() },
-            { x => x.PreloadedLevels, _prefetchedLevels }
+            { x => x.Position, item.Adapt<PositionDto>() }
         };
 
         var dialog = await DialogService.ShowAsync<PositionDialog>(
@@ -359,6 +340,7 @@
             var response = await PositionApiClient.DeleteAsync(id);
             if (response.Success)
             {
+                LookupState.ClearPositionCache();
                 Snackbar.Add(PositionMsg.Deleted, Severity.Success);
                 await RefreshDataAsync();
             }

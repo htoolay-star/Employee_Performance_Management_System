@@ -28,21 +28,21 @@
         </MudText>
 
         <MudPaper Elevation="2" Class="pa-2">
-            <MudTabs ApplyEffectsToContainer="true" PanelClass="pa-4">
+            <MudTabs @bind-ActivePanelIndex="_activeTabIndex" ApplyEffectsToContainer="true" PanelClass="pa-4">
                 <MudTabPanel Text="Profile" Icon="@Icons.Material.Filled.Person">
-                    <EmployeeProfileTab EmployeeId="@Id" PublicId="@_employee.PublicId" />
+                    <EmployeeProfileTab PublicId="@_employee.PublicId" />
                 </MudTabPanel>
                 <MudTabPanel Text="Employment" Icon="@Icons.Material.Filled.Work">
-                    <EmployeeEmploymentTab PublicId="@_employee.PublicId" />
+                    @if (_activatedTabs.Contains(1)) { <EmployeeEmploymentTab PublicId="@_employee.PublicId" /> }
                 </MudTabPanel>
                 <MudTabPanel Text="Contact" Icon="@Icons.Material.Filled.ContactPhone">
-                    <EmployeeContactTab PublicId="@_employee.PublicId" />
+                    @if (_activatedTabs.Contains(2)) { <EmployeeContactTab PublicId="@_employee.PublicId" /> }
                 </MudTabPanel>
                 <MudTabPanel Text="Family" Icon="@Icons.Material.Filled.FamilyRestroom">
-                    <EmployeeFamilyTab PublicId="@_employee.PublicId" />
+                    @if (_activatedTabs.Contains(3)) { <EmployeeFamilyTab PublicId="@_employee.PublicId" /> }
                 </MudTabPanel>
                 <MudTabPanel Text="Payroll" Icon="@Icons.Material.Filled.Payments">
-                    <EmployeePayrollTab PublicId="@_employee.PublicId" />
+                    @if (_activatedTabs.Contains(4)) { <EmployeePayrollTab PublicId="@_employee.PublicId" /> }
                 </MudTabPanel>
             </MudTabs>
         </MudPaper>
@@ -55,10 +55,21 @@
 
     private EmployeeProfileDto? _employee;
     private bool _loading = true;
+    private int _activeTabIndex;
+    private HashSet<int> _activatedTabs = new() { 0 };
 
     protected override async Task OnInitializedAsync()
     {
         await LoadEmployeeAsync();
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (!_activatedTabs.Contains(_activeTabIndex))
+        {
+            _activatedTabs.Add(_activeTabIndex);
+            StateHasChanged();
+        }
     }
 
     private async Task LoadEmployeeAsync()

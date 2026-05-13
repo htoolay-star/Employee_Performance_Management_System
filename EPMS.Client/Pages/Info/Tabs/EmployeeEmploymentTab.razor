@@ -1,7 +1,9 @@
+@using EPMS.Client.Extensions
 @using EPMS.Client.Models.Info
 @using EPMS.Client.Services.Info
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.EmployeeInfoDTOs
+@using EPMS.Shared.Validators.EmployeeInfoDTOs
 @using Mapster
 @using MudBlazor
 @using Refit
@@ -19,116 +21,175 @@ else if (_employment == null)
 }
 else
 {
-    <MudGrid>
-        <MudItem xs="12" sm="6">
-            <MudPaper Elevation="0" Class="border rounded pa-4">
-                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">Employment Details</MudText>
-                <MudStack Spacing="2">
-                    <MudText><strong>Employment Status:</strong> @_employment.EmploymentStatus</MudText>
-                    <MudText><strong>Staff Type:</strong> @_employment.StaffType ?? "-"</MudText>
-                    <MudText><strong>Probation Months:</strong> @_employment.ProbationMonth?.ToString() ?? "-"</MudText>
-                    <MudText><strong>Shift:</strong> @_employment.Shift ?? "-"</MudText>
-                </MudStack>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6">
-            <MudPaper Elevation="0" Class="border rounded pa-4">
-                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">Dates</MudText>
-                <MudStack Spacing="2">
-                    <MudText><strong>Date of Appointment:</strong> @_employment.DateOfAppointment?.ToString("yyyy-MM-dd") ?? "-"</MudText>
-                    <MudText><strong>Date of Confirmation:</strong> @_employment.DateOfConfirmation?.ToString("yyyy-MM-dd") ?? "-"</MudText>
-                    <MudText><strong>Date of Promotion:</strong> @_employment.DateOfPromotion?.ToString("yyyy-MM-dd") ?? "-"</MudText>
-                    <MudText><strong>Mobile Attendance:</strong> @(_employment.MobileAttendance ? "Yes" : "No")</MudText>
-                </MudStack>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6">
-            <MudPaper Elevation="0" Class="border rounded pa-4">
-                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">Work Information</MudText>
-                <MudStack Spacing="2">
-                    <MudText><strong>Department:</strong> @_employment.DepartmentName</MudText>
-                    <MudText><strong>Parent Department:</strong> @_employment.ParentDepartmentName</MudText>
-                    <MudText><strong>Team:</strong> @_employment.TeamName ?? "-"</MudText>
-                    <MudText><strong>Position:</strong> @_employment.PositionName</MudText>
-                    <MudText><strong>Product/Project:</strong> @_employment.ProductProject ?? "-"</MudText>
-                </MudStack>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6">
-            <MudPaper Elevation="0" Class="border rounded pa-4">
-                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">Finger Print</MudText>
-                <MudStack Spacing="2">
-                    <MudText><strong>Finger Print ID:</strong> @_employment.FingerPrintId ?? "-"</MudText>
-                    <MudText><strong>Direct Manager:</strong> @_employment.DirectManagerName ?? "-"</MudText>
-                </MudStack>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12">
-            <MudStack Row="true" Justify="Justify.FlexEnd">
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.Edit"
-                           OnClick="ToggleEdit">
-                    Edit Employment
-                </MudButton>
-            </MudStack>
-        </MudItem>
-    </MudGrid>
+    <MudPaper Elevation="0" Class="border rounded pa-4">
+        <MudForm @ref="_form" Model="@_model" Validation="@ValidateField">
+            <MudGrid>
 
-    @if (_editMode)
-    {
-        <MudDivider Class="my-4" />
-        <MudText Typo="Typo.h6" Class="mb-4">Edit Employment</MudText>
-        <MudPaper Elevation="0" Class="border rounded pa-4">
-            <MudForm @ref="_form">
-                <MudGrid>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.EmploymentStatus"
-                                      Label="Employment Status"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.StaffType"
-                                      Label="Staff Type"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudNumericField @bind-Value="_model.ProbationMonth"
-                                         Label="Probation Months"
-                                         Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.Shift"
-                                      Label="Shift"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudDatePicker @bind-Date="_dateOfAppointment"
-                                       Label="Date of Appointment"
-                                       Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudDatePicker @bind-Date="_dateOfConfirmation"
-                                       Label="Date of Confirmation"
-                                       Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.ProductProject"
-                                      Label="Product/Project"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.FingerPrintId"
-                                      Label="Finger Print ID"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudSwitch @bind-Value="_model.MobileAttendance"
-                                   Label="Mobile Attendance"
-                                   Color="Color.Success" />
-                    </MudItem>
-                    <MudItem xs="12">
-                        <MudStack Row="true" Spacing="2" Justify="Justify.FlexEnd">
+                @* ── Employment Details ── *@
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6" Color="Color.Primary" Class="mb-2">Employment Details</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Employment Status</MudText>
+                        <MudText Typo="Typo.body1">@_employment.EmploymentStatus</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.EmploymentStatus" Label="Employment Status" Variant="Variant.Outlined" For="@(() => _model.EmploymentStatus)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Staff Type</MudText>
+                        <MudText Typo="Typo.body1">@(_employment.StaffType ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.StaffType" Label="Staff Type" Variant="Variant.Outlined" For="@(() => _model.StaffType)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Probation Months</MudText>
+                        <MudText Typo="Typo.body1">@(_employment.ProbationMonth?.ToString() ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudNumericField @bind-Value="_model.ProbationMonth" Label="Probation Months" Variant="Variant.Outlined" For="@(() => _model.ProbationMonth)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Shift</MudText>
+                        <MudText Typo="Typo.body1">@(_employment.Shift ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.Shift" Label="Shift" Variant="Variant.Outlined" For="@(() => _model.Shift)" />
+                    }
+                </MudItem>
+
+                @* ── Dates ── *@
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6" Color="Color.Primary" Class="mt-4 mb-2">Dates</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Date of Appointment</MudText>
+                        <MudText Typo="Typo.body1">@(_employment.DateOfAppointment?.ToString("yyyy-MM-dd") ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudDatePicker @bind-Date="_model.DateOfAppointmentProxy" Label="Date of Appointment" Variant="Variant.Outlined" For="@(() => _model.DateOfAppointmentProxy)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Date of Confirmation</MudText>
+                        <MudText Typo="Typo.body1">@(_employment.DateOfConfirmation?.ToString("yyyy-MM-dd") ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudDatePicker @bind-Date="_model.DateOfConfirmationProxy" Label="Date of Confirmation" Variant="Variant.Outlined" For="@(() => _model.DateOfConfirmationProxy)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Date of Promotion</MudText>
+                        <MudText Typo="Typo.body1">@(_employment.DateOfPromotion?.ToString("yyyy-MM-dd") ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudDatePicker @bind-Date="_model.DateOfPromotionProxy" Label="Date of Promotion" Variant="Variant.Outlined" For="@(() => _model.DateOfPromotionProxy)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Mobile Attendance</MudText>
+                        <MudText Typo="Typo.body1">@(_employment.MobileAttendance ? "Yes" : "No")</MudText>
+                    }
+                    else
+                    {
+                        <MudSwitch @bind-Value="_model.MobileAttendance" Label="Mobile Attendance" Color="Color.Success" />
+                    }
+                </MudItem>
+
+                @* ── Work Information ── *@
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6" Color="Color.Primary" Class="mt-4 mb-2">Work Information</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Department</MudText>
+                    <MudText Typo="Typo.body1">@_employment.DepartmentName</MudText>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Parent Department</MudText>
+                    <MudText Typo="Typo.body1">@_employment.ParentDepartmentName</MudText>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Team</MudText>
+                    <MudText Typo="Typo.body1">@(_employment.TeamName ?? "-")</MudText>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Position</MudText>
+                    <MudText Typo="Typo.body1">@_employment.PositionName</MudText>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Product/Project</MudText>
+                        <MudText Typo="Typo.body1">@(_employment.ProductProject ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.ProductProject" Label="Product/Project" Variant="Variant.Outlined" For="@(() => _model.ProductProject)" />
+                    }
+                </MudItem>
+
+                @* ── Finger Print ── *@
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6" Color="Color.Primary" Class="mt-4 mb-2">Finger Print</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Finger Print ID</MudText>
+                        <MudText Typo="Typo.body1">@(_employment.FingerPrintId ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.FingerPrintId" Label="Finger Print ID" Variant="Variant.Outlined" For="@(() => _model.FingerPrintId)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Direct Manager</MudText>
+                    <MudText Typo="Typo.body1">@(_employment.DirectManagerName ?? "-")</MudText>
+                </MudItem>
+
+                @* ── Action Buttons ── *@
+                <MudItem xs="12">
+                    <MudStack Row="true" Spacing="2" Justify="Justify.FlexEnd" Class="mt-4">
+                        @if (!_editMode)
+                        {
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit" OnClick="ToggleEdit">
+                                Edit Employment
+                            </MudButton>
+                        }
+                        else
+                        {
                             <MudButton Variant="Variant.Outlined" OnClick="CancelEdit">Cancel</MudButton>
                             <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveEmployment" Disabled="_saving">
                                 @if (_saving)
@@ -137,12 +198,13 @@ else
                                 }
                                 Save
                             </MudButton>
-                        </MudStack>
-                    </MudItem>
-                </MudGrid>
-            </MudForm>
-        </MudPaper>
-    }
+                        }
+                    </MudStack>
+                </MudItem>
+
+            </MudGrid>
+        </MudForm>
+    </MudPaper>
 }
 
 @code {
@@ -156,8 +218,9 @@ else
     private MudForm? _form;
 
     private EmployeeEmploymentFormModel _model = new();
-    private DateTime? _dateOfAppointment;
-    private DateTime? _dateOfConfirmation;
+    private Dictionary<string, string> _serverErrors = new();
+
+    private readonly UpdateEmployeeEmploymentValidator _validator = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -173,6 +236,7 @@ else
             if (response.Success && response.Data != null)
             {
                 _employment = response.Data;
+                ResetFormModel();
             }
         }
         catch (ApiException ex)
@@ -190,33 +254,44 @@ else
         }
     }
 
-    private void ToggleEdit()
+    private void ResetFormModel()
     {
         if (_employment == null) return;
 
         _model = _employment.Adapt<EmployeeEmploymentFormModel>();
-        _dateOfAppointment = _employment.DateOfAppointment.HasValue ? _employment.DateOfAppointment.Value.ToDateTime(TimeOnly.MinValue) : null;
-        _dateOfConfirmation = _employment.DateOfConfirmation.HasValue ? _employment.DateOfConfirmation.Value.ToDateTime(TimeOnly.MinValue) : null;
+    }
+
+    private async Task<IEnumerable<string>> ValidateField(object model, string propertyName)
+    {
+        return await _validator.ValidateMappedValue<EmployeeEmploymentFormModel, UpdateEmployeeEmploymentDto>(
+            _model, _serverErrors)(model, propertyName);
+    }
+
+    private void ToggleEdit()
+    {
         _editMode = true;
     }
 
     private void CancelEdit()
     {
+        ResetFormModel();
         _editMode = false;
     }
 
     private async Task SaveEmployment()
     {
-        if (_employment == null) return;
+        await _form!.Validate();
+        if (!_form.IsValid)
+        {
+            Snackbar.Add("Please fill all required fields correctly.", Severity.Warning);
+            return;
+        }
 
         _saving = true;
         try
         {
-            _model.DateOfAppointment = _dateOfAppointment.HasValue ? DateOnly.FromDateTime(_dateOfAppointment.Value) : null;
-            _model.DateOfConfirmation = _dateOfConfirmation.HasValue ? DateOnly.FromDateTime(_dateOfConfirmation.Value) : null;
-
             var dto = _model.Adapt<UpdateEmployeeEmploymentDto>();
-            var response = await EmploymentApiClient.UpdateAsync(_employment.Id, dto);
+            var response = await EmploymentApiClient.UpdateAsync(_employment!.Id, dto);
             if (response.Success)
             {
                 Snackbar.Add("Employment updated successfully", Severity.Success);

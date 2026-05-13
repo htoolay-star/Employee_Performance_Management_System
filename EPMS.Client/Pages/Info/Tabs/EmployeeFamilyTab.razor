@@ -1,7 +1,9 @@
+@using EPMS.Client.Extensions
 @using EPMS.Client.Models.Info
 @using EPMS.Client.Services.Info
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.EmployeeInfoDTOs
+@using EPMS.Shared.Validators.EmployeeInfoDTOs
 @using Mapster
 @using MudBlazor
 @using Refit
@@ -19,91 +21,116 @@ else if (_familyInfo == null)
 }
 else
 {
-    <MudGrid>
-        <MudItem xs="12" sm="6">
-            <MudPaper Elevation="0" Class="border rounded pa-4">
-                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">Marital Status</MudText>
-                <MudStack Spacing="2">
-                    <MudText><strong>Marital Status:</strong> @_familyInfo.MaritalStatus ?? "-"</MudText>
-                </MudStack>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6">
-            <MudPaper Elevation="0" Class="border rounded pa-4">
-                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">Spouse</MudText>
-                <MudStack Spacing="2">
-                    <MudText><strong>Spouse Name:</strong> @_familyInfo.SpouseName ?? "-"</MudText>
-                    <MudText><strong>Spouse NRC No:</strong> @_familyInfo.SpouseNRCNo ?? "-"</MudText>
-                    <MudText><strong>Spouse Occupation:</strong> @_familyInfo.SpouseOccupation ?? "-"</MudText>
-                </MudStack>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6">
-            <MudPaper Elevation="0" Class="border rounded pa-4">
-                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">Father</MudText>
-                <MudStack Spacing="2">
-                    <MudText><strong>Father Name:</strong> @_familyInfo.FatherName ?? "-"</MudText>
-                    <MudText><strong>Father NRC No:</strong> @_familyInfo.FatherNRCNo ?? "-"</MudText>
-                    <MudText><strong>Father Occupation:</strong> @_familyInfo.FatherOccupation ?? "-"</MudText>
-                </MudStack>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12">
-            <MudStack Row="true" Justify="Justify.FlexEnd">
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.Edit"
-                           OnClick="ToggleEdit">
-                    Edit Family Info
-                </MudButton>
-            </MudStack>
-        </MudItem>
-    </MudGrid>
+    <MudPaper Elevation="0" Class="border rounded pa-4">
+        <MudForm @ref="_form" Model="@_model" Validation="@ValidateField">
+            <MudGrid>
 
-    @if (_editMode)
-    {
-        <MudDivider Class="my-4" />
-        <MudText Typo="Typo.h6" Class="mb-4">Edit Family Info</MudText>
-        <MudPaper Elevation="0" Class="border rounded pa-4">
-            <MudForm @ref="_form">
-                <MudGrid>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.MaritalStatus"
-                                      Label="Marital Status"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.SpouseName"
-                                      Label="Spouse Name"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.SpouseNRCNo"
-                                      Label="Spouse NRC No"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.SpouseOccupation"
-                                      Label="Spouse Occupation"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.FatherName"
-                                      Label="Father Name"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.FatherNRCNo"
-                                      Label="Father NRC No"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.FatherOccupation"
-                                      Label="Father Occupation"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12">
-                        <MudStack Row="true" Spacing="2" Justify="Justify.FlexEnd">
+                @* ── Marital Status ── *@
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6" Color="Color.Primary" Class="mb-2">Marital Status</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Marital Status</MudText>
+                        <MudText Typo="Typo.body1">@(_familyInfo.MaritalStatus ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.MaritalStatus" Label="Marital Status" Variant="Variant.Outlined" For="@(() => _model.MaritalStatus)" />
+                    }
+                </MudItem>
+
+                @* ── Spouse ── *@
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6" Color="Color.Primary" Class="mt-4 mb-2">Spouse</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Spouse Name</MudText>
+                        <MudText Typo="Typo.body1">@(_familyInfo.SpouseName ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.SpouseName" Label="Spouse Name" Variant="Variant.Outlined" For="@(() => _model.SpouseName)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Spouse NRC No</MudText>
+                        <MudText Typo="Typo.body1">@(_familyInfo.SpouseNRCNo ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.SpouseNRCNo" Label="Spouse NRC No" Variant="Variant.Outlined" For="@(() => _model.SpouseNRCNo)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Spouse Occupation</MudText>
+                        <MudText Typo="Typo.body1">@(_familyInfo.SpouseOccupation ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.SpouseOccupation" Label="Spouse Occupation" Variant="Variant.Outlined" For="@(() => _model.SpouseOccupation)" />
+                    }
+                </MudItem>
+
+                @* ── Father ── *@
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6" Color="Color.Primary" Class="mt-4 mb-2">Father</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Father Name</MudText>
+                        <MudText Typo="Typo.body1">@(_familyInfo.FatherName ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.FatherName" Label="Father Name" Variant="Variant.Outlined" For="@(() => _model.FatherName)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Father NRC No</MudText>
+                        <MudText Typo="Typo.body1">@(_familyInfo.FatherNRCNo ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.FatherNRCNo" Label="Father NRC No" Variant="Variant.Outlined" For="@(() => _model.FatherNRCNo)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Father Occupation</MudText>
+                        <MudText Typo="Typo.body1">@(_familyInfo.FatherOccupation ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.FatherOccupation" Label="Father Occupation" Variant="Variant.Outlined" For="@(() => _model.FatherOccupation)" />
+                    }
+                </MudItem>
+
+                @* ── Action Buttons ── *@
+                <MudItem xs="12">
+                    <MudStack Row="true" Spacing="2" Justify="Justify.FlexEnd" Class="mt-4">
+                        @if (!_editMode)
+                        {
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit" OnClick="ToggleEdit">
+                                Edit Family Info
+                            </MudButton>
+                        }
+                        else
+                        {
                             <MudButton Variant="Variant.Outlined" OnClick="CancelEdit">Cancel</MudButton>
                             <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveFamilyInfo" Disabled="_saving">
                                 @if (_saving)
@@ -112,12 +139,13 @@ else
                                 }
                                 Save
                             </MudButton>
-                        </MudStack>
-                    </MudItem>
-                </MudGrid>
-            </MudForm>
-        </MudPaper>
-    }
+                        }
+                    </MudStack>
+                </MudItem>
+
+            </MudGrid>
+        </MudForm>
+    </MudPaper>
 }
 
 @code {
@@ -131,6 +159,9 @@ else
     private MudForm? _form;
 
     private EmployeeFamilyFormModel _model = new();
+    private Dictionary<string, string> _serverErrors = new();
+
+    private readonly UpdateEmployeeFamilyInfoValidator _validator = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -146,6 +177,7 @@ else
             if (response.Success && response.Data != null)
             {
                 _familyInfo = response.Data;
+                ResetFormModel();
             }
         }
         catch (ApiException ex)
@@ -163,28 +195,44 @@ else
         }
     }
 
-    private void ToggleEdit()
+    private void ResetFormModel()
     {
         if (_familyInfo == null) return;
 
         _model = _familyInfo.Adapt<EmployeeFamilyFormModel>();
+    }
+
+    private async Task<IEnumerable<string>> ValidateField(object model, string propertyName)
+    {
+        return await _validator.ValidateMappedValue<EmployeeFamilyFormModel, UpdateEmployeeFamilyInfoDto>(
+            _model, _serverErrors)(model, propertyName);
+    }
+
+    private void ToggleEdit()
+    {
         _editMode = true;
     }
 
     private void CancelEdit()
     {
+        ResetFormModel();
         _editMode = false;
     }
 
     private async Task SaveFamilyInfo()
     {
-        if (_familyInfo == null) return;
+        await _form!.Validate();
+        if (!_form.IsValid)
+        {
+            Snackbar.Add("Please fill all required fields correctly.", Severity.Warning);
+            return;
+        }
 
         _saving = true;
         try
         {
             var dto = _model.Adapt<UpdateEmployeeFamilyInfoDto>();
-            var response = await FamilyInfoApiClient.UpdateAsync(_familyInfo.Id, dto);
+            var response = await FamilyInfoApiClient.UpdateAsync(_familyInfo!.Id, dto);
             if (response.Success)
             {
                 Snackbar.Add("Family info updated successfully", Severity.Success);

@@ -1,5 +1,5 @@
 using EPMS.Api.Controllers.Common;
-using EPMS.Domain.Services.Auth;
+using EPMS.Domain.Interface.IService.Auth;
 using EPMS.Shared.DTOs.AuthDTOs.PositionPermissionDTOs;
 using EPMS.Shared.DTOs.Common;
 using Microsoft.AspNetCore.Mvc;
@@ -15,20 +15,6 @@ public class PositionPermissionsController : ApiControllerBase
     public PositionPermissionsController(IPositionPermissionService service)
     {
         _service = service;
-    }
-
-    [HttpPost]
-    public async Task<ActionResult<SuccessResponse>> Create(CreatePositionPermissionDto dto)
-    {
-        var result = await _service.CreateAsync(dto);
-        return HandleResult(result);
-    }
-
-    [HttpDelete("position/{positionId:long}/permission/{permissionId:long}")]
-    public async Task<ActionResult<SuccessResponse>> Delete(long positionId, long permissionId)
-    {
-        var result = await _service.DeleteAsync(positionId, permissionId);
-        return HandleResult(result);
     }
 
     [HttpGet("{id:long}")]

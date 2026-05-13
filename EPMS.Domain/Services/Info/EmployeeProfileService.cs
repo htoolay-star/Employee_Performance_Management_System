@@ -17,20 +17,17 @@ public class EmployeeProfileService : IEmployeeProfileService
 {
     private readonly IUnitOfWork _uow;
     private readonly ICurrentEmployeeContextService _currentEmployee;
-    private readonly IPositionPermissionChecker _permissionChecker;
     private readonly IPasswordHasher _passwordHasher;
     private readonly ISystemSettingsService _settingsService;
 
     public EmployeeProfileService(
         IUnitOfWork uow,
         ICurrentEmployeeContextService currentEmployee,
-        IPositionPermissionChecker permissionChecker,
         IPasswordHasher passwordHasher,
         ISystemSettingsService settingsService)
     {
         _uow = uow;
         _currentEmployee = currentEmployee;
-        _permissionChecker = permissionChecker;
         _passwordHasher = passwordHasher;
         _settingsService = settingsService;
     }

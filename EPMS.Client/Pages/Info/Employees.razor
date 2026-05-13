@@ -1,6 +1,7 @@
 @page "/hr/employees"
 @using EPMS.Client.Constants
 @using EPMS.Client.Services.Hr
+@using EPMS.Client.Services.Auth
 @using EPMS.Client.Services.Info
 @using EPMS.Shared.Constants
 @using EPMS.Shared.DTOs.Common
@@ -16,6 +17,7 @@
 @inject IPositionApiClient PositionApiClient
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
+@inject LookupStateService LookupState
 
 <PageTitle>@UIConstants.Employee.PageTitle - EPMS</PageTitle>
 
@@ -185,30 +187,17 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadLookupsAsync();
-    }
-
-    private async Task LoadLookupsAsync()
-    {
         try
         {
-            var deptResponse = await DepartmentApiClient.GetLookupAsync();
-            if (deptResponse.Success && deptResponse.Data != null)
-            {
-                _departments = deptResponse.Data.ToList();
-            }
+            var deptTask = LookupState.GetDepartmentsAsync();
+            var teamTask = LookupState.GetTeamsAsync();
+            var posTask = LookupState.GetPositionsAsync();
 
-            var teamResponse = await TeamApiClient.GetLookupAsync();
-            if (teamResponse.Success && teamResponse.Data != null)
-            {
-                _teams = teamResponse.Data.ToList();
-            }
+            await Task.WhenAll(deptTask, teamTask, posTask);
 
-            var posResponse = await PositionApiClient.GetLookupAsync();
-            if (posResponse.Success && posResponse.Data != null)
-            {
-                _positions = posResponse.Data.ToList();
-            }
+            _departments = await deptTask;
+            _teams = await teamTask;
+            _positions = await posTask;
         }
         catch (Exception)
         {

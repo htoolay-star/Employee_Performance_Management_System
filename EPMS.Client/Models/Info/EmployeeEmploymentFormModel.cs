@@ -14,6 +14,24 @@ namespace EPMS.Client.Models.Info
         public DateOnly? DateOfAppointment { get; set; }
         public DateOnly? DateOfConfirmation { get; set; }
         public DateOnly? DateOfPromotion { get; set; }
+
+        public DateTime? DateOfAppointmentProxy
+        {
+            get => DateOfAppointment?.ToDateTime(TimeOnly.MinValue);
+            set => DateOfAppointment = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
+        }
+
+        public DateTime? DateOfConfirmationProxy
+        {
+            get => DateOfConfirmation?.ToDateTime(TimeOnly.MinValue);
+            set => DateOfConfirmation = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
+        }
+
+        public DateTime? DateOfPromotionProxy
+        {
+            get => DateOfPromotion?.ToDateTime(TimeOnly.MinValue);
+            set => DateOfPromotion = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
+        }
         public DateOnly? DateOfTermination { get; set; }
         public DateOnly? DateOfTransfer { get; set; }
         public DateOnly? DateOfDemotion { get; set; }

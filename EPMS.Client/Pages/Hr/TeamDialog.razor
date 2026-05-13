@@ -1,6 +1,7 @@
 @using EPMS.Client.Constants
 @using EPMS.Client.Extensions
 @using EPMS.Client.Models.Hr
+@using EPMS.Client.Services.Auth
 @using EPMS.Client.Services.Hr
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.DepartmentDTOs
@@ -10,8 +11,8 @@
 @using MudBlazor
 
 @inject ITeamApiClient TeamApiClient
-@inject IDepartmentApiClient DepartmentApiClient
 @inject ISnackbar Snackbar
+@inject LookupStateService LookupState
 
 <MudDialog>
     <DialogContent>
@@ -48,36 +49,23 @@
                                For="@(() => _model.DepartmentId)"
                                Variant="Variant.Outlined"
                                Clearable="true"
-                               Disabled="@_loadingDepartments"
-                               SearchFunc="SearchDepartments"
-                               ToStringFunc="GetDepartmentDisplay"
-                               ResetValueOnEmptyText="true"
-                               OpenIcon="@Icons.Material.Filled.ArrowDropDown">
-                        @if (_loadingDepartments)
+                                SearchFunc="SearchDepartments"
+                                ToStringFunc="GetDepartmentDisplay"
+                                ResetValueOnEmptyText="true"
+                                OpenIcon="@Icons.Material.Filled.ArrowDropDown">
+                        @foreach (var dept in AvailableDepartments)
                         {
-                            <MudSelectItem T="long?" Value="null">
-                                <div class="d-flex align-center">
-                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
-                                    <MudText Typo="Typo.body2">@UIConstants.Common.Loading</MudText>
-                                </div>
+                            <MudSelectItem T="long?" Value="@((long?)dept.Id)">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudText>@dept.Code</MudText>
+                                    @if (!dept.IsActive)
+                                    {
+                                        <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Text" Class="ml-auto">
+                                            Inactive
+                                        </MudChip>
+                                    }
+                                </MudStack>
                             </MudSelectItem>
-                        }
-                        else
-                        {
-                            @foreach (var dept in AvailableDepartments)
-                            {
-                                <MudSelectItem T="long?" Value="@((long?)dept.Id)">
-                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                                        <MudText>@dept.Code</MudText>
-                                        @if (!dept.IsActive)
-                                        {
-                                            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Text" Class="ml-auto">
-                                                Inactive
-                                            </MudChip>
-                                        }
-                                    </MudStack>
-                                </MudSelectItem>
-                            }
                         }
                     </MudAutocomplete>
                 }
@@ -118,9 +106,6 @@
     public TeamDto? Team { get; set; }
 
     [Parameter]
-    public List<LookUpDto>? PreloadedDepartments { get; set; }
-
-    [Parameter]
     public bool ShowDepartment { get; set; } = true;
 
     [Parameter]
@@ -128,7 +113,6 @@
 
     private MudForm? _form;
     private bool _saving;
-    private bool _loadingDepartments = true;
     private List<LookUpDto> _departments = new();
     private Dictionary<string, string> _serverErrors = new();
 
@@ -146,48 +130,14 @@
         if (Team is not null)
             _model = Team.Adapt<TeamFormModel>();
 
-        if (PreloadedDepartments is { Count: > 0 })
+        _departments = await LookupState.GetDepartmentsAsync();
+
+        if (!ShowDepartment && SelectedDepartmentId.HasValue)
         {
-            _departments = PreloadedDepartments;
-            await Task.Yield();
-            _loadingDepartments = false;
-            
-            if (!ShowDepartment && SelectedDepartmentId.HasValue)
-            {
-                _model.DepartmentId = SelectedDepartmentId.Value;
-            }
-        }
-        else
-        {
-            _ = LoadDepartmentsAsync();
+            _model.DepartmentId = SelectedDepartmentId.Value;
         }
 
         await base.OnInitializedAsync();
-    }
-
-    private async Task LoadDepartmentsAsync()
-    {
-        try
-        {
-            var response = await DepartmentApiClient.GetLookupAsync();
-            if (response.Success && response.Data != null)
-                _departments = response.Data.ToList();
-            else
-                Snackbar.Add(UIConstants.Common.LoadFailed, Severity.Error);
-        }
-        catch (Refit.ApiException)
-        {
-            Snackbar.Add(UIConstants.Common.LoadFailed, Severity.Error);
-        }
-        finally
-        {
-            _loadingDepartments = false;
-            await Task.Delay(1); // Small delay to ensure UI updates
-            StateHasChanged();
-            
-            // Force UI refresh to ensure dropdown displays properly
-            await Task.Yield();
-        }
     }
 
     private async Task Submit()
@@ -210,7 +160,10 @@
                 var response = await TeamApiClient.UpdateAsync(Team.Id, dto);
 
                 if (response.Success)
+                {
+                    LookupState.ClearTeamCache();
                     _mudDialog?.Close(DialogResult.Ok(true));
+                }
                 else
                     Snackbar.Add(response.Message ?? UIConstants.Common.UpdateFailed, Severity.Error);
             }
@@ -220,7 +173,10 @@
                 var response = await TeamApiClient.CreateAsync(dto);
 
                 if (response.Success)
+                {
+                    LookupState.ClearTeamCache();
                     _mudDialog?.Close(DialogResult.Ok(true));
+                }
                 else
                     Snackbar.Add(response.Message ?? UIConstants.Common.CreateFailed, Severity.Error);
             }
