@@ -33,4 +33,18 @@ public interface IEmployeeProfileApiClient
 
     [Delete("/api/employee-profiles/{id}")]
     Task<SuccessResponse> DeleteAsync(long id);
+
+    [Get("/api/employee-profiles/export")]
+    Task<HttpResponseMessage> ExportAsync();
+
+    [Get("/api/employee-profiles/export-template")]
+    Task<HttpResponseMessage> ExportTemplateAsync();
+
+    [Multipart]
+    [Post("/api/employee-profiles/import-preview")]
+    Task<SuccessResponse<ImportPreviewResult>> ImportPreviewAsync(MultipartFormDataContent content);
+
+    [Multipart]
+    [Post("/api/employee-profiles/import")]
+    Task<SuccessResponse<ImportResult>> ImportAsync(MultipartFormDataContent content);
 }

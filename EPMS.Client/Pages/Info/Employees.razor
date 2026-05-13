@@ -19,6 +19,7 @@
 @inject IDialogService DialogService
 @inject NavigationManager Navigation
 @inject LookupStateService LookupState
+@inject IJSRuntime JS
 
 <PageTitle>@UIConstants.Employee.PageTitle - EPMS</PageTitle>
 
@@ -131,12 +132,31 @@
                                   SortDirection="@_sortDirection"
                                   SortColumns="@_sortableColumns"
                                   OnSortChanged="OnSortChanged" />
+                <MudButton Variant="Variant.Outlined" Color="Color.Info"
+                           StartIcon="@Icons.Material.Filled.Download"
+                           OnClick="DownloadTemplateAsync">
+                    Template
+                </MudButton>
+                <MudFileUpload T="IReadOnlyList<IBrowserFile>" Hidden="true" FilesChanged="OnImportFileSelected">
+                    <ActivatorContent>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Warning"
+                                   StartIcon="@Icons.Material.Filled.Upload">
+                            Import
+                        </MudButton>
+                    </ActivatorContent>
+                </MudFileUpload>
+                <MudButton Variant="Variant.Outlined" Color="Color.Success"
+                           StartIcon="@Icons.Material.Filled.FileDownload"
+                           OnClick="ExportAsync">
+                    Export
+                </MudButton>
                 <MudButton Variant="Variant.Filled" Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.Add"
                            OnClick="OpenCreateWizardAsync">
                     Add Employee
                 </MudButton>
             </MudStack>
+
         </MudStack>
 
         @* ── Data Grid ────────────────────────────────────────────────── *@
@@ -217,6 +237,9 @@
 @code {
     private MudDataGrid<EmployeeProfileGridItemDto> _dataGrid = null!;
     private bool _isLoading = false;
+    private bool _importing = false;
+    private byte[]? _importFileBytes;
+    private string? _importFileName;
     
     // Filters
     private string _searchString = string.Empty;
@@ -409,6 +432,132 @@
         {
             Snackbar.Add("Employee created successfully.", Severity.Success);
             NavigateToDetail(newId);
+        }
+    }
+
+    private async Task ExportAsync()
+    {
+        try
+        {
+            var response = await EmployeeProfileApiClient.ExportAsync();
+            if (response.IsSuccessStatusCode)
+            {
+                var bytes = await response.Content.ReadAsByteArrayAsync();
+                var base64 = Convert.ToBase64String(bytes);
+                await JS.InvokeVoidAsync("downloadFile", $"employees-{DateTime.Now:yyyy-MM-dd}.xlsx", base64);
+                Snackbar.Add("Export completed.", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Export failed.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Export error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DownloadTemplateAsync()
+    {
+        try
+        {
+            var response = await EmployeeProfileApiClient.ExportTemplateAsync();
+            if (response.IsSuccessStatusCode)
+            {
+                var bytes = await response.Content.ReadAsByteArrayAsync();
+                var base64 = Convert.ToBase64String(bytes);
+                await JS.InvokeVoidAsync("downloadFile", "employee-import-template.xlsx", base64);
+            }
+            else
+            {
+                Snackbar.Add("Template download failed.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Template error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task OnImportFileSelected(IReadOnlyList<IBrowserFile> files)
+    {
+        var file = files.FirstOrDefault();
+        if (file == null) return;
+
+        _importing = true;
+        StateHasChanged();
+
+        try
+        {
+            using var ms = new MemoryStream();
+            await file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(ms);
+            ms.Position = 0;
+
+            _importFileBytes = ms.ToArray();
+            _importFileName = file.Name;
+
+            var content = new MultipartFormDataContent();
+            content.Add(new ByteArrayContent(_importFileBytes), "file", _importFileName);
+
+            var preview = await EmployeeProfileApiClient.ImportPreviewAsync(content);
+
+            if (!preview.Success || preview.Data == null)
+            {
+                Snackbar.Add(preview?.Message ?? "Preview failed.", Severity.Error);
+                return;
+            }
+
+            var dialog = await DialogService.ShowAsync<ImportPreviewDialog>(
+                "Import Preview",
+                new DialogParameters { ["PreviewResult"] = preview.Data },
+                new DialogOptions { MaxWidth = MaxWidth.ExtraLarge, FullWidth = true, CloseButton = true });
+
+            var result = await dialog.Result;
+            if (!result.Canceled)
+            {
+                await ImportConfirmedAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Import error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _importing = false;
+            _importFileBytes = null;
+            _importFileName = null;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ImportConfirmedAsync()
+    {
+        if (_importFileBytes == null) return;
+
+        try
+        {
+            var content = new MultipartFormDataContent();
+            content.Add(new ByteArrayContent(_importFileBytes), "file", _importFileName ?? "import.xlsx");
+
+            var result = await EmployeeProfileApiClient.ImportAsync(content);
+
+            if (result.Success && result.Data != null)
+            {
+                var msg = result.Data.Errors.Count > 0
+                    ? $"{result.Data.SuccessCount} created, {result.Data.ErrorCount} errors."
+                    : $"{result.Data.SuccessCount} employees imported successfully.";
+                Snackbar.Add(msg, result.Data.ErrorCount > 0 ? Severity.Warning : Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add(result.Message ?? "Import failed.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Import error: {ex.Message}", Severity.Error);
         }
     }
 }
