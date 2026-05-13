@@ -1,0 +1,132 @@
+@page "/hr/categories"
+@using EPMS.Client.Services
+@using EPMS.Shared.DTOs.CategoryDTOs
+@using MudBlazor
+
+@inject ICategoryApiClient CategoryApiClient
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudStack Row="true" Justify="Justify.SpaceBetween" Class="mb-4">
+        <MudText Typo="Typo.h4">Categories</MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenCreateDialog" StartIcon="@Icons.Material.Filled.Add">Add Category</MudButton>
+    </MudStack>
+
+    <MudPaper Outlined="true" Class="pa-4">
+        <MudStack Row="true" Spacing="4" Class="mb-4">
+            <MudTextField @bind-Value="_searchString" Placeholder="Search..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" Variant="Variant.Outlined" />
+            <MudSelect T="bool" Value="@_statusFilter" ValueChanged="OnStatusChanged" Variant="Variant.Outlined" Style="width:150px">
+                <MudSelectItem Value="true">Active</MudSelectItem>
+                <MudSelectItem Value="false">Inactive</MudSelectItem>
+            </MudSelect>
+        </MudStack>
+
+        <MudDataGrid Items="@_categories" QuickFilter="QuickFilter" Loading="_loading">
+            <Columns>
+                <TemplateColumn Title="No.">
+                    <CellTemplate>@_rowNumbers.GetValueOrDefault(context.Item.Id)</CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.Code" />
+                <PropertyColumn Property="x => x.Name" />
+                <PropertyColumn Property="x => x.Module" />
+                <PropertyColumn Property="x => x.ParentName" Title="Parent" />
+                <PropertyColumn Property="x => x.Description" Title="Description" />
+                <TemplateColumn Title="Actions">
+                    <CellTemplate>
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => OpenEditDialog(context.Item))" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => OpenDeleteDialog(context.Item))" />
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+            <PagerContent><MudDataGridPager T="CategoryDto" /></PagerContent>
+        </MudDataGrid>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private List<CategoryDto> _categories = new();
+    private bool _loading = true;
+    private string _searchString = "";
+    private bool _statusFilter = true;
+    private Dictionary<long, int> _rowNumbers = new();
+
+    protected override async Task OnInitializedAsync() => await LoadDataAsync();
+
+    private async Task LoadDataAsync()
+    {
+        _loading = true;
+        var res = await CategoryApiClient.GetAllAsync();
+        if (res.Success)
+        {
+            _categories = res.Data.ToList();
+            RefreshRowNumbers();
+        }
+        _loading = false;
+    }
+
+    private bool QuickFilter(CategoryDto x)
+    {
+        if (x.IsActive != _statusFilter) return false;
+        if (string.IsNullOrWhiteSpace(_searchString)) return true;
+        return x.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase) || x.Code.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void RefreshRowNumbers()
+    {
+        _rowNumbers = _categories.Where(x => x.IsActive == _statusFilter)
+            .Select((x, i) => new { x.Id, Index = i + 1 })
+            .ToDictionary(x => x.Id, x => x.Index);
+    }
+
+    private async Task OnStatusChanged(bool val)
+    {
+        _statusFilter = val;
+        RefreshRowNumbers();
+        StateHasChanged();
+    }
+
+
+    private async Task OpenCreateDialog()
+    {
+        var dial = await DialogService.ShowAsync<CategoryDialog>("Create Category");
+        if (!(await dial.Result).Canceled) await LoadDataAsync();
+    }
+
+    private async Task OpenEditDialog(CategoryDto item)
+    {
+        var param = new DialogParameters { ["Category"] = item };
+        var dial = await DialogService.ShowAsync<CategoryDialog>("Edit Category", param);
+        if (!(await dial.Result).Canceled) await LoadDataAsync();
+    }
+
+    private async Task OpenDeleteDialog(CategoryDto item)
+    {
+        // Confirm Dialog Parameters ????????????
+        var parameters = new DialogParameters<ConfirmDialog>
+    {
+        { x => x.ContentText, $"Are you sure you want to delete category '{item.Name}'?" },
+        { x => x.ButtonText, "Delete" },
+        { x => x.Color, Color.Error }
+    };
+
+        // Confirm Dialog ??? ??????????
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete Confirmation", parameters);
+        var result = await dialog.Result;
+
+        // ????? Cancel ??????? Delete ??? ??????????? API ???????
+        if (!result.Canceled)
+        {
+            var res = await CategoryApiClient.DeleteAsync(item.Id);
+            if (res.Success)
+            {
+                Snackbar.Add("Category deleted successfully", Severity.Success);
+                await LoadDataAsync();
+            }
+            else
+            {
+                Snackbar.Add(res.Message ?? "Delete failed", Severity.Error);
+            }
+        }
+    }
+}

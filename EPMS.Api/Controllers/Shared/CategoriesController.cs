@@ -10,7 +10,7 @@ namespace EPMS.Api.Controllers.Shared;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize(Roles = RoleConstants.Admin)]
+//[Authorize(Roles = RoleConstants.Admin)]
 public class CategoriesController : ApiControllerBase
 {
     private readonly ICategoryService _categoryService;
@@ -18,6 +18,12 @@ public class CategoriesController : ApiControllerBase
     public CategoriesController(ICategoryService categoryService)
     {
         _categoryService = categoryService;
+    }
+    [HttpGet("lookup")]
+    public async Task<ActionResult<SuccessResponse<IEnumerable<LookUpDto>>>> GetLookup()
+    {
+        var result = await _categoryService.GetLookupAsync();
+        return HandleResult(result);
     }
 
     [HttpGet]
@@ -27,8 +33,8 @@ public class CategoriesController : ApiControllerBase
         return HandleResult(result);
     }
 
-    [HttpGet("{id:int}")]
-    public async Task<ActionResult<SuccessResponse<CategoryDto>>> GetById(int id)
+    [HttpGet("{id:long}")]
+    public async Task<ActionResult<SuccessResponse<CategoryDto>>> GetById(long id)
     {
         var result = await _categoryService.GetCategoryByIdAsync(id);
         return HandleResult(result);
@@ -41,15 +47,15 @@ public class CategoriesController : ApiControllerBase
         return HandleResult(result);
     }
 
-    [HttpPut("{id:int}")]
-    public async Task<ActionResult<SuccessResponse>> Update(int id, UpdateCategoryDto dto)
+    [HttpPut("{id:long}")]
+    public async Task<ActionResult<SuccessResponse>> Update(long id, UpdateCategoryDto dto)
     {
         var result = await _categoryService.UpdateCategoryAsync(id, dto);
         return HandleResult(result);
     }
 
-    [HttpDelete("{id:int}")]
-    public async Task<ActionResult<SuccessResponse>> Delete(int id)
+    [HttpDelete("{id:long}")]
+    public async Task<ActionResult<SuccessResponse>> Delete(long id)
     {
         var result = await _categoryService.DeleteCategoryAsync(id);
         return HandleResult(result);

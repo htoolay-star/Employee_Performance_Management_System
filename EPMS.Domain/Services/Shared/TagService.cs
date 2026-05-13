@@ -20,7 +20,20 @@ public class TagService : ITagService
         _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
+    public async Task<SuccessResponse<IEnumerable<LookUpDto>>> GetLookupAsync()
+    {
+        var tuples = await _unitOfWork.Shared.Tags.GetLookupAsync();
 
+        var dtos = tuples.Select(t => new LookUpDto
+        {
+            Id = t.Id,
+            Code = t.Code,
+            Name = t.Code,
+            IsActive = true
+        }).ToList();
+
+        return SuccessResponse<IEnumerable<LookUpDto>>.Ok(dtos, TagMsg.RetrievedAll);
+    }
     public async Task<SuccessResponse<IEnumerable<TagDto>>> GetAllTagsAsync()
     {
         var tags = await _unitOfWork.Shared.Tags.GetAllAsync();
@@ -28,7 +41,7 @@ public class TagService : ITagService
         return SuccessResponse<IEnumerable<TagDto>>.Ok(dtos, TagMsg.RetrievedAll);
     }
 
-    public async Task<SuccessResponse<TagDto>> GetTagByIdAsync(int id)
+    public async Task<SuccessResponse<TagDto>> GetTagByIdAsync(long id)
     {
         var tag = await _unitOfWork.Shared.Tags.GetByIdAsync(id);
 
@@ -54,7 +67,7 @@ public class TagService : ITagService
         return SuccessResponse<long>.Ok(tag.Id, TagMsg.Created);
     }
 
-    public async Task<SuccessResponse> UpdateTagAsync(int id, UpdateTagDto dto)
+    public async Task<SuccessResponse> UpdateTagAsync(long id, UpdateTagDto dto)
     {
         var tag = await _unitOfWork.Shared.Tags.GetByIdAsync(id);
 
@@ -72,7 +85,7 @@ public class TagService : ITagService
         return SuccessResponse.Ok(TagMsg.Updated);
     }
 
-    public async Task<SuccessResponse> DeleteTagAsync(int id)
+    public async Task<SuccessResponse> DeleteTagAsync(long id)
     {
         var tag = await _unitOfWork.Shared.Tags.GetByIdAsync(id);
 
