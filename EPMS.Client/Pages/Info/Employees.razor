@@ -1,6 +1,7 @@
 @page "/hr/employees"
 @using EPMS.Client.Constants
 @using EPMS.Client.Services.Hr
+@using EPMS.Client.Services.Auth
 @using EPMS.Client.Services.Info
 @using EPMS.Shared.Constants
 @using EPMS.Shared.DTOs.Common
@@ -15,7 +16,10 @@
 @inject ITeamApiClient TeamApiClient
 @inject IPositionApiClient PositionApiClient
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 @inject NavigationManager Navigation
+@inject LookupStateService LookupState
+@inject IJSRuntime JS
 
 <PageTitle>@UIConstants.Employee.PageTitle - EPMS</PageTitle>
 
@@ -38,44 +42,89 @@
                               Variant="Variant.Outlined"
                               Style="max-width: 300px;" />
 
-                <MudSelect T="long?"
+                <MudAutocomplete T="long?"
                            Value="@_departmentFilter"
-                           ValueChanged="OnDepartmentFilterChanged"
+                           ValueChanged="@OnDepartmentFilterChanged"
                            Placeholder="All Departments"
-                           Variant="Variant.Outlined"
                            Clearable="true"
-                           Style="max-width: 200px;">
-                    @foreach (var dept in _departments)
-                    {
-                        <MudSelectItem T="long?" Value="@dept.Id">@dept.Code</MudSelectItem>
-                    }
-                </MudSelect>
+                           Variant="Variant.Outlined"
+                           Style="max-width: 200px;"
+                           SearchFunc="SearchFilterDepartments"
+                           ToStringFunc="GetFilterDepartmentDisplay"
+                           ResetValueOnEmptyText="true"
+                           OpenIcon="@Icons.Material.Filled.ArrowDropDown">
+                    <ItemTemplate Context="deptId">
+                        @{ var dept = _departments.FirstOrDefault(x => x.Id == deptId); }
+                        @if (dept != null)
+                        {
+                            <MudStack Row="true" AlignItems="AlignItems.Center">
+                                <MudText>@dept.Code</MudText>
+                                @if (!dept.IsActive)
+                                {
+                                        <MudTooltip Text="This department is inactive" Placement="Placement.Right">
+                                            <MudIcon Icon="@Icons.Material.Filled.WarningAmber" Color="Color.Warning" Size="Size.Small" />
+                                        </MudTooltip>
+                                }
+                            </MudStack>
+                        }
+                    </ItemTemplate>
+                </MudAutocomplete>
 
-                <MudSelect T="long?"
+                <MudAutocomplete T="long?"
                            Value="@_teamFilter"
-                           ValueChanged="OnTeamFilterChanged"
+                           ValueChanged="@OnTeamFilterChanged"
                            Placeholder="All Teams"
-                           Variant="Variant.Outlined"
                            Clearable="true"
-                           Style="max-width: 200px;">
-                    @foreach (var team in _teams)
-                    {
-                        <MudSelectItem T="long?" Value="@team.Id">@team.Code</MudSelectItem>
-                    }
-                </MudSelect>
+                           Variant="Variant.Outlined"
+                           Style="max-width: 200px;"
+                           SearchFunc="SearchFilterTeams"
+                           ToStringFunc="GetFilterTeamDisplay"
+                           ResetValueOnEmptyText="true"
+                           OpenIcon="@Icons.Material.Filled.ArrowDropDown">
+                    <ItemTemplate Context="teamId">
+                        @{ var team = _teams.FirstOrDefault(x => x.Id == teamId); }
+                        @if (team != null)
+                        {
+                            <MudStack Row="true" AlignItems="AlignItems.Center">
+                                <MudText>@team.Code</MudText>
+                                @if (!team.IsActive)
+                                {
+                                        <MudTooltip Text="This team is inactive" Placement="Placement.Right">
+                                            <MudIcon Icon="@Icons.Material.Filled.WarningAmber" Color="Color.Warning" Size="Size.Small" />
+                                        </MudTooltip>
+                                }
+                            </MudStack>
+                        }
+                    </ItemTemplate>
+                </MudAutocomplete>
 
-                <MudSelect T="long?"
+                <MudAutocomplete T="long?"
                            Value="@_positionFilter"
-                           ValueChanged="OnPositionFilterChanged"
+                           ValueChanged="@OnPositionFilterChanged"
                            Placeholder="All Positions"
-                           Variant="Variant.Outlined"
                            Clearable="true"
-                           Style="max-width: 200px;">
-                    @foreach (var pos in _positions)
-                    {
-                        <MudSelectItem T="long?" Value="@pos.Id">@pos.Code</MudSelectItem>
-                    }
-                </MudSelect>
+                           Variant="Variant.Outlined"
+                           Style="max-width: 200px;"
+                           SearchFunc="SearchFilterPositions"
+                           ToStringFunc="GetFilterPositionDisplay"
+                           ResetValueOnEmptyText="true"
+                           OpenIcon="@Icons.Material.Filled.ArrowDropDown">
+                    <ItemTemplate Context="posId">
+                        @{ var pos = _positions.FirstOrDefault(x => x.Id == posId); }
+                        @if (pos != null)
+                        {
+                            <MudStack Row="true" AlignItems="AlignItems.Center">
+                                <MudText>@pos.Code</MudText>
+                                @if (!pos.IsActive)
+                                {
+                                        <MudTooltip Text="This position is inactive" Placement="Placement.Right">
+                                            <MudIcon Icon="@Icons.Material.Filled.WarningAmber" Color="Color.Warning" Size="Size.Small" />
+                                        </MudTooltip>
+                                }
+                            </MudStack>
+                        }
+                    </ItemTemplate>
+                </MudAutocomplete>
             </MudStack>
 
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
@@ -83,7 +132,31 @@
                                   SortDirection="@_sortDirection"
                                   SortColumns="@_sortableColumns"
                                   OnSortChanged="OnSortChanged" />
+                <MudButton Variant="Variant.Outlined" Color="Color.Info"
+                           StartIcon="@Icons.Material.Filled.Download"
+                           OnClick="DownloadTemplateAsync">
+                    Template
+                </MudButton>
+                <MudFileUpload T="IReadOnlyList<IBrowserFile>" Hidden="true" FilesChanged="OnImportFileSelected">
+                    <ActivatorContent>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Warning"
+                                   StartIcon="@Icons.Material.Filled.Upload">
+                            Import
+                        </MudButton>
+                    </ActivatorContent>
+                </MudFileUpload>
+                <MudButton Variant="Variant.Outlined" Color="Color.Success"
+                           StartIcon="@Icons.Material.Filled.FileDownload"
+                           OnClick="ExportAsync">
+                    Export
+                </MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenCreateWizardAsync">
+                    Add Employee
+                </MudButton>
             </MudStack>
+
         </MudStack>
 
         @* ── Data Grid ────────────────────────────────────────────────── *@
@@ -164,6 +237,9 @@
 @code {
     private MudDataGrid<EmployeeProfileGridItemDto> _dataGrid = null!;
     private bool _isLoading = false;
+    private bool _importing = false;
+    private byte[]? _importFileBytes;
+    private string? _importFileName;
     
     // Filters
     private string _searchString = string.Empty;
@@ -185,30 +261,17 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadLookupsAsync();
-    }
-
-    private async Task LoadLookupsAsync()
-    {
         try
         {
-            var deptResponse = await DepartmentApiClient.GetLookupAsync();
-            if (deptResponse.Success && deptResponse.Data != null)
-            {
-                _departments = deptResponse.Data.ToList();
-            }
+            var deptTask = LookupState.GetDepartmentsAsync();
+            var teamTask = LookupState.GetTeamsAsync();
+            var posTask = LookupState.GetPositionsAsync();
 
-            var teamResponse = await TeamApiClient.GetLookupAsync();
-            if (teamResponse.Success && teamResponse.Data != null)
-            {
-                _teams = teamResponse.Data.ToList();
-            }
+            await Task.WhenAll(deptTask, teamTask, posTask);
 
-            var posResponse = await PositionApiClient.GetLookupAsync();
-            if (posResponse.Success && posResponse.Data != null)
-            {
-                _positions = posResponse.Data.ToList();
-            }
+            _departments = await deptTask;
+            _teams = await teamTask;
+            _positions = await posTask;
         }
         catch (Exception)
         {
@@ -302,6 +365,54 @@
         await RefreshDataAsync();
     }
 
+    private Task<IEnumerable<long?>> SearchFilterDepartments(string value, CancellationToken token)
+    {
+        var query = _departments.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(value))
+            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(query.Select(x => (long?)x.Id).AsEnumerable());
+    }
+
+    private string GetFilterDepartmentDisplay(long? id)
+    {
+        if (id == null) return string.Empty;
+        var dept = _departments.FirstOrDefault(x => x.Id == id);
+        if (dept == null) return string.Empty;
+        return dept.IsActive ? dept.Code : $"{dept.Code} (Inactive)";
+    }
+
+    private Task<IEnumerable<long?>> SearchFilterTeams(string value, CancellationToken token)
+    {
+        var query = _teams.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(value))
+            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(query.Select(x => (long?)x.Id).AsEnumerable());
+    }
+
+    private string GetFilterTeamDisplay(long? id)
+    {
+        if (id == null) return string.Empty;
+        var team = _teams.FirstOrDefault(x => x.Id == id);
+        if (team == null) return string.Empty;
+        return team.IsActive ? team.Code : $"{team.Code} (Inactive)";
+    }
+
+    private Task<IEnumerable<long?>> SearchFilterPositions(string value, CancellationToken token)
+    {
+        var query = _positions.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(value))
+            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(query.Select(x => (long?)x.Id).AsEnumerable());
+    }
+
+    private string GetFilterPositionDisplay(long? id)
+    {
+        if (id == null) return string.Empty;
+        var pos = _positions.FirstOrDefault(x => x.Id == id);
+        if (pos == null) return string.Empty;
+        return pos.IsActive ? pos.Code : $"{pos.Code} (Inactive)";
+    }
+
     private async Task RefreshDataAsync()
     {
         if (_dataGrid is not null)
@@ -311,5 +422,142 @@
     private void NavigateToDetail(long id)
     {
         Navigation.NavigateTo($"/hr/employees/{id}");
+    }
+
+    private async Task OpenCreateWizardAsync()
+    {
+        var dialog = await DialogService.ShowAsync<EmployeeCreateWizard>("Add Employee");
+        var result = await dialog.Result;
+        if (!result.Canceled && result.Data is long newId)
+        {
+            Snackbar.Add("Employee created successfully.", Severity.Success);
+            NavigateToDetail(newId);
+        }
+    }
+
+    private async Task ExportAsync()
+    {
+        try
+        {
+            var response = await EmployeeProfileApiClient.ExportAsync();
+            if (response.IsSuccessStatusCode)
+            {
+                var bytes = await response.Content.ReadAsByteArrayAsync();
+                var base64 = Convert.ToBase64String(bytes);
+                await JS.InvokeVoidAsync("downloadFile", $"employees-{DateTime.Now:yyyy-MM-dd}.xlsx", base64);
+                Snackbar.Add("Export completed.", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Export failed.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Export error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DownloadTemplateAsync()
+    {
+        try
+        {
+            var response = await EmployeeProfileApiClient.ExportTemplateAsync();
+            if (response.IsSuccessStatusCode)
+            {
+                var bytes = await response.Content.ReadAsByteArrayAsync();
+                var base64 = Convert.ToBase64String(bytes);
+                await JS.InvokeVoidAsync("downloadFile", "employee-import-template.xlsx", base64);
+            }
+            else
+            {
+                Snackbar.Add("Template download failed.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Template error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task OnImportFileSelected(IReadOnlyList<IBrowserFile> files)
+    {
+        var file = files.FirstOrDefault();
+        if (file == null) return;
+
+        _importing = true;
+        StateHasChanged();
+
+        try
+        {
+            using var ms = new MemoryStream();
+            await file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(ms);
+            ms.Position = 0;
+
+            _importFileBytes = ms.ToArray();
+            _importFileName = file.Name;
+
+            var content = new MultipartFormDataContent();
+            content.Add(new ByteArrayContent(_importFileBytes), "file", _importFileName);
+
+            var preview = await EmployeeProfileApiClient.ImportPreviewAsync(content);
+
+            if (!preview.Success || preview.Data == null)
+            {
+                Snackbar.Add(preview?.Message ?? "Preview failed.", Severity.Error);
+                return;
+            }
+
+            var dialog = await DialogService.ShowAsync<ImportPreviewDialog>(
+                "Import Preview",
+                new DialogParameters { ["PreviewResult"] = preview.Data },
+                new DialogOptions { MaxWidth = MaxWidth.ExtraLarge, FullWidth = true, CloseButton = true });
+
+            var result = await dialog.Result;
+            if (!result.Canceled)
+            {
+                await ImportConfirmedAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Import error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _importing = false;
+            _importFileBytes = null;
+            _importFileName = null;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ImportConfirmedAsync()
+    {
+        if (_importFileBytes == null) return;
+
+        try
+        {
+            var content = new MultipartFormDataContent();
+            content.Add(new ByteArrayContent(_importFileBytes), "file", _importFileName ?? "import.xlsx");
+
+            var result = await EmployeeProfileApiClient.ImportAsync(content);
+
+            if (result.Success && result.Data != null)
+            {
+                var msg = result.Data.Errors.Count > 0
+                    ? $"{result.Data.SuccessCount} created, {result.Data.ErrorCount} errors."
+                    : $"{result.Data.SuccessCount} employees imported successfully.";
+                Snackbar.Add(msg, result.Data.ErrorCount > 0 ? Severity.Warning : Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add(result.Message ?? "Import failed.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Import error: {ex.Message}", Severity.Error);
+        }
     }
 }

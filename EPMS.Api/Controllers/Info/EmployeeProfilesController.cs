@@ -1,8 +1,10 @@
 using EPMS.Api.Controllers.Common;
+using EPMS.Domain.Interface.IService.App;
 using EPMS.Domain.Interface.IService.Info;
 using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
+using EPMS.Shared.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,10 +15,12 @@ namespace EPMS.Api.Controllers.Info;
 public class EmployeeProfilesController : ApiControllerBase
 {
     private readonly IEmployeeProfileService _profileService;
+    private readonly IExcelService _excelService;
 
-    public EmployeeProfilesController(IEmployeeProfileService profileService)
+    public EmployeeProfilesController(IEmployeeProfileService profileService, IExcelService excelService)
     {
         _profileService = profileService;
+        _excelService = excelService;
     }
 
     [HttpGet]
@@ -75,6 +79,13 @@ public class EmployeeProfilesController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HttpPost("full-create")]
+    public async Task<ActionResult<SuccessResponse<long>>> CreateFull(CreateFullEmployeeDto dto)
+    {
+        var result = await _profileService.CreateFullAsync(dto);
+        return HandleResult(result);
+    }
+
     [HttpPut("{id:long}")]
     public async Task<ActionResult<SuccessResponse>> Update(long id, UpdateEmployeeProfileDto dto)
     {
@@ -86,6 +97,65 @@ public class EmployeeProfilesController : ApiControllerBase
     public async Task<ActionResult<SuccessResponse>> Delete(long id)
     {
         var result = await _profileService.DeleteAsync(id);
+        return HandleResult(result);
+    }
+
+    [HttpGet("export")]
+    public async Task<ActionResult> Export()
+    {
+        var result = await _profileService.GetFullExportAsync();
+        if (!result.Success || result.Data == null)
+            return BadRequest(result);
+
+        var excelResult = await _excelService.ExportAsync(result.Data, "Employees");
+        if (!excelResult.Success)
+            return BadRequest(excelResult);
+
+        return File(excelResult.Data,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            $"employees-{DateTime.Now:yyyy-MM-dd}.xlsx");
+    }
+
+    [HttpGet("export-template")]
+    public async Task<ActionResult> ExportTemplate()
+    {
+        var emptyList = new List<EmployeeFullImportRow> { new() };
+        var excelResult = await _excelService.ExportAsync(emptyList, "Template");
+        if (!excelResult.Success)
+            return BadRequest(excelResult);
+
+        return File(excelResult.Data,
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "employee-import-template.xlsx");
+    }
+
+    [HttpPost("import-preview")]
+    public async Task<ActionResult<SuccessResponse<ImportPreviewResult>>> ImportPreview(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(SuccessResponse<ImportPreviewResult>.Fail("No file uploaded.", ErrorType.Validation));
+
+        using var stream = file.OpenReadStream();
+        var importResult = await _excelService.ImportAsync<EmployeeFullImportRow>(stream);
+        if (!importResult.Success || importResult.Data == null)
+            return BadRequest(importResult);
+
+        var result = await _profileService.ImportPreviewAsync(importResult.Data.ToList());
+        return HandleResult(result);
+    }
+
+    [HttpPost("import")]
+    public async Task<ActionResult<SuccessResponse<ImportResult>>> Import(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(SuccessResponse<ImportResult>.Fail("No file uploaded.", ErrorType.Validation));
+
+        using var stream = file.OpenReadStream();
+        var importResult = await _excelService.ImportAsync<EmployeeFullImportRow>(stream);
+        if (!importResult.Success || importResult.Data == null)
+            return BadRequest(importResult);
+
+        var result = await _profileService.ImportFullEmployeesAsync(importResult.Data.ToList());
         return HandleResult(result);
     }
 }

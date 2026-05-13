@@ -1,3 +1,4 @@
+using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using EPMS.Shared.Validators.ValidationMessages;
 using FluentValidation;
@@ -13,15 +14,12 @@ public class UpdateEmployeePayrollInfoValidator : AbstractValidator<UpdateEmploy
             .WithMessage(EmployeeInfoValidationMessages.EmployeePayrollInfo.SalaryInvalid);
 
         RuleFor(x => x.Currency)
-            .MaximumLength(10)
-            .WithMessage(EmployeeInfoValidationMessages.EmployeePayrollInfo.CurrencyMaxLength)
-            .Matches(@"^[A-Z]{3}$")
-            .When(x => !string.IsNullOrEmpty(x.Currency))
+            .Must(c => string.IsNullOrEmpty(c) || Currency.All.Contains(c))
             .WithMessage(EmployeeInfoValidationMessages.EmployeePayrollInfo.CurrencyInvalid);
 
         RuleFor(x => x.PayType)
-            .MaximumLength(50)
-            .WithMessage(EmployeeInfoValidationMessages.EmployeePayrollInfo.PayTypeMaxLength);
+            .Must(p => string.IsNullOrEmpty(p) || PayType.All.Contains(p))
+            .WithMessage(EmployeeInfoValidationMessages.EmployeePayrollInfo.PayTypeInvalid);
 
         RuleFor(x => x.CostAllocate)
             .MaximumLength(100)

@@ -1,7 +1,10 @@
+@using EPMS.Client.Extensions
 @using EPMS.Client.Models.Info
 @using EPMS.Client.Services.Info
+@using EPMS.Shared.Constants
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.EmployeeInfoDTOs
+@using EPMS.Shared.Validators.EmployeeInfoDTOs
 @using Mapster
 @using MudBlazor
 @using Refit
@@ -19,126 +22,195 @@ else if (_payrollInfo == null)
 }
 else
 {
-    <MudGrid>
-        <MudItem xs="12" sm="6">
-            <MudPaper Elevation="0" Class="border rounded pa-4">
-                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">Salary Information</MudText>
-                <MudStack Spacing="2">
-                    <MudText><strong>Salary:</strong> @_payrollInfo.Salary.ToString("N2")</MudText>
-                    <MudText><strong>Currency:</strong> @_payrollInfo.Currency ?? "-"</MudText>
-                    <MudText><strong>Pay Type:</strong> @_payrollInfo.PayType ?? "-"</MudText>
-                    <MudText><strong>Date of Pay Type Changed:</strong> @_payrollInfo.DateOfPayTypeChanged?.ToString("yyyy-MM-dd") ?? "-"</MudText>
-                </MudStack>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6">
-            <MudPaper Elevation="0" Class="border rounded pa-4">
-                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">Additional Info</MudText>
-                <MudStack Spacing="2">
-                    <MudText><strong>Cost Allocate:</strong> @_payrollInfo.CostAllocate ?? "-"</MudText>
-                    <MudText><strong>Pay By Backlog:</strong> @_payrollInfo.PayByBacklog ?? "-"</MudText>
-                    <MudText><strong>Date of Salary Changed:</strong> @_payrollInfo.DateOfSalaryChanged?.ToString("yyyy-MM-dd") ?? "-"</MudText>
-                </MudStack>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6">
-            <MudPaper Elevation="0" Class="border rounded pa-4">
-                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">Tax Information</MudText>
-                <MudStack Spacing="2">
-                    <MudText><strong>Tax Status:</strong> @_payrollInfo.TaxStatus ?? "-"</MudText>
-                    <MudText><strong>Tax No:</strong> @_payrollInfo.TaxNo ?? "-"</MudText>
-                </MudStack>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" sm="6">
-            <MudPaper Elevation="0" Class="border rounded pa-4">
-                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">SSB / SOCSO</MudText>
-                <MudStack Spacing="2">
-                    <MudText><strong>SSB Status:</strong> @_payrollInfo.SSBStatus ?? "-"</MudText>
-                    <MudText><strong>SSCB No:</strong> @_payrollInfo.SSCBNo ?? "-"</MudText>
-                    <MudText><strong>Compliance Earned Points:</strong> @_payrollInfo.ComplianceEarnedPoints?.ToString() ?? "-"</MudText>
-                    <MudText><strong>Compliance Balance Points:</strong> @_payrollInfo.ComplianceBalancePoints?.ToString() ?? "-"</MudText>
-                </MudStack>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12">
-            <MudStack Row="true" Justify="Justify.FlexEnd">
-                <MudButton Variant="Variant.Filled"
-                           Color="Color.Primary"
-                           StartIcon="@Icons.Material.Filled.Edit"
-                           OnClick="ToggleEdit">
-                    Edit Payroll
-                </MudButton>
-            </MudStack>
-        </MudItem>
-    </MudGrid>
+    <MudPaper Elevation="0" Class="border rounded pa-4">
+        <MudForm @ref="_form" Model="@_model" Validation="@ValidateField">
+            <MudGrid>
 
-    @if (_editMode)
-    {
-        <MudDivider Class="my-4" />
-        <MudText Typo="Typo.h6" Class="mb-4">Edit Payroll</MudText>
-        <MudPaper Elevation="0" Class="border rounded pa-4">
-            <MudForm @ref="_form">
-                <MudGrid>
-                    <MudItem xs="12" sm="6">
+                @* ── Salary Information ── *@
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6" Color="Color.Primary" Class="mb-2">Salary Information</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Salary</MudText>
+                        <MudText Typo="Typo.body1">@_payrollInfo.Salary.ToString("N2")</MudText>
+                    }
+                    else
+                    {
                         <MudNumericField @bind-Value="_model.Salary"
                                          Label="Salary"
                                          Variant="Variant.Outlined"
                                          Adornment="Adornment.Start"
-                                         AdornmentText="$" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.Currency"
-                                      Label="Currency"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.PayType"
-                                      Label="Pay Type"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.CostAllocate"
-                                      Label="Cost Allocate"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.PayByBacklog"
-                                      Label="Pay By Backlog"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.TaxStatus"
-                                      Label="Tax Status"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.TaxNo"
-                                      Label="Tax No"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.SSBStatus"
-                                      Label="SSB Status"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_model.SSCBNo"
-                                      Label="SSCB No"
-                                      Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
+                                         AdornmentText="$"
+                                         For="@(() => _model.Salary)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Currency</MudText>
+                        <MudText Typo="Typo.body1">@(_payrollInfo.Currency ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudSelect T="string" @bind-Value="_model.Currency" Label="Currency" Variant="Variant.Outlined" For="@(() => _model.Currency)">
+                            @foreach (var c in Currency.All)
+                            {
+                                <MudSelectItem Value="@c" />
+                            }
+                        </MudSelect>
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Pay Type</MudText>
+                        <MudText Typo="Typo.body1">@(_payrollInfo.PayType ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudSelect T="string" @bind-Value="_model.PayType" Label="Pay Type" Variant="Variant.Outlined" For="@(() => _model.PayType)">
+                            @foreach (var p in PayType.All)
+                            {
+                                <MudSelectItem Value="@p" />
+                            }
+                        </MudSelect>
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Date of Pay Type Changed</MudText>
+                    <MudText Typo="Typo.body1">@(_payrollInfo.DateOfPayTypeChanged?.ToString("yyyy-MM-dd") ?? "-")</MudText>
+                </MudItem>
+
+                @* ── Additional Info ── *@
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6" Color="Color.Primary" Class="mt-4 mb-2">Additional Info</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Cost Allocate</MudText>
+                        <MudText Typo="Typo.body1">@(_payrollInfo.CostAllocate ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.CostAllocate" Label="Cost Allocate" Variant="Variant.Outlined" For="@(() => _model.CostAllocate)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Pay By Backlog</MudText>
+                        <MudText Typo="Typo.body1">@(_payrollInfo.PayByBacklog ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.PayByBacklog" Label="Pay By Backlog" Variant="Variant.Outlined" For="@(() => _model.PayByBacklog)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Date of Salary Changed</MudText>
+                    <MudText Typo="Typo.body1">@(_payrollInfo.DateOfSalaryChanged?.ToString("yyyy-MM-dd") ?? "-")</MudText>
+                </MudItem>
+
+                @* ── Tax Information ── *@
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6" Color="Color.Primary" Class="mt-4 mb-2">Tax Information</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Tax Status</MudText>
+                        <MudText Typo="Typo.body1">@(_payrollInfo.TaxStatus ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.TaxStatus" Label="Tax Status" Variant="Variant.Outlined" For="@(() => _model.TaxStatus)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Tax No</MudText>
+                        <MudText Typo="Typo.body1">@(_payrollInfo.TaxNo ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.TaxNo" Label="Tax No" Variant="Variant.Outlined" For="@(() => _model.TaxNo)" />
+                    }
+                </MudItem>
+
+                @* ── SSB / SOCSO ── *@
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6" Color="Color.Primary" Class="mt-4 mb-2">SSB / SOCSO</MudText>
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">SSB Status</MudText>
+                        <MudText Typo="Typo.body1">@(_payrollInfo.SSBStatus ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.SSBStatus" Label="SSB Status" Variant="Variant.Outlined" For="@(() => _model.SSBStatus)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">SSCB No</MudText>
+                        <MudText Typo="Typo.body1">@(_payrollInfo.SSCBNo ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudTextField @bind-Value="_model.SSCBNo" Label="SSCB No" Variant="Variant.Outlined" For="@(() => _model.SSCBNo)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Compliance Earned Points</MudText>
+                        <MudText Typo="Typo.body1">@(_payrollInfo.ComplianceEarnedPoints?.ToString() ?? "-")</MudText>
+                    }
+                    else
+                    {
                         <MudNumericField @bind-Value="_model.ComplianceEarnedPoints"
                                          Label="Compliance Earned Points"
-                                         Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
+                                         Variant="Variant.Outlined"
+                                         For="@(() => _model.ComplianceEarnedPoints)" />
+                    }
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Compliance Balance Points</MudText>
+                        <MudText Typo="Typo.body1">@(_payrollInfo.ComplianceBalancePoints?.ToString() ?? "-")</MudText>
+                    }
+                    else
+                    {
                         <MudNumericField @bind-Value="_model.ComplianceBalancePoints"
                                          Label="Compliance Balance Points"
-                                         Variant="Variant.Outlined" />
-                    </MudItem>
-                    <MudItem xs="12">
-                        <MudStack Row="true" Spacing="2" Justify="Justify.FlexEnd">
+                                         Variant="Variant.Outlined"
+                                         For="@(() => _model.ComplianceBalancePoints)" />
+                    }
+                </MudItem>
+
+                @* ── Action Buttons ── *@
+                <MudItem xs="12">
+                    <MudStack Row="true" Spacing="2" Justify="Justify.FlexEnd" Class="mt-4">
+                        @if (!_editMode)
+                        {
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit" OnClick="ToggleEdit">
+                                Edit Payroll
+                            </MudButton>
+                        }
+                        else
+                        {
                             <MudButton Variant="Variant.Outlined" OnClick="CancelEdit">Cancel</MudButton>
                             <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SavePayrollInfo" Disabled="_saving">
                                 @if (_saving)
@@ -147,12 +219,13 @@ else
                                 }
                                 Save
                             </MudButton>
-                        </MudStack>
-                    </MudItem>
-                </MudGrid>
-            </MudForm>
-        </MudPaper>
-    }
+                        }
+                    </MudStack>
+                </MudItem>
+
+            </MudGrid>
+        </MudForm>
+    </MudPaper>
 }
 
 @code {
@@ -166,6 +239,9 @@ else
     private MudForm? _form;
 
     private EmployeePayrollFormModel _model = new();
+    private Dictionary<string, string> _serverErrors = new();
+
+    private readonly UpdateEmployeePayrollInfoValidator _validator = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -181,6 +257,7 @@ else
             if (response.Success && response.Data != null)
             {
                 _payrollInfo = response.Data;
+                ResetFormModel();
             }
         }
         catch (ApiException ex)
@@ -198,28 +275,44 @@ else
         }
     }
 
-    private void ToggleEdit()
+    private void ResetFormModel()
     {
         if (_payrollInfo == null) return;
 
         _model = _payrollInfo.Adapt<EmployeePayrollFormModel>();
+    }
+
+    private async Task<IEnumerable<string>> ValidateField(object model, string propertyName)
+    {
+        return await _validator.ValidateMappedValue<EmployeePayrollFormModel, UpdateEmployeePayrollInfoDto>(
+            _model, _serverErrors)(model, propertyName);
+    }
+
+    private void ToggleEdit()
+    {
         _editMode = true;
     }
 
     private void CancelEdit()
     {
+        ResetFormModel();
         _editMode = false;
     }
 
     private async Task SavePayrollInfo()
     {
-        if (_payrollInfo == null) return;
+        await _form!.Validate();
+        if (!_form.IsValid)
+        {
+            Snackbar.Add("Please fill all required fields correctly.", Severity.Warning);
+            return;
+        }
 
         _saving = true;
         try
         {
             var dto = _model.Adapt<UpdateEmployeePayrollInfoDto>();
-            var response = await PayrollInfoApiClient.UpdateAsync(_payrollInfo.Id, dto);
+            var response = await PayrollInfoApiClient.UpdateAsync(_payrollInfo!.Id, dto);
             if (response.Success)
             {
                 Snackbar.Add("Payroll info updated successfully", Severity.Success);

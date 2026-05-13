@@ -8,6 +8,7 @@
    - Click on blue Department name → opens full page side drawer with teams.
    ═══════════════════════════════════════════════════════════════════════════ *@
 @using EPMS.Client.Constants
+@using EPMS.Client.Services.Auth
 @using EPMS.Client.Services.Hr
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.DepartmentDTOs
@@ -22,6 +23,7 @@
 @inject IDepartmentApiClient DepartmentApiClient
 @inject ITeamApiClient TeamApiClient
 @inject IDialogService DialogService
+@inject LookupStateService LookupState
 @inject ISnackbar Snackbar
 
 <PageTitle>@UIConstants.Department.PageTitle - EPMS</PageTitle>
@@ -86,6 +88,7 @@
                     </CellTemplate>
                 </TemplateColumn>
                 <PropertyColumn Property="x => x.Description" Title="@UIConstants.Common.Description" />
+                <PropertyColumn Property="x => x.DeptHeadName" Title="@UIConstants.Department.HeadColumn" />
                 <TemplateColumn Title="@UIConstants.Common.Status" SortBy="@(x => x.IsActive)">
                     <CellTemplate>
                         <MudChip T="bool" Color="@(context.Item.IsActive ? Color.Success : Color.Default)"
@@ -183,7 +186,7 @@
                 </MudStack>
             </MudStack>
 
-            if (_teamsInDepartment.Count == 0)
+            @if (_teamsInDepartment.Count == 0)
             {
                 <MudText Color="Color.Secondary">No teams in this department.</MudText>
             }
@@ -256,6 +259,7 @@
         CloseOnEscapeKey = true
     };
 
+    private List<DepartmentDto> _allDepartments = new();
     private List<DepartmentDto> _departments = new();
     private bool _loading = true;
     private string _searchString = string.Empty;
@@ -281,7 +285,7 @@
     private long? _lastLoadedDepartmentId;
     private bool _drawerDataStale = true;
 
-    private List<LookUpDto> _prefetchedDepartments = new();
+
 
     private List<TeamDto> FilteredTeams =>
         _teamsInDepartment
@@ -317,8 +321,8 @@
             var response = await DepartmentApiClient.GetAllAsync();
             if (response.Success && response.Data != null)
             {
-                _departments = response.Data.ToList();
-                SortData();
+                _allDepartments = response.Data.ToList();
+                ApplyFiltersAndSort();
             }
             else
             {
@@ -350,19 +354,20 @@
         _sortDirection = sortData.SortDirection;
 
         _loading = false;
-        SortData();
+        ApplyFiltersAndSort();
     }
 
     private void OnStatusFilterChanged(bool value)
     {
         _statusFilter = value;
+        ApplyFiltersAndSort();
     }
 
-    private void SortData()
+    private void ApplyFiltersAndSort()
     {
-        if (!_departments.Any()) return;
+        if (!_allDepartments.Any()) return;
 
-        var filteredList = _departments.Where(x => x.IsActive == _statusFilter).ToList();
+        var filteredList = _allDepartments.Where(x => x.IsActive == _statusFilter).ToList();
 
         filteredList = _sortBy switch
         {
@@ -434,6 +439,7 @@
             var response = await DepartmentApiClient.DeleteAsync(id);
             if (response.Success)
             {
+                LookupState.ClearDepartmentCache();
                 Snackbar.Add(DeptMsg.Deleted, Severity.Success);
                 await LoadDepartmentsAsync();
             }
@@ -501,22 +507,8 @@
 
     private async Task AddTeam()
     {
-        if (_prefetchedDepartments.Count == 0)
-        {
-            try
-            {
-                var response = await DepartmentApiClient.GetLookupAsync();
-                if (response.Success && response.Data != null)
-                    _prefetchedDepartments = response.Data.ToList();
-            }
-            catch (ApiException)
-            {
-            }
-        }
-
         var parameters = new DialogParameters<TeamDialog>
         {
-            { x => x.PreloadedDepartments, _prefetchedDepartments },
             { x => x.ShowDepartment, false },
             { x => x.SelectedDepartmentId, _selectedDepartment?.Id }
         };
@@ -534,24 +526,10 @@
 
     private async Task EditTeam(TeamDto team)
     {
-        if (_prefetchedDepartments.Count == 0)
-        {
-            try
-            {
-                var response = await DepartmentApiClient.GetLookupAsync();
-                if (response.Success && response.Data != null)
-                    _prefetchedDepartments = response.Data.ToList();
-            }
-            catch (ApiException)
-            {
-            }
-        }
-
         var parameters = new DialogParameters<TeamDialog>
         {
             { x => x.IsEdit, true },
-            { x => x.Team, team },
-            { x => x.PreloadedDepartments, _prefetchedDepartments }
+            { x => x.Team, team }
         };
 
         var dialog = await DialogService.ShowAsync<TeamDialog>(

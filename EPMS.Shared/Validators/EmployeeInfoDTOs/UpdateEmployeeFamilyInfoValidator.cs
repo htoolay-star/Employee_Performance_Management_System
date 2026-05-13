@@ -1,3 +1,4 @@
+using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using EPMS.Shared.Validators.ValidationMessages;
 using FluentValidation;
@@ -9,8 +10,8 @@ public class UpdateEmployeeFamilyInfoValidator : AbstractValidator<UpdateEmploye
     public UpdateEmployeeFamilyInfoValidator()
     {
         RuleFor(x => x.MaritalStatus)
-            .MaximumLength(50)
-            .WithMessage(EmployeeInfoValidationMessages.EmployeeFamilyInfo.MaritalStatusMaxLength);
+            .Must(m => string.IsNullOrEmpty(m) || MaritalStatuses.All.Contains(m))
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeFamilyInfo.MaritalStatusInvalid);
 
         RuleFor(x => x.SpouseName)
             .MaximumLength(100)

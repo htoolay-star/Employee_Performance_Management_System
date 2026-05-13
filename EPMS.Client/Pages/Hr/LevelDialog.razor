@@ -6,6 +6,7 @@
 @using EPMS.Client.Constants
 @using EPMS.Client.Extensions
 @using EPMS.Client.Models.Hr
+@using EPMS.Client.Services.Auth
 @using EPMS.Client.Services.Hr
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.LevelDTOs
@@ -15,6 +16,7 @@
 
 @inject ILevelApiClient LevelApiClient
 @inject ISnackbar Snackbar
+@inject LookupStateService LookupState
 
 <MudDialog>
     <DialogContent>
@@ -120,7 +122,10 @@
                 var response = await LevelApiClient.UpdateAsync(Level!.Id, dto);
 
                 if (response.Success)
+                {
+                    LookupState.ClearLevelCache();
                     _mudDialog?.Close(DialogResult.Ok(true));
+                }
                 else
                     Snackbar.Add(response.Message ?? UIConstants.Common.UpdateFailed, Severity.Error);
             }
@@ -130,7 +135,10 @@
                 var response = await LevelApiClient.CreateAsync(dto);
 
                 if (response.Success)
+                {
+                    LookupState.ClearLevelCache();
                     _mudDialog?.Close(DialogResult.Ok(true));
+                }
                 else
                     Snackbar.Add(response.Message ?? UIConstants.Common.CreateFailed, Severity.Error);
             }

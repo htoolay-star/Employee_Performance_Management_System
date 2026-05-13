@@ -1,12 +1,11 @@
 using EPMS.Shared.DTOs.AuthDTOs.PositionPermissionDTOs;
 using EPMS.Shared.DTOs.Common;
 
-namespace EPMS.Domain.Services.Auth;
+namespace EPMS.Domain.Interface.IService.Auth;
 
 public interface IPositionPermissionService
 {
-    Task<SuccessResponse> CreateAsync(CreatePositionPermissionDto dto);
-    Task<SuccessResponse> DeleteAsync(long positionId, long permissionId);
+    Task<SuccessResponse> UpdatePositionPermissionsAsync(long positionId, List<long> selectedPermissionIds);
     Task<SuccessResponse> GetByIdAsync(long id);
     Task<SuccessResponse> GetAllAsync();
     Task<SuccessResponse> GetByPositionIdAsync(long positionId);

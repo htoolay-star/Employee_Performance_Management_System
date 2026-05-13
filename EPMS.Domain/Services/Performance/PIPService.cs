@@ -18,18 +18,15 @@ namespace EPMS.Domain.Services.Performance
         private readonly IUnitOfWork _uow;
         private readonly IMapper _mapper;
         private readonly ICurrentEmployeeContextService _currentEmployee;
-        private readonly IPositionPermissionChecker _permissionChecker;
 
         public PIPService(
             IUnitOfWork uow,
             IMapper mapper,
-            ICurrentEmployeeContextService currentEmployee,
-            IPositionPermissionChecker permissionChecker)
+            ICurrentEmployeeContextService currentEmployee)
         {
             _uow = uow;
             _mapper = mapper;
             _currentEmployee = currentEmployee;
-            _permissionChecker = permissionChecker;
         }
 
         public async Task<SuccessResponse<IEnumerable<PIPDto>>> GetAllAsync()
@@ -77,9 +74,6 @@ namespace EPMS.Domain.Services.Performance
             if (!positionId.HasValue)
                 return SuccessResponse<long>.Fail("User position is required.", ErrorType.Forbidden);
 
-            var canCreate = await _permissionChecker.HasPermissionAsync(positionId.Value, PermissionCodes.PerfPipCreate);
-            if (!canCreate)
-                return SuccessResponse<long>.Fail("Permission denied.", ErrorType.Forbidden);
 
             var pip = new PIP(dto.EmployeeId, dto.ManagerId, dto.StartDate, dto.EndDate, dto.Reason, dto.AppraisalId);
 
@@ -125,10 +119,6 @@ namespace EPMS.Domain.Services.Performance
             var positionId = await _currentEmployee.GetPositionIdAsync();
             if (!positionId.HasValue)
                 return SuccessResponse.Fail("User position is required.", ErrorType.Forbidden);
-
-            var canConclude = await _permissionChecker.HasPermissionAsync(positionId.Value, PermissionCodes.PerfPipConclude);
-            if (!canConclude)
-                return SuccessResponse.Fail("Permission denied.", ErrorType.Forbidden);
 
             var pip = await _uow.Perf.PIPs.GetByIdAsync(id);
 

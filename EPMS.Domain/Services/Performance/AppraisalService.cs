@@ -18,20 +18,17 @@ public class AppraisalService : IAppraisalService
     private readonly TimeProvider _timeProvider;
     private readonly IMapper _mapper;
     private readonly ICurrentEmployeeContextService _currentEmployee;
-    private readonly IPositionPermissionChecker _permissionChecker;
 
     public AppraisalService(
         IUnitOfWork uow,
         TimeProvider timeProvider,
         IMapper mapper,
-        ICurrentEmployeeContextService currentEmployee,
-        IPositionPermissionChecker permissionChecker)
+        ICurrentEmployeeContextService currentEmployee)
     {
         _uow = uow;
         _timeProvider = timeProvider;
         _mapper = mapper;
         _currentEmployee = currentEmployee;
-        _permissionChecker = permissionChecker;
     }
 
     public async Task<SuccessResponse> CreateAsync(CreateAppraisalDto dto)
@@ -126,10 +123,6 @@ public class AppraisalService : IAppraisalService
         if (!positionId.HasValue)
             return SuccessResponse.Fail("User position is required.", ErrorType.Forbidden);
 
-        var canSubmit = await _permissionChecker.HasPermissionAsync(positionId.Value, PermissionCodes.PerfAppraisalSubmit);
-        if (!canSubmit)
-            return SuccessResponse.Fail("Permission denied.", ErrorType.Forbidden);
-
         var appraisal = await _uow.Perf.Appraisals.GetAppraisalWithDetailsAsync(dto.Id);
         if (appraisal == null)
             return SuccessResponse.Fail(AppraisalMsg.NotFound(dto.Id), ErrorType.NotFound);
@@ -178,10 +171,6 @@ public class AppraisalService : IAppraisalService
         if (!positionId.HasValue)
             return SuccessResponse.Fail("User position is required.", ErrorType.Forbidden);
 
-        var canLock = await _permissionChecker.HasPermissionAsync(positionId.Value, PermissionCodes.PerfAppraisalLock);
-        if (!canLock)
-            return SuccessResponse.Fail("Permission denied.", ErrorType.Forbidden);
-
         var appraisal = await _uow.Perf.Appraisals.GetByIdAsync(id);
         if (appraisal == null)
             return SuccessResponse.Fail(AppraisalMsg.NotFound(id), ErrorType.NotFound);
@@ -200,10 +189,6 @@ public class AppraisalService : IAppraisalService
         var positionId = await _currentEmployee.GetPositionIdAsync();
         if (!positionId.HasValue)
             return SuccessResponse.Fail("User position is required.", ErrorType.Forbidden);
-
-        var canLock = await _permissionChecker.HasPermissionAsync(positionId.Value, PermissionCodes.PerfAppraisalLock);
-        if (!canLock)
-            return SuccessResponse.Fail("Permission denied.", ErrorType.Forbidden);
 
         var appraisal = await _uow.Perf.Appraisals.GetByIdAsync(id);
         if (appraisal == null)

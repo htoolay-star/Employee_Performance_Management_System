@@ -1,17 +1,19 @@
 @using EPMS.Client.Constants
 @using EPMS.Client.Extensions
 @using EPMS.Client.Models.Hr
+@using EPMS.Client.Services.Auth
 @using EPMS.Client.Services.Hr
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.DepartmentDTOs
+@using EPMS.Shared.DTOs.EmployeeInfoDTOs
 @using EPMS.Shared.DTOs.TeamDTOs
 @using EPMS.Shared.Validators.TeamDTOs
 @using Mapster
 @using MudBlazor
 
-@inject ITeamApiClient TeamApiClient
-@inject IDepartmentApiClient DepartmentApiClient
-@inject ISnackbar Snackbar
+    @inject ITeamApiClient TeamApiClient
+    @inject ISnackbar Snackbar
+    @inject LookupStateService LookupState
 
 <MudDialog>
     <DialogContent>
@@ -48,39 +50,73 @@
                                For="@(() => _model.DepartmentId)"
                                Variant="Variant.Outlined"
                                Clearable="true"
-                               Disabled="@_loadingDepartments"
-                               SearchFunc="SearchDepartments"
-                               ToStringFunc="GetDepartmentDisplay"
-                               ResetValueOnEmptyText="true"
-                               OpenIcon="@Icons.Material.Filled.ArrowDropDown">
-                        @if (_loadingDepartments)
-                        {
-                            <MudSelectItem T="long?" Value="null">
-                                <div class="d-flex align-center">
-                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
-                                    <MudText Typo="Typo.body2">@UIConstants.Common.Loading</MudText>
-                                </div>
-                            </MudSelectItem>
-                        }
-                        else
-                        {
-                            @foreach (var dept in AvailableDepartments)
+                                SearchFunc="SearchDepartments"
+                                ToStringFunc="GetDepartmentDisplay"
+                                ResetValueOnEmptyText="true"
+                                OpenIcon="@Icons.Material.Filled.ArrowDropDown">
+                        <ItemTemplate Context="deptId">
+                            @{ var dept = AvailableDepartments.FirstOrDefault(x => x.Id == deptId); }
+                            @if (dept != null)
                             {
-                                <MudSelectItem T="long?" Value="@((long?)dept.Id)">
-                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                                        <MudText>@dept.Code</MudText>
-                                        @if (!dept.IsActive)
-                                        {
-                                            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Text" Class="ml-auto">
-                                                Inactive
-                                            </MudChip>
-                                        }
-                                    </MudStack>
-                                </MudSelectItem>
+                                <MudStack Row="true" AlignItems="AlignItems.Center">
+                                    <MudText>@dept.Code</MudText>
+                                    @if (!dept.IsActive)
+                                    {
+                                            <MudTooltip Text="This department is inactive" Placement="Placement.Right">
+                                                <MudIcon Icon="@Icons.Material.Filled.WarningAmber" Color="Color.Warning" Size="Size.Small" />
+                                            </MudTooltip>
+                                    }
+                                </MudStack>
                             }
-                        }
+                        </ItemTemplate>
                     </MudAutocomplete>
                 }
+
+                <MudAutocomplete T="long?"
+                           Label="Position"
+                           @bind-Value="_selectedPositionId"
+                           Placeholder="Select position to filter employees"
+                           Clearable="true"
+                           Variant="Variant.Outlined"
+                           SearchFunc="SearchPositions"
+                           ToStringFunc="GetPositionDisplay"
+                           ResetValueOnEmptyText="true"
+                           OpenIcon="@Icons.Material.Filled.ArrowDropDown">
+                    <ItemTemplate Context="posId">
+                        @{ var pos = _positions.FirstOrDefault(x => x.Id == posId); }
+                        @if (pos != null)
+                        {
+                            <MudStack Row="true" AlignItems="AlignItems.Center">
+                                <MudText>@pos.Code</MudText>
+                                @if (!pos.IsActive)
+                                {
+                                    <MudTooltip Text="This position is inactive" Placement="Placement.Right">
+                                        <MudIcon Icon="@Icons.Material.Filled.WarningAmber" Color="Color.Warning" Size="Size.Small" />
+                                    </MudTooltip>
+                                }
+                            </MudStack>
+                        }
+                    </ItemTemplate>
+                </MudAutocomplete>
+
+                <MudAutocomplete T="long?"
+                           @bind-Value="_model.LeadTeamId"
+                           Label="Team Lead"
+                           Placeholder="Select team lead"
+                           Clearable="true"
+                           Variant="Variant.Outlined"
+                           SearchFunc="SearchEmployees"
+                           ToStringFunc="GetEmployeeDisplay"
+                           ResetValueOnEmptyText="true"
+                           OpenIcon="@Icons.Material.Filled.ArrowDropDown">
+                    <ItemTemplate Context="empId">
+                        @{ var emp = AvailableEmployees.FirstOrDefault(x => x.Id == empId); }
+                        @if (emp != null)
+                        {
+                            <MudText>@emp.StaffNo - @emp.StaffName</MudText>
+                        }
+                    </ItemTemplate>
+                </MudAutocomplete>
 
                 @if (IsEdit)
                 {
@@ -118,9 +154,6 @@
     public TeamDto? Team { get; set; }
 
     [Parameter]
-    public List<LookUpDto>? PreloadedDepartments { get; set; }
-
-    [Parameter]
     public bool ShowDepartment { get; set; } = true;
 
     [Parameter]
@@ -128,8 +161,10 @@
 
     private MudForm? _form;
     private bool _saving;
-    private bool _loadingDepartments = true;
     private List<LookUpDto> _departments = new();
+    private List<LookUpDto> _positions = new();
+    private List<EmployeeLookupDto> _allEmployees = new();
+    private long? _selectedPositionId;
     private Dictionary<string, string> _serverErrors = new();
 
     private readonly CreateTeamDtoValidator _createValidator = new();
@@ -139,6 +174,9 @@
     private IEnumerable<LookUpDto> AvailableDepartments =>
         _departments.Where(x => x.IsActive || (IsEdit && x.Id == Team!.DepartmentId));
 
+    private IEnumerable<EmployeeLookupDto> AvailableEmployees =>
+        _allEmployees.Where(x => !_selectedPositionId.HasValue || x.PositionId == _selectedPositionId.Value);
+
     private TeamFormModel _model = new();
 
     protected override async Task OnInitializedAsync()
@@ -146,48 +184,23 @@
         if (Team is not null)
             _model = Team.Adapt<TeamFormModel>();
 
-        if (PreloadedDepartments is { Count: > 0 })
+        _departments = await LookupState.GetDepartmentsAsync();
+        _positions = await LookupState.GetPositionsAsync();
+        _allEmployees = await LookupState.GetEmployeesAsync();
+
+        if (_model.LeadTeamId.HasValue)
         {
-            _departments = PreloadedDepartments;
-            await Task.Yield();
-            _loadingDepartments = false;
-            
-            if (!ShowDepartment && SelectedDepartmentId.HasValue)
-            {
-                _model.DepartmentId = SelectedDepartmentId.Value;
-            }
+            var currentLead = _allEmployees.FirstOrDefault(x => x.Id == _model.LeadTeamId.Value);
+            if (currentLead?.PositionId.HasValue == true)
+                _selectedPositionId = currentLead.PositionId;
         }
-        else
+
+        if (!ShowDepartment && SelectedDepartmentId.HasValue)
         {
-            _ = LoadDepartmentsAsync();
+            _model.DepartmentId = SelectedDepartmentId.Value;
         }
 
         await base.OnInitializedAsync();
-    }
-
-    private async Task LoadDepartmentsAsync()
-    {
-        try
-        {
-            var response = await DepartmentApiClient.GetLookupAsync();
-            if (response.Success && response.Data != null)
-                _departments = response.Data.ToList();
-            else
-                Snackbar.Add(UIConstants.Common.LoadFailed, Severity.Error);
-        }
-        catch (Refit.ApiException)
-        {
-            Snackbar.Add(UIConstants.Common.LoadFailed, Severity.Error);
-        }
-        finally
-        {
-            _loadingDepartments = false;
-            await Task.Delay(1); // Small delay to ensure UI updates
-            StateHasChanged();
-            
-            // Force UI refresh to ensure dropdown displays properly
-            await Task.Yield();
-        }
     }
 
     private async Task Submit()
@@ -210,7 +223,10 @@
                 var response = await TeamApiClient.UpdateAsync(Team.Id, dto);
 
                 if (response.Success)
+                {
+                    LookupState.ClearTeamCache();
                     _mudDialog?.Close(DialogResult.Ok(true));
+                }
                 else
                     Snackbar.Add(response.Message ?? UIConstants.Common.UpdateFailed, Severity.Error);
             }
@@ -220,7 +236,10 @@
                 var response = await TeamApiClient.CreateAsync(dto);
 
                 if (response.Success)
+                {
+                    LookupState.ClearTeamCache();
                     _mudDialog?.Close(DialogResult.Ok(true));
+                }
                 else
                     Snackbar.Add(response.Message ?? UIConstants.Common.CreateFailed, Severity.Error);
             }
@@ -276,10 +295,40 @@
         return _model.Code != Team.Code ||
                _model.Name != Team.Name ||
                _model.DepartmentId != Team.DepartmentId ||
+               _model.LeadTeamId != Team.LeadTeamId ||
                _model.Description != Team.Description ||
                _model.IsActive != Team.IsActive;
     }
 
+    private Task<IEnumerable<long?>> SearchPositions(string value, CancellationToken token)
+    {
+        var query = _positions.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(value))
+            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(query.Select(x => (long?)x.Id).AsEnumerable());
+    }
+
+    private string GetPositionDisplay(long? id)
+    {
+        if (id == null) return string.Empty;
+        var pos = _positions.FirstOrDefault(x => x.Id == id);
+        return pos?.Code ?? string.Empty;
+    }
+
+    private Task<IEnumerable<long?>> SearchEmployees(string value, CancellationToken token)
+    {
+        var query = AvailableEmployees.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(value))
+            query = query.Where(x => x.StaffNo.Contains(value) || x.StaffName.Contains(value));
+        return Task.FromResult(query.Select(x => (long?)x.Id).AsEnumerable());
+    }
+
+    private string GetEmployeeDisplay(long? id)
+    {
+        if (id == null) return string.Empty;
+        var emp = _allEmployees.FirstOrDefault(x => x.Id == id);
+        return emp != null ? $"PM: {emp.StaffNo} - {emp.StaffName}" : string.Empty;
+    }
 
     private async Task<IEnumerable<long?>> SearchDepartments(string value, CancellationToken token)
     {

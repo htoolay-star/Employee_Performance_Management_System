@@ -3,6 +3,7 @@ using EPMS.Domain.Entities.Auth;
 using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Domain.Entities.Hr;
 using EPMS.Domain.Entities.Shared;
+using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Auth;
 using EPMS.Shared.DTOs.AuthDTOs.PermissionDTOS;
 using EPMS.Shared.DTOs.CategoryDTOs;
@@ -123,7 +124,7 @@ public class MappingProfile : Profile
 
         CreateMap<Appraisal, AppraisalResponseDto>()
             .ForMember(dest => dest.TotalScore, opt => opt.MapFrom(src => src.TotalScore ?? 0))
-            .ForMember(dest => dest.Grade, opt => opt.MapFrom(src => src.RatingLabel ?? "Pending"));
+            .ForMember(dest => dest.Grade, opt => opt.MapFrom(src => src.RatingLabel ?? EmploymentStatuses.Pending));
 
         // Form DTOs - AppraisalRecommendation Mappings
         CreateMap<AppraisalRecommendation, AppraisalRecommendationDto>()

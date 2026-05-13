@@ -33,26 +33,5 @@ namespace EPMS.Api.Controllers.Auth
             var result = await _permissionService.GetPermissionByIdAsync(id);
             return HandleResult(result);
         }
-
-        [HttpPost]
-        public async Task<ActionResult<SuccessResponse<long>>> Create(CreatePermissionDto dto)
-        {
-            var result = await _permissionService.CreatePermissionAsync(dto);
-            return HandleResult(result);
-        }
-
-        [HttpPut("{id:long}")]
-        public async Task<ActionResult<SuccessResponse>> Update(long id, UpdatePermissionDto dto)
-        {
-            var result = await _permissionService.UpdatePermissionAsync(id, dto);
-            return HandleResult(result);
-        }
-
-        [HttpDelete("{id:long}")]
-        public async Task<ActionResult<SuccessResponse>> Delete(long id)
-        {
-            var result = await _permissionService.DeletePermissionAsync(id);
-            return HandleResult(result);
-        }
     }
 }

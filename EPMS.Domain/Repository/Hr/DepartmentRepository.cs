@@ -18,6 +18,14 @@ public class DepartmentRepository : GenericRepository<Department>, IDepartmentRe
             .FirstOrDefaultAsync(d => d.Id == teamId);
     }
 
+    public async Task<IEnumerable<Department>> GetAllWithHeadAsync()
+    {
+        return await _dbSet
+            .AsNoTracking()
+            .Include(d => d.DeptHead)
+            .ToListAsync();
+    }
+
     public async Task<bool> ExistsByCodeAsync(string code)
     {
         return await _dbSet.AnyAsync(d => d.Code == code);

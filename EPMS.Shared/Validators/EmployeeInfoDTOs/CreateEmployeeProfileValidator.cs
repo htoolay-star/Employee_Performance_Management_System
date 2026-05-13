@@ -1,3 +1,4 @@
+using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using EPMS.Shared.Validators.ValidationMessages;
 using FluentValidation;
@@ -23,9 +24,16 @@ public class CreateEmployeeProfileValidator : AbstractValidator<CreateEmployeePr
             .ApplyNRCRules();
 
         RuleFor(x => x.Gender)
-            .Must(g => string.IsNullOrEmpty(g) || g.Equals("Male", StringComparison.OrdinalIgnoreCase) || 
-                      g.Equals("Female", StringComparison.OrdinalIgnoreCase) || g.Equals("Other", StringComparison.OrdinalIgnoreCase))
+            .Must(g => string.IsNullOrEmpty(g) || Genders.All.Contains(g))
             .WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.GenderInvalid);
+
+        RuleFor(x => x.Religion)
+            .Must(r => string.IsNullOrEmpty(r) || Religions.All.Contains(r))
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.ReligionInvalid);
+
+        RuleFor(x => x.DateOfBirth)
+            .LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.Today))
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeProfile.DateOfBirthFuture);
 
         RuleFor(x => x.Nationality)
             .ApplyOptionalPersonNameRules()

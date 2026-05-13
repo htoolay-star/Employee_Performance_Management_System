@@ -147,7 +147,8 @@
     };
 
     // ── State ─────────────────────────────────────────────────────────────────
-    private List<LevelDto> _levels = new();
+     private List<LevelDto> _allLevels = new();
+    private List<LevelDto> _levels = new();
     private bool _loading = true;
     private string _searchString = string.Empty;
     private Dictionary<long, int> _rowNumbers = new();
@@ -184,7 +185,7 @@
 
     // ── Data ──────────────────────────────────────────────────────────────────
 
-    private async Task HandleSortChanged((string SortBy, string SortDirection) sortData)
+     private async Task HandleSortChanged((string SortBy, string SortDirection) sortData)
     {
         _loading = true;
         await Task.Yield();
@@ -193,11 +194,11 @@
         _sortDirection = sortData.SortDirection;
 
         _loading = false;
-        SortData();
+        ApplyFiltersAndSort();
     }
 
     /// <summary>Loads all levels from the API. Called on init and after every CUD operation.</summary>
-    private async Task LoadLevelsAsync()
+     private async Task LoadLevelsAsync()
     {
         _loading = true;
         StateHasChanged();
@@ -206,8 +207,8 @@
             var response = await LevelApiClient.GetAllAsync();
             if (response.Success && response.Data != null)
             {
-                _levels = response.Data.ToList();
-                SortData();
+                _allLevels = response.Data.ToList();
+                ApplyFiltersAndSort();
             }
 
             else
@@ -302,24 +303,20 @@
             await DeleteLevelAsync(level.Id);
     }
 
-    private void SortData()
+    private void ApplyFiltersAndSort()
     {
-        if (!_levels.Any()) return;
+        if (!_allLevels.Any()) return;
 
-        // Step 1: Filter by status first
-        var filteredList = _levels.Where(x => x.IsActive == _statusFilter).ToList();
+        var filteredList = _allLevels.Where(x => x.IsActive == _statusFilter).ToList();
 
-        // Step 2: Sort filtered list
         filteredList = _sortBy switch
         {
             "Name" => _sortDirection == "asc" ? filteredList.OrderBy(x => x.Name).ToList() : filteredList.OrderByDescending(x => x.Name).ToList(),
             _ => _sortDirection == "asc" ? filteredList.OrderBy(x => x.Code).ToList() : filteredList.OrderByDescending(x => x.Code).ToList(),
         };
 
-        // Update the main list with sorted/filtered data
         _levels = filteredList;
 
-        // Step 3: Calculate row numbers from FILTERED list (no gaps!)
         _rowNumbers = filteredList
           .Select((x, i) => (x.Id, Index: i + 1))
           .ToDictionary(x => x.Id, x => x.Index);
@@ -328,5 +325,6 @@
     private void OnStatusFilterChanged(bool value)
     {
         _statusFilter = value;
+        ApplyFiltersAndSort();
     }
 }

@@ -1,6 +1,7 @@
 using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Auth;
+using EPMS.Domain.Interface.IService.Auth;
 using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.AuthDTOs.PositionPermissionDTOs;
 using EPMS.Shared.DTOs.Common;
@@ -20,35 +21,28 @@ public class PositionPermissionService : IPositionPermissionService
         _mapper = mapper;
     }
 
-    public async Task<SuccessResponse> CreateAsync(CreatePositionPermissionDto dto)
+
+    public async Task<SuccessResponse> UpdatePositionPermissionsAsync(long positionId, List<long> selectedPermissionIds)
     {
-        var exists = await _uow.Auth.PositionPermissions.ExistsAsync(dto.PositionId, dto.PermissionId);
+        var existingPermissions = await _uow.Auth.PositionPermissions.GetByPositionIdAsync(positionId);
 
-        if (exists)
-            return SuccessResponse.Fail(PositionPermissionMsg.DuplicateEntry, ErrorType.Conflict);
+        foreach (var existing in existingPermissions)
+        {
+            _uow.Auth.PositionPermissions.Delete(existing);
+        }
 
-        var positionPermission = new PositionPermission(dto.PositionId, dto.PermissionId);
+        if (selectedPermissionIds != null && selectedPermissionIds.Any())
+        {
+            foreach (var permissionId in selectedPermissionIds.Distinct())
+            {
+                var newPermission = new PositionPermission(positionId, permissionId);
+                _uow.Auth.PositionPermissions.Add(newPermission);
+            }
+        }
 
-        _uow.Auth.PositionPermissions.Add(positionPermission);
         await _uow.CompleteAsync();
 
-        return SuccessResponse.Ok(PositionPermissionMsg.Created);
-    }
-
-    public async Task<SuccessResponse> DeleteAsync(long positionId, long permissionId)
-    {
-        var positionPermission = await _uow.Auth.PositionPermissions
-            .GetByPositionAndPermissionAsync(positionId, permissionId);
-
-        if (positionPermission == null)
-            return SuccessResponse.Fail(
-                PositionPermissionMsg.NotFoundByPositionAndPermission(positionId, permissionId),
-                ErrorType.NotFound);
-
-        _uow.Auth.PositionPermissions.Delete(positionPermission);
-        await _uow.CompleteAsync();
-
-        return SuccessResponse.Ok(PositionPermissionMsg.Deleted);
+        return SuccessResponse.Ok("Position permissions updated successfully.");
     }
 
     public async Task<SuccessResponse> GetByIdAsync(long id)

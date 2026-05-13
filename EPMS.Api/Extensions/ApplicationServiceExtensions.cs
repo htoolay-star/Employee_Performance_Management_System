@@ -27,8 +27,6 @@ namespace EPMS.Api.Extensions
             services.AddTransient<IDbSeeder, DbSeeder>();
             services.AddSingleton<IAuditLogFactory, AuditLogFactory>();
 
-            services.AddScoped<IPositionPermissionChecker, PositionPermissionChecker>();
-
             services.Scan(scan => scan
                 .FromAssembliesOf(typeof(UnitOfWork))
                 .AddClasses(classes => classes.Where(t => t.Name.EndsWith("Service") || t.Name.EndsWith("Module")))

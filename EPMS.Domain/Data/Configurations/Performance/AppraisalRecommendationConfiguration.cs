@@ -1,11 +1,7 @@
 using EPMS.Domain.Entities.Performance;
+using EPMS.Shared.Constants;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EPMS.Domain.Data.Configurations.Performance
 {
@@ -22,7 +18,7 @@ namespace EPMS.Domain.Data.Configurations.Performance
             builder.Property(e => e.RecommendationType).HasMaxLength(50).IsRequired();
             builder.Property(e => e.ProposedValue).HasMaxLength(200);
             builder.Property(e => e.Reason).IsRequired();
-            builder.Property(e => e.Priority).HasMaxLength(20).HasDefaultValue("Normal");
+            builder.Property(e => e.Priority).HasMaxLength(20).HasDefaultValue(Shift.Normal);
 
             builder.Property(e => e.Status).HasMaxLength(20).IsRequired();
             builder.Property(e => e.HRComments).HasMaxLength(500);

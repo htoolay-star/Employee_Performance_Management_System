@@ -1,3 +1,4 @@
+using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using EPMS.Shared.Validators.ValidationMessages;
 using FluentValidation;
@@ -37,7 +38,7 @@ public class CreateEmployeeContactValidator : AbstractValidator<CreateEmployeeCo
             .WithMessage(EmployeeInfoValidationMessages.EmployeeContact.EmergencyMobileNoMaxLength);
 
         RuleFor(x => x.RelationWithEmergencyContact)
-            .MaximumLength(50)
-            .WithMessage(EmployeeInfoValidationMessages.EmployeeContact.RelationWithEmergencyContactMaxLength);
+            .Must(r => string.IsNullOrEmpty(r) || RelationWithEmergencyContact.All.Contains(r))
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeContact.RelationWithEmergencyContactInvalid);
     }
 }

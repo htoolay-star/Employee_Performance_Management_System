@@ -10,7 +10,8 @@ public static class EmployeeInfoValidationMessages
         public const string StaffNameMaxLength = "Staff name cannot exceed 100 characters.";
         public const string OtherNameMaxLength = "Other name cannot exceed 100 characters.";
         public const string NRCMaxLength = "NRC number cannot exceed 50 characters.";
-        public const string GenderInvalid = "Gender must be Male, Female, or Other.";
+        public const string GenderInvalid = "Gender is not valid.";
+        public const string ReligionInvalid = "Religion is not valid.";
         public const string DateOfBirthFuture = "Date of birth cannot be in the future.";
         public const string NationalityMaxLength = "Nationality cannot exceed 100 characters.";
         public const string WorkPermitNoMaxLength = "Work permit number cannot exceed 50 characters.";
@@ -36,8 +37,11 @@ public static class EmployeeInfoValidationMessages
         public const string TeamIdInvalid = "Team ID must be greater than 0.";
         public const string DirectManagerIdInvalid = "Direct manager ID must be greater than 0.";
         public const string StaffTypeMaxLength = "Staff type cannot exceed 50 characters.";
+        public const string StaffTypeInvalid = "Staff type is not valid.";
         public const string ProbationMonthInvalid = "Probation months must be greater than or equal to 0.";
         public const string ShiftMaxLength = "Shift cannot exceed 50 characters.";
+        public const string ShiftInvalid = "Shift is not valid.";
+        public const string DateOfPromotionFuture = "Date of promotion cannot be in the future.";
         public const string FingerPrintIdMaxLength = "Fingerprint ID cannot exceed 50 characters.";
         public const string ProductProjectMaxLength = "Product/project cannot exceed 200 characters.";
         public const string DateOfAppointmentFuture = "Date of appointment cannot be in the future.";
@@ -56,11 +60,13 @@ public static class EmployeeInfoValidationMessages
         public const string InternalPhoneNoMaxLength = "Internal phone number cannot exceed 20 characters.";
         public const string EmergencyMobileNoMaxLength = "Emergency mobile number cannot exceed 20 characters.";
         public const string RelationWithEmergencyContactMaxLength = "Relation with emergency contact cannot exceed 50 characters.";
+        public const string RelationWithEmergencyContactInvalid = "Relation with emergency contact is not valid.";
     }
 
     public static class EmployeeFamilyInfo
     {
         public const string MaritalStatusMaxLength = "Marital status cannot exceed 50 characters.";
+        public const string MaritalStatusInvalid = "Marital status is not valid.";
         public const string SpouseNameMaxLength = "Spouse name cannot exceed 100 characters.";
         public const string SpouseNRCMaxLength = "Spouse NRC number cannot exceed 50 characters.";
         public const string SpouseOccupationMaxLength = "Spouse occupation cannot exceed 100 characters.";
@@ -73,8 +79,9 @@ public static class EmployeeInfoValidationMessages
     {
         public const string SalaryInvalid = "Salary must be greater than or equal to 0.";
         public const string CurrencyMaxLength = "Currency cannot exceed 10 characters.";
-        public const string CurrencyInvalid = "Currency must be a valid 3-letter currency code (e.g., USD, EUR).";
+        public const string CurrencyInvalid = "Currency is not valid.";
         public const string PayTypeMaxLength = "Pay type cannot exceed 50 characters.";
+        public const string PayTypeInvalid = "Pay type is not valid.";
         public const string CostAllocateMaxLength = "Cost allocate cannot exceed 100 characters.";
         public const string PayByBacklogMaxLength = "Pay by backlog cannot exceed 50 characters.";
         public const string TaxStatusMaxLength = "Tax status cannot exceed 50 characters.";

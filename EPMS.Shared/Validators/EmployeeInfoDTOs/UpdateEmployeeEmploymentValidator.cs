@@ -1,3 +1,4 @@
+using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using EPMS.Shared.Validators.ValidationMessages;
 using FluentValidation;
@@ -26,8 +27,8 @@ public class UpdateEmployeeEmploymentValidator : AbstractValidator<UpdateEmploye
             .ApplyEmploymentStatusRules();
 
         RuleFor(x => x.StaffType)
-            .MaximumLength(50)
-            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.StaffTypeMaxLength);
+            .Must(s => string.IsNullOrEmpty(s) || StaffTypes.All.Contains(s))
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.StaffTypeInvalid);
 
         RuleFor(x => x.ProbationMonth)
             .GreaterThanOrEqualTo(0)
@@ -50,8 +51,13 @@ public class UpdateEmployeeEmploymentValidator : AbstractValidator<UpdateEmploye
             .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.DateOfIncrementFuture);
 
         RuleFor(x => x.Shift)
-            .MaximumLength(50)
-            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.ShiftMaxLength);
+            .Must(s => string.IsNullOrEmpty(s) || Shift.All.Contains(s))
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.ShiftInvalid);
+
+        RuleFor(x => x.DateOfPromotion)
+            .LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.Today))
+            .When(x => x.DateOfPromotion.HasValue)
+            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.DateOfPromotionFuture);
 
         RuleFor(x => x.FingerPrintId)
             .MaximumLength(50)

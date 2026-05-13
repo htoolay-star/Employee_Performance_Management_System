@@ -46,7 +46,7 @@ public class DepartmentService : IDepartmentService
 
     public async Task<SuccessResponse<IEnumerable<DepartmentDto>>> GetAllAsync()
     {
-        var departments = await _uow.HR.Departments.GetAllAsync();
+        var departments = await _uow.HR.Departments.GetAllWithHeadAsync();
         var dtos = departments.Adapt<IEnumerable<DepartmentDto>>();
         return SuccessResponse<IEnumerable<DepartmentDto>>.Ok(dtos, DeptMsg.RetrievedAll);
     }
