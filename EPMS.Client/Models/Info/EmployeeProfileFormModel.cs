@@ -3,6 +3,7 @@ namespace EPMS.Client.Models.Info
     public class EmployeeProfileFormModel
     {
         public long Id { get; set; }
+        public string StaffNo { get; set; } = string.Empty;
         public string StaffName { get; set; } = string.Empty;
         public string? OtherName { get; set; }
         public string? NRCNo { get; set; }

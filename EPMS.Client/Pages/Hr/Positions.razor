@@ -56,10 +56,21 @@
                        ToStringFunc="GetFilterLevelDisplay"
                        ResetValueOnEmptyText="true"
                        OpenIcon="@Icons.Material.Filled.ArrowDropDown">
-                @foreach (var level in _levels)
+            <ItemTemplate Context="levelId">
+                @{ var level = _levels.FirstOrDefault(x => x.Id == levelId); }
+                @if (level != null)
                 {
-                    <MudSelectItem T="long?" Value="@level.Id">@level.Code</MudSelectItem>
+                    <MudStack Row="true" AlignItems="AlignItems.Center">
+                        <MudText>@level.Code</MudText>
+                        @if (!level.IsActive)
+                        {
+                                <MudTooltip Text="This level is inactive" Placement="Placement.Right">
+                                    <MudIcon Icon="@Icons.Material.Filled.WarningAmber" Color="Color.Warning" Size="Size.Small" />
+                                </MudTooltip>
+                        }
+                    </MudStack>
                 }
+            </ItemTemplate>
             </MudAutocomplete>
 
             <MudSelect T="bool"
@@ -376,6 +387,7 @@
     {
         if (id == null) return string.Empty;
         var level = _levels.FirstOrDefault(x => x.Id == id);
-        return level != null ? level.Code : string.Empty;
+        if (level == null) return string.Empty;
+        return level.IsActive ? level.Code : $"{level.Code} (Inactive)";
     }
 }

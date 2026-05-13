@@ -55,10 +55,21 @@
                        ToStringFunc="GetFilterDepartmentDisplay"
                        ResetValueOnEmptyText="true"
                        OpenIcon="@Icons.Material.Filled.ArrowDropDown">
-                @foreach (var dept in _departments)
-                {
-                    <MudSelectItem T="long?" Value="@dept.Id">@dept.Code</MudSelectItem>
-                }
+                <ItemTemplate Context="deptId">
+                    @{ var dept = _departments.FirstOrDefault(x => x.Id == deptId); }
+                    @if (dept != null)
+                    {
+                        <MudStack Row="true" AlignItems="AlignItems.Center">
+                            <MudText>@dept.Code</MudText>
+                            @if (!dept.IsActive)
+                            {
+                                    <MudTooltip Text="This department is inactive" Placement="Placement.Right">
+                                        <MudIcon Icon="@Icons.Material.Filled.WarningAmber" Color="Color.Warning" Size="Size.Small" />
+                                    </MudTooltip>
+                            }
+                        </MudStack>
+                    }
+                </ItemTemplate>
             </MudAutocomplete>
 
             <MudSelect T="bool"
@@ -115,6 +126,7 @@
                     </CellTemplate>
                 </TemplateColumn>
                 <PropertyColumn Property="x => x.Description" Title="@UIConstants.Common.Description" />
+                <PropertyColumn Property="x => x.LeadTeamName" Title="@UIConstants.Team.LeadColumn" />
                 <TemplateColumn Title="@UIConstants.Common.Status" Sortable="false">
                     <CellTemplate>
                         <MudChip Color="@(context.Item.IsActive ? Color.Success : Color.Default)"
@@ -370,6 +382,7 @@
     {
         if (id == null) return string.Empty;
         var dept = _departments.FirstOrDefault(x => x.Id == id);
-        return dept != null ? dept.Code : string.Empty;
+        if (dept == null) return string.Empty;
+        return dept.IsActive ? dept.Code : $"{dept.Code} (Inactive)";
     }
 }

@@ -1,6 +1,7 @@
 @using EPMS.Client.Extensions
 @using EPMS.Client.Models.Info
 @using EPMS.Client.Services.Info
+@using EPMS.Shared.Constants
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.EmployeeInfoDTOs
 @using EPMS.Shared.Validators.EmployeeInfoDTOs
@@ -54,7 +55,12 @@ else
                     }
                     else
                     {
-                        <MudTextField @bind-Value="_model.Currency" Label="Currency" Variant="Variant.Outlined" For="@(() => _model.Currency)" />
+                        <MudSelect T="string" @bind-Value="_model.Currency" Label="Currency" Variant="Variant.Outlined" For="@(() => _model.Currency)">
+                            @foreach (var c in Currency.All)
+                            {
+                                <MudSelectItem Value="@c" />
+                            }
+                        </MudSelect>
                     }
                 </MudItem>
                 <MudItem xs="12" sm="6">
@@ -65,7 +71,12 @@ else
                     }
                     else
                     {
-                        <MudTextField @bind-Value="_model.PayType" Label="Pay Type" Variant="Variant.Outlined" For="@(() => _model.PayType)" />
+                        <MudSelect T="string" @bind-Value="_model.PayType" Label="Pay Type" Variant="Variant.Outlined" For="@(() => _model.PayType)">
+                            @foreach (var p in PayType.All)
+                            {
+                                <MudSelectItem Value="@p" />
+                            }
+                        </MudSelect>
                     }
                 </MudItem>
                 <MudItem xs="12" sm="6">

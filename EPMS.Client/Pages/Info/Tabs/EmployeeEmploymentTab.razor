@@ -1,6 +1,7 @@
 @using EPMS.Client.Extensions
 @using EPMS.Client.Models.Info
 @using EPMS.Client.Services.Info
+@using EPMS.Shared.Constants
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.EmployeeInfoDTOs
 @using EPMS.Shared.Validators.EmployeeInfoDTOs
@@ -38,7 +39,12 @@ else
                     }
                     else
                     {
-                        <MudTextField @bind-Value="_model.EmploymentStatus" Label="Employment Status" Variant="Variant.Outlined" For="@(() => _model.EmploymentStatus)" />
+                        <MudSelect T="string" @bind-Value="_model.EmploymentStatus" Label="Employment Status" Variant="Variant.Outlined" For="@(() => _model.EmploymentStatus)">
+                            @foreach (var s in EmploymentStatuses.All)
+                            {
+                                <MudSelectItem Value="@s" />
+                            }
+                        </MudSelect>
                     }
                 </MudItem>
                 <MudItem xs="12" sm="6">
@@ -49,7 +55,12 @@ else
                     }
                     else
                     {
-                        <MudTextField @bind-Value="_model.StaffType" Label="Staff Type" Variant="Variant.Outlined" For="@(() => _model.StaffType)" />
+                        <MudSelect T="string" @bind-Value="_model.StaffType" Label="Staff Type" Variant="Variant.Outlined" For="@(() => _model.StaffType)">
+                            @foreach (var s in StaffTypes.All)
+                            {
+                                <MudSelectItem Value="@s" />
+                            }
+                        </MudSelect>
                     }
                 </MudItem>
                 <MudItem xs="12" sm="6">
@@ -71,7 +82,12 @@ else
                     }
                     else
                     {
-                        <MudTextField @bind-Value="_model.Shift" Label="Shift" Variant="Variant.Outlined" For="@(() => _model.Shift)" />
+                        <MudSelect T="string" @bind-Value="_model.Shift" Label="Shift" Variant="Variant.Outlined" For="@(() => _model.Shift)">
+                            @foreach (var s in Shift.All)
+                            {
+                                <MudSelectItem Value="@s" />
+                            }
+                        </MudSelect>
                     }
                 </MudItem>
 

@@ -88,6 +88,7 @@
                     </CellTemplate>
                 </TemplateColumn>
                 <PropertyColumn Property="x => x.Description" Title="@UIConstants.Common.Description" />
+                <PropertyColumn Property="x => x.DeptHeadName" Title="@UIConstants.Department.HeadColumn" />
                 <TemplateColumn Title="@UIConstants.Common.Status" SortBy="@(x => x.IsActive)">
                     <CellTemplate>
                         <MudChip T="bool" Color="@(context.Item.IsActive ? Color.Success : Color.Default)"
@@ -258,6 +259,7 @@
         CloseOnEscapeKey = true
     };
 
+    private List<DepartmentDto> _allDepartments = new();
     private List<DepartmentDto> _departments = new();
     private bool _loading = true;
     private string _searchString = string.Empty;
@@ -319,8 +321,8 @@
             var response = await DepartmentApiClient.GetAllAsync();
             if (response.Success && response.Data != null)
             {
-                _departments = response.Data.ToList();
-                SortData();
+                _allDepartments = response.Data.ToList();
+                ApplyFiltersAndSort();
             }
             else
             {
@@ -352,19 +354,20 @@
         _sortDirection = sortData.SortDirection;
 
         _loading = false;
-        SortData();
+        ApplyFiltersAndSort();
     }
 
     private void OnStatusFilterChanged(bool value)
     {
         _statusFilter = value;
+        ApplyFiltersAndSort();
     }
 
-    private void SortData()
+    private void ApplyFiltersAndSort()
     {
-        if (!_departments.Any()) return;
+        if (!_allDepartments.Any()) return;
 
-        var filteredList = _departments.Where(x => x.IsActive == _statusFilter).ToList();
+        var filteredList = _allDepartments.Where(x => x.IsActive == _statusFilter).ToList();
 
         filteredList = _sortBy switch
         {

@@ -19,15 +19,18 @@ public class EmployeeProfileService : IEmployeeProfileService
     private readonly ICurrentEmployeeContextService _currentEmployee;
     private readonly IPasswordHasher _passwordHasher;
     private readonly ISystemSettingsService _settingsService;
+    private readonly ICacheService _cacheService;
 
     public EmployeeProfileService(
         IUnitOfWork uow,
         ICurrentEmployeeContextService currentEmployee,
         IPasswordHasher passwordHasher,
-        ISystemSettingsService settingsService)
+        ISystemSettingsService settingsService,
+        ICacheService cacheService)
     {
         _uow = uow;
         _currentEmployee = currentEmployee;
+        _cacheService = cacheService;
         _passwordHasher = passwordHasher;
         _settingsService = settingsService;
     }
@@ -94,6 +97,8 @@ public class EmployeeProfileService : IEmployeeProfileService
         _uow.Info.EmployeeProfiles.Add(profile);
         await _uow.CompleteAsync();
 
+        await _cacheService.RemoveAsync(CacheKeys.Hr.EmployeeLookups());
+
         // Create User if EmailAddress is provided and Employee has no linked User
         if (!string.IsNullOrWhiteSpace(dto.EmailAddress))
         {
@@ -111,6 +116,87 @@ public class EmployeeProfileService : IEmployeeProfileService
         }
         
         return SuccessResponse<long>.Ok(profile.Id, EmployeeProfileMsg.Created);
+    }
+
+    public async Task<SuccessResponse<long>> CreateFullAsync(CreateFullEmployeeDto dto)
+    {
+        await _uow.BeginTransactionAsync();
+        try
+        {
+            // 1. Create Profile (handles dedup checks + User creation internally)
+            var profileResult = await CreateAsync(dto.Profile);
+            if (!profileResult.Success)
+            {
+                await _uow.RollbackAsync();
+                return profileResult;
+            }
+            var employeeId = profileResult.Data!;
+
+            // 2. Create Employment (if provided)
+            if (dto.Employment != null)
+            {
+                var emp = dto.Employment;
+                var employment = new EmployeeEmployment(
+                    employeeId, emp.DepartmentId, emp.ParentDepartmentId,
+                    emp.PositionId, emp.EmploymentStatus);
+                if (!string.IsNullOrEmpty(emp.StaffType))
+                    employment.UpdateDetails(emp.DepartmentId, emp.ParentDepartmentId, emp.PositionId,
+                        emp.TeamId, emp.DirectManagerId, emp.EmploymentStatus,
+                        emp.StaffType, emp.ProbationMonth, emp.Shift, emp.FingerPrintId, emp.MobileAttendance);
+                if (!string.IsNullOrEmpty(emp.ProductProject))
+                    employment.AssignProject(emp.ProductProject);
+                _uow.Info.EmployeeEmployments.Add(employment);
+            }
+
+            // 3. Create Contact (if provided)
+            if (dto.Contact != null)
+            {
+                var con = dto.Contact;
+                var contact = new EmployeeContact(employeeId);
+                if (!string.IsNullOrEmpty(con.PhoneNo) || !string.IsNullOrEmpty(con.ContactAddress))
+                    contact.UpdatePrimaryContact(con.PhoneNo, con.ContactAddress);
+                if (!string.IsNullOrEmpty(con.EmergencyMobileNo) || !string.IsNullOrEmpty(con.RelationWithEmergencyContact))
+                    contact.UpdateEmergencyContact(con.EmergencyMobileNo, con.RelationWithEmergencyContact);
+                if (!string.IsNullOrEmpty(con.PermanentAddress))
+                    contact.UpdatePermanentAddress(con.PermanentAddress);
+                _uow.Info.EmployeeContacts.Add(contact);
+            }
+
+            // 4. Create Family (if provided)
+            if (dto.Family != null)
+            {
+                var fam = dto.Family;
+                var family = new EmployeeFamilyInfo(employeeId);
+                if (!string.IsNullOrEmpty(fam.MaritalStatus))
+                    family.UpdateMaritalStatus(fam.MaritalStatus, fam.SpouseName, fam.SpouseNRCNo, fam.SpouseOccupation);
+                if (!string.IsNullOrEmpty(fam.FatherName))
+                    family.UpdateFatherDetails(fam.FatherName, fam.FatherNRCNo, fam.FatherOccupation);
+                _uow.Info.EmployeeFamilyInfos.Add(family);
+            }
+
+            // 5. Create Payroll (if provided)
+            if (dto.Payroll != null)
+            {
+                var pay = dto.Payroll;
+                var payroll = new EmployeePayrollInfo(employeeId, pay.Salary, pay.Currency);
+                if (!string.IsNullOrEmpty(pay.TaxStatus) || !string.IsNullOrEmpty(pay.TaxNo))
+                    payroll.UpdateTaxInfo(pay.TaxStatus, pay.TaxNo);
+                if (!string.IsNullOrEmpty(pay.SSBStatus) || !string.IsNullOrEmpty(pay.SSCBNo))
+                    payroll.UpdateSSBInfo(pay.SSBStatus, pay.SSCBNo);
+                if (pay.ComplianceEarnedPoints.HasValue || pay.ComplianceBalancePoints.HasValue)
+                    payroll.UpdateCompliancePoints(pay.ComplianceEarnedPoints, pay.ComplianceBalancePoints);
+                _uow.Info.EmployeePayrollInfos.Add(payroll);
+            }
+
+            await _cacheService.RemoveAsync(CacheKeys.Hr.EmployeeLookups());
+            await _uow.CommitAsync();
+            return SuccessResponse<long>.Ok(employeeId, EmployeeProfileMsg.Created);
+        }
+        catch
+        {
+            await _uow.RollbackAsync();
+            throw;
+        }
     }
 
     public async Task<SuccessResponse> UpdateAsync(long id, UpdateEmployeeProfileDto dto)
@@ -159,6 +245,7 @@ public class EmployeeProfileService : IEmployeeProfileService
             profile.UpdateAdditionalData(dto.AdditionalData);
 
         await _uow.CompleteAsync();
+        await _cacheService.RemoveAsync(CacheKeys.Hr.EmployeeLookups());
         return SuccessResponse.Ok(EmployeeProfileMsg.Updated);
     }
 
@@ -171,7 +258,7 @@ public class EmployeeProfileService : IEmployeeProfileService
 
         _uow.Info.EmployeeProfiles.Delete(profile);
         await _uow.CompleteAsync();
-        
+        await _cacheService.RemoveAsync(CacheKeys.Hr.EmployeeLookups());
         return SuccessResponse.Ok(EmployeeProfileMsg.Deleted);
     }
 
@@ -199,8 +286,12 @@ public class EmployeeProfileService : IEmployeeProfileService
 
     public async Task<SuccessResponse<IEnumerable<EmployeeLookupDto>>> GetLookupAsync()
     {
-        var dtos = await _uow.Info.EmployeeProfiles.GetLookupDtoAsync();
-        return SuccessResponse<IEnumerable<EmployeeLookupDto>>.Ok(dtos, EmployeeProfileMsg.RetrievedAll);
+        var dtos = await _cacheService.GetOrCreateAsync(
+            CacheKeys.Hr.EmployeeLookups(),
+            async () => await _uow.Info.EmployeeProfiles.GetLookupDtoAsync(),
+            TimeSpan.FromHours(1)
+        );
+        return SuccessResponse<IEnumerable<EmployeeLookupDto>>.Ok(dtos ?? [], EmployeeProfileMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<PaginatedResponse<EmployeeProfileGridItemDto>>> GetPagedAsync(EPMS.Shared.Features.EmployeeProfiles.EmployeeProfileQueryParameters parameters)

@@ -1,0 +1,458 @@
+@using EPMS.Client.Extensions
+@using EPMS.Client.Models.Info
+@using EPMS.Client.Services.Info
+@using EPMS.Shared.Constants
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.EmployeeInfoDTOs
+@using EPMS.Shared.Validators.EmployeeInfoDTOs
+@using Mapster
+@using MudBlazor
+
+@inject IEmployeeProfileApiClient EmployeeProfileApiClient
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="w-100">
+            <MudText Typo="Typo.h6">Create Employee</MudText>
+            <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="Cancel" />
+        </MudStack>
+    </TitleContent>
+    <DialogContent>
+        <MudStepper @ref="_stepper" NonLinear="false" OnPreviewInteraction="OnPreviewInteraction">
+            <ChildContent>
+            @* ── Step 1: Profile ── *@
+            <MudStep Title="Profile" SecondaryText="Basic info & identification">
+                <MudForm @ref="_profileForm" Model="@_profileModel" Validation="@ValidateProfileField">
+                    <MudGrid>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_profileModel.StaffNo" Label="Staff No" Variant="Variant.Outlined" For="@(() => _profileModel.StaffNo)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_profileModel.StaffName" Label="Staff Name" Variant="Variant.Outlined" For="@(() => _profileModel.StaffName)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_profileModel.OtherName" Label="Other Name" Variant="Variant.Outlined" For="@(() => _profileModel.OtherName)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudSelect T="string" @bind-Value="_profileModel.Gender" Label="Gender" Variant="Variant.Outlined" For="@(() => _profileModel.Gender)">
+                                @foreach (var g in Genders.All)
+                                {
+                                    <MudSelectItem Value="@g" />
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudDatePicker @bind-Date="_profileModel.DateOfBirthProxy" Label="Date of Birth" Variant="Variant.Outlined" For="@(() => _profileModel.DateOfBirthProxy)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_profileModel.EmailAddress" Label="Email Address" Variant="Variant.Outlined" For="@(() => _profileModel.EmailAddress)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_profileModel.NRCNo" Label="NRC No" Variant="Variant.Outlined" For="@(() => _profileModel.NRCNo)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_profileModel.LabourRegistrationNo" Label="Labour Registration No" Variant="Variant.Outlined" For="@(() => _profileModel.LabourRegistrationNo)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_profileModel.Race" Label="Race" Variant="Variant.Outlined" For="@(() => _profileModel.Race)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudSelect T="string" @bind-Value="_profileModel.Religion" Label="Religion" Variant="Variant.Outlined" For="@(() => _profileModel.Religion)">
+                                @foreach (var r in Religions.All)
+                                {
+                                    <MudSelectItem Value="@r" />
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_profileModel.Nationality" Label="Nationality" Variant="Variant.Outlined" For="@(() => _profileModel.Nationality)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_profileModel.BirthPlace" Label="Birth Place" Variant="Variant.Outlined" For="@(() => _profileModel.BirthPlace)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_profileModel.PassportNo" Label="Passport No" Variant="Variant.Outlined" For="@(() => _profileModel.PassportNo)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudDatePicker @bind-Date="_profileModel.PassportExpireDateProxy" Label="Passport Expiry" Variant="Variant.Outlined" For="@(() => _profileModel.PassportExpireDateProxy)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_profileModel.WorkPermitNo" Label="Work Permit No" Variant="Variant.Outlined" For="@(() => _profileModel.WorkPermitNo)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudDatePicker @bind-Date="_profileModel.WorkPermitValidDateProxy" Label="Work Permit Valid Date" Variant="Variant.Outlined" For="@(() => _profileModel.WorkPermitValidDateProxy)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudDatePicker @bind-Date="_profileModel.WorkPermitExpireDateProxy" Label="Work Permit Expire Date" Variant="Variant.Outlined" For="@(() => _profileModel.WorkPermitExpireDateProxy)" />
+                        </MudItem>
+                    </MudGrid>
+                </MudForm>
+            </MudStep>
+
+            @* ── Step 2: Employment ── *@
+            <MudStep Title="Employment" SecondaryText="Employment details">
+                <MudForm @ref="_employmentForm" Model="@_employmentModel" Validation="@ValidateEmploymentField">
+                    <MudGrid>
+                        <MudItem xs="12" sm="6">
+                            <MudSelect T="string" @bind-Value="_employmentModel.EmploymentStatus" Label="Employment Status" Variant="Variant.Outlined" For="@(() => _employmentModel.EmploymentStatus)">
+                                @foreach (var s in EmploymentStatuses.All)
+                                {
+                                    <MudSelectItem Value="@s" />
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudSelect T="string" @bind-Value="_employmentModel.StaffType" Label="Staff Type" Variant="Variant.Outlined" For="@(() => _employmentModel.StaffType)">
+                                @foreach (var s in StaffTypes.All)
+                                {
+                                    <MudSelectItem Value="@s" />
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudNumericField @bind-Value="_employmentModel.ProbationMonth" Label="Probation Months" Variant="Variant.Outlined" For="@(() => _employmentModel.ProbationMonth)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudSelect T="string" @bind-Value="_employmentModel.Shift" Label="Shift" Variant="Variant.Outlined" For="@(() => _employmentModel.Shift)">
+                                @foreach (var s in Shift.All)
+                                {
+                                    <MudSelectItem Value="@s" />
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudDatePicker @bind-Date="_employmentModel.DateOfAppointmentProxy" Label="Date of Appointment" Variant="Variant.Outlined" For="@(() => _employmentModel.DateOfAppointmentProxy)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudDatePicker @bind-Date="_employmentModel.DateOfConfirmationProxy" Label="Date of Confirmation" Variant="Variant.Outlined" For="@(() => _employmentModel.DateOfConfirmationProxy)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudDatePicker @bind-Date="_employmentModel.DateOfPromotionProxy" Label="Date of Promotion" Variant="Variant.Outlined" For="@(() => _employmentModel.DateOfPromotionProxy)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_employmentModel.FingerPrintId" Label="Finger Print ID" Variant="Variant.Outlined" For="@(() => _employmentModel.FingerPrintId)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_employmentModel.ProductProject" Label="Product/Project" Variant="Variant.Outlined" For="@(() => _employmentModel.ProductProject)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudSwitch @bind-Value="_employmentModel.MobileAttendance" Label="Mobile Attendance" Color="Color.Success" />
+                        </MudItem>
+                    </MudGrid>
+                </MudForm>
+            </MudStep>
+
+            @* ── Step 3: Contact ── *@
+            <MudStep Title="Contact" SecondaryText="Contact information">
+                <MudForm @ref="_contactForm" Model="@_contactModel" Validation="@ValidateContactField">
+                    <MudGrid>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_contactModel.ContactAddress" Label="Contact Address" Variant="Variant.Outlined" For="@(() => _contactModel.ContactAddress)" Lines="3" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_contactModel.PermanentAddress" Label="Permanent Address" Variant="Variant.Outlined" For="@(() => _contactModel.PermanentAddress)" Lines="3" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_contactModel.PhoneNo" Label="Phone No" Variant="Variant.Outlined" For="@(() => _contactModel.PhoneNo)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_contactModel.PermanentPhoneNo" Label="Permanent Phone" Variant="Variant.Outlined" For="@(() => _contactModel.PermanentPhoneNo)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_contactModel.PresentPhoneNo" Label="Present Phone" Variant="Variant.Outlined" For="@(() => _contactModel.PresentPhoneNo)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_contactModel.InternalPhoneNo" Label="Internal Phone" Variant="Variant.Outlined" For="@(() => _contactModel.InternalPhoneNo)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_contactModel.EmergencyMobileNo" Label="Emergency Mobile" Variant="Variant.Outlined" For="@(() => _contactModel.EmergencyMobileNo)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudSelect T="string" @bind-Value="_contactModel.RelationWithEmergencyContact" Label="Emergency Contact Relation" Variant="Variant.Outlined" For="@(() => _contactModel.RelationWithEmergencyContact)">
+                                @foreach (var r in RelationWithEmergencyContact.All)
+                                {
+                                    <MudSelectItem Value="@r" />
+                                }
+                            </MudSelect>
+                        </MudItem>
+                    </MudGrid>
+                </MudForm>
+            </MudStep>
+
+            @* ── Step 4: Family ── *@
+            <MudStep Title="Family" SecondaryText="Family information">
+                <MudForm @ref="_familyForm" Model="@_familyModel" Validation="@ValidateFamilyField">
+                    <MudGrid>
+                        <MudItem xs="12" sm="6">
+                            <MudSelect T="string" @bind-Value="_familyModel.MaritalStatus" Label="Marital Status" Variant="Variant.Outlined" For="@(() => _familyModel.MaritalStatus)">
+                                @foreach (var m in MaritalStatuses.All)
+                                {
+                                    <MudSelectItem Value="@m" />
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_familyModel.SpouseName" Label="Spouse Name" Variant="Variant.Outlined" For="@(() => _familyModel.SpouseName)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_familyModel.SpouseNRCNo" Label="Spouse NRC No" Variant="Variant.Outlined" For="@(() => _familyModel.SpouseNRCNo)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_familyModel.SpouseOccupation" Label="Spouse Occupation" Variant="Variant.Outlined" For="@(() => _familyModel.SpouseOccupation)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_familyModel.FatherName" Label="Father Name" Variant="Variant.Outlined" For="@(() => _familyModel.FatherName)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_familyModel.FatherNRCNo" Label="Father NRC No" Variant="Variant.Outlined" For="@(() => _familyModel.FatherNRCNo)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_familyModel.FatherOccupation" Label="Father Occupation" Variant="Variant.Outlined" For="@(() => _familyModel.FatherOccupation)" />
+                        </MudItem>
+                    </MudGrid>
+                </MudForm>
+            </MudStep>
+
+            @* ── Step 5: Payroll ── *@
+            <MudStep Title="Payroll" SecondaryText="Payroll details">
+                <MudForm @ref="_payrollForm" Model="@_payrollModel" Validation="@ValidatePayrollField">
+                    <MudGrid>
+                        <MudItem xs="12" sm="6">
+                            <MudNumericField @bind-Value="_payrollModel.Salary" Label="Salary" Variant="Variant.Outlined" For="@(() => _payrollModel.Salary)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudSelect T="string" @bind-Value="_payrollModel.Currency" Label="Currency" Variant="Variant.Outlined" For="@(() => _payrollModel.Currency)">
+                                @foreach (var c in Currency.All)
+                                {
+                                    <MudSelectItem Value="@c" />
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudSelect T="string" @bind-Value="_payrollModel.PayType" Label="Pay Type" Variant="Variant.Outlined" For="@(() => _payrollModel.PayType)">
+                                @foreach (var p in PayType.All)
+                                {
+                                    <MudSelectItem Value="@p" />
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_payrollModel.CostAllocate" Label="Cost Allocate" Variant="Variant.Outlined" For="@(() => _payrollModel.CostAllocate)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_payrollModel.PayByBacklog" Label="Pay By Backlog" Variant="Variant.Outlined" For="@(() => _payrollModel.PayByBacklog)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_payrollModel.TaxStatus" Label="Tax Status" Variant="Variant.Outlined" For="@(() => _payrollModel.TaxStatus)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_payrollModel.TaxNo" Label="Tax No" Variant="Variant.Outlined" For="@(() => _payrollModel.TaxNo)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_payrollModel.SSBStatus" Label="SSB Status" Variant="Variant.Outlined" For="@(() => _payrollModel.SSBStatus)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_payrollModel.SSCBNo" Label="SSCB No" Variant="Variant.Outlined" For="@(() => _payrollModel.SSCBNo)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudNumericField @bind-Value="_payrollModel.ComplianceEarnedPoints" Label="Compliance Earned Points" Variant="Variant.Outlined" For="@(() => _payrollModel.ComplianceEarnedPoints)" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudNumericField @bind-Value="_payrollModel.ComplianceBalancePoints" Label="Compliance Balance Points" Variant="Variant.Outlined" For="@(() => _payrollModel.ComplianceBalancePoints)" />
+                        </MudItem>
+                    </MudGrid>
+                </MudForm>
+            </MudStep>
+
+            </ChildContent>
+            @* ── Custom Action Buttons ── *@
+            <ActionContent>
+                <MudStack Row="true" Justify="Justify.FlexEnd" AlignItems="AlignItems.Center" Spacing="1" Class="w-100">
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                                   Color="Color.Primary"
+                                   Disabled="@(!_stepper.PreviousStepEnabled)"
+                                   OnClick="_stepper.PreviousStepAsync" />
+                    @if (_stepper.ActiveIndex < 4)
+                    {
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowForward"
+                                   Color="Color.Primary"
+                                   OnClick="_stepper.NextStepAsync" />
+                    }
+                    else
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Save" Disabled="@_saving">
+                            @if (_saving)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-1" />
+                            }
+                            Save
+                        </MudButton>
+                        <MudButton Variant="Variant.Text" OnClick="Cancel">Cancel</MudButton>
+                    }
+                </MudStack>
+            </ActionContent>
+        </MudStepper>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance? _mudDialog { get; set; }
+
+    private MudStepper _stepper = null!;
+    private bool _saving;
+
+    private void Cancel() => _mudDialog?.Cancel();
+
+    // Form references
+    private MudForm? _profileForm;
+    private MudForm? _employmentForm;
+    private MudForm? _contactForm;
+    private MudForm? _familyForm;
+    private MudForm? _payrollForm;
+
+    // Form models
+    private EmployeeProfileFormModel _profileModel = new();
+    private EmployeeEmploymentFormModel _employmentModel = new();
+    private EmployeeContactFormModel _contactModel = new();
+    private EmployeeFamilyFormModel _familyModel = new();
+    private EmployeePayrollFormModel _payrollModel = new();
+
+    // Validators
+    private readonly CreateEmployeeProfileValidator _profileValidator = new();
+    private readonly CreateEmployeeEmploymentValidator _employmentValidator = new();
+    private readonly CreateEmployeeContactValidator _contactValidator = new();
+    private readonly CreateEmployeeFamilyInfoValidator _familyValidator = new();
+    private readonly CreateEmployeePayrollInfoValidator _payrollValidator = new();
+
+    // ── Validation ──
+
+    private async Task<IEnumerable<string>> ValidateProfileField(object model, string propertyName)
+    {
+        var actualPropertyName = propertyName.EndsWith("Proxy")
+                             ? propertyName.Replace("Proxy", "")
+                             : propertyName;
+        return await _profileValidator.ValidateMappedValue<EmployeeProfileFormModel, CreateEmployeeProfileDto>(
+            _profileModel, new Dictionary<string, string>())(model, actualPropertyName);
+    }
+
+    private async Task<IEnumerable<string>> ValidateEmploymentField(object model, string propertyName)
+    {
+        var actualPropertyName = propertyName.EndsWith("Proxy")
+                             ? propertyName.Replace("Proxy", "")
+                             : propertyName;
+        return await _employmentValidator.ValidateMappedValue<EmployeeEmploymentFormModel, CreateEmployeeEmploymentDto>(
+            _employmentModel, new Dictionary<string, string>())(model, actualPropertyName);
+    }
+
+    private async Task<IEnumerable<string>> ValidateContactField(object model, string propertyName)
+    {
+        return await _contactValidator.ValidateMappedValue<EmployeeContactFormModel, CreateEmployeeContactDto>(
+            _contactModel, new Dictionary<string, string>())(model, propertyName);
+    }
+
+    private async Task<IEnumerable<string>> ValidateFamilyField(object model, string propertyName)
+    {
+        return await _familyValidator.ValidateMappedValue<EmployeeFamilyFormModel, CreateEmployeeFamilyInfoDto>(
+            _familyModel, new Dictionary<string, string>())(model, propertyName);
+    }
+
+    private async Task<IEnumerable<string>> ValidatePayrollField(object model, string propertyName)
+    {
+        return await _payrollValidator.ValidateMappedValue<EmployeePayrollFormModel, CreateEmployeePayrollInfoDto>(
+            _payrollModel, new Dictionary<string, string>())(model, propertyName);
+    }
+
+    private MudForm? GetCurrentForm()
+    {
+        return _stepper.ActiveIndex switch
+        {
+            0 => _profileForm,
+            1 => _employmentForm,
+            2 => _contactForm,
+            3 => _familyForm,
+            4 => _payrollForm,
+            _ => null
+        };
+    }
+
+    private async Task<bool> ValidateCurrentStepAsync()
+    {
+        return _stepper.ActiveIndex switch
+        {
+            0 => (await _profileValidator.ValidateAsync(_profileModel.Adapt<CreateEmployeeProfileDto>())).IsValid,
+            1 => (await _employmentValidator.ValidateAsync(_employmentModel.Adapt<CreateEmployeeEmploymentDto>() with { EmployeeId = 1 })).IsValid,
+            2 => (await _contactValidator.ValidateAsync(_contactModel.Adapt<CreateEmployeeContactDto>() with { EmployeeId = 1 })).IsValid,
+            3 => (await _familyValidator.ValidateAsync(_familyModel.Adapt<CreateEmployeeFamilyInfoDto>() with { EmployeeId = 1 })).IsValid,
+            4 => (await _payrollValidator.ValidateAsync(_payrollModel.Adapt<CreateEmployeePayrollInfoDto>() with { EmployeeId = 1 })).IsValid,
+            _ => true
+        };
+    }
+
+    // ── Save ──
+
+    private async Task Save()
+    {
+        var profileValid = (await _profileValidator.ValidateAsync(_profileModel.Adapt<CreateEmployeeProfileDto>())).IsValid;
+        var employmentValid = (await _employmentValidator.ValidateAsync(_employmentModel.Adapt<CreateEmployeeEmploymentDto>() with { EmployeeId = 1 })).IsValid;
+        var contactValid = (await _contactValidator.ValidateAsync(_contactModel.Adapt<CreateEmployeeContactDto>() with { EmployeeId = 1 })).IsValid;
+        var familyValid = (await _familyValidator.ValidateAsync(_familyModel.Adapt<CreateEmployeeFamilyInfoDto>() with { EmployeeId = 1 })).IsValid;
+        var payrollValid = (await _payrollValidator.ValidateAsync(_payrollModel.Adapt<CreateEmployeePayrollInfoDto>() with { EmployeeId = 1 })).IsValid;
+
+        if (!profileValid || !employmentValid || !contactValid || !familyValid || !payrollValid)
+        {
+            Snackbar.Add("Please fix all validation errors before saving.", Severity.Warning);
+            _saving = false;
+            return;
+        }
+
+        _saving = true;
+        try
+        {
+            var dto = new CreateFullEmployeeDto
+            {
+                Profile = _profileModel.Adapt<CreateEmployeeProfileDto>(),
+                Employment = _employmentModel.Adapt<CreateEmployeeEmploymentDto>(),
+                Contact = _contactModel.Adapt<CreateEmployeeContactDto>(),
+                Family = _familyModel.Adapt<CreateEmployeeFamilyInfoDto>(),
+                Payroll = _payrollModel.Adapt<CreateEmployeePayrollInfoDto>()
+            };
+
+            var response = await EmployeeProfileApiClient.CreateFullAsync(dto);
+            if (response.Success)
+            {
+                Snackbar.Add("Employee created successfully", Severity.Success);
+                _mudDialog?.Close(DialogResult.Ok(response.Data));
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? "Failed to create employee", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task OnPreviewInteraction(StepperInteractionEventArgs e)
+    {
+        if (e.Action == StepAction.Next ||
+            e.Action == StepAction.Complete ||
+           (e.Action == StepAction.Activate && e.StepIndex > _stepper.ActiveIndex))
+        {
+            if (!await ValidateCurrentStepAsync())
+            {
+                var form = GetCurrentForm();
+                if (form != null) await form.Validate();
+
+                e.Cancel = true;
+            }
+        }
+    }
+}

@@ -16,6 +16,7 @@
 @inject ITeamApiClient TeamApiClient
 @inject IPositionApiClient PositionApiClient
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 @inject NavigationManager Navigation
 @inject LookupStateService LookupState
 
@@ -40,44 +41,89 @@
                               Variant="Variant.Outlined"
                               Style="max-width: 300px;" />
 
-                <MudSelect T="long?"
+                <MudAutocomplete T="long?"
                            Value="@_departmentFilter"
-                           ValueChanged="OnDepartmentFilterChanged"
+                           ValueChanged="@OnDepartmentFilterChanged"
                            Placeholder="All Departments"
-                           Variant="Variant.Outlined"
                            Clearable="true"
-                           Style="max-width: 200px;">
-                    @foreach (var dept in _departments)
-                    {
-                        <MudSelectItem T="long?" Value="@dept.Id">@dept.Code</MudSelectItem>
-                    }
-                </MudSelect>
+                           Variant="Variant.Outlined"
+                           Style="max-width: 200px;"
+                           SearchFunc="SearchFilterDepartments"
+                           ToStringFunc="GetFilterDepartmentDisplay"
+                           ResetValueOnEmptyText="true"
+                           OpenIcon="@Icons.Material.Filled.ArrowDropDown">
+                    <ItemTemplate Context="deptId">
+                        @{ var dept = _departments.FirstOrDefault(x => x.Id == deptId); }
+                        @if (dept != null)
+                        {
+                            <MudStack Row="true" AlignItems="AlignItems.Center">
+                                <MudText>@dept.Code</MudText>
+                                @if (!dept.IsActive)
+                                {
+                                        <MudTooltip Text="This department is inactive" Placement="Placement.Right">
+                                            <MudIcon Icon="@Icons.Material.Filled.WarningAmber" Color="Color.Warning" Size="Size.Small" />
+                                        </MudTooltip>
+                                }
+                            </MudStack>
+                        }
+                    </ItemTemplate>
+                </MudAutocomplete>
 
-                <MudSelect T="long?"
+                <MudAutocomplete T="long?"
                            Value="@_teamFilter"
-                           ValueChanged="OnTeamFilterChanged"
+                           ValueChanged="@OnTeamFilterChanged"
                            Placeholder="All Teams"
-                           Variant="Variant.Outlined"
                            Clearable="true"
-                           Style="max-width: 200px;">
-                    @foreach (var team in _teams)
-                    {
-                        <MudSelectItem T="long?" Value="@team.Id">@team.Code</MudSelectItem>
-                    }
-                </MudSelect>
+                           Variant="Variant.Outlined"
+                           Style="max-width: 200px;"
+                           SearchFunc="SearchFilterTeams"
+                           ToStringFunc="GetFilterTeamDisplay"
+                           ResetValueOnEmptyText="true"
+                           OpenIcon="@Icons.Material.Filled.ArrowDropDown">
+                    <ItemTemplate Context="teamId">
+                        @{ var team = _teams.FirstOrDefault(x => x.Id == teamId); }
+                        @if (team != null)
+                        {
+                            <MudStack Row="true" AlignItems="AlignItems.Center">
+                                <MudText>@team.Code</MudText>
+                                @if (!team.IsActive)
+                                {
+                                        <MudTooltip Text="This team is inactive" Placement="Placement.Right">
+                                            <MudIcon Icon="@Icons.Material.Filled.WarningAmber" Color="Color.Warning" Size="Size.Small" />
+                                        </MudTooltip>
+                                }
+                            </MudStack>
+                        }
+                    </ItemTemplate>
+                </MudAutocomplete>
 
-                <MudSelect T="long?"
+                <MudAutocomplete T="long?"
                            Value="@_positionFilter"
-                           ValueChanged="OnPositionFilterChanged"
+                           ValueChanged="@OnPositionFilterChanged"
                            Placeholder="All Positions"
-                           Variant="Variant.Outlined"
                            Clearable="true"
-                           Style="max-width: 200px;">
-                    @foreach (var pos in _positions)
-                    {
-                        <MudSelectItem T="long?" Value="@pos.Id">@pos.Code</MudSelectItem>
-                    }
-                </MudSelect>
+                           Variant="Variant.Outlined"
+                           Style="max-width: 200px;"
+                           SearchFunc="SearchFilterPositions"
+                           ToStringFunc="GetFilterPositionDisplay"
+                           ResetValueOnEmptyText="true"
+                           OpenIcon="@Icons.Material.Filled.ArrowDropDown">
+                    <ItemTemplate Context="posId">
+                        @{ var pos = _positions.FirstOrDefault(x => x.Id == posId); }
+                        @if (pos != null)
+                        {
+                            <MudStack Row="true" AlignItems="AlignItems.Center">
+                                <MudText>@pos.Code</MudText>
+                                @if (!pos.IsActive)
+                                {
+                                        <MudTooltip Text="This position is inactive" Placement="Placement.Right">
+                                            <MudIcon Icon="@Icons.Material.Filled.WarningAmber" Color="Color.Warning" Size="Size.Small" />
+                                        </MudTooltip>
+                                }
+                            </MudStack>
+                        }
+                    </ItemTemplate>
+                </MudAutocomplete>
             </MudStack>
 
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
@@ -85,6 +131,11 @@
                                   SortDirection="@_sortDirection"
                                   SortColumns="@_sortableColumns"
                                   OnSortChanged="OnSortChanged" />
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenCreateWizardAsync">
+                    Add Employee
+                </MudButton>
             </MudStack>
         </MudStack>
 
@@ -291,6 +342,54 @@
         await RefreshDataAsync();
     }
 
+    private Task<IEnumerable<long?>> SearchFilterDepartments(string value, CancellationToken token)
+    {
+        var query = _departments.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(value))
+            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(query.Select(x => (long?)x.Id).AsEnumerable());
+    }
+
+    private string GetFilterDepartmentDisplay(long? id)
+    {
+        if (id == null) return string.Empty;
+        var dept = _departments.FirstOrDefault(x => x.Id == id);
+        if (dept == null) return string.Empty;
+        return dept.IsActive ? dept.Code : $"{dept.Code} (Inactive)";
+    }
+
+    private Task<IEnumerable<long?>> SearchFilterTeams(string value, CancellationToken token)
+    {
+        var query = _teams.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(value))
+            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(query.Select(x => (long?)x.Id).AsEnumerable());
+    }
+
+    private string GetFilterTeamDisplay(long? id)
+    {
+        if (id == null) return string.Empty;
+        var team = _teams.FirstOrDefault(x => x.Id == id);
+        if (team == null) return string.Empty;
+        return team.IsActive ? team.Code : $"{team.Code} (Inactive)";
+    }
+
+    private Task<IEnumerable<long?>> SearchFilterPositions(string value, CancellationToken token)
+    {
+        var query = _positions.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(value))
+            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(query.Select(x => (long?)x.Id).AsEnumerable());
+    }
+
+    private string GetFilterPositionDisplay(long? id)
+    {
+        if (id == null) return string.Empty;
+        var pos = _positions.FirstOrDefault(x => x.Id == id);
+        if (pos == null) return string.Empty;
+        return pos.IsActive ? pos.Code : $"{pos.Code} (Inactive)";
+    }
+
     private async Task RefreshDataAsync()
     {
         if (_dataGrid is not null)
@@ -300,5 +399,16 @@
     private void NavigateToDetail(long id)
     {
         Navigation.NavigateTo($"/hr/employees/{id}");
+    }
+
+    private async Task OpenCreateWizardAsync()
+    {
+        var dialog = await DialogService.ShowAsync<EmployeeCreateWizard>("Add Employee");
+        var result = await dialog.Result;
+        if (!result.Canceled && result.Data is long newId)
+        {
+            Snackbar.Add("Employee created successfully.", Severity.Success);
+            NavigateToDetail(newId);
+        }
     }
 }

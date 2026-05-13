@@ -25,6 +25,7 @@ namespace EPMS.Shared.Constants
             public static string PositionLookups() => "hr:positions:lookups";
             public static string DepartmentLookups() => "hr:departments:lookups";
             public static string EmployeeById(long id) => $"hr:employee:id:{id}";
+            public static string EmployeeLookups() => "hr:employees:lookups";
         }
 
         public static class System

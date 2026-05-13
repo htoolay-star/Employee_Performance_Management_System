@@ -79,6 +79,7 @@
             public const string ColumnName = "Team Name";
             public const string ColumnDepartment = "Department";
             public const string SelectDepartmentPlaceholder = "-- Select a Department --";
+            public const string LeadColumn = "PM";
             public const string NoDataFound = "Try adjusting your search or add a new team.";
         }
 
@@ -94,6 +95,7 @@
             public const string NameLabel = "Department Name";
             public const string ColumnCode = "Department Code";
             public const string ColumnName = "Department Name";
+            public const string HeadColumn = "Head";
             public const string NoDataFound = "Try adjusting your search or add a new department.";
         }
 

@@ -25,6 +25,9 @@ public interface IEmployeeProfileApiClient
     [Post("/api/employee-profiles")]
     Task<SuccessResponse<long>> CreateAsync([Body] CreateEmployeeProfileDto dto);
 
+    [Post("/api/employee-profiles/full-create")]
+    Task<SuccessResponse<long>> CreateFullAsync([Body] CreateFullEmployeeDto dto);
+
     [Put("/api/employee-profiles/{id}")]
     Task<SuccessResponse> UpdateAsync(long id, [Body] UpdateEmployeeProfileDto dto);
 

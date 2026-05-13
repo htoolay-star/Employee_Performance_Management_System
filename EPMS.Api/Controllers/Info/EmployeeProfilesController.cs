@@ -75,6 +75,13 @@ public class EmployeeProfilesController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HttpPost("full-create")]
+    public async Task<ActionResult<SuccessResponse<long>>> CreateFull(CreateFullEmployeeDto dto)
+    {
+        var result = await _profileService.CreateFullAsync(dto);
+        return HandleResult(result);
+    }
+
     [HttpPut("{id:long}")]
     public async Task<ActionResult<SuccessResponse>> Update(long id, UpdateEmployeeProfileDto dto)
     {

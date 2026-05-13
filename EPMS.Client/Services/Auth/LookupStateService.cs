@@ -1,5 +1,7 @@
 ﻿using EPMS.Client.Services.Hr;
+using EPMS.Client.Services.Info;
 using EPMS.Shared.DTOs.Common;
+using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 
 namespace EPMS.Client.Services.Auth
 {
@@ -9,18 +11,21 @@ namespace EPMS.Client.Services.Auth
         private readonly ITeamApiClient _teamApi;
         private readonly IPositionApiClient _posApi;
         private readonly ILevelApiClient _levelApi;
+        private readonly IEmployeeProfileApiClient _employeeApi;
 
         private List<LookUpDto>? _departments;
         private List<LookUpDto>? _teams;
         private List<LookUpDto>? _positions;
         private List<LookUpDto>? _levels;
+        private List<EmployeeLookupDto>? _employees;
 
-        public LookupStateService(IDepartmentApiClient deptApi, ITeamApiClient teamApi, IPositionApiClient posApi, ILevelApiClient levelApi)
+        public LookupStateService(IDepartmentApiClient deptApi, ITeamApiClient teamApi, IPositionApiClient posApi, ILevelApiClient levelApi, IEmployeeProfileApiClient employeeApi)
         {
             _deptApi = deptApi;
             _teamApi = teamApi;
             _posApi = posApi;
             _levelApi = levelApi;
+            _employeeApi = employeeApi;
         }
 
         public async Task<List<LookUpDto>> GetDepartmentsAsync()
@@ -63,9 +68,20 @@ namespace EPMS.Client.Services.Auth
             return _levels;
         }
 
+        public async Task<List<EmployeeLookupDto>> GetEmployeesAsync()
+        {
+            if (_employees == null)
+            {
+                var response = await _employeeApi.GetLookupAsync();
+                _employees = response.Data?.ToList() ?? new List<EmployeeLookupDto>();
+            }
+            return _employees;
+        }
+
         public void ClearDepartmentCache() => _departments = null;
         public void ClearTeamCache() => _teams = null;
         public void ClearPositionCache() => _positions = null;
         public void ClearLevelCache() => _levels = null;
+        public void ClearEmployeeCache() => _employees = null;
     }
 }

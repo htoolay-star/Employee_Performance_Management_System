@@ -9,6 +9,7 @@ public interface IEmployeeProfileService
     Task<SuccessResponse<EmployeeProfileDto>> GetByIdAsync(long id);
     Task<SuccessResponse<EmployeeProfileDto>> GetByPublicIdAsync(Guid publicId);
     Task<SuccessResponse<long>> CreateAsync(CreateEmployeeProfileDto dto);
+    Task<SuccessResponse<long>> CreateFullAsync(CreateFullEmployeeDto dto);
     Task<SuccessResponse> UpdateAsync(long id, UpdateEmployeeProfileDto dto);
     Task<SuccessResponse> DeleteAsync(long id);
     Task<SuccessResponse<EmployeeProfileDto>> GetByStaffNoAsync(string staffNo);

@@ -55,21 +55,21 @@
                             ToStringFunc="GetLevelDisplay"
                             ResetValueOnEmptyText="true"
                             OpenIcon="@Icons.Material.Filled.ArrowDropDown">
-                    @foreach (var level in AvailableLevels)
-                    {
-                        long? currentLevelId = level.Id;
-                        <MudSelectItem T="long?" Value="@currentLevelId">
-                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                                <MudText>@level.Code</MudText>
-                                @if (!level.IsActive)
-                                {
-                                    <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Text" Class="ml-auto">
-                                        Inactive
-                                    </MudChip>
-                                }
-                            </MudStack>
-                        </MudSelectItem>
-                    }
+            <ItemTemplate Context="levelId">
+                @{ var level = AvailableLevels.FirstOrDefault(x => x.Id == levelId); }
+                @if (level != null)
+                {
+                    <MudStack Row="true" AlignItems="AlignItems.Center">
+                        <MudText>@level.Code</MudText>
+                        @if (!level.IsActive)
+                        {
+                                <MudTooltip Text="This level is inactive" Placement="Placement.Right">
+                                    <MudIcon Icon="@Icons.Material.Filled.WarningAmber" Color="Color.Warning" Size="Size.Small" />
+                                </MudTooltip>
+                        }
+                    </MudStack>
+                }
+            </ItemTemplate>
                 </MudAutocomplete>
 
                 @* {{!-- IsActive toggle: only shown on Edit --}} *@

@@ -1,6 +1,7 @@
 @using EPMS.Client.Extensions
 @using EPMS.Client.Models.Info
 @using EPMS.Client.Services.Info
+@using EPMS.Shared.Constants
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.EmployeeInfoDTOs
 @using EPMS.Shared.Validators.EmployeeInfoDTOs
@@ -127,7 +128,12 @@ else
                     }
                     else
                     {
-                        <MudTextField @bind-Value="_model.RelationWithEmergencyContact" Label="Relation With Emergency Contact" Variant="Variant.Outlined" For="@(() => _model.RelationWithEmergencyContact)" />
+                        <MudSelect T="string" @bind-Value="_model.RelationWithEmergencyContact" Label="Relation With Emergency Contact" Variant="Variant.Outlined" For="@(() => _model.RelationWithEmergencyContact)">
+                            @foreach (var r in RelationWithEmergencyContact.All)
+                            {
+                                <MudSelectItem Value="@r" />
+                            }
+                        </MudSelect>
                     }
                 </MudItem>
 

@@ -40,6 +40,7 @@ namespace EPMS.Domain.Repository.Info
                     Id = p.Id,
                     StaffNo = p.StaffNo,
                     StaffName = p.StaffName,
+                    PositionId = p.Employment != null ? p.Employment.PositionId : null,
                 })
                 .ToListAsync();
         }

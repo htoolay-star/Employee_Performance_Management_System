@@ -1,6 +1,7 @@
 @using EPMS.Client.Extensions
 @using EPMS.Client.Models.Info
 @using EPMS.Client.Services.Info
+@using EPMS.Shared.Constants
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.EmployeeInfoDTOs
 @using EPMS.Shared.Validators.EmployeeInfoDTOs
@@ -65,8 +66,10 @@ else
                     else
                     {
                         <MudSelect T="string" @bind-Value="_model.Gender" Label="Gender" Variant="Variant.Outlined" For="@(() => _model.Gender)">
-                            <MudSelectItem Value="@("Male")" />
-                            <MudSelectItem Value="@("Female")" />
+                            @foreach (var g in Genders.All)
+                            {
+                                <MudSelectItem Value="@g" />
+                            }
                         </MudSelect>
                     }
                 </MudItem>
@@ -167,7 +170,12 @@ else
                     }
                     else
                     {
-                        <MudTextField @bind-Value="_model.Religion" Label="Religion" Variant="Variant.Outlined" For="@(() => _model.Religion)" />
+                        <MudSelect T="string" @bind-Value="_model.Religion" Label="Religion" Variant="Variant.Outlined" For="@(() => _model.Religion)">
+                            @foreach (var r in Religions.All)
+                            {
+                                <MudSelectItem Value="@r" />
+                            }
+                        </MudSelect>
                     }
                 </MudItem>
                 <MudItem xs="12" sm="6">
