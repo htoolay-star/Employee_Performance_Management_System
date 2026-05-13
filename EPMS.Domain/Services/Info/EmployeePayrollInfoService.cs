@@ -1,10 +1,10 @@
-using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Domain.Interface.IService.Info;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using EPMS.Shared.Enums;
+using Mapster;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 namespace EPMS.Domain.Services.Info;
@@ -12,18 +12,18 @@ namespace EPMS.Domain.Services.Info;
 public class EmployeePayrollInfoService : IEmployeePayrollInfoService
 {
     private readonly IUnitOfWork _uow;
-    private readonly IMapper _mapper;
+    private readonly TimeProvider _timeProvider;
 
-    public EmployeePayrollInfoService(IUnitOfWork uow, IMapper mapper)
+    public EmployeePayrollInfoService(IUnitOfWork uow, TimeProvider timeProvider)
     {
         _uow = uow;
-        _mapper = mapper;
+        _timeProvider = timeProvider;
     }
 
     public async Task<SuccessResponse<IEnumerable<EmployeePayrollInfoDto>>> GetAllAsync()
     {
         var payrolls = await _uow.Info.EmployeePayrollInfos.GetAllAsync();
-        var dtos = _mapper.Map<IEnumerable<EmployeePayrollInfoDto>>(payrolls);
+        var dtos = payrolls.Adapt<IEnumerable<EmployeePayrollInfoDto>>();
         return SuccessResponse<IEnumerable<EmployeePayrollInfoDto>>.Ok(dtos, EmployeePayrollInfoMsg.RetrievedAll);
     }
 
@@ -34,18 +34,22 @@ public class EmployeePayrollInfoService : IEmployeePayrollInfoService
         if (payroll == null)
             return SuccessResponse<EmployeePayrollInfoDto>.Fail(EmployeePayrollInfoMsg.NotFound(id), ErrorType.NotFound);
 
-        var dto = _mapper.Map<EmployeePayrollInfoDto>(payroll);
+        var dto = payroll.Adapt<EmployeePayrollInfoDto>();
         return SuccessResponse<EmployeePayrollInfoDto>.Ok(dto, EmployeePayrollInfoMsg.Retrieved);
     }
 
-    public async Task<SuccessResponse<EmployeePayrollInfoDto>> GetByEmployeeIdAsync(long employeeId)
+    public async Task<SuccessResponse<EmployeePayrollInfoDto>> GetByEmployeeIdAsync(Guid employeePublicId)
     {
-        var payroll = await _uow.Info.EmployeePayrollInfos.GetByEmployeeIdAsync(employeeId);
+        var employee = await _uow.Info.EmployeeProfiles.GetByPublicIdAsync(employeePublicId);
+        if (employee == null)
+            return SuccessResponse<EmployeePayrollInfoDto>.Fail(EmployeeProfileMsg.NotFound(employeePublicId), ErrorType.NotFound);
+
+        var payroll = await _uow.Info.EmployeePayrollInfos.GetByEmployeeIdAsync(employee.Id);
 
         if (payroll == null)
-            return SuccessResponse<EmployeePayrollInfoDto>.Fail(EmployeePayrollInfoMsg.NotFound(employeeId), ErrorType.NotFound);
+            return SuccessResponse<EmployeePayrollInfoDto>.Fail(EmployeePayrollInfoMsg.NotFound(employeePublicId), ErrorType.NotFound);
 
-        var dto = _mapper.Map<EmployeePayrollInfoDto>(payroll);
+        var dto = payroll.Adapt<EmployeePayrollInfoDto>();
         return SuccessResponse<EmployeePayrollInfoDto>.Ok(dto, EmployeePayrollInfoMsg.Retrieved);
     }
 
@@ -82,6 +86,8 @@ public class EmployeePayrollInfoService : IEmployeePayrollInfoService
         if (dto.Salary < 0)
             return SuccessResponse.Fail(EmployeePayrollInfoMsg.SalaryNegative, ErrorType.Validation);
 
+        var oldSalary = payroll.Salary;
+
         if (dto.Salary != payroll.Salary || dto.CostAllocate != null || dto.PayByBacklog != null)
             payroll.UpdatePayrollDetails(dto.Salary, dto.CostAllocate, dto.PayByBacklog);
 
@@ -93,6 +99,20 @@ public class EmployeePayrollInfoService : IEmployeePayrollInfoService
 
         if (dto.ComplianceEarnedPoints != null || dto.ComplianceBalancePoints != null)
             payroll.UpdateCompliancePoints(dto.ComplianceEarnedPoints, dto.ComplianceBalancePoints);
+
+        // Auto-create salary history when salary changes
+        if (oldSalary != payroll.Salary)
+        {
+            var history = new EmployeeSalaryHistory(
+                payroll.EmployeeId,
+                oldSalary,
+                payroll.Salary,
+                DateOnly.FromDateTime(_timeProvider.GetUtcNow().DateTime),
+                $"Salary updated from {oldSalary:N2} to {payroll.Salary:N2}",
+                _timeProvider);
+
+            _uow.Info.EmployeeSalaryHistories.Add(history);
+        }
 
         await _uow.CompleteAsync();
         return SuccessResponse.Ok(EmployeePayrollInfoMsg.Updated);

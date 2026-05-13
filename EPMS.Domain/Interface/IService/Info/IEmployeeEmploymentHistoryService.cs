@@ -8,6 +8,5 @@ public interface IEmployeeEmploymentHistoryService
     Task<SuccessResponse<IEnumerable<EmployeeEmploymentHistoryDto>>> GetAllAsync();
     Task<SuccessResponse<EmployeeEmploymentHistoryDto>> GetByIdAsync(long id);
     Task<SuccessResponse<IEnumerable<EmployeeEmploymentHistoryDto>>> GetByEmployeeIdAsync(long employeeId);
-    Task<SuccessResponse<long>> CreateAsync(CreateEmployeeEmploymentHistoryDto dto);
-    // No Update or Delete - history is append-only
+    // No Create, Update or Delete - history is auto-generated append-only
 }

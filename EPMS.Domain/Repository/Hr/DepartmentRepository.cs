@@ -2,6 +2,7 @@ using EPMS.Domain.Data;
 using EPMS.Domain.Entities.Hr;
 using EPMS.Domain.Interface.Irepo.Hr;
 using EPMS.Domain.Repository.Base;
+using EPMS.Shared.DTOs.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace EPMS.Domain.Repository.Hr;
@@ -27,15 +28,26 @@ public class DepartmentRepository : GenericRepository<Department>, IDepartmentRe
         return await _dbSet.AnyAsync(d => d.Name == name);
     }
 
+    public async Task<bool> ExistsByNameAsync(string name, long excludeId)
+    {
+        return await _dbSet.AnyAsync(d => d.Name == name && d.Id != excludeId);
+    }
+
     public async Task<bool> ExistsByIdAsync(long id)
     {
         return await _dbSet.AnyAsync(d => d.Id == id);
     }
 
-    public async Task<IEnumerable<(long Id, string Code, bool IsActive)>> GetLookupAsync()
+    public async Task<IEnumerable<LookUpDto>> GetLookupDtoAsync()
     {
         return await _dbSet
-            .Select(x => new ValueTuple<long, string, bool>(x.Id, x.Code, x.IsActive))
+            .AsNoTracking()
+            .Select(p => new LookUpDto
+            {
+                Id = p.Id,
+                Code = p.Code,
+                IsActive = p.IsActive,
+            })
             .ToListAsync();
     }
 }

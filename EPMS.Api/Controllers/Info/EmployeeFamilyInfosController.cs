@@ -10,7 +10,6 @@ namespace EPMS.Api.Controllers.Info;
 
 [Route("api/employee-family-infos")]
 [ApiController]
-[Authorize(Roles = RoleConstants.Admin)]
 public class EmployeeFamilyInfosController : ApiControllerBase
 {
     private readonly IEmployeeFamilyInfoService _familyInfoService;
@@ -34,10 +33,10 @@ public class EmployeeFamilyInfosController : ApiControllerBase
         return HandleResult(result);
     }
 
-    [HttpGet("by-employee/{employeeId:long}")]
-    public async Task<ActionResult<SuccessResponse<EmployeeFamilyInfoDto>>> GetByEmployeeId(long employeeId)
+    [HttpGet("by-employee/{employeePublicId:guid}")]
+    public async Task<ActionResult<SuccessResponse<EmployeeFamilyInfoDto>>> GetByEmployeeId(Guid employeePublicId)
     {
-        var result = await _familyInfoService.GetByEmployeeIdAsync(employeeId);
+        var result = await _familyInfoService.GetByEmployeeIdAsync(employeePublicId);
         return HandleResult(result);
     }
 

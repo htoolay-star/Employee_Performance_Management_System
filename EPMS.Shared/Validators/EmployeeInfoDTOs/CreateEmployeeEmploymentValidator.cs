@@ -21,10 +21,7 @@ public class CreateEmployeeEmploymentValidator : AbstractValidator<CreateEmploye
             .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.PositionIdInvalid);
 
         RuleFor(x => x.EmploymentStatus)
-            .NotEmpty()
-            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.EmploymentStatusRequired)
-            .MaximumLength(50)
-            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.EmploymentStatusMaxLength);
+            .ApplyEmploymentStatusRules();
 
         RuleFor(x => x.ParentDepartmentId)
             .GreaterThan(0)

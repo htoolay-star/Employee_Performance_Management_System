@@ -8,6 +8,7 @@ public class UpdateDepartmentDtoValidator : AbstractValidator<UpdateDepartmentDt
 {
     public UpdateDepartmentDtoValidator()
     {
+        RuleFor(x => x.Name).ApplyDepartmentNameRules();
         RuleFor(x => x.Description).ApplyDepartmentOptionalDescriptionRules();
         RuleFor(x => x.DeptHeadId).ApplyDepartmentDeptHeadIdRules();
     }

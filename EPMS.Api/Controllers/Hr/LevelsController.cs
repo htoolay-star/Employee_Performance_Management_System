@@ -1,5 +1,5 @@
 using EPMS.Api.Controllers.Common;
-using EPMS.Domain.Interfaces;
+using EPMS.Domain.Interface.IService.Hr;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.LevelDTOs;
 using Microsoft.AspNetCore.Mvc;

@@ -10,7 +10,6 @@ namespace EPMS.Api.Controllers.Info;
 
 [Route("api/employee-contacts")]
 [ApiController]
-[Authorize(Roles = RoleConstants.Admin)]
 public class EmployeeContactsController : ApiControllerBase
 {
     private readonly IEmployeeContactService _contactService;
@@ -34,10 +33,10 @@ public class EmployeeContactsController : ApiControllerBase
         return HandleResult(result);
     }
 
-    [HttpGet("by-employee/{employeeId:long}")]
-    public async Task<ActionResult<SuccessResponse<EmployeeContactDto>>> GetByEmployeeId(long employeeId)
+    [HttpGet("by-employee/{employeePublicId:guid}")]
+    public async Task<ActionResult<SuccessResponse<EmployeeContactDto>>> GetByEmployeeId(Guid employeePublicId)
     {
-        var result = await _contactService.GetByEmployeeIdAsync(employeeId);
+        var result = await _contactService.GetByEmployeeIdAsync(employeePublicId);
         return HandleResult(result);
     }
 

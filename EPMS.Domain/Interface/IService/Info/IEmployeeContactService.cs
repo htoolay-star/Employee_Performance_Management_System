@@ -7,7 +7,7 @@ public interface IEmployeeContactService
 {
     Task<SuccessResponse<IEnumerable<EmployeeContactDto>>> GetAllAsync();
     Task<SuccessResponse<EmployeeContactDto>> GetByIdAsync(long id);
-    Task<SuccessResponse<EmployeeContactDto>> GetByEmployeeIdAsync(long employeeId);
+    Task<SuccessResponse<EmployeeContactDto>> GetByEmployeeIdAsync(Guid employeePublicId);
     Task<SuccessResponse<long>> CreateAsync(CreateEmployeeContactDto dto);
     Task<SuccessResponse> UpdateAsync(long id, UpdateEmployeeContactDto dto);
     Task<SuccessResponse> DeleteAsync(long id);

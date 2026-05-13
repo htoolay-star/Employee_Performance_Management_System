@@ -9,5 +9,6 @@ namespace EPMS.Shared.Features.Positions
     public class PositionQueryParameters : QueryParametersBase
     {
         public string? SearchTerm { get; set; }
+        public long? LevelId { get; set; }
     }
 }

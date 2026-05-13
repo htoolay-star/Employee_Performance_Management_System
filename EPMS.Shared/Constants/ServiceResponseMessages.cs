@@ -88,6 +88,7 @@ public static class ServiceResponseMessages
         public const string DuplicateEmail = "Employee with email '{0}' already exists.";
         public const string DuplicateUserId = "Employee with user ID '{0}' already exists.";
         public static string NotFound(long id) => $"Employee profile with ID '{id}' was not found.";
+        public static string NotFound(Guid id) => $"Employee profile with ID '{id}' was not found.";
     }
 
     public static class EmployeeContactMsg
@@ -98,6 +99,7 @@ public static class ServiceResponseMessages
         public const string Retrieved = "Employee contact retrieved successfully.";
         public const string RetrievedAll = "Employee contacts retrieved successfully.";
         public static string NotFound(long id) => $"Employee contact with ID '{id}' was not found.";
+        public static string NotFound(Guid id) => $"Employee contact with ID '{id}' was not found.";
     }
 
     public static class EmployeeEmploymentMsg
@@ -108,6 +110,7 @@ public static class ServiceResponseMessages
         public const string Retrieved = "Employee employment retrieved successfully.";
         public const string RetrievedAll = "Employee employments retrieved successfully.";
         public static string NotFound(long id) => $"Employee employment with ID '{id}' was not found.";
+        public static string NotFound(Guid id) => $"Employment info for employee '{id}' was not found.";
     }
 
     public static class EmployeePayrollInfoMsg
@@ -119,6 +122,7 @@ public static class ServiceResponseMessages
         public const string RetrievedAll = "Employee payroll info retrieved successfully.";
         public const string SalaryNegative = "Salary cannot be negative.";
         public static string NotFound(long id) => $"Employee payroll info with ID '{id}' was not found.";
+        public static string NotFound(Guid id) => $"Employee payroll info for employee '{id}' was not found.";
     }
 
     public static class EmployeeFamilyInfoMsg
@@ -129,21 +133,18 @@ public static class ServiceResponseMessages
         public const string Retrieved = "Employee family info retrieved successfully.";
         public const string RetrievedAll = "Employee family info retrieved successfully.";
         public static string NotFound(long id) => $"Employee family info with ID '{id}' was not found.";
+        public static string NotFound(Guid id) => $"Family info for employee '{id}' was not found.";
     }
 
     public static class EmployeeSalaryHistoryMsg
     {
-        public const string Created = "Employee salary history created successfully.";
         public const string Retrieved = "Employee salary history retrieved successfully.";
         public const string RetrievedAll = "Employee salary histories retrieved successfully.";
-        public const string SalaryNegative = "Salary amounts cannot be negative.";
-        public const string ChangeReasonRequired = "Change reason is required.";
         public static string NotFound(long id) => $"Employee salary history with ID '{id}' was not found.";
     }
 
     public static class EmployeeEmploymentHistoryMsg
     {
-        public const string Created = "Employee employment history created successfully.";
         public const string Retrieved = "Employee employment history retrieved successfully.";
         public const string RetrievedAll = "Employee employment histories retrieved successfully.";
         public static string NotFound(long id) => $"Employee employment history with ID '{id}' was not found.";
@@ -455,5 +456,13 @@ public static class PIPObjectiveMsg
         public const string RetrievedByQuestion = "Evaluation responses for question retrieved successfully.";
         public static string NotFound(long id) => $"Evaluation response with ID '{id}' was not found.";
         public static string NotFoundByAppraisal(long appraisalId) => $"Evaluation response for appraisal with ID '{appraisalId}' was not found.";
+    }
+
+    public static class ExcelMsg
+    {
+        public const string Exported = "Data exported successfully.";
+        public const string Imported = "Data imported successfully.";
+        public static string ExportFailed(string reason) => $"Export failed: {reason}";
+        public static string ImportFailed(string reason) => $"Import failed: {reason}";
     }
 }

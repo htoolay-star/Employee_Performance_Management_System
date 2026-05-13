@@ -10,12 +10,11 @@ namespace EPMS.Domain.Repository.Info
     {
         public EmployeeFamilyInfoRepository(AppDbContext context) : base(context) { }
 
-        public async Task<IEnumerable<EmployeeFamilyInfo>> GetByEmployeeIdAsync(long employeeId)
+        public async Task<EmployeeFamilyInfo?> GetByEmployeeIdAsync(long employeeId)
         {
             return await _dbSet
                 .AsNoTracking()
-                .Where(f => f.EmployeeId == employeeId)
-                .ToListAsync();
+                .FirstOrDefaultAsync(f => f.EmployeeId == employeeId);
         }
     }
 }

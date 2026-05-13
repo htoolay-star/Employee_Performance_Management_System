@@ -17,7 +17,6 @@ namespace EPMS.Domain.Repository.Hr
         private ITeamRepository? _teams;
         private ILevelRepository? _levels;
         private IPositionRepository? _positions;
-        private IRatingScaleRepository? _ratingScales;
 
         public IDepartmentRepository Departments =>
         _departments ??= serviceProvider.GetRequiredService<IDepartmentRepository>();
@@ -30,8 +29,5 @@ namespace EPMS.Domain.Repository.Hr
 
         public IPositionRepository Positions =>
         _positions ??= serviceProvider.GetRequiredService<IPositionRepository>();
-
-        public IRatingScaleRepository RatingScales =>
-        _ratingScales ??= serviceProvider.GetRequiredService<IRatingScaleRepository>();
     }
 }

@@ -28,9 +28,6 @@ public class CreateEmployeeContactValidator : AbstractValidator<CreateEmployeeCo
         RuleFor(x => x.PresentPhoneNo)
             .ApplyOptionalPhoneNumberRules(cmd => cmd.PhoneNo);
 
-        RuleFor(x => x.EmailAddress)
-            .ApplyOptionalEmailAddressRules(cmd => cmd.EmailAddress);
-
         RuleFor(x => x.InternalPhoneNo)
             .MaximumLength(20)
             .WithMessage(EmployeeInfoValidationMessages.EmployeeContact.InternalPhoneNoMaxLength);

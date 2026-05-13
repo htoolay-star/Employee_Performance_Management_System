@@ -3,7 +3,7 @@ using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Hr;
 using EPMS.Domain.Interface.Irepo.Hr;
 using EPMS.Domain.Interface.IService.App;
-using EPMS.Domain.Interfaces;
+using EPMS.Domain.Interface.IService.Hr;
 using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.DepartmentDTOs;
@@ -28,29 +28,13 @@ public class DepartmentService : IDepartmentService
 
     public async Task<SuccessResponse<IEnumerable<LookUpDto>>> GetLookupAsync()
     {
-        var cachedAllDepts = await _cacheService.GetAsync<IEnumerable<DepartmentDto>>(CacheKeys.Hr.AllDepartments());
+        var dtos = await _cacheService.GetOrCreateAsync(
+            CacheKeys.Hr.DepartmentLookups(),
+            async () => await _uow.HR.Departments.GetLookupDtoAsync(),
+            TimeSpan.FromHours(12)
+        );
 
-        if (cachedAllDepts != null)
-        {
-            var lookupFromCache = cachedAllDepts.Select(x => new LookUpDto
-            {
-                Id = x.Id,
-                Code = x.Code,
-                IsActive = x.IsActive
-            });
-            return SuccessResponse<IEnumerable<LookUpDto>>.Ok(lookupFromCache, DeptMsg.RetrievedAll);
-        }
-
-        var tuples = await _uow.HR.Departments.GetLookupAsync();
-
-        var dtos = tuples.Select(t => new LookUpDto
-        {
-            Id = t.Id,
-            Code = t.Code,
-            IsActive = t.IsActive
-        }).ToList();
-
-        return SuccessResponse<IEnumerable<LookUpDto>>.Ok(dtos, DeptMsg.RetrievedAll);
+        return SuccessResponse<IEnumerable<LookUpDto>>.Ok(dtos ?? [], DeptMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<IEnumerable<DepartmentDto>>> GetDepartmentWithTeamsAsync(long teamId)
@@ -62,11 +46,8 @@ public class DepartmentService : IDepartmentService
 
     public async Task<SuccessResponse<IEnumerable<DepartmentDto>>> GetAllAsync()
     {
-        var dtos = await _cacheService.GetOrCreateAsync(CacheKeys.Hr.AllDepartments(), async () =>
-        {
-            var departments = await _uow.HR.Departments.GetAllAsync();
-            return departments.Adapt<IEnumerable<DepartmentDto>>();
-        });
+        var departments = await _uow.HR.Departments.GetAllAsync();
+        var dtos = departments.Adapt<IEnumerable<DepartmentDto>>();
         return SuccessResponse<IEnumerable<DepartmentDto>>.Ok(dtos, DeptMsg.RetrievedAll);
     }
 
@@ -92,7 +73,7 @@ public class DepartmentService : IDepartmentService
         var entity = new Department(dto.Code, dto.Name, dto.Description, dto.DeptHeadId);
         _uow.HR.Departments.Add(entity);
         await _uow.CompleteAsync();
-        await _cacheService.RemoveAsync(CacheKeys.Hr.AllDepartments());
+        await _cacheService.RemoveAsync(CacheKeys.Hr.DepartmentLookups());
         return SuccessResponse<long>.Ok(entity.Id, DeptMsg.Created);
     }
 
@@ -103,6 +84,10 @@ public class DepartmentService : IDepartmentService
         if (department == null)
             return SuccessResponse.Fail(DeptMsg.NotFound(id), ErrorType.NotFound);
 
+        if (department.Name != dto.Name && await _uow.HR.Departments.ExistsByNameAsync(dto.Name, id))
+            return SuccessResponse.Fail(string.Format(DeptMsg.DuplicateName, dto.Name), ErrorType.Conflict);
+
+        department.Rename(dto.Name);
         department.SetDescription(dto.Description);
         department.SetDeptHead(dto.DeptHeadId);
         
@@ -110,7 +95,7 @@ public class DepartmentService : IDepartmentService
         else department.Deactivate();
 
         await _uow.CompleteAsync();
-        await _cacheService.RemoveAsync(CacheKeys.Hr.AllDepartments());
+        await _cacheService.RemoveAsync(CacheKeys.Hr.DepartmentLookups());
         return SuccessResponse.Ok(DeptMsg.Updated);
     }
 
@@ -126,7 +111,7 @@ public class DepartmentService : IDepartmentService
 
         _uow.HR.Departments.Delete(department);
         await _uow.CompleteAsync();
-        await _cacheService.RemoveAsync(CacheKeys.Hr.AllDepartments());
+        await _cacheService.RemoveAsync(CacheKeys.Hr.DepartmentLookups());
         return SuccessResponse.Ok(DeptMsg.Deleted);
     }
 }

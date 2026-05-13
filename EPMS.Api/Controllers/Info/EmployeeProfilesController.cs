@@ -10,7 +10,6 @@ namespace EPMS.Api.Controllers.Info;
 
 [Route("api/employee-profiles")]
 [ApiController]
-[Authorize(Roles = RoleConstants.Admin)]
 public class EmployeeProfilesController : ApiControllerBase
 {
     private readonly IEmployeeProfileService _profileService;
@@ -27,6 +26,20 @@ public class EmployeeProfilesController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HttpGet("lookup")]
+    public async Task<ActionResult<SuccessResponse<IEnumerable<EmployeeLookupDto>>>> GetLookup()
+    {
+        var result = await _profileService.GetLookupAsync();
+        return HandleResult(result);
+    }
+
+    [HttpGet("paged")]
+    public async Task<ActionResult<SuccessResponse<PaginatedResponse<EmployeeProfileGridItemDto>>>> GetPaged([FromQuery] EPMS.Shared.Features.EmployeeProfiles.EmployeeProfileQueryParameters parameters)
+    {
+        var result = await _profileService.GetPagedAsync(parameters);
+        return HandleResult(result);
+    }
+
     [HttpGet("{id:long}")]
     public async Task<ActionResult<SuccessResponse<EmployeeProfileDto>>> GetById(long id)
     {
@@ -34,10 +47,10 @@ public class EmployeeProfilesController : ApiControllerBase
         return HandleResult(result);
     }
 
-    [HttpGet("{id:long}/full")]
-    public async Task<ActionResult<SuccessResponse<EmployeeProfileDetailDto>>> GetFullProfile(long id)
+    [HttpGet("by-publicid/{publicId:guid}")]
+    public async Task<ActionResult<SuccessResponse<EmployeeProfileDto>>> GetByPublicId(Guid publicId)
     {
-        var result = await _profileService.GetFullProfileAsync(id);
+        var result = await _profileService.GetByPublicIdAsync(publicId);
         return HandleResult(result);
     }
 

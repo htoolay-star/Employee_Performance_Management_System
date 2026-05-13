@@ -12,22 +12,21 @@ namespace EPMS.Domain.Entities.EmployeeInfo
     {
         private EmployeeProfile() { }
 
-        public EmployeeProfile(long? userId, string staffNo, string firstName, string? lastName)
+        public EmployeeProfile(long? userId, string staffNo, string staffName, string email)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(staffNo);
-            ArgumentException.ThrowIfNullOrWhiteSpace(firstName);
+            ArgumentException.ThrowIfNullOrWhiteSpace(staffName);
 
             UserId = userId;
             StaffNo = staffNo.Trim().ToUpperInvariant();
-            FirstName = firstName.Trim();
-            LastName = lastName?.Trim();
+            StaffName = staffName.Trim();
+            EmailAddress = email.Trim();
         }
 
         public long? UserId { get; private set; }
 
         public string StaffNo { get; private set; } = string.Empty;
-        public string FirstName { get; private set; } = string.Empty;
-        public string? LastName { get; private set; }
+        public string StaffName { get; private set; } = string.Empty;
         public string? OtherName { get; private set; }
 
         public string? NRCNo { get; private set; }
@@ -39,6 +38,7 @@ namespace EPMS.Domain.Entities.EmployeeInfo
         public string? BirthPlace { get; private set; }
         public string? PassportNo { get; private set; }
         public string? LabourRegistrationNo { get; private set; }
+        public string EmailAddress { get; private set; } = string.Empty;
 
         public DateOnly? DateOfBirth { get; private set; }
         public DateOnly? PassportExpireDate { get; private set; }
@@ -74,6 +74,12 @@ namespace EPMS.Domain.Entities.EmployeeInfo
             OtherName = otherName?.Trim();
         }
 
+        public void UpdateStaffName(string staffName)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(staffName);
+            StaffName = staffName.Trim();
+        }
+
         public void UpdateNRCNo(string? nrcNo)
         {
             NRCNo = nrcNo?.Trim().ToUpperInvariant();
@@ -84,6 +90,11 @@ namespace EPMS.Domain.Entities.EmployeeInfo
             WorkPermitNo = permitNo?.Trim().ToUpperInvariant();
             WorkPermitValidDate = validDate;
             WorkPermitExpireDate = expireDate;
+        }
+
+        public void UpdateEmail(string email)
+        {
+            EmailAddress = email.Trim();
         }
 
         public void UpdateProfilePicture(string? url, string? thumbnailUrl)

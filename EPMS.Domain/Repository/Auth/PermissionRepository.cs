@@ -14,4 +14,10 @@ public class PermissionRepository : GenericRepository<Permission>, IPermissionRe
     {
         return !await _dbSet.AnyAsync(p => p.Code == code.ToUpper() && p.Id != excludeId);
     }
+
+    public async Task<Permission?> GetByCodeAsync(string code)
+    {
+        var normalizedCode = code.Trim().ToUpperInvariant();
+        return await _dbSet.FirstOrDefaultAsync(p => p.Code == normalizedCode && p.IsActive && !p.IsDeleted);
+    }
 }

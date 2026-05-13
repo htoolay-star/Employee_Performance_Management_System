@@ -1,0 +1,223 @@
+@using EPMS.Client.Models.Info
+@using EPMS.Client.Services.Info
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.EmployeeInfoDTOs
+@using Mapster
+@using MudBlazor
+@using Refit
+
+@inject IEmployeeContactApiClient ContactApiClient
+@inject ISnackbar Snackbar
+
+@if (_loading)
+{
+    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="200px" />
+}
+else if (_contact == null)
+{
+    <MudAlert Severity="Severity.Info">No contact data found.</MudAlert>
+}
+else
+{
+    <MudGrid>
+        <MudItem xs="12" sm="6">
+            <MudPaper Elevation="0" Class="border rounded pa-4">
+                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">Phone Numbers</MudText>
+                <MudStack Spacing="2">
+                    <MudText><strong>Phone No:</strong> @_contact.PhoneNo ?? "-"</MudText>
+                    <MudText><strong>Permanent Phone:</strong> @_contact.PermanentPhoneNo ?? "-"</MudText>
+                    <MudText><strong>Present Phone:</strong> @_contact.PresentPhoneNo ?? "-"</MudText>
+                    <MudText><strong>Internal Phone:</strong> @_contact.InternalPhoneNo ?? "-"</MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" sm="6">
+            <MudPaper Elevation="0" Class="border rounded pa-4">
+                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">Addresses</MudText>
+                <MudStack Spacing="2">
+                    <MudText><strong>Contact Address:</strong> @_contact.ContactAddress ?? "-"</MudText>
+                    <MudText><strong>Permanent Address:</strong> @_contact.PermanentAddress ?? "-"</MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudPaper Elevation="0" Class="border rounded pa-4">
+                <MudText Typo="Typo.subtitle1" Color="Color.Primary" Class="mb-2">Emergency Contact</MudText>
+                <MudStack Spacing="2">
+                    <MudText><strong>Emergency Mobile:</strong> @_contact.EmergencyMobileNo ?? "-"</MudText>
+                    <MudText><strong>Relationship:</strong> @_contact.RelationWithEmergencyContact ?? "-"</MudText>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12">
+            <MudStack Row="true" Justify="Justify.FlexEnd">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Edit"
+                           OnClick="ToggleEdit">
+                    Edit Contact
+                </MudButton>
+            </MudStack>
+        </MudItem>
+    </MudGrid>
+
+    @if (_editMode)
+    {
+        <MudDivider Class="my-4" />
+        <MudText Typo="Typo.h6" Class="mb-4">Edit Contact</MudText>
+        <MudPaper Elevation="0" Class="border rounded pa-4">
+            <MudForm @ref="_form">
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.PhoneNo"
+                                      Label="Phone No"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.PermanentPhoneNo"
+                                      Label="Permanent Phone No"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.PresentPhoneNo"
+                                      Label="Present Phone No"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.InternalPhoneNo"
+                                      Label="Internal Phone No"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="_model.ContactAddress"
+                                      Label="Contact Address"
+                                      Variant="Variant.Outlined"
+                                      Lines="2" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="_model.PermanentAddress"
+                                      Label="Permanent Address"
+                                      Variant="Variant.Outlined"
+                                      Lines="2" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.EmergencyMobileNo"
+                                      Label="Emergency Mobile No"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.RelationWithEmergencyContact"
+                                      Label="Relation With Emergency Contact"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudStack Row="true" Spacing="2" Justify="Justify.FlexEnd">
+                            <MudButton Variant="Variant.Outlined" OnClick="CancelEdit">Cancel</MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveContact" Disabled="_saving">
+                                @if (_saving)
+                                {
+                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                }
+                                Save
+                            </MudButton>
+                        </MudStack>
+                    </MudItem>
+                </MudGrid>
+            </MudForm>
+        </MudPaper>
+    }
+}
+
+@code {
+    [Parameter]
+    public Guid PublicId { get; set; }
+
+    private EmployeeContactDto? _contact;
+    private bool _loading = true;
+    private bool _editMode = false;
+    private bool _saving = false;
+    private MudForm? _form;
+
+    private EmployeeContactFormModel _model = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _loading = true;
+        try
+        {
+            var response = await ContactApiClient.GetByEmployeeIdAsync(PublicId);
+            if (response.Success && response.Data != null)
+            {
+                _contact = response.Data;
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Failed to load contact data", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void ToggleEdit()
+    {
+        if (_contact == null) return;
+
+        _model = _contact.Adapt<EmployeeContactFormModel>();
+        _editMode = true;
+    }
+
+    private void CancelEdit()
+    {
+        _editMode = false;
+    }
+
+    private async Task SaveContact()
+    {
+        if (_contact == null) return;
+
+        _saving = true;
+        try
+        {
+            var dto = _model.Adapt<UpdateEmployeeContactDto>();
+            var response = await ContactApiClient.UpdateAsync(_contact.Id, dto);
+            if (response.Success)
+            {
+                Snackbar.Add("Contact updated successfully", Severity.Success);
+                _editMode = false;
+                await LoadDataAsync();
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? "Failed to update contact", Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Failed to update contact", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+}

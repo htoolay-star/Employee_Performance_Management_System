@@ -6,10 +6,8 @@ public static class EmployeeInfoValidationMessages
     {
         public const string StaffNoRequired = "Staff number is required.";
         public const string StaffNoMaxLength = "Staff number cannot exceed 20 characters.";
-        public const string FirstNameRequired = "First name is required.";
-        public const string FirstNameMaxLength = "First name cannot exceed 100 characters.";
-        public const string LastNameRequired = "Last name is required.";
-        public const string LastNameMaxLength = "Last name cannot exceed 100 characters.";
+        public const string StaffNameRequired = "Staff name is required.";
+        public const string StaffNameMaxLength = "Staff name cannot exceed 100 characters.";
         public const string OtherNameMaxLength = "Other name cannot exceed 100 characters.";
         public const string NRCMaxLength = "NRC number cannot exceed 50 characters.";
         public const string GenderInvalid = "Gender must be Male, Female, or Other.";
@@ -21,6 +19,9 @@ public static class EmployeeInfoValidationMessages
         public const string ProfilePictureUrlInvalid = "Profile picture URL must be a valid URL.";
         public const string ProfileThumbnailUrlInvalid = "Profile thumbnail URL must be a valid URL.";
         public const string AdditionalDataMaxLength = "Additional data cannot exceed 2000 characters.";
+        public const string EmailAddressMaxLength = "Email address cannot exceed 100 characters.";
+        public const string EmailAddressInvalid = "Email address format is invalid.";
+        public const string EmailAddressRequired = "Email address is required.";
     }
 
     public static class EmployeeEmployment
@@ -30,6 +31,7 @@ public static class EmployeeInfoValidationMessages
         public const string PositionIdInvalid = "Position ID must be greater than 0.";
         public const string EmploymentStatusRequired = "Employment status is required.";
         public const string EmploymentStatusMaxLength = "Employment status cannot exceed 50 characters.";
+        public const string EmploymentStatusInvalid = "Employment status must be one of: Permanent, Probation, Resigned.";
         public const string ParentDepartmentIdInvalid = "Parent department ID must be greater than 0.";
         public const string TeamIdInvalid = "Team ID must be greater than 0.";
         public const string DirectManagerIdInvalid = "Direct manager ID must be greater than 0.";

@@ -1,40 +1,28 @@
-using AutoMapper;
 using EPMS.Domain.Contracts;
-using EPMS.Domain.Entities.Auth;
 using EPMS.Domain.Entities.EmployeeInfo;
-using EPMS.Domain.Interface.IService.App;
-using EPMS.Domain.Interface.IService.Auth;
 using EPMS.Domain.Interface.IService.Info;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using EPMS.Shared.Enums;
+using Mapster;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
+using EmployeeContact = EPMS.Domain.Entities.EmployeeInfo.EmployeeContact;
 
 namespace EPMS.Domain.Services.Info;
 
 public class EmployeeContactService : IEmployeeContactService
 {
     private readonly IUnitOfWork _uow;
-    private readonly IMapper _mapper;
-    private readonly IPasswordHasher _passwordHasher;
-    private readonly ISystemSettingsService _settingsService;
 
-    public EmployeeContactService(
-        IUnitOfWork uow, 
-        IMapper mapper,
-        IPasswordHasher passwordHasher,
-        ISystemSettingsService settingsService)
+    public EmployeeContactService(IUnitOfWork uow)
     {
         _uow = uow;
-        _mapper = mapper;
-        _passwordHasher = passwordHasher;
-        _settingsService = settingsService;
     }
 
     public async Task<SuccessResponse<IEnumerable<EmployeeContactDto>>> GetAllAsync()
     {
         var contacts = await _uow.Info.EmployeeContacts.GetAllAsync();
-        var dtos = _mapper.Map<IEnumerable<EmployeeContactDto>>(contacts);
+        var dtos = contacts.Adapt<IEnumerable<EmployeeContactDto>>();
         return SuccessResponse<IEnumerable<EmployeeContactDto>>.Ok(dtos, EmployeeContactMsg.RetrievedAll);
     }
 
@@ -45,18 +33,23 @@ public class EmployeeContactService : IEmployeeContactService
         if (contact == null)
             return SuccessResponse<EmployeeContactDto>.Fail(EmployeeContactMsg.NotFound(id), ErrorType.NotFound);
 
-        var dto = _mapper.Map<EmployeeContactDto>(contact);
+        var dto = contact.Adapt<EmployeeContactDto>();
         return SuccessResponse<EmployeeContactDto>.Ok(dto, EmployeeContactMsg.Retrieved);
     }
 
-    public async Task<SuccessResponse<EmployeeContactDto>> GetByEmployeeIdAsync(long employeeId)
+    public async Task<SuccessResponse<EmployeeContactDto>> GetByEmployeeIdAsync(Guid employeePublicId)
     {
-        var contact = await _uow.Info.EmployeeContacts.GetByEmployeeIdAsync(employeeId);
+        var employee = await _uow.Info.EmployeeProfiles.GetByPublicIdAsync(employeePublicId);
+
+        if (employee == null)
+            return SuccessResponse <EmployeeContactDto>.Fail(EmployeeProfileMsg.NotFound(employeePublicId), ErrorType.NotFound);
+
+        var contact = await _uow.Info.EmployeeContacts.GetByEmployeeIdAsync(employee.Id);
 
         if (contact == null)
-            return SuccessResponse<EmployeeContactDto>.Fail(EmployeeContactMsg.NotFound(employeeId), ErrorType.NotFound);
+            return SuccessResponse<EmployeeContactDto>.Fail(EmployeeContactMsg.NotFound(employeePublicId), ErrorType.NotFound);
 
-        var dto = _mapper.Map<EmployeeContactDto>(contact);
+        var dto = contact.Adapt<EmployeeContactDto>();
         return SuccessResponse<EmployeeContactDto>.Ok(dto, EmployeeContactMsg.Retrieved);
     }
 
@@ -72,34 +65,15 @@ public class EmployeeContactService : IEmployeeContactService
         if (existing != null)
             return SuccessResponse<long>.Fail(EmployeeContactMsg.Retrieved, ErrorType.Conflict);
 
-        // Create User if EmailAddress is provided and Employee has no User
-        if (!string.IsNullOrWhiteSpace(dto.EmailAddress))
+        var contact = new EmployeeContact(dto.EmployeeId);
+
+        // Update contact with provided details
+        if (!string.IsNullOrWhiteSpace(dto.PhoneNo) ||
+            !string.IsNullOrWhiteSpace(dto.ContactAddress))
         {
-            // Check if email already exists as a User
-            var emailExists = await _uow.Auth.Users.ExistsAsync(dto.EmailAddress);
-            if (emailExists)
-                return SuccessResponse<long>.Fail(AuthMsg.EmailAlreadyRegistered, ErrorType.Conflict);
-
-            // Check if EmployeeProfile already has a linked User
-            if (profile.UserId != null)
-                return SuccessResponse<long>.Fail("Employee already has a user account.", ErrorType.Conflict);
-
-            // Create new User with default password and UserRole.User
-            var defaultPassword = await _settingsService.GetDefaultPasswordAsync();
-            var hashedPassword = _passwordHasher.Hash(defaultPassword);
-            var newUser = new User(dto.EmailAddress, hashedPassword, UserRole.User);
-            _uow.Auth.Users.Add(newUser);
-
-            // Link User to EmployeeProfile
-            profile.LinkUser(newUser.Id);
+            contact.UpdatePrimaryContact(dto.PhoneNo, dto.ContactAddress);
         }
 
-        var contact = new EmployeeContact(dto.EmployeeId);
-        
-        // Update contact with provided details
-        if (!string.IsNullOrWhiteSpace(dto.EmailAddress))
-            contact.UpdatePrimaryContact(dto.EmailAddress, dto.PhoneNo, dto.ContactAddress);
-        
         if (!string.IsNullOrWhiteSpace(dto.PhoneNo) || !string.IsNullOrWhiteSpace(dto.PermanentPhoneNo) || 
             !string.IsNullOrWhiteSpace(dto.PresentPhoneNo) || !string.IsNullOrWhiteSpace(dto.InternalPhoneNo))
             contact.UpdatePhones(dto.PhoneNo, dto.PermanentPhoneNo, dto.PresentPhoneNo, dto.InternalPhoneNo);
@@ -126,8 +100,8 @@ public class EmployeeContactService : IEmployeeContactService
             return SuccessResponse.Fail(EmployeeContactMsg.NotFound(id), ErrorType.NotFound);
 
         // Update contact fields using existing entity methods
-        if (dto.EmailAddress != null || dto.PhoneNo != null || dto.ContactAddress != null)
-            contact.UpdatePrimaryContact(dto.EmailAddress, dto.PhoneNo, dto.ContactAddress);
+        if (dto.PhoneNo != null || dto.ContactAddress != null)
+            contact.UpdatePrimaryContact(dto.PhoneNo, dto.ContactAddress);
 
         if (dto.PermanentPhoneNo != null || dto.PresentPhoneNo != null || dto.InternalPhoneNo != null)
             contact.UpdatePhones(dto.PhoneNo, dto.PermanentPhoneNo, dto.PresentPhoneNo, dto.InternalPhoneNo);
@@ -137,28 +111,6 @@ public class EmployeeContactService : IEmployeeContactService
 
         if (dto.PermanentAddress != null)
             contact.UpdatePermanentAddress(dto.PermanentAddress);
-
-        // Handle EmailAddress change - update existing User if Employee has one
-        if (dto.EmailAddress != null)
-        {
-            var profile = await _uow.Info.EmployeeProfiles.GetByIdAsync(contact.EmployeeId);
-            
-            if (profile?.UserId != null)
-            {
-                var user = await _uow.Auth.Users.GetByIdAsync(profile.UserId.Value);
-                
-                if (user != null && user.Email != dto.EmailAddress)
-                {
-                    // Check if new email already exists as another user
-                    var emailExists = await _uow.Auth.Users.ExistsAsync(dto.EmailAddress);
-                    if (emailExists)
-                        return SuccessResponse.Fail(AuthMsg.EmailAlreadyRegistered, ErrorType.Conflict);
-
-                    // Update the existing User's email
-                    user.UpdateEmail(dto.EmailAddress);
-                }
-            }
-        }
 
         await _uow.CompleteAsync();
         return SuccessResponse.Ok(EmployeeContactMsg.Updated);

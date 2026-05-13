@@ -1,7 +1,7 @@
 @using EPMS.Client.Constants
 @using EPMS.Client.Extensions
 @using EPMS.Client.Models.Hr
-@using EPMS.Client.Services
+@using EPMS.Client.Services.Hr
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.DepartmentDTOs
 @using EPMS.Shared.DTOs.TeamDTOs
@@ -18,19 +18,30 @@
         <MudForm @ref="_form" Model="@_model" Validation="@ValidateField">
             <MudStack Spacing="3">
 
+                @if (!IsEdit)
+                {
+                    
+                    <MudTextField @bind-Value="_model.Code"
+                                  Label="@UIConstants.Team.CodeLabel"
+                                  For="@(() => _model.Code)"
+                                  Variant="Variant.Outlined" />
+                }
+
                 <MudTextField @bind-Value="_model.Name"
                               Label="@UIConstants.Team.NameLabel"
                               For="@(() => _model.Name)"
                               Variant="Variant.Outlined" />
 
-                <MudTextField @bind-Value="_model.Code"
-                              Label="@UIConstants.Team.CodeLabel"
-                              For="@(() => _model.Code)"
-                              Variant="Variant.Outlined" />
+
+                <MudTextField @bind-Value="_model.Description"
+                              Label="@UIConstants.Common.Description"
+                              For="@(() => _model.Description)"
+                              Variant="Variant.Outlined"
+                              Lines="3" />
 
                 @if (ShowDepartment)
                 {
-                    <MudSelect T="long?"
+                    <MudAutocomplete T="long?"
                                @bind-Value="_model.DepartmentId"
                                Label="@UIConstants.Team.DepartmentLabel"
                                Placeholder="@UIConstants.Team.SelectDepartmentPlaceholder"
@@ -38,7 +49,10 @@
                                Variant="Variant.Outlined"
                                Clearable="true"
                                Disabled="@_loadingDepartments"
-                               AdornmentIcon="@(_loadingDepartments ? Icons.Material.Filled.HourglassEmpty : Icons.Material.Filled.ArrowDropDown)">
+                               SearchFunc="SearchDepartments"
+                               ToStringFunc="GetDepartmentDisplay"
+                               ResetValueOnEmptyText="true"
+                               OpenIcon="@Icons.Material.Filled.ArrowDropDown">
                         @if (_loadingDepartments)
                         {
                             <MudSelectItem T="long?" Value="null">
@@ -65,7 +79,7 @@
                                 </MudSelectItem>
                             }
                         }
-                    </MudSelect>
+                    </MudAutocomplete>
                 }
 
                 @if (IsEdit)
@@ -135,6 +149,7 @@
         if (PreloadedDepartments is { Count: > 0 })
         {
             _departments = PreloadedDepartments;
+            await Task.Yield();
             _loadingDepartments = false;
             
             if (!ShowDepartment && SelectedDepartmentId.HasValue)
@@ -263,5 +278,28 @@
                _model.DepartmentId != Team.DepartmentId ||
                _model.Description != Team.Description ||
                _model.IsActive != Team.IsActive;
+    }
+
+
+    private async Task<IEnumerable<long?>> SearchDepartments(string value, CancellationToken token)
+    {
+        await Task.Yield();
+
+        if (string.IsNullOrWhiteSpace(value))
+            return AvailableDepartments.Select(x => (long?)x.Id).ToList();
+
+        return AvailableDepartments
+            .Where(x => x.Code != null && x.Code.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Select(x => (long?)x.Id)
+            .ToList();
+    }
+
+    private string GetDepartmentDisplay(long? id)
+    {
+        if (id == null) return string.Empty;
+        var dept = AvailableDepartments.FirstOrDefault(x => x.Id == id);
+        if (dept == null) return string.Empty;
+        
+        return dept.IsActive ? dept.Code : $"{dept.Code} (Inactive)";
     }
 }

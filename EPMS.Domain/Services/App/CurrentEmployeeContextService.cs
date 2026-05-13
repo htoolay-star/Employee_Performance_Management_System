@@ -35,7 +35,16 @@ public class CurrentEmployeeContextService : ICurrentEmployeeContextService
             return null;
         }
 
+        // Optimized: Fetch profile and employment in ONE TRIP
         _cachedProfile = await _uow.Info.EmployeeProfiles.GetByUserIdAsync(_currentUser.UserId.Value);
+        
+        // If profile exists, check if we can pre-load employment
+        if (_cachedProfile != null)
+        {
+            _cachedEmployment = await _uow.Info.EmployeeEmployments.GetByEmployeeIdAsync(_cachedProfile.Id);
+            _employmentLoaded = true;
+        }
+
         return _cachedProfile;
     }
 

@@ -31,7 +31,6 @@ namespace EPMS.Domain.Data.Configurations.EmployeeInfo
             entity.Property(e => e.PhoneNo).HasMaxLength(50);
             entity.Property(e => e.PermanentPhoneNo).HasMaxLength(50);
             entity.Property(e => e.PresentPhoneNo).HasMaxLength(50);
-            entity.Property(e => e.EmailAddress).HasMaxLength(100);
             entity.Property(e => e.InternalPhoneNo).HasMaxLength(50);
             entity.Property(e => e.EmergencyMobileNo).HasMaxLength(50);
             entity.Property(e => e.RelationWithEmergencyContact).HasMaxLength(50);

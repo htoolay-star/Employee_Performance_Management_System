@@ -23,7 +23,6 @@ namespace EPMS.Domain.Entities.EmployeeInfo
         public string? PhoneNo { get; private set; }
         public string? PermanentPhoneNo { get; private set; }
         public string? PresentPhoneNo { get; private set; }
-        public string? EmailAddress { get; private set; }
 
         public string? InternalPhoneNo { get; private set; }
         public string? EmergencyMobileNo { get; private set; }
@@ -36,9 +35,8 @@ namespace EPMS.Domain.Entities.EmployeeInfo
 
         public virtual EmployeeProfile Profile { get; private set; } = null!;
 
-        public void UpdatePrimaryContact(string? email, string? phone, string? contactAddress)
+        public void UpdatePrimaryContact(string? phone, string? contactAddress)
         {
-            EmailAddress = email?.Trim();
             PhoneNo = phone?.Trim();
             ContactAddress = contactAddress?.Trim();
         }
