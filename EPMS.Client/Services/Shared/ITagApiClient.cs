@@ -3,7 +3,7 @@ using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.TagDTOs;
 using Refit;
 
-namespace EPMS.Client.Services
+namespace EPMS.Client.Services.Shared
 {
     public interface ITagApiClient
     {

@@ -2,7 +2,7 @@
 using EPMS.Client.Services.Auth;
 using EPMS.Client.Services.Hr;
 using EPMS.Client.Services.Info;
-using Microsoft.Extensions.DependencyInjection;
+using EPMS.Client.Services.Shared;
 using Refit;
 using System.Text.Json;
 
