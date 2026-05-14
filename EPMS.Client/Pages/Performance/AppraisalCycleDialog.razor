@@ -1,0 +1,381 @@
+@using EPMS.Client.Constants
+@using EPMS.Client.Extensions
+@using EPMS.Client.Models.Performance
+@using EPMS.Client.Services.Performance
+@using EPMS.Shared.Constants
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.PerformanceDTOs.AppraisalCycleDTOs
+@using EPMS.Shared.Validators.PerformanceDTOs.AppraisalCycleDTOs
+@using Mapster
+@using MudBlazor
+
+@inject IAppraisalCycleApiClient AppraisalCycleApiClient
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="_form" Model="@_model" Validation="@ValidateField">
+            <MudStack Spacing="3">
+
+                @if (!IsEdit)
+                {
+                    <MudSelect T="string"
+                               Value="@_model.AppraisalType"
+                               ValueChanged="@(v => { _model.AppraisalType = v; AutoFillEvaluationDates(); AutoGenerateName(); })"
+                               Label="@UIConstants.AppraisalCycle.AppraisalTypeLabel"
+                               For="@(() => _model.AppraisalType)"
+                               Variant="Variant.Outlined">
+                        <MudSelectItem T="string" Value="@AppraisalConstants.AppraisalTypes.Annual">Annual</MudSelectItem>
+                        <MudSelectItem T="string" Value="@AppraisalConstants.AppraisalTypes.SemiAnnual">Semi-Annual</MudSelectItem>
+                        <MudSelectItem T="string" Value="@AppraisalConstants.AppraisalTypes.Quarterly">Quarterly</MudSelectItem>
+                        <MudSelectItem T="string" Value="@AppraisalConstants.AppraisalTypes.Monthly">Monthly</MudSelectItem>
+                    </MudSelect>
+
+                    <MudSelect T="string"
+                               Value="@_model.CalendarType"
+                               ValueChanged="@(v => { _model.CalendarType = v; AutoFillEvaluationDates(); AutoGenerateName(); })"
+                               Label="@UIConstants.AppraisalCycle.CalendarTypeLabel"
+                               For="@(() => _model.CalendarType)"
+                               Variant="Variant.Outlined">
+                        <MudSelectItem T="string" Value="@AppraisalConstants.CalendarTypes.Standard">Standard Calendar</MudSelectItem>
+                        <MudSelectItem T="string" Value="@AppraisalConstants.CalendarTypes.FiscalYear">Fiscal Year Calendar</MudSelectItem>
+                    </MudSelect>
+
+                    <MudTextField @bind-Value="_model.YearLabel"
+                                  For="@(() => _model.YearLabel)"
+                                  Label="@UIConstants.AppraisalCycle.YearLabelLabel"
+                                  Variant="Variant.Outlined"
+                                  OnBlur="@(() => { AutoFillEvaluationDates(); AutoGenerateName(); })" />
+
+                    <MudTextField @bind-Value="_model.Name"
+                                  Label="@UIConstants.AppraisalCycle.NameLabel"
+                                  For="@(() => _model.Name)"
+                                  Variant="Variant.Outlined" />
+                }
+                else
+                {
+                    <MudSelect T="string"
+                               Value="@_model.AppraisalType"
+                               ValueChanged="@(v => { _model.AppraisalType = v; AutoFillEvaluationDates(); AutoGenerateName(); })"
+                               Label="@UIConstants.AppraisalCycle.AppraisalTypeLabel"
+                               For="@(() => _model.AppraisalType)"
+                               Variant="Variant.Outlined">
+                        <MudSelectItem T="string" Value="@AppraisalConstants.AppraisalTypes.Annual">Annual</MudSelectItem>
+                        <MudSelectItem T="string" Value="@AppraisalConstants.AppraisalTypes.SemiAnnual">Semi-Annual</MudSelectItem>
+                        <MudSelectItem T="string" Value="@AppraisalConstants.AppraisalTypes.Quarterly">Quarterly</MudSelectItem>
+                        <MudSelectItem T="string" Value="@AppraisalConstants.AppraisalTypes.Monthly">Monthly</MudSelectItem>
+                    </MudSelect>
+
+                    <MudSelect T="string"
+                               Value="@_model.CalendarType"
+                               ValueChanged="@(v => { _model.CalendarType = v; AutoFillEvaluationDates(); AutoGenerateName(); })"
+                               Label="@UIConstants.AppraisalCycle.CalendarTypeLabel"
+                               For="@(() => _model.CalendarType)"
+                               Variant="Variant.Outlined">
+                        <MudSelectItem T="string" Value="@AppraisalConstants.CalendarTypes.Standard">Standard Calendar</MudSelectItem>
+                        <MudSelectItem T="string" Value="@AppraisalConstants.CalendarTypes.FiscalYear">Fiscal Year Calendar</MudSelectItem>
+                    </MudSelect>
+
+                    <MudTextField @bind-Value="_model.YearLabel"
+                                  For="@(() => _model.YearLabel)"
+                                  Label="@UIConstants.AppraisalCycle.YearLabelLabel"
+                                  Variant="Variant.Outlined"
+                                  OnBlur="@(() => { AutoFillEvaluationDates(); AutoGenerateName(); })" />
+
+                    <MudTextField @bind-Value="_model.Name"
+                                  Label="@UIConstants.AppraisalCycle.NameLabel"
+                                  For="@(() => _model.Name)"
+                                  Variant="Variant.Outlined" />
+                }
+
+                <MudText Typo="Typo.subtitle1" Class="mt-2">@UIConstants.AppraisalCycle.EvalPeriod</MudText>
+
+                <MudStack Row="true" Spacing="2">
+                    <MudDatePicker @bind-Date="_model.EvaluationStartDateProxy"
+                                   Label="@UIConstants.AppraisalCycle.EvalStart"
+                                   For="@(() => _model.EvaluationStartDateProxy)"
+                                   Variant="Variant.Outlined"
+                                   Class="flex-1" />
+                    <MudDatePicker @bind-Date="_model.EvaluationEndDateProxy"
+                                   Label="@UIConstants.AppraisalCycle.EvalEnd"
+                                   For="@(() => _model.EvaluationEndDateProxy)"
+                                   Variant="Variant.Outlined"
+                                   Class="flex-1" />
+                </MudStack>
+
+                <MudText Typo="Typo.subtitle1" Class="mt-2">Appraisal Window</MudText>
+
+                <MudStack Row="true" Spacing="2">
+                    <MudDatePicker @bind-Date="_model.WindowStartDateProxy"
+                                   Label="@UIConstants.AppraisalCycle.WindowStart"
+                                   For="@(() => _model.WindowStartDateProxy)"
+                                   Variant="Variant.Outlined"
+                                   Class="flex-1" />
+                    <MudDatePicker @bind-Date="_model.WindowEndDateProxy"
+                                   Label="@UIConstants.AppraisalCycle.WindowEnd"
+                                   For="@(() => _model.WindowEndDateProxy)"
+                                   Variant="Variant.Outlined"
+                                   Class="flex-1" />
+                </MudStack>
+
+                <MudText Typo="Typo.subtitle1" Class="mt-2">@UIConstants.AppraisalCycle.SelfReview (Optional)</MudText>
+
+                <MudStack Row="true" Spacing="2">
+                    <MudDatePicker @bind-Date="_model.SelfReviewStartDateProxy"
+                                   Label="Start"
+                                   For="@(() => _model.SelfReviewStartDateProxy)"
+                                   Variant="Variant.Outlined"
+                                   Class="flex-1" />
+                    <MudDatePicker @bind-Date="_model.SelfReviewDeadlineProxy"
+                                   Label="Deadline"
+                                   For="@(() => _model.SelfReviewDeadlineProxy)"
+                                   Variant="Variant.Outlined"
+                                   Class="flex-1" />
+                </MudStack>
+
+                <MudText Typo="Typo.subtitle1" Class="mt-2">@UIConstants.AppraisalCycle.ManagerReview (Optional)</MudText>
+
+                <MudStack Row="true" Spacing="2">
+                    <MudDatePicker @bind-Date="_model.ManagerReviewStartDateProxy"
+                                   Label="Start"
+                                   For="@(() => _model.ManagerReviewStartDateProxy)"
+                                   Variant="Variant.Outlined"
+                                   Class="flex-1" />
+                    <MudDatePicker @bind-Date="_model.ManagerReviewDeadlineProxy"
+                                   Label="Deadline"
+                                   For="@(() => _model.ManagerReviewDeadlineProxy)"
+                                   Variant="Variant.Outlined"
+                                   Class="flex-1" />
+                </MudStack>
+
+                <MudText Typo="Typo.subtitle1" Class="mt-2">@UIConstants.AppraisalCycle.PeerReview (Optional)</MudText>
+
+                <MudStack Row="true" Spacing="2">
+                    <MudDatePicker @bind-Date="_model.PeerReviewStartDateProxy"
+                                   Label="Start"
+                                   For="@(() => _model.PeerReviewStartDateProxy)"
+                                   Variant="Variant.Outlined"
+                                   Class="flex-1" />
+                    <MudDatePicker @bind-Date="_model.PeerReviewDeadlineProxy"
+                                   Label="Deadline"
+                                   For="@(() => _model.PeerReviewDeadlineProxy)"
+                                   Variant="Variant.Outlined"
+                                   Class="flex-1" />
+                </MudStack>
+
+            </MudStack>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@UIConstants.Common.Cancel</MudButton>
+        <MudButton Color="Color.Primary"
+                   OnClick="Submit"
+                   Disabled="@(_saving || !HasChanged())">
+            @if (_saving)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+            }
+            @(IsEdit ? UIConstants.Common.Update : UIConstants.Common.Create)
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter] private IMudDialogInstance? _mudDialog { get; set; }
+
+    [Parameter] public AppraisalCycleDto? Cycle { get; set; }
+
+    private bool IsEdit => Cycle is not null;
+
+    private MudForm? _form;
+    private bool _saving;
+    private AppraisalCycleFormModel _model = new();
+    private Dictionary<string, string> _serverErrors = new();
+
+    private readonly CreateAppraisalCycleValidator _createValidator = new();
+    private readonly UpdateAppraisalCycleValidator _updateValidator = new();
+
+    protected override Task OnInitializedAsync()
+    {
+        if (Cycle is not null)
+            _model = Cycle.Adapt<AppraisalCycleFormModel>();
+
+        return base.OnInitializedAsync();
+    }
+
+    private async Task Submit()
+    {
+        _serverErrors.Clear();
+
+        await _form!.Validate();
+        if (!_form.IsValid)
+        {
+            Snackbar.Add(UIConstants.Common.ValidationFailed, Severity.Warning);
+            return;
+        }
+
+        _saving = true;
+        try
+        {
+            if (IsEdit)
+            {
+                var dto = _model.Adapt<UpdateAppraisalCycleDto>();
+                dto.Id = Cycle!.Id;
+                var response = await AppraisalCycleApiClient.UpdateAsync(Cycle.Id, dto);
+
+                if (response.Success)
+                    _mudDialog?.Close(DialogResult.Ok(true));
+                else
+                    Snackbar.Add(response.Message ?? UIConstants.Common.UpdateFailed, Severity.Error);
+            }
+            else
+            {
+                var dto = _model.Adapt<CreateAppraisalCycleDto>();
+                var response = await AppraisalCycleApiClient.CreateAsync(dto);
+
+                if (response.Success)
+                    _mudDialog?.Close(DialogResult.Ok(true));
+                else
+                    Snackbar.Add(response.Message ?? UIConstants.Common.CreateFailed, Severity.Error);
+            }
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.BadRequest)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ValidationFailed, Severity.Error);
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            _serverErrors[nameof(_model.Name)] = error?.Message ?? UIConstants.Common.DuplicateEntry;
+            await _form!.Validate();
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void Cancel() => _mudDialog?.Cancel();
+
+    private async Task<IEnumerable<string>> ValidateField(object model, string propertyName)
+    {
+        IEnumerable<string> fluentErrors;
+
+        if (IsEdit)
+        {
+            var fn = _updateValidator.ValidateMappedValue<AppraisalCycleFormModel, UpdateAppraisalCycleDto>(_model, _serverErrors);
+            fluentErrors = await fn(model, propertyName);
+        }
+        else
+        {
+            var fn = _createValidator.ValidateMappedValue<AppraisalCycleFormModel, CreateAppraisalCycleDto>(_model, _serverErrors);
+            fluentErrors = await fn(model, propertyName);
+        }
+
+        var errorList = fluentErrors.ToList();
+
+        if (_serverErrors.TryGetValue(propertyName, out var serverError))
+            errorList.Add(serverError);
+
+        return errorList;
+    }
+
+    private bool HasChanged()
+    {
+        if (!IsEdit) return true;
+
+        return _model.Name != Cycle!.Name ||
+               _model.AppraisalType != Cycle.AppraisalType ||
+               _model.CalendarType != Cycle.CalendarType ||
+               _model.YearLabel != Cycle.YearLabel ||
+               _model.EvaluationStartDate != Cycle.EvaluationStartDate ||
+               _model.EvaluationEndDate != Cycle.EvaluationEndDate ||
+               _model.WindowStartDate != Cycle.WindowStartDate ||
+               _model.WindowEndDate != Cycle.WindowEndDate ||
+               _model.SelfReviewStartDate != Cycle.SelfReviewStartDate ||
+               _model.SelfReviewDeadline != Cycle.SelfReviewDeadline ||
+               _model.ManagerReviewStartDate != Cycle.ManagerReviewStartDate ||
+               _model.ManagerReviewDeadline != Cycle.ManagerReviewDeadline ||
+               _model.PeerReviewStartDate != Cycle.PeerReviewStartDate ||
+               _model.PeerReviewDeadline != Cycle.PeerReviewDeadline;
+    }
+
+    private void AutoFillEvaluationDates()
+    {
+        var upperType = _model.AppraisalType?.Trim().ToUpperInvariant();
+        var upperCal = _model.CalendarType?.Trim().ToUpperInvariant();
+        var yearLabel = _model.YearLabel?.Trim();
+
+        if (string.IsNullOrEmpty(upperType) || string.IsNullOrEmpty(upperCal) || string.IsNullOrEmpty(yearLabel))
+            return;
+
+        if (!int.TryParse(yearLabel[..Math.Min(4, yearLabel.Length)], out var year))
+            return;
+
+        DateOnly start, end;
+
+        if (upperCal == AppraisalConstants.CalendarTypes.FiscalYear)
+        {
+            (start, end) = upperType switch
+            {
+                AppraisalConstants.AppraisalTypes.Annual => (new DateOnly(year, 4, 1), new DateOnly(year + 1, 3, 31)),
+                AppraisalConstants.AppraisalTypes.SemiAnnual => (new DateOnly(year, 4, 1), new DateOnly(year, 9, 30)),
+                AppraisalConstants.AppraisalTypes.Quarterly => (new DateOnly(year, 4, 1), new DateOnly(year, 6, 30)),
+                AppraisalConstants.AppraisalTypes.Monthly => (new DateOnly(year, 4, 1), new DateOnly(year, 4, 30)),
+                _ => (new DateOnly(year, 4, 1), new DateOnly(year + 1, 3, 31))
+            };
+        }
+        else
+        {
+            (start, end) = upperType switch
+            {
+                AppraisalConstants.AppraisalTypes.Annual => (new DateOnly(year, 1, 1), new DateOnly(year, 12, 31)),
+                AppraisalConstants.AppraisalTypes.SemiAnnual => (new DateOnly(year, 1, 1), new DateOnly(year, 6, 30)),
+                AppraisalConstants.AppraisalTypes.Quarterly => (new DateOnly(year, 1, 1), new DateOnly(year, 3, 31)),
+                AppraisalConstants.AppraisalTypes.Monthly => (new DateOnly(year, 1, 1), new DateOnly(year, 1, 31)),
+                _ => (new DateOnly(year, 1, 1), new DateOnly(year, 12, 31))
+            };
+        }
+
+        _model.EvaluationStartDate = start;
+        _model.EvaluationEndDate = end;
+        _model.WindowStartDate = end;
+        _model.WindowEndDate = end.AddDays(30);
+    }
+
+    private static string GetAppraisalTypeDisplay(string type)
+    {
+        return type?.Trim().ToUpperInvariant() switch
+        {
+            AppraisalConstants.AppraisalTypes.Annual => "Annual",
+            AppraisalConstants.AppraisalTypes.SemiAnnual => "Semi-Annual",
+            AppraisalConstants.AppraisalTypes.Quarterly => "Quarterly",
+            AppraisalConstants.AppraisalTypes.Monthly => "Monthly",
+            _ => type ?? ""
+        };
+    }
+
+    private static string GetCalendarTypeDisplay(string cal)
+    {
+        return cal?.Trim().ToUpperInvariant() switch
+        {
+            AppraisalConstants.CalendarTypes.Standard => "Standard Calendar",
+            AppraisalConstants.CalendarTypes.FiscalYear => "Fiscal Year Calendar",
+            _ => cal ?? ""
+        };
+    }
+
+    private void AutoGenerateName()
+    {
+        var appType = _model.AppraisalType?.Trim();
+        var calType = _model.CalendarType?.Trim();
+        var year = _model.YearLabel?.Trim();
+
+        if (string.IsNullOrEmpty(appType) || string.IsNullOrEmpty(calType) || string.IsNullOrEmpty(year))
+            return;
+
+        _model.Name = $"ACE - {year} ({GetAppraisalTypeDisplay(appType)} Cycle) - {GetCalendarTypeDisplay(calType)}";
+    }
+}

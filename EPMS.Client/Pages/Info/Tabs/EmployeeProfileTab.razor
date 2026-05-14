@@ -77,7 +77,7 @@ else
                     @if (!_editMode)
                     {
                         <MudText Typo="Typo.caption" Class="mud-text-secondary">Date of Birth</MudText>
-                        <MudText Typo="Typo.body1">@(_employee.DateOfBirth?.ToString("yyyy-MM-dd") ?? "-")</MudText>
+                        <MudText Typo="Typo.body1">@(_employee.DateOfBirth?.ToString("dd/MM/yyyy") ?? "-")</MudText>
                     }
                     else
                     {
@@ -138,7 +138,7 @@ else
                     @if (!_editMode)
                     {
                         <MudText Typo="Typo.caption" Class="mud-text-secondary">Passport Expiry</MudText>
-                        <MudText Typo="Typo.body1">@(_employee.PassportExpireDate?.ToString("yyyy-MM-dd") ?? "-")</MudText>
+                        <MudText Typo="Typo.body1">@(_employee.PassportExpireDate?.ToString("dd/MM/yyyy") ?? "-")</MudText>
                     }
                     else
                     {
@@ -221,7 +221,7 @@ else
                     @if (!_editMode)
                     {
                         <MudText Typo="Typo.caption" Class="mud-text-secondary">Work Permit Valid Date</MudText>
-                        <MudText Typo="Typo.body1">@(_employee.WorkPermitValidDate?.ToString("yyyy-MM-dd") ?? "-")</MudText>
+                        <MudText Typo="Typo.body1">@(_employee.WorkPermitValidDate?.ToString("dd/MM/yyyy") ?? "-")</MudText>
                     }
                     else
                     {
@@ -232,7 +232,7 @@ else
                     @if (!_editMode)
                     {
                         <MudText Typo="Typo.caption" Class="mud-text-secondary">Work Permit Expire Date</MudText>
-                        <MudText Typo="Typo.body1">@(_employee.WorkPermitExpireDate?.ToString("yyyy-MM-dd") ?? "-")</MudText>
+                        <MudText Typo="Typo.body1">@(_employee.WorkPermitExpireDate?.ToString("dd/MM/yyyy") ?? "-")</MudText>
                     }
                     else
                     {

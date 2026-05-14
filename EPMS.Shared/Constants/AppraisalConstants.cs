@@ -1,0 +1,22 @@
+namespace EPMS.Shared.Constants;
+
+public static class AppraisalConstants
+{
+    public static class AppraisalTypes
+    {
+        public const string Annual = "ANNUAL";
+        public const string SemiAnnual = "SEMI-ANNUAL";
+        public const string Quarterly = "QUARTERLY";
+        public const string Monthly = "MONTHLY";
+
+        public static readonly HashSet<string> All = [Annual, SemiAnnual, Quarterly, Monthly];
+    }
+
+    public static class CalendarTypes
+    {
+        public const string Standard = "STANDARD";
+        public const string FiscalYear = "FISCAL YEAR";
+
+        public static readonly HashSet<string> All = [Standard, FiscalYear];
+    }
+}

@@ -2,6 +2,7 @@
 using EPMS.Client.Services.Auth;
 using EPMS.Client.Services.Hr;
 using EPMS.Client.Services.Info;
+using EPMS.Client.Services.Performance;
 using EPMS.Client.Services.Shared;
 using Refit;
 using System.Text.Json;
@@ -40,6 +41,9 @@ public static class ServiceCollectionExtensions
         services.AddSecureRefitClient<IDepartmentApiClient>(refitSettings, baseUri);
         services.AddSecureRefitClient<ITeamApiClient>(refitSettings, baseUri);
         services.AddSecureRefitClient<ICategoryApiClient>(refitSettings, baseUri);
+
+        // Performance
+        services.AddSecureRefitClient<IAppraisalCycleApiClient>(refitSettings, baseUri);
 
         // Info
         services.AddSecureRefitClient<IEmployeeProfileApiClient>(refitSettings, baseUri);

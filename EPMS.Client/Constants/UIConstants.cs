@@ -116,6 +116,48 @@
             public const string NoDataFound = "Try adjusting your search or add a new department.";
         }
 
+        public static class AppraisalCycle
+        {
+            public const string PageTitle = "Appraisal Cycles";
+            public const string SearchPlaceholder = "Search by name or year...";
+            public const string AddButton = "Add Cycle";
+            public const string CreateDialogTitle = "Create Appraisal Cycle";
+            public const string EditDialogTitle = "Edit Appraisal Cycle";
+            public const string DeleteDialogTitle = "Delete Appraisal Cycle";
+
+            public const string NameLabel = "Cycle Name";
+            public const string AppraisalTypeLabel = "Appraisal Type";
+            public const string CalendarTypeLabel = "Calendar Type";
+            public const string YearLabelLabel = "Year Label";
+            public const string EvalPeriod = "Evaluation Period";
+            public const string EvalStart = "Evaluation Start";
+            public const string EvalEnd = "Evaluation End";
+            public const string WindowStart = "Window Start";
+            public const string WindowEnd = "Window End";
+            public const string SelfReview = "Self Review";
+            public const string ManagerReview = "Manager Review";
+            public const string PeerReview = "Peer Review";
+
+            public const string SelectAppraisalType = "-- Select Type --";
+            public const string SelectCalendarType = "-- Select Calendar --";
+
+            public const string ColumnName = "Cycle Name";
+            public const string ColumnType = "Type";
+            public const string ColumnCalendar = "Calendar";
+            public const string ColumnYear = "Year";
+            public const string ColumnEvalPeriod = "Evaluation Period";
+            public const string ColumnWindowPeriod = "Window Period";
+            public const string Lock = "Lock";
+            public const string Unlock = "Unlock";
+            public const string Deactivate = "Deactivate";
+            public const string Reactivate = "Reactivate";
+            public const string StatusChipActive = "Active";
+            public const string StatusChipInactive = "Inactive";
+            public const string StatusChipLocked = "Locked";
+
+            public const string NoDataFound = "No appraisal cycles found. Add one to get started.";
+        }
+
         public static class Employee
         {
             public const string PageTitle = "Employee Directory";

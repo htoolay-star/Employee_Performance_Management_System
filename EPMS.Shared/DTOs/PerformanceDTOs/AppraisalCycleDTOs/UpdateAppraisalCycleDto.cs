@@ -4,6 +4,9 @@ public class UpdateAppraisalCycleDto
 {
     public long Id { get; set; }
     public string Name { get; set; } = string.Empty;
+    public string AppraisalType { get; set; } = string.Empty;
+    public string CalendarType { get; set; } = string.Empty;
+    public string YearLabel { get; set; } = string.Empty;
     public DateOnly EvaluationStartDate { get; set; }
     public DateOnly EvaluationEndDate { get; set; }
     public DateOnly WindowStartDate { get; set; }

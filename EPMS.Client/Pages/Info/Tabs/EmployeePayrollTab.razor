@@ -81,7 +81,7 @@ else
                 </MudItem>
                 <MudItem xs="12" sm="6">
                     <MudText Typo="Typo.caption" Class="mud-text-secondary">Date of Pay Type Changed</MudText>
-                    <MudText Typo="Typo.body1">@(_payrollInfo.DateOfPayTypeChanged?.ToString("yyyy-MM-dd") ?? "-")</MudText>
+                    <MudText Typo="Typo.body1">@(_payrollInfo.DateOfPayTypeChanged?.ToString("dd/MM/yyyy") ?? "-")</MudText>
                 </MudItem>
 
                 @* ── Additional Info ── *@
@@ -113,7 +113,7 @@ else
                 </MudItem>
                 <MudItem xs="12" sm="6">
                     <MudText Typo="Typo.caption" Class="mud-text-secondary">Date of Salary Changed</MudText>
-                    <MudText Typo="Typo.body1">@(_payrollInfo.DateOfSalaryChanged?.ToString("yyyy-MM-dd") ?? "-")</MudText>
+                    <MudText Typo="Typo.body1">@(_payrollInfo.DateOfSalaryChanged?.ToString("dd/MM/yyyy") ?? "-")</MudText>
                 </MudItem>
 
                 @* ── Tax Information ── *@

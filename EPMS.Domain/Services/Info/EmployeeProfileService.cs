@@ -454,7 +454,7 @@ public class EmployeeProfileService : IEmployeeProfileService
             try
             {
                 var rowErrors = new List<string>();
-                var rowNum = rows.IndexOf(row) + 2;
+            var rowNum = rows.IndexOf(row) + 1;
 
                 if (string.IsNullOrWhiteSpace(row.StaffNo))
                 { rowErrors.Add($"Row {rowNum}: StaffNo is required."); }

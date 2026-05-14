@@ -82,9 +82,16 @@ namespace EPMS.Shared.Validators.ValidationMessages
             public const string WindowStartDateRequired = "Window start date is required.";
             public const string WindowEndDateRequired = "Window end date is required.";
             public const string WindowEndAfterStart = "Window end date must be after start date.";
+            public const string WindowStartAfterEvaluationEnd = "Window start date must be on or after evaluation end date.";
             public const string SelfReviewStartBeforeDeadline = "Self-review start date must be before deadline.";
             public const string ManagerReviewStartBeforeDeadline = "Manager review start date must be before deadline.";
             public const string PeerReviewStartBeforeDeadline = "Peer review start date must be before deadline.";
+            public const string AppraisalTypeInvalid = "Appraisal type must be one of: Annual, Semi-Annual, Quarterly, Monthly.";
+            public const string CalendarTypeInvalid = "Calendar type must be one of: Standard Calendar, Fiscal Year Calendar.";
+            public const string EvaluationPeriodExceedsMax = "Evaluation period ({0} days) exceeds the maximum of {1} days allowed for {2} appraisal.";
+            public const string EvaluationPeriodBelowMinimum = "Evaluation period ({0} days) is below the minimum of {1} days required for {2} appraisal.";
+            public const string EvaluationStartDateBeforeYearRange = "Evaluation start date must be on or after {0:dd/MM/yyyy} for year '{1}'.";
+            public const string EvaluationEndDateAfterYearRange = "Evaluation end date must be on or before {0:dd/MM/yyyy} for year '{1}'.";
         }
 
         public static class KPIMaster

@@ -13,5 +13,6 @@ namespace EPMS.Domain.Interface.IService.Performance
         Task<SuccessResponse> DeleteAsync(long id);
         Task<SuccessResponse> LockCycleAsync(long id);
         Task<SuccessResponse> DeactivateAsync(long id);
+        Task<SuccessResponse> ReactivateAsync(long id);
     }
 }
