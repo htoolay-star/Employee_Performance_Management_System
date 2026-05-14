@@ -28,10 +28,16 @@ namespace EPMS.Shared.Constants
             public static string EmployeeLookups() => "hr:employees:lookups";
         }
 
+        public static class Shared
+        {
+            public static string CategoryLookups() => "shared:categories:lookups";
+        }
+
         public static class System
         {
             public static string Setting(string key) => $"system:setting:{key.ToLower()}";
             public static string DefaultPassword() => "system:setting:defaultpassword";
         }
+
     }
 }

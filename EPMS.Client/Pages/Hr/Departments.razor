@@ -357,10 +357,13 @@
         ApplyFiltersAndSort();
     }
 
-    private void OnStatusFilterChanged(bool value)
+    private async Task OnStatusFilterChanged(bool value)
     {
         _statusFilter = value;
+        _loading = true;
+        await Task.Yield();
         ApplyFiltersAndSort();
+        _loading = false;
     }
 
     private void ApplyFiltersAndSort()

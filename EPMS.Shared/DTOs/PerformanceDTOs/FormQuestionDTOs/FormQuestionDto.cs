@@ -10,5 +10,4 @@ public record FormQuestionDto(
     long? CategoryId,
     string? CategoryName,
     long? RatingScaleId,
-    string? RatingScaleName,
-    IReadOnlyList<string> Tags);
+    string? RatingScaleName);

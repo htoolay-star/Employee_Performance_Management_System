@@ -25,7 +25,8 @@ namespace EPMS.Client.Extensions
                     return Array.Empty<string>();
 
                 return result.Errors
-                    .Where(e => e.PropertyName == propertyName)
+                    .Where(e => e.PropertyName == propertyName
+                             || (propertyName.EndsWith("Proxy") && e.PropertyName == propertyName[..^5]))
                     .Select(e => e.ErrorMessage);
             };
         }

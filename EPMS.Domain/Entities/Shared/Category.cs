@@ -11,13 +11,11 @@ namespace EPMS.Domain.Entities.Shared
     {
         private Category() { }
 
-        public Category(string module, string code, string name, string? description = null, long? parentId = null)
+        public Category(string code, string name, string? description = null, long? parentId = null)
         {
-            ArgumentException.ThrowIfNullOrWhiteSpace(module);
             ArgumentException.ThrowIfNullOrWhiteSpace(code);
             ArgumentException.ThrowIfNullOrWhiteSpace(name);
 
-            Module = module.Trim().ToUpperInvariant();
             Code = code.Trim().ToUpperInvariant();
             Name = name.Trim();
             Description = description?.Trim();
@@ -26,7 +24,6 @@ namespace EPMS.Domain.Entities.Shared
             IsActive = true;
         }
 
-        public string Module { get; private set; } = string.Empty;
         public string Code { get; private set; } = string.Empty;
         public string Name { get; private set; } = string.Empty;
         public string? Description { get; private set; }

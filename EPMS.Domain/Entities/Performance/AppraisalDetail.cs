@@ -34,6 +34,7 @@ namespace EPMS.Domain.Entities.Performance
 
         public long AppraisalId { get; private set; }
         public long? KPIId { get; private set; }
+        public long? EmployeeKPIId { get; private set; }
         public long? QuestionId { get; private set; }
 
         public string KPIName { get; private set; } = string.Empty;

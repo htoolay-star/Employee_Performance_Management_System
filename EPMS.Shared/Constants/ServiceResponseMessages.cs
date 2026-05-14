@@ -163,17 +163,6 @@ public static class ServiceResponseMessages
         public static string NotFound(long id) => $"Category with ID '{id}' was not found.";
     }
 
-    public static class TagMsg
-    {
-        public const string Created = "Tag created successfully.";
-        public const string Updated = "Tag updated successfully.";
-        public const string Deleted = "Tag deleted successfully.";
-        public const string Retrieved = "Tag retrieved successfully.";
-        public const string RetrievedAll = "Tags retrieved successfully.";
-        public const string DuplicateName = "Tag with name '{0}' already exists.";
-        public static string NotFound(long id) => $"Tag with ID '{id}' was not found.";
-    }
-
     public static class RatingScaleMsg
     {
         public const string Created = "Rating scale created successfully.";
@@ -213,6 +202,7 @@ public static class ServiceResponseMessages
         public const string Updated = "Appraisal cycle updated successfully.";
         public const string Deleted = "Appraisal cycle deleted successfully.";
         public const string Deactivated = "Appraisal cycle deactivated successfully.";
+        public const string Reactivated = "Appraisal cycle reactivated successfully.";
         public const string Locked = "Appraisal cycle locked successfully.";
         public const string Unlocked = "Appraisal cycle unlocked successfully.";
         public const string Retrieved = "Appraisal cycle retrieved successfully.";
@@ -221,6 +211,10 @@ public static class ServiceResponseMessages
         public const string DuplicateCycle = "An appraisal cycle for year '{0}' and type '{1}' already exists.";
         public static string NotFound(long id) => $"Appraisal cycle with ID '{id}' was not found.";
         public static string AlreadyLocked = "This appraisal cycle is already locked.";
+        public static string AlreadyDeactivated = "This appraisal cycle is already deactivated.";
+        public static string AlreadyActive = "This appraisal cycle is already active.";
+        public static string CannotDeleteLocked = "Cannot delete a locked appraisal cycle.";
+        public static string CannotLockDeactivated = "Cannot lock a deactivated appraisal cycle.";
     }
 
     public static class KPIMasterMsg

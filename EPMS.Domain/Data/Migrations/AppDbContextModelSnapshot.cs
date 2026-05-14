@@ -1629,13 +1629,21 @@ namespace EPMS.Domain.Data.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<string>("CalendarType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
                     b.Property<DateTimeOffset?>("DeletedAt")
                         .HasColumnType("datetimeoffset");
 
-                    b.Property<DateOnly>("EndDate")
+                    b.Property<DateOnly>("EvaluationEndDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("EvaluationStartDate")
                         .HasColumnType("date");
 
                     b.Property<DateTimeOffset?>("FinalClosureDate")
@@ -1682,9 +1690,6 @@ namespace EPMS.Domain.Data.Migrations
                     b.Property<DateOnly?>("SelfReviewStartDate")
                         .HasColumnType("date");
 
-                    b.Property<DateOnly>("StartDate")
-                        .HasColumnType("date");
-
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -1694,8 +1699,16 @@ namespace EPMS.Domain.Data.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
-                    b.Property<int>("Year")
-                        .HasColumnType("int");
+                    b.Property<DateOnly>("WindowEndDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("WindowStartDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("YearLabel")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
 
@@ -1703,7 +1716,7 @@ namespace EPMS.Domain.Data.Migrations
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
 
-                    b.HasIndex("Name", "Year")
+                    b.HasIndex("Name", "YearLabel")
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
 
@@ -1734,6 +1747,9 @@ namespace EPMS.Domain.Data.Migrations
 
                     b.Property<DateTimeOffset?>("DeletedAt")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<long?>("EmployeeKPIId")
+                        .HasColumnType("bigint");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
@@ -1987,6 +2003,79 @@ namespace EPMS.Domain.Data.Migrations
                     b.HasIndex("RelatedGoalId");
 
                     b.ToTable("ContinuousFeedbacks", "perf");
+                });
+
+            modelBuilder.Entity("EPMS.Domain.Entities.Performance.EmployeeKPI", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long>("CycleId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long>("EmployeeId")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<long>("KPIId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("PriorityId")
+                        .HasColumnType("bigint");
+
+                    b.Property<Guid>("PublicId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("TargetUnit")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("TargetValue")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<byte[]>("Version")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<decimal>("Weightage")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CycleId");
+
+                    b.HasIndex("KPIId");
+
+                    b.HasIndex("PriorityId");
+
+                    b.HasIndex("PublicId")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.HasIndex("EmployeeId", "KPIId", "CycleId")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("EmployeeKPIs", "perf");
                 });
 
             modelBuilder.Entity("EPMS.Domain.Entities.Performance.EvaluationResponse", b =>
@@ -2965,11 +3054,6 @@ namespace EPMS.Domain.Data.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<string>("Module")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -2992,13 +3076,17 @@ namespace EPMS.Domain.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ParentId");
-
-                    b.HasIndex("PublicId")
+                    b.HasIndex("Code")
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
 
-                    b.HasIndex("Module", "Code")
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("Name");
+
+                    b.HasIndex("ParentId");
+
+                    b.HasIndex("PublicId")
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
 
@@ -3092,51 +3180,6 @@ namespace EPMS.Domain.Data.Migrations
                     b.HasIndex("EntityType", "EntityId");
 
                     b.ToTable("DocumentAttachments", "shared");
-                });
-
-            modelBuilder.Entity("EPMS.Domain.Entities.Shared.Tag", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetimeoffset")
-                        .HasDefaultValueSql("SYSDATETIMEOFFSET()");
-
-                    b.Property<string>("Module")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.ToTable("Tags", "shared");
-                });
-
-            modelBuilder.Entity("FormQuestionTag", b =>
-                {
-                    b.Property<long>("QuestionId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("TagId")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("QuestionId", "TagId");
-
-                    b.HasIndex("TagId");
-
-                    b.ToTable("FormQuestionTags", "perf");
                 });
 
             modelBuilder.Entity("EPMS.Domain.Entities.App.Notification", b =>
@@ -3530,6 +3573,41 @@ namespace EPMS.Domain.Data.Migrations
                     b.Navigation("RelatedGoal");
                 });
 
+            modelBuilder.Entity("EPMS.Domain.Entities.Performance.EmployeeKPI", b =>
+                {
+                    b.HasOne("EPMS.Domain.Entities.Performance.AppraisalCycle", "Cycle")
+                        .WithMany("EmployeeKPIs")
+                        .HasForeignKey("CycleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("EPMS.Domain.Entities.EmployeeInfo.EmployeeProfile", "Employee")
+                        .WithMany("EmployeeKPIs")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EPMS.Domain.Entities.Performance.KPIMaster", "KPI")
+                        .WithMany()
+                        .HasForeignKey("KPIId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("EPMS.Domain.Entities.Performance.KPIWeightPriority", "Priority")
+                        .WithMany()
+                        .HasForeignKey("PriorityId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Cycle");
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("KPI");
+
+                    b.Navigation("Priority");
+                });
+
             modelBuilder.Entity("EPMS.Domain.Entities.Performance.EvaluationResponse", b =>
                 {
                     b.HasOne("EPMS.Domain.Entities.Performance.Appraisal", "Appraisal")
@@ -3795,21 +3873,6 @@ namespace EPMS.Domain.Data.Migrations
                     b.Navigation("UploadedBy");
                 });
 
-            modelBuilder.Entity("FormQuestionTag", b =>
-                {
-                    b.HasOne("EPMS.Domain.Entities.Performance.FormQuestion", null)
-                        .WithMany()
-                        .HasForeignKey("QuestionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("EPMS.Domain.Entities.Shared.Tag", null)
-                        .WithMany()
-                        .HasForeignKey("TagId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("EPMS.Domain.Entities.Auth.User", b =>
                 {
                     b.Navigation("Profile");
@@ -3820,6 +3883,8 @@ namespace EPMS.Domain.Data.Migrations
             modelBuilder.Entity("EPMS.Domain.Entities.EmployeeInfo.EmployeeProfile", b =>
                 {
                     b.Navigation("Contact");
+
+                    b.Navigation("EmployeeKPIs");
 
                     b.Navigation("Employment");
 
@@ -3858,6 +3923,11 @@ namespace EPMS.Domain.Data.Migrations
                     b.Navigation("Recommendations");
 
                     b.Navigation("Responses");
+                });
+
+            modelBuilder.Entity("EPMS.Domain.Entities.Performance.AppraisalCycle", b =>
+                {
+                    b.Navigation("EmployeeKPIs");
                 });
 
             modelBuilder.Entity("EPMS.Domain.Entities.Performance.FormTemplate", b =>

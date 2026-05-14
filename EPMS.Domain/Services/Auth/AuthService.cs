@@ -190,6 +190,7 @@ namespace EPMS.Domain.Services.Auth
                 {
                     UserGuid = user.PublicId,
                     Email = user.Email,
+                    StaffName = user.Profile?.StaffName ?? string.Empty,
                     RoleName = user.Role.Name,
                     IsActive = user.IsActive,
                     IsFirstLogin = user.IsFirstLogin,

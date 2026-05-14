@@ -1,48 +1,165 @@
+using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.PerformanceDTOs.AppraisalCycleDTOs;
 using EPMS.Shared.Validators;
 using EPMS.Shared.Validators.ValidationMessages;
 using FluentValidation;
 
-namespace EPMS.Shared.Validators.PerformanceDTOs.AppraisalCycleDTOs
+namespace EPMS.Shared.Validators.PerformanceDTOs.AppraisalCycleDTOs;
+
+public class CreateAppraisalCycleValidator : AbstractValidator<CreateAppraisalCycleDto>
 {
-    public class CreateAppraisalCycleValidator : AbstractValidator<CreateAppraisalCycleDto>
+    public CreateAppraisalCycleValidator()
     {
-        public CreateAppraisalCycleValidator()
-        {
-            RuleFor(x => x.Name)
-                .NotEmpty().WithMessage(PerformanceValidationMessages.AppraisalCycle.NameRequired)
-                .MaximumLength(100).WithMessage(PerformanceValidationMessages.AppraisalCycle.NameMaxLength);
+        RuleFor(x => x.Name)
+            .NotEmpty().WithMessage(PerformanceValidationMessages.AppraisalCycle.NameRequired)
+            .MaximumLength(100).WithMessage(PerformanceValidationMessages.AppraisalCycle.NameMaxLength);
 
-            RuleFor(x => x.Year)
-                .InclusiveBetween(2000, 2100)
-                .WithMessage(PerformanceValidationMessages.AppraisalCycle.YearInvalid);
+        RuleFor(x => x.CalendarType)
+            .NotEmpty().WithMessage(PerformanceValidationMessages.AppraisalCycle.CalendarTypeRequired)
+            .MaximumLength(50).WithMessage(PerformanceValidationMessages.AppraisalCycle.CalendarTypeMaxLength)
+            .Must(x => string.IsNullOrEmpty(x) || AppraisalConstants.CalendarTypes.All.Contains(x.Trim().ToUpperInvariant()))
+            .WithMessage(PerformanceValidationMessages.AppraisalCycle.CalendarTypeInvalid);
 
-            RuleFor(x => x.AppraisalType)
-                .NotEmpty().WithMessage(PerformanceValidationMessages.AppraisalCycle.AppraisalTypeRequired)
-                .MaximumLength(50).WithMessage(PerformanceValidationMessages.AppraisalCycle.AppraisalTypeMaxLength);
+        RuleFor(x => x.YearLabel)
+            .NotEmpty().WithMessage(PerformanceValidationMessages.AppraisalCycle.YearLabelRequired)
+            .MaximumLength(50).WithMessage(PerformanceValidationMessages.AppraisalCycle.YearLabelMaxLength);
 
-            RuleFor(x => x.StartDate)
-                .NotEmpty().WithMessage(PerformanceValidationMessages.AppraisalCycle.StartDateRequired);
+        RuleFor(x => x.AppraisalType)
+            .NotEmpty().WithMessage(PerformanceValidationMessages.AppraisalCycle.AppraisalTypeRequired)
+            .MaximumLength(50).WithMessage(PerformanceValidationMessages.AppraisalCycle.AppraisalTypeMaxLength)
+            .Must(x => string.IsNullOrEmpty(x) || AppraisalConstants.AppraisalTypes.All.Contains(x.Trim().ToUpperInvariant()))
+            .WithMessage(PerformanceValidationMessages.AppraisalCycle.AppraisalTypeInvalid);
 
-            RuleFor(x => x.EndDate)
-                .NotEmpty().WithMessage(PerformanceValidationMessages.AppraisalCycle.EndDateRequired)
-                .GreaterThan(x => x.StartDate)
-                .WithMessage(PerformanceValidationMessages.AppraisalCycle.EndDateAfterStart);
+        RuleFor(x => x.EvaluationStartDate)
+            .NotEmpty().When(x => x.EvaluationEndDate.HasValue)
+            .WithMessage(PerformanceValidationMessages.AppraisalCycle.EvaluationStartDateRequired);
 
-            RuleFor(x => x.SelfReviewStartDate)
-                .LessThanOrEqualTo(x => x.SelfReviewDeadline)
-                .When(x => x.SelfReviewStartDate.HasValue && x.SelfReviewDeadline.HasValue)
-                .WithMessage(PerformanceValidationMessages.AppraisalCycle.SelfReviewStartBeforeDeadline);
+        RuleFor(x => x.EvaluationStartDate)
+            .Must((dto, startDate) =>
+            {
+                if (!startDate.HasValue || string.IsNullOrEmpty(dto.CalendarType) || string.IsNullOrEmpty(dto.YearLabel))
+                    return true;
+                var upperCal = dto.CalendarType.Trim().ToUpperInvariant();
+                if (!int.TryParse(dto.YearLabel[..Math.Min(4, dto.YearLabel.Length)], out var year))
+                    return true;
+                var yearStart = upperCal == AppraisalConstants.CalendarTypes.FiscalYear
+                    ? new DateOnly(year, 4, 1)
+                    : new DateOnly(year, 1, 1);
+                var yearEnd = upperCal == AppraisalConstants.CalendarTypes.FiscalYear
+                    ? new DateOnly(year + 1, 3, 31)
+                    : new DateOnly(year, 12, 31);
+                return startDate.Value >= yearStart && startDate.Value <= yearEnd;
+            })
+            .When(x => x.EvaluationStartDate.HasValue && !string.IsNullOrEmpty(x.CalendarType) && !string.IsNullOrEmpty(x.YearLabel))
+            .WithMessage(x =>
+            {
+                var upperCal = x.CalendarType.Trim().ToUpperInvariant();
+                _ = int.TryParse(x.YearLabel[..Math.Min(4, x.YearLabel.Length)], out var year);
+                var yearStart = upperCal == AppraisalConstants.CalendarTypes.FiscalYear
+                    ? new DateOnly(year, 4, 1)
+                    : new DateOnly(year, 1, 1);
+                var yearEnd = upperCal == AppraisalConstants.CalendarTypes.FiscalYear
+                    ? new DateOnly(year + 1, 3, 31)
+                    : new DateOnly(year, 12, 31);
+                return string.Format(PerformanceValidationMessages.AppraisalCycle.EvaluationDateOutsideYearRange,
+                    yearStart, yearEnd, x.YearLabel);
+            });
 
-            RuleFor(x => x.ManagerReviewStartDate)
-                .LessThanOrEqualTo(x => x.ManagerReviewDeadline)
-                .When(x => x.ManagerReviewStartDate.HasValue && x.ManagerReviewDeadline.HasValue)
-                .WithMessage(PerformanceValidationMessages.AppraisalCycle.ManagerReviewStartBeforeDeadline);
+        RuleFor(x => x.EvaluationEndDate)
+            .NotEmpty().When(x => x.EvaluationStartDate.HasValue)
+            .WithMessage(PerformanceValidationMessages.AppraisalCycle.EvaluationEndDateRequired)
+            .GreaterThan(x => x.EvaluationStartDate!.Value)
+            .When(x => x.EvaluationStartDate.HasValue && x.EvaluationEndDate.HasValue)
+            .WithMessage(PerformanceValidationMessages.AppraisalCycle.EvaluationEndAfterStart)
+            .Must((dto, endDate) =>
+            {
+                if (!endDate.HasValue || !dto.EvaluationStartDate.HasValue || string.IsNullOrEmpty(dto.AppraisalType))
+                    return true;
+                var upperType = dto.AppraisalType.Trim().ToUpperInvariant();
+                var (minDays, maxDays) = upperType switch
+                {
+                    AppraisalConstants.AppraisalTypes.Monthly => (20, 31),
+                    AppraisalConstants.AppraisalTypes.Quarterly => (60, 92),
+                    AppraisalConstants.AppraisalTypes.SemiAnnual => (120, 184),
+                    AppraisalConstants.AppraisalTypes.Annual => (300, 366),
+                    _ => (300, 366)
+                };
+                var actualDays = endDate.Value.DayNumber - dto.EvaluationStartDate.Value.DayNumber;
+                return actualDays >= minDays && actualDays <= maxDays;
+            })
+            .When(x => x.EvaluationStartDate.HasValue && x.EvaluationEndDate.HasValue && !string.IsNullOrEmpty(x.AppraisalType))
+            .WithMessage(x =>
+            {
+                var upperType = x.AppraisalType.Trim().ToUpperInvariant();
+                var (minDays, maxDays) = upperType switch
+                {
+                    AppraisalConstants.AppraisalTypes.Monthly => (20, 31),
+                    AppraisalConstants.AppraisalTypes.Quarterly => (60, 92),
+                    AppraisalConstants.AppraisalTypes.SemiAnnual => (120, 184),
+                    AppraisalConstants.AppraisalTypes.Annual => (300, 366),
+                    _ => (300, 366)
+                };
+                var actualDays = x.EvaluationEndDate!.Value.DayNumber - x.EvaluationStartDate!.Value.DayNumber;
+                if (actualDays < minDays)
+                    return string.Format(PerformanceValidationMessages.AppraisalCycle.EvaluationPeriodBelowMinimum,
+                        actualDays, minDays, upperType);
+                return string.Format(PerformanceValidationMessages.AppraisalCycle.EvaluationPeriodExceedsMax,
+                    actualDays, maxDays, upperType);
+            })
+            .Must((dto, endDate) =>
+            {
+                if (!endDate.HasValue || string.IsNullOrEmpty(dto.CalendarType) || string.IsNullOrEmpty(dto.YearLabel))
+                    return true;
+                var upperCal = dto.CalendarType.Trim().ToUpperInvariant();
+                if (!int.TryParse(dto.YearLabel[..Math.Min(4, dto.YearLabel.Length)], out var year))
+                    return true;
+                var yearStart = upperCal == AppraisalConstants.CalendarTypes.FiscalYear
+                    ? new DateOnly(year, 4, 1)
+                    : new DateOnly(year, 1, 1);
+                var yearEnd = upperCal == AppraisalConstants.CalendarTypes.FiscalYear
+                    ? new DateOnly(year + 1, 3, 31)
+                    : new DateOnly(year, 12, 31);
+                return endDate.Value <= yearEnd && endDate.Value >= yearStart;
+            })
+            .When(x => x.EvaluationEndDate.HasValue && !string.IsNullOrEmpty(x.CalendarType) && !string.IsNullOrEmpty(x.YearLabel))
+            .WithMessage(x =>
+            {
+                var upperCal = x.CalendarType.Trim().ToUpperInvariant();
+                _ = int.TryParse(x.YearLabel[..Math.Min(4, x.YearLabel.Length)], out var year);
+                var yearStart = upperCal == AppraisalConstants.CalendarTypes.FiscalYear
+                    ? new DateOnly(year, 4, 1)
+                    : new DateOnly(year, 1, 1);
+                var yearEnd = upperCal == AppraisalConstants.CalendarTypes.FiscalYear
+                    ? new DateOnly(year + 1, 3, 31)
+                    : new DateOnly(year, 12, 31);
+                return string.Format(PerformanceValidationMessages.AppraisalCycle.EvaluationDateOutsideYearRange,
+                    yearStart, yearEnd, x.YearLabel);
+            });
 
-            RuleFor(x => x.PeerReviewStartDate)
-                .LessThanOrEqualTo(x => x.PeerReviewDeadline)
-                .When(x => x.PeerReviewStartDate.HasValue && x.PeerReviewDeadline.HasValue)
-                .WithMessage(PerformanceValidationMessages.AppraisalCycle.PeerReviewStartBeforeDeadline);
-        }
+        RuleFor(x => x.WindowStartDate)
+            .NotEmpty().WithMessage(PerformanceValidationMessages.AppraisalCycle.WindowStartDateRequired)
+            .GreaterThanOrEqualTo(x => x.EvaluationEndDate!.Value)
+            .When(x => x.EvaluationEndDate.HasValue)
+            .WithMessage(PerformanceValidationMessages.AppraisalCycle.WindowStartAfterEvaluationEnd);
+
+        RuleFor(x => x.WindowEndDate)
+            .NotEmpty().WithMessage(PerformanceValidationMessages.AppraisalCycle.WindowEndDateRequired)
+            .GreaterThan(x => x.WindowStartDate)
+            .WithMessage(PerformanceValidationMessages.AppraisalCycle.WindowEndAfterStart);
+
+        RuleFor(x => x.SelfReviewStartDate)
+            .LessThanOrEqualTo(x => x.SelfReviewDeadline)
+            .When(x => x.SelfReviewStartDate.HasValue && x.SelfReviewDeadline.HasValue)
+            .WithMessage(PerformanceValidationMessages.AppraisalCycle.SelfReviewStartBeforeDeadline);
+
+        RuleFor(x => x.ManagerReviewStartDate)
+            .LessThanOrEqualTo(x => x.ManagerReviewDeadline)
+            .When(x => x.ManagerReviewStartDate.HasValue && x.ManagerReviewDeadline.HasValue)
+            .WithMessage(PerformanceValidationMessages.AppraisalCycle.ManagerReviewStartBeforeDeadline);
+
+        RuleFor(x => x.PeerReviewStartDate)
+            .LessThanOrEqualTo(x => x.PeerReviewDeadline)
+            .When(x => x.PeerReviewStartDate.HasValue && x.PeerReviewDeadline.HasValue)
+            .WithMessage(PerformanceValidationMessages.AppraisalCycle.PeerReviewStartBeforeDeadline);
     }
 }

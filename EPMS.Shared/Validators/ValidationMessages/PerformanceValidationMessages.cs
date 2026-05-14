@@ -70,15 +70,27 @@ namespace EPMS.Shared.Validators.ValidationMessages
             public const string IdRequired = "Appraisal cycle ID is required.";
             public const string NameRequired = "Cycle name is required.";
             public const string NameMaxLength = "Cycle name cannot exceed 100 characters.";
-            public const string YearInvalid = "Year must be between 2000 and 2100.";
+            public const string CalendarTypeRequired = "Calendar type is required.";
+            public const string CalendarTypeMaxLength = "Calendar type cannot exceed 50 characters.";
+            public const string YearLabelRequired = "Year label is required.";
+            public const string YearLabelMaxLength = "Year label cannot exceed 50 characters.";
             public const string AppraisalTypeRequired = "Appraisal type is required.";
             public const string AppraisalTypeMaxLength = "Appraisal type cannot exceed 50 characters.";
-            public const string StartDateRequired = "Start date is required.";
-            public const string EndDateRequired = "End date is required.";
-            public const string EndDateAfterStart = "End date must be after start date.";
+            public const string EvaluationStartDateRequired = "Evaluation start date is required.";
+            public const string EvaluationEndDateRequired = "Evaluation end date is required.";
+            public const string EvaluationEndAfterStart = "Evaluation end date must be after start date.";
+            public const string WindowStartDateRequired = "Window start date is required.";
+            public const string WindowEndDateRequired = "Window end date is required.";
+            public const string WindowEndAfterStart = "Window end date must be after start date.";
+            public const string WindowStartAfterEvaluationEnd = "Window start date must be on or after evaluation end date.";
             public const string SelfReviewStartBeforeDeadline = "Self-review start date must be before deadline.";
             public const string ManagerReviewStartBeforeDeadline = "Manager review start date must be before deadline.";
             public const string PeerReviewStartBeforeDeadline = "Peer review start date must be before deadline.";
+            public const string AppraisalTypeInvalid = "Appraisal type must be one of: Annual, Semi-Annual, Quarterly, Monthly.";
+            public const string CalendarTypeInvalid = "Calendar type must be one of: Standard Calendar, Fiscal Year Calendar.";
+            public const string EvaluationPeriodExceedsMax = "Evaluation period ({0} days) exceeds the maximum of {1} days allowed for {2} appraisal.";
+            public const string EvaluationPeriodBelowMinimum = "Evaluation period ({0} days) is below the minimum of {1} days required for {2} appraisal.";
+            public const string EvaluationDateOutsideYearRange = "Evaluation date must be within {0:dd/MM/yyyy} to {1:dd/MM/yyyy} for year '{2}'.";
         }
 
         public static class KPIMaster

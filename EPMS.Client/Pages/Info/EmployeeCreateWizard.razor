@@ -135,27 +135,27 @@
                            OpenIcon="@Icons.Material.Filled.ArrowDropDown">
                             <ItemTemplate Context="deptId">
                                 @{ var dept = _departments.FirstOrDefault(x => x.Id == deptId); }
-                                @if (dept != null)
-                                {
-                                    <MudText>@dept.Code - @dept.Name</MudText>
-                                }
-                            </ItemTemplate>
-                        </MudAutocomplete>
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudAutocomplete T="long"
-                           @bind-Value="_employmentModel.ParentDepartmentId"
-                           Label="Parent Department"
-                           Variant="Variant.Outlined"
-                           For="@(() => _employmentModel.ParentDepartmentId)"
-                           SearchFunc="SearchDepartments"
-                           ToStringFunc="GetDepartmentDisplay"
-                           OpenIcon="@Icons.Material.Filled.ArrowDropDown">
-                            <ItemTemplate Context="deptId">
-                                @{ var dept = _departments.FirstOrDefault(x => x.Id == deptId); }
-                                @if (dept != null)
-                                {
-                                    <MudText>@dept.Code - @dept.Name</MudText>
+                                 @if (dept != null)
+                                 {
+                                     <MudText>@dept.Code</MudText>
+                                 }
+                             </ItemTemplate>
+                         </MudAutocomplete>
+                     </MudItem>
+                     <MudItem xs="12" sm="6">
+                         <MudAutocomplete T="long"
+                            @bind-Value="_employmentModel.ParentDepartmentId"
+                            Label="Parent Department"
+                            Variant="Variant.Outlined"
+                            For="@(() => _employmentModel.ParentDepartmentId)"
+                            SearchFunc="SearchDepartments"
+                            ToStringFunc="GetDepartmentDisplay"
+                            OpenIcon="@Icons.Material.Filled.ArrowDropDown">
+                             <ItemTemplate Context="deptId">
+                                 @{ var dept = _departments.FirstOrDefault(x => x.Id == deptId); }
+                                 @if (dept != null)
+                                 {
+                                     <MudText>@dept.Code</MudText>
                                 }
                             </ItemTemplate>
                         </MudAutocomplete>
@@ -171,29 +171,29 @@
                            OpenIcon="@Icons.Material.Filled.ArrowDropDown">
                             <ItemTemplate Context="posId">
                                 @{ var pos = _positions.FirstOrDefault(x => x.Id == posId); }
-                                @if (pos != null)
-                                {
-                                    <MudText>@pos.Code - @pos.Name</MudText>
-                                }
-                            </ItemTemplate>
-                        </MudAutocomplete>
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudAutocomplete T="long?"
-                           @bind-Value="_employmentModel.TeamId"
-                           Label="Team"
-                           Variant="Variant.Outlined"
-                           For="@(() => _employmentModel.TeamId)"
-                           Clearable="true"
-                           SearchFunc="SearchTeams"
-                           ToStringFunc="GetTeamDisplay"
-                           ResetValueOnEmptyText="true"
-                           OpenIcon="@Icons.Material.Filled.ArrowDropDown">
-                            <ItemTemplate Context="teamId">
-                                @{ var team = teamId.HasValue ? _teams.FirstOrDefault(x => x.Id == teamId.Value) : null; }
-                                @if (team != null)
-                                {
-                                    <MudText>@team.Code - @team.Name</MudText>
+                                 @if (pos != null)
+                                 {
+                                     <MudText>@pos.Code</MudText>
+                                 }
+                             </ItemTemplate>
+                         </MudAutocomplete>
+                     </MudItem>
+                     <MudItem xs="12" sm="6">
+                         <MudAutocomplete T="long?"
+                            @bind-Value="_employmentModel.TeamId"
+                            Label="Team"
+                            Variant="Variant.Outlined"
+                            For="@(() => _employmentModel.TeamId)"
+                            Clearable="true"
+                            SearchFunc="SearchTeams"
+                            ToStringFunc="GetTeamDisplay"
+                            ResetValueOnEmptyText="true"
+                            OpenIcon="@Icons.Material.Filled.ArrowDropDown">
+                             <ItemTemplate Context="teamId">
+                                 @{ var team = teamId.HasValue ? _teams.FirstOrDefault(x => x.Id == teamId.Value) : null; }
+                                 @if (team != null)
+                                 {
+                                     <MudText>@team.Code</MudText>
                                 }
                             </ItemTemplate>
                         </MudAutocomplete>
@@ -467,8 +467,7 @@
     {
         var query = _departments.AsQueryable();
         if (!string.IsNullOrWhiteSpace(value))
-            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase)
-                                  || x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
         return Task.FromResult(query.Select(x => x.Id).AsEnumerable());
     }
 
@@ -477,15 +476,14 @@
         if (id <= 0) return string.Empty;
         var dept = _departments.FirstOrDefault(x => x.Id == id);
         if (dept == null) return string.Empty;
-        return dept.IsActive ? $"{dept.Code} - {dept.Name}" : $"{dept.Code} - {dept.Name} (Inactive)";
+        return dept.IsActive ? dept.Code : $"{dept.Code} (Inactive)";
     }
 
     private Task<IEnumerable<long>> SearchPositions(string value, CancellationToken token)
     {
         var query = _positions.AsQueryable();
         if (!string.IsNullOrWhiteSpace(value))
-            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase)
-                                  || x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
         return Task.FromResult(query.Select(x => x.Id).AsEnumerable());
     }
 
@@ -494,15 +492,14 @@
         if (id <= 0) return string.Empty;
         var pos = _positions.FirstOrDefault(x => x.Id == id);
         if (pos == null) return string.Empty;
-        return pos.IsActive ? $"{pos.Code} - {pos.Name}" : $"{pos.Code} - {pos.Name} (Inactive)";
+        return pos.IsActive ? pos.Code : $"{pos.Code} (Inactive)";
     }
 
     private Task<IEnumerable<long?>> SearchTeams(string value, CancellationToken token)
     {
         var query = _teams.AsQueryable();
         if (!string.IsNullOrWhiteSpace(value))
-            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase)
-                                  || x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
         return Task.FromResult(query.Select(x => (long?)x.Id).AsEnumerable());
     }
 
@@ -511,7 +508,7 @@
         if (id == null || id <= 0) return string.Empty;
         var team = _teams.FirstOrDefault(x => x.Id == id);
         if (team == null) return string.Empty;
-        return team.IsActive ? $"{team.Code} - {team.Name}" : $"{team.Code} - {team.Name} (Inactive)";
+        return team.IsActive ? team.Code : $"{team.Code} (Inactive)";
     }
 
     private Task<IEnumerable<long?>> SearchEmployees(string value, CancellationToken token)

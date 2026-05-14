@@ -13,14 +13,10 @@ namespace EPMS.Domain.Repository.Shared
 public class SharedModule(IServiceProvider serviceProvider) : ISharedModule
 {
     private ICategoryRepository? _categories;
-    private ITagRepository? _tags;
     private IDocumentAttachmentRepository? _documentAttachments;
 
     public ICategoryRepository Categories =>
         _categories ??= serviceProvider.GetRequiredService<ICategoryRepository>();
-
-    public ITagRepository Tags =>
-        _tags ??= serviceProvider.GetRequiredService<ITagRepository>();
 
     public IDocumentAttachmentRepository DocumentAttachments =>
         _documentAttachments ??= serviceProvider.GetRequiredService<IDocumentAttachmentRepository>();

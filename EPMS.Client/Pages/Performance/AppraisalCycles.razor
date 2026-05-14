@@ -1,0 +1,330 @@
+@page "/performance/appraisal-cycles"
+@using EPMS.Client.Constants
+@using EPMS.Client.Services.Performance
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.PerformanceDTOs.AppraisalCycleDTOs
+@using MudBlazor
+@using Refit
+@using static EPMS.Shared.Constants.ServiceResponseMessages
+
+@inject IAppraisalCycleApiClient AppraisalCycleApiClient
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>@UIConstants.AppraisalCycle.PageTitle</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.AppraisalCycle.PageTitle</MudText>
+
+    <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+            <MudTextField @bind-Value="_searchString"
+                          Placeholder="@UIConstants.AppraisalCycle.SearchPlaceholder"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          IconSize="Size.Medium"
+                          Variant="Variant.Outlined"
+                          Clearable="true"
+                          Immediate="true"
+                          DebounceInterval="500"
+                          Style="max-width: 300px;" />
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenCreateDialog">
+                @UIConstants.AppraisalCycle.AddButton
+            </MudButton>
+        </MudStack>
+
+        <MudDataGrid Items="@_cycles"
+                     QuickFilter="@QuickFilter"
+                     Loading="@_loading"
+                     SortMode="SortMode.None"
+                     Hover="true"
+                     Elevation="0">
+            <Columns>
+                <TemplateColumn Title="@UIConstants.Common.ColumnNo" Sortable="false">
+                    <CellTemplate>
+                        @_rowNumbers.GetValueOrDefault(context.Item.Id)
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.Name" Title="@UIConstants.AppraisalCycle.ColumnName" />
+                <PropertyColumn Property="x => x.AppraisalType" Title="@UIConstants.AppraisalCycle.ColumnType" />
+                <PropertyColumn Property="x => x.CalendarType" Title="@UIConstants.AppraisalCycle.ColumnCalendar" />
+                <PropertyColumn Property="x => x.YearLabel" Title="@UIConstants.AppraisalCycle.ColumnYear" />
+                <TemplateColumn Title="@UIConstants.AppraisalCycle.ColumnEvalPeriod" Sortable="false">
+                    <CellTemplate>
+                        @context.Item.EvaluationStartDate.ToString("dd/MM/yyyy") - @context.Item.EvaluationEndDate.ToString("dd/MM/yyyy")
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="@UIConstants.Common.Status">
+                    <CellTemplate>
+                        @{
+                            var (statusText, statusColor) = GetStatus(context.Item);
+                        }
+                        <MudChip Color="@statusColor" Size="Size.Small">@statusText</MudChip>
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="@UIConstants.Common.Actions" Sortable="false">
+                    <CellTemplate>
+                        @{
+                            var isLocked = context.Item.IsLocked;
+                            var isActive = context.Item.IsActive;
+                        }
+                        <MudStack Row="true" Spacing="0">
+                            <MudTooltip Text="Edit Cycle" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Color="Color.Primary"
+                                               Size="Size.Small"
+                                               Disabled="@isLocked"
+                                               OnClick="@(() => OpenEditDialog(context.Item))" />
+                            </MudTooltip>
+
+                            @if (isActive && !isLocked)
+                            {
+                                <MudTooltip Text="Lock Cycle" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Lock"
+                                                   Color="Color.Warning"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => OpenLockDialog(context.Item))" />
+                                </MudTooltip>
+                                <MudTooltip Text="Deactivate Cycle" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Cancel"
+                                                   Color="Color.Default"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => OpenDeactivateDialog(context.Item))" />
+                                </MudTooltip>
+                            }
+
+                            @if (!isActive && !isLocked)
+                            {
+                                <MudTooltip Text="Reactivate Cycle" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                                                   Color="Color.Success"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => OpenReactivateDialog(context.Item))" />
+                                </MudTooltip>
+                            }
+
+                            <MudTooltip Text="Delete Cycle" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Color="Color.Error"
+                                               Size="Size.Small"
+                                               Disabled="@isLocked"
+                                               OnClick="@(() => OpenDeleteDialog(context.Item))" />
+                            </MudTooltip>
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+            <NoRecordsContent>
+                <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
+                    <MudIcon Icon="@Icons.Material.Outlined.Inbox" Style="font-size: 4rem;" Color="Color.Default" />
+                    <MudText Typo="Typo.h6" Color="Color.Default">@UIConstants.Common.NoRecords</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">@UIConstants.AppraisalCycle.NoDataFound</MudText>
+                </MudStack>
+            </NoRecordsContent>
+            <LoadingContent>
+                <MudStack Spacing="3" Class="w-100">
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                </MudStack>
+            </LoadingContent>
+            <PagerContent>
+                <MudDataGridPager T="AppraisalCycleDto" />
+            </PagerContent>
+        </MudDataGrid>
+
+    </MudPaper>
+</MudContainer>
+
+@code {
+
+    private static readonly DialogOptions _formDialogOptions = new()
+    {
+        CloseOnEscapeKey = true,
+        MaxWidth = MaxWidth.Large,
+        FullWidth = true
+    };
+    private static readonly DialogOptions _confirmDialogOptions = new()
+    {
+        CloseOnEscapeKey = true
+    };
+
+    private List<AppraisalCycleDto> _allCycles = new();
+    private List<AppraisalCycleDto> _cycles = new();
+    private bool _loading = true;
+    private string _searchString = string.Empty;
+    private Dictionary<long, int> _rowNumbers = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCyclesAsync();
+    }
+
+    private bool QuickFilter(AppraisalCycleDto x)
+    {
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+
+        return x.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
+            || x.YearLabel.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
+            || x.AppraisalType.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task LoadCyclesAsync()
+    {
+        _loading = true;
+        StateHasChanged();
+        try
+        {
+            var response = await AppraisalCycleApiClient.GetAllAsync();
+            if (response.Success && response.Data != null)
+            {
+                _allCycles = response.Data.ToList();
+                ApplySort();
+            }
+            else
+                Snackbar.Add(response.Message ?? UIConstants.Common.LoadFailed, Severity.Error);
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private (string Text, Color Color) GetStatus(AppraisalCycleDto cycle)
+    {
+        if (cycle.IsLocked) return (UIConstants.AppraisalCycle.StatusChipLocked, Color.Warning);
+        if (cycle.IsActive) return (UIConstants.AppraisalCycle.StatusChipActive, Color.Success);
+        return (UIConstants.AppraisalCycle.StatusChipInactive, Color.Default);
+    }
+
+    private void ApplySort()
+    {
+        _cycles = _allCycles
+            .OrderByDescending(x => x.EvaluationEndDate)
+            .ToList();
+
+        _rowNumbers = _cycles
+            .Select((x, i) => (x.Id, Index: i + 1))
+            .ToDictionary(x => x.Id, x => x.Index);
+    }
+
+    private async Task PerformAction(long id, Func<long, Task<SuccessResponse>> action, string successMsg)
+    {
+        try
+        {
+            var response = await action(id);
+            if (response.Success)
+            {
+                Snackbar.Add(successMsg, Severity.Success);
+                await LoadCyclesAsync();
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+    }
+
+    private async Task OpenCreateDialog()
+    {
+        var dialog = await DialogService.ShowAsync<AppraisalCycleDialog>(
+            UIConstants.AppraisalCycle.CreateDialogTitle, _formDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+        {
+            Snackbar.Add(AppraisalCycleMsg.Created, Severity.Success);
+            await LoadCyclesAsync();
+        }
+    }
+
+    private async Task OpenEditDialog(AppraisalCycleDto cycle)
+    {
+        var parameters = new DialogParameters<AppraisalCycleDialog>
+        {
+            { x => x.Cycle, cycle }
+        };
+
+        var dialog = await DialogService.ShowAsync<AppraisalCycleDialog>(
+            UIConstants.AppraisalCycle.EditDialogTitle, parameters, _formDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+        {
+            Snackbar.Add(AppraisalCycleMsg.Updated, Severity.Success);
+            await LoadCyclesAsync();
+        }
+    }
+
+    private async Task OpenDeleteDialog(AppraisalCycleDto cycle)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, string.Format(UIConstants.Common.DeleteConfirmationFormat, cycle.Name) },
+            { x => x.ButtonText, UIConstants.Common.Delete },
+            { x => x.Color, Color.Error }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(
+            UIConstants.AppraisalCycle.DeleteDialogTitle, parameters, _confirmDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+            await PerformAction(cycle.Id, id => AppraisalCycleApiClient.DeleteAsync(id), AppraisalCycleMsg.Deleted);
+    }
+
+    private Task OpenLockDialog(AppraisalCycleDto cycle)
+        => ShowConfirmAndExecute(cycle, "Lock this cycle? This will finalize and deactivate it.", "Lock",
+                                 Color.Warning, UIConstants.AppraisalCycle.Lock,
+                                 id => AppraisalCycleApiClient.LockAsync(id), AppraisalCycleMsg.Locked);
+
+    private Task OpenDeactivateDialog(AppraisalCycleDto cycle)
+        => ShowConfirmAndExecute(cycle, "Deactivate this cycle? It can be reactivated later.", "Deactivate",
+                                 Color.Default, UIConstants.AppraisalCycle.Deactivate,
+                                 id => AppraisalCycleApiClient.DeactivateAsync(id), AppraisalCycleMsg.Deactivated);
+
+    private Task OpenReactivateDialog(AppraisalCycleDto cycle)
+        => ShowConfirmAndExecute(cycle, "Reactivate this cycle?", "Reactivate",
+                                 Color.Success, UIConstants.AppraisalCycle.Reactivate,
+                                 id => AppraisalCycleApiClient.ReactivateAsync(id), AppraisalCycleMsg.Reactivated);
+
+    private async Task ShowConfirmAndExecute(AppraisalCycleDto cycle, string message, string buttonText,
+                                              Color color, string successMsg,
+                                              Func<long, Task<SuccessResponse>> action, string actionSuccessMsg)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, message },
+            { x => x.ButtonText, buttonText },
+            { x => x.Color, color }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(
+            successMsg, parameters, _confirmDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+            await PerformAction(cycle.Id, action, actionSuccessMsg);
+    }
+}

@@ -1,12 +1,6 @@
 using EPMS.Domain.Entities.Performance;
-using EPMS.Domain.Entities.Shared;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EPMS.Domain.Data.Configurations.Performance
 {
@@ -45,29 +39,7 @@ namespace EPMS.Domain.Data.Configurations.Performance
             builder.Property(e => e.IsDeleted).HasDefaultValue(false).IsRequired();
             builder.Property(e => e.DeletedAt);
 
-            builder.HasMany(e => e.Tags)
-                   .WithMany()
-                   .UsingEntity<Dictionary<string, object>>(
-                       "FormQuestionTag",
 
-                       right => right.HasOne<Tag>()
-                                     .WithMany()
-                                     .HasForeignKey("TagId")
-                                     .OnDelete(DeleteBehavior.Cascade),
-
-                       left => left.HasOne<FormQuestion>()
-                                   .WithMany()
-                                   .HasForeignKey("QuestionId")
-                                   .OnDelete(DeleteBehavior.Cascade),
-
-                       join =>
-                       {
-                           join.ToTable("FormQuestionTags", "perf");
-                           join.HasKey("QuestionId", "TagId");
-                       }
-                   );
-
-            builder.Metadata.FindNavigation(nameof(FormQuestion.Tags))?.SetPropertyAccessMode(PropertyAccessMode.Field);
         }
     }
 }

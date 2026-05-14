@@ -1,26 +1,25 @@
 ﻿@using EPMS.Client.Constants
+@using EPMS.Client.Extensions
 @using EPMS.Client.Models.Hr
 @using EPMS.Client.Services
+@using EPMS.Client.Services.Auth
 @using EPMS.Client.Services.Shared
 @using EPMS.Shared.DTOs.CategoryDTOs
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.Validators.CategoryDTOs
-@using FluentValidation
 @using Mapster
 @using MudBlazor
+@using Refit
+@using static EPMS.Shared.Constants.ServiceResponseMessages
 
 @inject ICategoryApiClient CategoryApiClient
 @inject ISnackbar Snackbar
+@inject LookupStateService LookupState
 
 <MudDialog>
     <DialogContent>
         <MudForm @ref="_form" Model="@_model" Validation="@ValidateField">
             <MudStack Spacing="3">
-                <MudSelect T="string" @bind-Value="_model.Module" Label="Module" Variant="Variant.Outlined">
-                    <MudSelectItem Value="@("KPI")">KPI</MudSelectItem>
-                    <MudSelectItem Value="@("HR")">HR</MudSelectItem>
-                </MudSelect>
-
                 @if (!IsEdit)
                 {
                     <MudTextField @bind-Value="_model.Code" Label="Code" Variant="Variant.Outlined" For="@(() => _model.Code)" />
@@ -31,17 +30,14 @@
 
                 <MudSelect T="long?" @bind-Value="_model.ParentId" Label="Parent Category" Variant="Variant.Outlined" Clearable="true">
                     <MudSelectItem T="long?" Value="null">None (Root)</MudSelectItem>
-
-                    
                     @foreach (var p in _parents.Where(x => (!IsEdit || x.Id != Category?.Id) && x.IsActive))
                     {
-                        <MudSelectItem T="long?" Value="@p.Id">@($"{p.Code} - {p.Name}")</MudSelectItem>
+                        <MudSelectItem T="long?" Value="@p.Id">@p.Code</MudSelectItem>
                     }
                 </MudSelect>
 
                 @if (IsEdit)
                 {
-                    @* bind-Value က _model.IsActive နဲ့ တိုက်ရိုက်ချိတ်ထားရပါမယ် *@
                     <MudSwitch @bind-Value="_model.IsActive"
                                Label="@(_model.IsActive ? "Active" : "Inactive")"
                                Color="Color.Success" />
@@ -77,9 +73,7 @@
     protected override async Task OnInitializedAsync()
     {
         if (Category is not null)
-        {
             _model = Category.Adapt<CategoryFormModel>();
-        }
         await LoadParentsAsync();
     }
 
@@ -87,9 +81,7 @@
     {
         var res = await CategoryApiClient.GetLookupAsync();
         if (res.Success)
-        {
             _parents = res.Data.ToList();
-        }
     }
 
     private async Task Submit()
@@ -100,7 +92,6 @@
         _saving = true;
         try
         {
-            SuccessResponse res;
             if (IsEdit)
             {
                 var updateDto = new UpdateCategoryDto
@@ -108,35 +99,83 @@
                     Name = _model.Name,
                     Description = _model.Description,
                     ParentId = _model.ParentId,
-                    IsActive = _model.IsActive 
+                    IsActive = _model.IsActive
                 };
-                res = await CategoryApiClient.UpdateAsync(Category!.Id, updateDto);
+                var response = await CategoryApiClient.UpdateAsync(Category!.Id, updateDto);
+                if (response.Success)
+                {
+                    LookupState.ClearCategoryCache();
+                    Snackbar.Add(CategoryMsg.Updated, Severity.Success);
+                    _mudDialog?.Close(DialogResult.Ok(true));
+                }
+                else
+                {
+                    Snackbar.Add(response.Message ?? "Update failed", Severity.Error);
+                }
             }
             else
             {
                 var createDto = _model.Adapt<CreateCategoryDto>();
-                var createRes = await CategoryApiClient.CreateAsync(createDto);
-                res = createRes;
+                var response = await CategoryApiClient.CreateAsync(createDto);
+                if (response.Success)
+                {
+                    LookupState.ClearCategoryCache();
+                    Snackbar.Add(CategoryMsg.Created, Severity.Success);
+                    _mudDialog?.Close(DialogResult.Ok(true));
+                }
+                else
+                {
+                    Snackbar.Add(response.Message ?? "Create failed", Severity.Error);
+                }
             }
+        }
+        catch (ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.BadRequest)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Validation failed", Severity.Error);
+        }
+        catch (ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            var errorMessage = error?.Message ?? "A duplicate entry exists.";
 
-            if (res.Success)
-            {
-                Snackbar.Add("Saved successfully", MudBlazor.Severity.Success);
-                _mudDialog?.Close(DialogResult.Ok(true));
-            }
+            if (errorMessage.Contains("Code", StringComparison.OrdinalIgnoreCase))
+                _serverErrors[nameof(_model.Code)] = errorMessage;
+            else if (errorMessage.Contains("Name", StringComparison.OrdinalIgnoreCase))
+                _serverErrors[nameof(_model.Name)] = errorMessage;
+            else
+                _serverErrors["Name"] = errorMessage;
+
+            await _form!.Validate();
         }
         finally { _saving = false; }
     }
 
     private void Cancel() => _mudDialog?.Cancel();
+
     private async Task<IEnumerable<string>> ValidateField(object m, string p)
     {
-        var result = IsEdit
-            ? await _updateValidator.ValidateAsync(ValidationContext<UpdateCategoryDto>.CreateWithOptions((UpdateCategoryDto)m.Adapt<UpdateCategoryDto>(), x => x.IncludeProperties(p)))
-            : await _createValidator.ValidateAsync(ValidationContext<CreateCategoryDto>.CreateWithOptions((CreateCategoryDto)m.Adapt<CreateCategoryDto>(), x => x.IncludeProperties(p)));
+        IEnumerable<string> fluentErrors;
 
-        return result.Errors.Select(e => e.ErrorMessage);
+        if (IsEdit)
+        {
+            var fn = _updateValidator.ValidateMappedValue<CategoryFormModel, UpdateCategoryDto>(_model, _serverErrors);
+            fluentErrors = await fn(m, p);
+        }
+        else
+        {
+            var fn = _createValidator.ValidateMappedValue<CategoryFormModel, CreateCategoryDto>(_model, _serverErrors);
+            fluentErrors = await fn(m, p);
+        }
+
+        var errorList = fluentErrors.ToList();
+
+        if (_serverErrors.TryGetValue(p, out var serverError))
+            errorList.Add(serverError);
+
+        return errorList;
     }
+
     private bool HasChanged()
     {
         if (!IsEdit) return true;
@@ -146,5 +185,5 @@
                _model.Description != Category.Description ||
                _model.IsActive != Category.IsActive ||
                _model.ParentId != Category.ParentId;
-    } // Simplified for brevity
+    }
 }

@@ -19,13 +19,17 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.Property(e => e.PublicId).IsRequired();
             entity.HasIndex(e => e.PublicId).IsUnique().HasFilter("[IsDeleted] = 0");
 
-            entity.HasIndex(e => new { e.Name, e.Year }).IsUnique().HasFilter("[IsDeleted] = 0");
+            entity.HasIndex(e => new { e.Name, e.YearLabel }).IsUnique().HasFilter("[IsDeleted] = 0");
 
             entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
             entity.Property(e => e.AppraisalType).HasMaxLength(20).IsRequired();
+            entity.Property(e => e.CalendarType).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.YearLabel).HasMaxLength(50).IsRequired();
 
-            entity.Property(e => e.StartDate).IsRequired();
-            entity.Property(e => e.EndDate).IsRequired();
+            entity.Property(e => e.EvaluationStartDate).IsRequired();
+            entity.Property(e => e.EvaluationEndDate).IsRequired();
+            entity.Property(e => e.WindowStartDate).IsRequired();
+            entity.Property(e => e.WindowEndDate).IsRequired();
 
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.IsLocked).HasDefaultValue(false);
@@ -45,6 +49,11 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.Property(e => e.ManagerReviewDeadline);
 
             entity.Property(e => e.FinalClosureDate);
+
+            entity.HasMany(e => e.EmployeeKPIs)
+                  .WithOne(e => e.Cycle)
+                  .HasForeignKey(e => e.CycleId)
+                  .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

@@ -179,8 +179,7 @@
             return true;
 
         return x.Code.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
-          || x.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
-          || (x.Description?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false);
+          || x.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
     }
 
     // ── Data ──────────────────────────────────────────────────────────────────
@@ -322,9 +321,12 @@
           .ToDictionary(x => x.Id, x => x.Index);
     }
 
-    private void OnStatusFilterChanged(bool value)
+    private async Task OnStatusFilterChanged(bool value)
     {
         _statusFilter = value;
+        _loading = true;
+        await Task.Yield();
         ApplyFiltersAndSort();
+        _loading = false;
     }
 }

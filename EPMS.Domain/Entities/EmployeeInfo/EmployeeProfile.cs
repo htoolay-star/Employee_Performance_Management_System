@@ -62,6 +62,9 @@ namespace EPMS.Domain.Entities.EmployeeInfo
         public virtual EmployeePayrollInfo? PayrollInfo { get; private set; }
         public virtual EmployeeFamilyInfo? FamilyInfo { get; private set; }
 
+        private readonly List<Performance.EmployeeKPI> _employeeKPIs = new();
+        public virtual IReadOnlyCollection<Performance.EmployeeKPI> EmployeeKPIs => _employeeKPIs.AsReadOnly();
+
         public void UpdateDemographics(string? gender, DateOnly? dateOfBirth, string? nationality)
         {
             Gender = gender?.Trim();

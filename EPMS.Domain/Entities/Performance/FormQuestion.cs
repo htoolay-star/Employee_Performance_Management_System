@@ -1,10 +1,5 @@
 ﻿using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Shared;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
@@ -44,9 +39,6 @@ namespace EPMS.Domain.Entities.Performance
 
         public byte[] Version { get; private set; } = Array.Empty<byte>();
 
-        private readonly List<Tag> _tags = new();
-        public virtual IReadOnlyCollection<Tag> Tags => _tags.AsReadOnly();
-
         public virtual FormTemplate Template { get; private set; } = null!;
         public virtual Category? Category { get; private set; }
         public virtual QuestionRatingScale? RatingScale { get; private set; }
@@ -70,26 +62,6 @@ namespace EPMS.Domain.Entities.Performance
         {
             HasYesNo = hasYesNo;
             HasComment = hasComment;
-        }
-
-        public void AddTag(Shared.Tag tag)
-        {
-            ArgumentNullException.ThrowIfNull(tag);
-
-            if (!_tags.Contains(tag))
-            {
-                _tags.Add(tag);
-            }
-        }
-
-        public void RemoveTag(Shared.Tag tag)
-        {
-            ArgumentNullException.ThrowIfNull(tag);
-
-            if (_tags.Contains(tag))
-            {
-                _tags.Remove(tag);
-            }
         }
     }
 }

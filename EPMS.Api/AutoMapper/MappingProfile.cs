@@ -10,7 +10,6 @@ using EPMS.Shared.DTOs.CategoryDTOs;
 using EPMS.Shared.DTOs.DepartmentDTOs;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using EPMS.Shared.DTOs.LevelDTOs;
-using EPMS.Shared.DTOs.TagDTOs;
 using EPMS.Shared.DTOs.PositionDTOs;
 using EPMS.Shared.DTOs.TeamDTOs;
 using EPMS.Shared.DTOs.PerformanceDTOs.RatingScaleDTOs;
@@ -40,7 +39,6 @@ public class MappingProfile : Profile
 
         // Shared Entities
         CreateMap<Category, CategoryDto>();
-        CreateMap<Tag, TagDto>();
 
         // EmployeeInfo Entities
         CreateMap<EmployeeProfile, EmployeeProfileDto>();
@@ -88,8 +86,7 @@ public class MappingProfile : Profile
 
         CreateMap<FormQuestion, FormQuestionDto>()
             .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category != null ? src.Category.Name : null))
-            .ForMember(dest => dest.RatingScaleName, opt => opt.MapFrom(src => src.RatingScale != null ? src.RatingScale.Name : null))
-            .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.Tags.Select(t => t.Name).ToList()));
+            .ForMember(dest => dest.RatingScaleName, opt => opt.MapFrom(src => src.RatingScale != null ? src.RatingScale.Name : null));
 
         CreateMap<ContinuousFeedback, ContinuousFeedbackDto>()
             .ForMember(dest => dest.EmployeeName, opt => opt.MapFrom(src => src.Employee != null ? src.Employee.StaffName : string.Empty))

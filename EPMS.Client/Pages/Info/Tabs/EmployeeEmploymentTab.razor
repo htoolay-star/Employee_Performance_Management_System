@@ -100,7 +100,7 @@ else
                     @if (!_editMode)
                     {
                         <MudText Typo="Typo.caption" Class="mud-text-secondary">Date of Appointment</MudText>
-                        <MudText Typo="Typo.body1">@(_employment.DateOfAppointment?.ToString("yyyy-MM-dd") ?? "-")</MudText>
+                        <MudText Typo="Typo.body1">@(_employment.DateOfAppointment?.ToString("dd/MM/yyyy") ?? "-")</MudText>
                     }
                     else
                     {
@@ -111,7 +111,7 @@ else
                     @if (!_editMode)
                     {
                         <MudText Typo="Typo.caption" Class="mud-text-secondary">Date of Confirmation</MudText>
-                        <MudText Typo="Typo.body1">@(_employment.DateOfConfirmation?.ToString("yyyy-MM-dd") ?? "-")</MudText>
+                        <MudText Typo="Typo.body1">@(_employment.DateOfConfirmation?.ToString("dd/MM/yyyy") ?? "-")</MudText>
                     }
                     else
                     {
@@ -122,7 +122,7 @@ else
                     @if (!_editMode)
                     {
                         <MudText Typo="Typo.caption" Class="mud-text-secondary">Date of Promotion</MudText>
-                        <MudText Typo="Typo.body1">@(_employment.DateOfPromotion?.ToString("yyyy-MM-dd") ?? "-")</MudText>
+                        <MudText Typo="Typo.body1">@(_employment.DateOfPromotion?.ToString("dd/MM/yyyy") ?? "-")</MudText>
                     }
                     else
                     {
