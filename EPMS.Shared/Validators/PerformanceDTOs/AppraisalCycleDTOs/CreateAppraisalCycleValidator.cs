@@ -45,7 +45,10 @@ public class CreateAppraisalCycleValidator : AbstractValidator<CreateAppraisalCy
                 var yearStart = upperCal == AppraisalConstants.CalendarTypes.FiscalYear
                     ? new DateOnly(year, 4, 1)
                     : new DateOnly(year, 1, 1);
-                return startDate.Value >= yearStart;
+                var yearEnd = upperCal == AppraisalConstants.CalendarTypes.FiscalYear
+                    ? new DateOnly(year + 1, 3, 31)
+                    : new DateOnly(year, 12, 31);
+                return startDate.Value >= yearStart && startDate.Value <= yearEnd;
             })
             .When(x => x.EvaluationStartDate.HasValue && !string.IsNullOrEmpty(x.CalendarType) && !string.IsNullOrEmpty(x.YearLabel))
             .WithMessage(x =>
@@ -55,8 +58,11 @@ public class CreateAppraisalCycleValidator : AbstractValidator<CreateAppraisalCy
                 var yearStart = upperCal == AppraisalConstants.CalendarTypes.FiscalYear
                     ? new DateOnly(year, 4, 1)
                     : new DateOnly(year, 1, 1);
-                return string.Format(PerformanceValidationMessages.AppraisalCycle.EvaluationStartDateBeforeYearRange,
-                    yearStart, x.YearLabel);
+                var yearEnd = upperCal == AppraisalConstants.CalendarTypes.FiscalYear
+                    ? new DateOnly(year + 1, 3, 31)
+                    : new DateOnly(year, 12, 31);
+                return string.Format(PerformanceValidationMessages.AppraisalCycle.EvaluationDateOutsideYearRange,
+                    yearStart, yearEnd, x.YearLabel);
             });
 
         RuleFor(x => x.EvaluationEndDate)
@@ -107,21 +113,27 @@ public class CreateAppraisalCycleValidator : AbstractValidator<CreateAppraisalCy
                 var upperCal = dto.CalendarType.Trim().ToUpperInvariant();
                 if (!int.TryParse(dto.YearLabel[..Math.Min(4, dto.YearLabel.Length)], out var year))
                     return true;
+                var yearStart = upperCal == AppraisalConstants.CalendarTypes.FiscalYear
+                    ? new DateOnly(year, 4, 1)
+                    : new DateOnly(year, 1, 1);
                 var yearEnd = upperCal == AppraisalConstants.CalendarTypes.FiscalYear
                     ? new DateOnly(year + 1, 3, 31)
                     : new DateOnly(year, 12, 31);
-                return endDate.Value <= yearEnd;
+                return endDate.Value <= yearEnd && endDate.Value >= yearStart;
             })
             .When(x => x.EvaluationEndDate.HasValue && !string.IsNullOrEmpty(x.CalendarType) && !string.IsNullOrEmpty(x.YearLabel))
             .WithMessage(x =>
             {
                 var upperCal = x.CalendarType.Trim().ToUpperInvariant();
                 _ = int.TryParse(x.YearLabel[..Math.Min(4, x.YearLabel.Length)], out var year);
+                var yearStart = upperCal == AppraisalConstants.CalendarTypes.FiscalYear
+                    ? new DateOnly(year, 4, 1)
+                    : new DateOnly(year, 1, 1);
                 var yearEnd = upperCal == AppraisalConstants.CalendarTypes.FiscalYear
                     ? new DateOnly(year + 1, 3, 31)
                     : new DateOnly(year, 12, 31);
-                return string.Format(PerformanceValidationMessages.AppraisalCycle.EvaluationEndDateAfterYearRange,
-                    yearEnd, x.YearLabel);
+                return string.Format(PerformanceValidationMessages.AppraisalCycle.EvaluationDateOutsideYearRange,
+                    yearStart, yearEnd, x.YearLabel);
             });
 
         RuleFor(x => x.WindowStartDate)

@@ -90,8 +90,7 @@ namespace EPMS.Shared.Validators.ValidationMessages
             public const string CalendarTypeInvalid = "Calendar type must be one of: Standard Calendar, Fiscal Year Calendar.";
             public const string EvaluationPeriodExceedsMax = "Evaluation period ({0} days) exceeds the maximum of {1} days allowed for {2} appraisal.";
             public const string EvaluationPeriodBelowMinimum = "Evaluation period ({0} days) is below the minimum of {1} days required for {2} appraisal.";
-            public const string EvaluationStartDateBeforeYearRange = "Evaluation start date must be on or after {0:dd/MM/yyyy} for year '{1}'.";
-            public const string EvaluationEndDateAfterYearRange = "Evaluation end date must be on or before {0:dd/MM/yyyy} for year '{1}'.";
+            public const string EvaluationDateOutsideYearRange = "Evaluation date must be within {0:dd/MM/yyyy} to {1:dd/MM/yyyy} for year '{2}'.";
         }
 
         public static class KPIMaster

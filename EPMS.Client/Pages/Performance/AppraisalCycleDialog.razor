@@ -369,6 +369,8 @@
 
     private void AutoGenerateName()
     {
+        if (IsEdit) return;
+
         var appType = _model.AppraisalType?.Trim();
         var calType = _model.CalendarType?.Trim();
         var year = _model.YearLabel?.Trim();
