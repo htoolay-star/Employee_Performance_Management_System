@@ -9,10 +9,6 @@ public class CreateEmployeeFamilyInfoValidator : AbstractValidator<CreateEmploye
 {
     public CreateEmployeeFamilyInfoValidator()
     {
-        RuleFor(x => x.EmployeeId)
-            .GreaterThan(0)
-            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.EmployeeIdInvalid);
-
         RuleFor(x => x.MaritalStatus)
             .Must(m => string.IsNullOrEmpty(m) || MaritalStatuses.All.Contains(m))
             .WithMessage(EmployeeInfoValidationMessages.EmployeeFamilyInfo.MaritalStatusInvalid);

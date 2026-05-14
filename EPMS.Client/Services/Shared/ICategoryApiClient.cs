@@ -2,7 +2,7 @@
 using EPMS.Shared.DTOs.Common;
 using Refit;
 
-namespace EPMS.Client.Services
+namespace EPMS.Client.Services.Shared
 {
     public interface ICategoryApiClient
     {

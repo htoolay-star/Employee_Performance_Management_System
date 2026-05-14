@@ -9,10 +9,6 @@ public class CreateEmployeeEmploymentValidator : AbstractValidator<CreateEmploye
 {
     public CreateEmployeeEmploymentValidator()
     {
-        RuleFor(x => x.EmployeeId)
-            .GreaterThan(0)
-            .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.EmployeeIdInvalid);
-
         RuleFor(x => x.DepartmentId)
             .GreaterThan(0)
             .WithMessage(EmployeeInfoValidationMessages.EmployeeEmployment.DepartmentIdInvalid);

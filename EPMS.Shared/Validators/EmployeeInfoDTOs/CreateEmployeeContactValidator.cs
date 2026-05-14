@@ -9,9 +9,6 @@ public class CreateEmployeeContactValidator : AbstractValidator<CreateEmployeeCo
 {
     public CreateEmployeeContactValidator()
     {
-        RuleFor(x => x.EmployeeId)
-            .ApplyEmployeeIdRules();
-
         RuleFor(x => x.ContactAddress)
             .ApplyAddressRules()
             .WithMessage(EmployeeInfoValidationMessages.EmployeeContact.ContactAddressMaxLength);
