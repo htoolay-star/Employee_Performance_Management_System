@@ -1,6 +1,8 @@
 using EPMS.Api.Extensions;
 using EPMS.Api.Mapster;
 using EPMS.Domain.Contracts;
+using EPMS.Api.Jobs;
+using Hangfire;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +14,14 @@ builder.Services
     .AddApplicationServices()
     .AddJwtAuthentication(builder.Configuration)
     .AddWebApi();
+
+builder.Services.AddScoped<EmployeeImportJob>();
+builder.Services.AddHangfire(cfg => cfg
+    .UseSqlServerStorage(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddHangfireServer(options =>
+{
+    options.WorkerCount = 1;
+});
 
 builder.Services.AddCors(options =>
 {
@@ -37,6 +47,12 @@ if (app.Environment.IsDevelopment())
 app.UseCors("BlazorPolicy");
 
 app.UseHttpsRedirection();
+
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    Authorization = [new EPMS.Api.Middlewares.HangfireDashboardAuthorizationFilter()]
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

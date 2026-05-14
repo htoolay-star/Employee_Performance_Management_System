@@ -1,12 +1,16 @@
 using EPMS.Api.Controllers.Common;
+using EPMS.Api.Jobs;
 using EPMS.Domain.Interface.IService.App;
 using EPMS.Domain.Interface.IService.Info;
 using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using EPMS.Shared.Enums;
+using Hangfire;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
 
 namespace EPMS.Api.Controllers.Info;
 
@@ -145,17 +149,38 @@ public class EmployeeProfilesController : ApiControllerBase
     }
 
     [HttpPost("import")]
-    public async Task<ActionResult<SuccessResponse<ImportResult>>> Import(IFormFile file)
+    public async Task<ActionResult<SuccessResponse<string>>> Import(IFormFile file)
     {
         if (file == null || file.Length == 0)
-            return BadRequest(SuccessResponse<ImportResult>.Fail("No file uploaded.", ErrorType.Validation));
+            return BadRequest(SuccessResponse<string>.Fail("No file uploaded.", ErrorType.Validation));
 
-        using var stream = file.OpenReadStream();
-        var importResult = await _excelService.ImportAsync<EmployeeFullImportRow>(stream);
-        if (!importResult.Success || importResult.Data == null)
-            return BadRequest(importResult);
+        using var ms = new MemoryStream();
+        await file.CopyToAsync(ms);
+        var bytes = ms.ToArray();
 
-        var result = await _profileService.ImportFullEmployeesAsync(importResult.Data.ToList());
-        return HandleResult(result);
+        var jobId = BackgroundJob.Enqueue<EmployeeImportJob>(
+            job => job.ImportAsync(bytes, file.FileName, null!));
+
+        return Ok(SuccessResponse<string>.Ok(jobId, "Import queued."));
+    }
+
+    [HttpGet("import-status/{jobId}")]
+    public async Task<ActionResult<SuccessResponse<ImportResult>>> GetImportStatus(string jobId)
+    {
+        var cache = HttpContext.RequestServices.GetRequiredService<IDistributedCache>();
+        var cached = await cache.GetAsync($"import:{jobId}");
+
+        if (cached == null)
+        {
+            var monitor = HttpContext.RequestServices.GetRequiredService<Hangfire.Storage.IMonitoringApi>();
+            var job = monitor.JobDetails(jobId);
+            if (job == null)
+                return Ok(SuccessResponse<ImportResult>.Fail("Import job not found.", ErrorType.NotFound));
+            return Ok(SuccessResponse<ImportResult>.Ok(null, "Import is processing..."));
+        }
+
+        var result = JsonSerializer.Deserialize<ImportResult>(cached);
+        await cache.RemoveAsync($"import:{jobId}");
+        return Ok(SuccessResponse<ImportResult>.Ok(result, "Import completed."));
     }
 }

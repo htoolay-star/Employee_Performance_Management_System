@@ -22,6 +22,7 @@ namespace EPMS.Domain.Data.Configurations.Performance
 
             entity.Property(e => e.KPIName).HasMaxLength(250).IsRequired();
             entity.Property(e => e.KPIId);
+            entity.Property(e => e.EmployeeKPIId);
             entity.Property(e => e.CategoryName).HasMaxLength(100);
             entity.Property(e => e.TargetValue).HasMaxLength(100);
             entity.Property(e => e.ActualValue).HasMaxLength(100);

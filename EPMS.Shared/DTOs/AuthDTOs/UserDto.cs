@@ -12,6 +12,7 @@ namespace EPMS.Shared.DTOs.Auth
         [JsonPropertyName("id")]
         public Guid UserGuid { get; init; }
         public string Email { get; init; } = string.Empty;
+        public string StaffName { get; init; } = string.Empty;
         public string RoleName { get; init; } = string.Empty;
         public bool IsActive { get; init; }
         public bool IsFirstLogin { get; init; }

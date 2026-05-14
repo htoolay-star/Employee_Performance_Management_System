@@ -1,40 +1,53 @@
 ﻿using EPMS.Domain.Contracts;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class AppraisalCycle : AuditableEntity , ISoftDeletable
+    public class AppraisalCycle : AuditableEntity, ISoftDeletable
     {
         private AppraisalCycle() { }
 
-        public AppraisalCycle(string name, int year, string type, DateOnly start, DateOnly end)
+        public AppraisalCycle(string name, string appraisalType, string calendarType, string yearLabel,
+                              DateOnly evalStart, DateOnly evalEnd,
+                              DateOnly windowStart, DateOnly windowEnd)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(name);
-            ArgumentException.ThrowIfNullOrWhiteSpace(type);
+            ArgumentException.ThrowIfNullOrWhiteSpace(appraisalType);
+            ArgumentException.ThrowIfNullOrWhiteSpace(calendarType);
+            ArgumentException.ThrowIfNullOrWhiteSpace(yearLabel);
 
-            if (start > end)
-                throw new ArgumentException("Cycle StartDate cannot be after EndDate.");
+            if (evalStart > evalEnd)
+                throw new ArgumentException("Evaluation StartDate cannot be after EndDate.");
+
+            if (windowStart > windowEnd)
+                throw new ArgumentException("Appraisal Window StartDate cannot be after EndDate.");
 
             Name = name.Trim();
-            AppraisalType = type.Trim().ToUpperInvariant();
-            Year = year;
-            StartDate = start;
-            EndDate = end;
+            AppraisalType = appraisalType.Trim().ToUpperInvariant();
+            CalendarType = calendarType.Trim();
+            YearLabel = yearLabel.Trim();
+
+            EvaluationStartDate = evalStart;
+            EvaluationEndDate = evalEnd;
+
+            WindowStartDate = windowStart;
+            WindowEndDate = windowEnd;
 
             IsActive = true;
             IsLocked = false;
         }
 
         public string Name { get; private set; } = string.Empty;
-        public int Year { get; private set; }
         public string AppraisalType { get; private set; } = string.Empty;
 
-        public DateOnly StartDate { get; private set; }
-        public DateOnly EndDate { get; private set; }
+        public string CalendarType { get; private set; } = string.Empty;
+        public string YearLabel { get; private set; } = string.Empty;
+
+        public DateOnly EvaluationStartDate { get; private set; }
+        public DateOnly EvaluationEndDate { get; private set; }
+
+        public DateOnly WindowStartDate { get; private set; }
+        public DateOnly WindowEndDate { get; private set; }
 
         public DateOnly? PeerReviewStartDate { get; private set; }
         public DateOnly? PeerReviewDeadline { get; private set; }
@@ -55,37 +68,16 @@ namespace EPMS.Domain.Entities.Performance
 
         public byte[] Version { get; private set; } = Array.Empty<byte>();
 
-        public void UpdatePeriod(DateOnly start, DateOnly end)
-        {
-            if (IsLocked)
-                throw new InvalidOperationException("Cannot modify period dates of a locked appraisal cycle.");
-
-            if (start > end)
-                throw new ArgumentException("Cycle StartDate cannot be after EndDate.");
-
-            StartDate = start;
-            EndDate = end;
-        }
-
-        public void UpdateDeadlines(DateOnly? selfReview, DateOnly? managerReview)
-        {
-            if (IsLocked)
-                throw new InvalidOperationException("Cannot modify deadlines of a locked appraisal cycle.");
-
-            if (selfReview.HasValue && managerReview.HasValue && selfReview.Value > managerReview.Value)
-                throw new ArgumentException("Self-review deadline cannot be after the manager review deadline.");
-
-            SelfReviewDeadline = selfReview;
-            ManagerReviewDeadline = managerReview;
-        }
+        private readonly List<EmployeeKPI> _employeeKPIs = new();
+        public virtual IReadOnlyCollection<EmployeeKPI> EmployeeKPIs => _employeeKPIs.AsReadOnly();
 
         public void ConfigureSelfReviewWindow(DateOnly start, DateOnly deadline)
         {
             if (start > deadline)
                 throw new ArgumentException("Start date cannot be after the deadline.");
 
-            if (start < StartDate || deadline > EndDate)
-                throw new ArgumentException("The self-review window strictly must fall within the overall cycle Start and End dates.");
+            if (start < WindowStartDate || deadline > WindowEndDate)
+                throw new ArgumentException("The self-review window strictly must fall within the overall Appraisal Window dates.");
 
             SelfReviewStartDate = start;
             SelfReviewDeadline = deadline;
@@ -96,8 +88,8 @@ namespace EPMS.Domain.Entities.Performance
             if (start > deadline)
                 throw new ArgumentException("Start date cannot be after the deadline.");
 
-            if (start < StartDate || deadline > EndDate)
-                throw new ArgumentException("The manager review window strictly must fall within the overall cycle Start and End dates.");
+            if (start < WindowStartDate || deadline > WindowEndDate)
+                throw new ArgumentException("The manager review window strictly must fall within the overall Appraisal Window dates.");
 
             ManagerReviewStartDate = start;
             ManagerReviewDeadline = deadline;
@@ -108,11 +100,27 @@ namespace EPMS.Domain.Entities.Performance
             if (start > deadline)
                 throw new ArgumentException("Start date cannot be after the deadline.");
 
-            if (start < StartDate || deadline > EndDate)
-                throw new ArgumentException("The peer review window strictly must fall within the overall cycle Start and End dates.");
+            if (start < WindowStartDate || deadline > WindowEndDate)
+                throw new ArgumentException("The peer review window strictly must fall within the overall Appraisal Window dates.");
 
             PeerReviewStartDate = start;
             PeerReviewDeadline = deadline;
+        }
+
+        public void Update(string name, DateOnly evalStart, DateOnly evalEnd,
+                           DateOnly windowStart, DateOnly windowEnd)
+        {
+            if (IsLocked) throw new InvalidOperationException("Cannot update a locked cycle.");
+            ArgumentException.ThrowIfNullOrWhiteSpace(name);
+            if (evalStart > evalEnd)
+                throw new ArgumentException("Evaluation start date cannot be after end date.");
+            if (windowStart > windowEnd)
+                throw new ArgumentException("Window start date cannot be after end date.");
+            Name = name.Trim();
+            EvaluationStartDate = evalStart;
+            EvaluationEndDate = evalEnd;
+            WindowStartDate = windowStart;
+            WindowEndDate = windowEnd;
         }
 
         public void LockCycle() => IsLocked = true;

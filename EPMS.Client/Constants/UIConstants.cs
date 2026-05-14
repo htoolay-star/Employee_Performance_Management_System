@@ -83,6 +83,23 @@
             public const string NoDataFound = "Try adjusting your search or add a new team.";
         }
 
+        public static class Category
+        {
+            public const string PageTitle = "Category Management";
+            public const string SearchPlaceholder = "Search by code or name...";
+            public const string AddButton = "Add Category";
+            public const string CreateDialogTitle = "Create Category";
+            public const string EditDialogTitle = "Edit Category";
+            public const string DeleteDialogTitle = "Delete Category";
+            public const string CodeLabel = "Category Code";
+            public const string NameLabel = "Category Name";
+            public const string ColumnCode = "Category Code";
+            public const string ColumnName = "Category Name";
+            public const string SelectParent = "Parent Category";
+            public const string NoneRoot = "None (Root)";
+            public const string NoDataFound = "Try adjusting your search or add a new category.";
+        }
+
         public static class Department
         {
             public const string PageTitle = "Department Management";

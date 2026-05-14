@@ -46,5 +46,8 @@ public interface IEmployeeProfileApiClient
 
     [Multipart]
     [Post("/api/employee-profiles/import")]
-    Task<SuccessResponse<ImportResult>> ImportAsync(MultipartFormDataContent content);
+    Task<SuccessResponse<string>> ImportAsync(MultipartFormDataContent content);
+
+    [Get("/api/employee-profiles/import-status/{jobId}")]
+    Task<SuccessResponse<ImportResult>> GetImportStatusAsync(string jobId);
 }

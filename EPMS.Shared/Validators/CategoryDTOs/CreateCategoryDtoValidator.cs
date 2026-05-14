@@ -7,7 +7,6 @@ public class CreateCategoryDtoValidator : AbstractValidator<CreateCategoryDto>
 {
     public CreateCategoryDtoValidator()
     {
-        RuleFor(x => x.Module).ApplyCategoryModuleRules();
         RuleFor(x => x.Code).ApplyCategoryCodeRules();
         RuleFor(x => x.Name).ApplyCategoryNameRules();
         RuleFor(x => x.Description).ApplyCategoryOptionalDescriptionRules();

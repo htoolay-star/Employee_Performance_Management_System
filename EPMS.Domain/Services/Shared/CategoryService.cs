@@ -2,13 +2,12 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Shared;
 using EPMS.Domain.Interface.Irepo.Shared;
+using EPMS.Domain.Interface.IService.App;
 using EPMS.Domain.Interface.IService.Shared;
 using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.CategoryDTOs;
 using EPMS.Shared.DTOs.Common;
-using EPMS.Shared.DTOs.LevelDTOs;
 using EPMS.Shared.Enums;
-using Microsoft.EntityFrameworkCore;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 namespace EPMS.Domain.Services.Shared;
@@ -16,25 +15,24 @@ namespace EPMS.Domain.Services.Shared;
 public class CategoryService : ICategoryService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICacheService _cacheService;
     private readonly IMapper _mapper;
 
-    public CategoryService(IUnitOfWork unitOfWork, IMapper mapper)
+    public CategoryService(IUnitOfWork unitOfWork, ICacheService cacheService, IMapper mapper)
     {
         _unitOfWork = unitOfWork;
+        _cacheService = cacheService;
         _mapper = mapper;
     }
     public async Task<SuccessResponse<IEnumerable<LookUpDto>>> GetLookupAsync()
     {
-        var tuples = await _unitOfWork.Shared.Categories.GetLookupAsync();
+        var dtos = await _cacheService.GetOrCreateAsync(
+            CacheKeys.Shared.CategoryLookups(),
+            async () => await _unitOfWork.Shared.Categories.GetLookupAsync(),
+            TimeSpan.FromHours(12)
+        );
 
-        var dtos = tuples.Select(t => new LookUpDto
-        {
-            Id = t.Id,
-            Code = t.Code,
-            IsActive = t.IsActive
-        }).ToList();
-
-        return SuccessResponse<IEnumerable<LookUpDto>>.Ok(dtos, CategoryMsg.RetrievedAll);
+        return SuccessResponse<IEnumerable<LookUpDto>>.Ok(dtos ?? [], CategoryMsg.RetrievedAll);
     }
     
     public async Task<SuccessResponse<IEnumerable<CategoryDto>>> GetAllCategoriesAsync()
@@ -46,11 +44,9 @@ public class CategoryService : ICategoryService
             Id = x.Id,
             Code = x.Code,
             Name = x.Name,
-            Module = x.Module,
             Description = x.Description,
             ParentId = x.ParentId,
             IsActive = x.IsActive,
-            // Parent ရှိရင် Parent ရဲ့ Name ကို ထည့်ပေးပါ
             ParentName = categories.FirstOrDefault(p => p.Id == x.ParentId)?.Name
         });
         return SuccessResponse<IEnumerable<CategoryDto>>.Ok(dtos, CategoryMsg.RetrievedAll);
@@ -69,14 +65,13 @@ public class CategoryService : ICategoryService
 
     public async Task<SuccessResponse<long>> CreateCategoryAsync(CreateCategoryDto dto)
     {
-        var normalizedModule = dto.Module.Trim().ToUpperInvariant();
         var normalizedCode = dto.Code.Trim().ToUpperInvariant();
 
-        if (await _unitOfWork.Shared.Categories.ExistsByCodeAsync(normalizedCode, normalizedModule))
-            return SuccessResponse<long>.Fail($"Category with code '{normalizedCode}' already exists in module '{normalizedModule}'.", ErrorType.Conflict);
+        if (await _unitOfWork.Shared.Categories.ExistsByCodeAsync(normalizedCode))
+            return SuccessResponse<long>.Fail($"Category with code '{normalizedCode}' already exists.", ErrorType.Conflict);
 
-        if (await _unitOfWork.Shared.Categories.ExistsByNameAsync(dto.Name, normalizedModule))
-            return SuccessResponse<long>.Fail($"Category with name '{dto.Name}' already exists in module '{normalizedModule}'.", ErrorType.Conflict);
+        if (await _unitOfWork.Shared.Categories.ExistsByNameAsync(dto.Name))
+            return SuccessResponse<long>.Fail($"Category with name '{dto.Name}' already exists.", ErrorType.Conflict);
 
         // Validate parent exists if specified
         if (dto.ParentId.HasValue)
@@ -86,9 +81,10 @@ public class CategoryService : ICategoryService
                 return SuccessResponse<long>.Fail($"Parent category with ID '{dto.ParentId.Value}' was not found.", ErrorType.NotFound);
         }
 
-        var category = new Category(dto.Module, dto.Code, dto.Name, dto.Description, dto.ParentId);
+        var category = new Category(dto.Code, dto.Name, dto.Description, dto.ParentId);
         _unitOfWork.Shared.Categories.Add(category);
         await _unitOfWork.CompleteAsync();
+        await _cacheService.RemoveAsync(CacheKeys.Shared.CategoryLookups());
         return SuccessResponse<long>.Ok(category.Id, CategoryMsg.Created);
     }
 
@@ -99,11 +95,9 @@ public class CategoryService : ICategoryService
         if (category == null)
             return SuccessResponse.Fail(CategoryMsg.NotFound(id), ErrorType.NotFound);
 
-        var normalizedModule = category.Module;
-
         // Check for duplicate name
-        if (category.Name != dto.Name && await _unitOfWork.Shared.Categories.ExistsByNameAsync(dto.Name, normalizedModule, id))
-            return SuccessResponse.Fail($"Another category with name '{dto.Name}' already exists in module '{normalizedModule}'.", ErrorType.Conflict);
+        if (category.Name != dto.Name && await _unitOfWork.Shared.Categories.ExistsByNameAsync(dto.Name, id))
+            return SuccessResponse.Fail($"Another category with name '{dto.Name}' already exists.", ErrorType.Conflict);
 
         // Validate new parent if changing
         if (category.ParentId != dto.ParentId)
@@ -126,6 +120,7 @@ public class CategoryService : ICategoryService
         else category.Deactivate();
 
         await _unitOfWork.CompleteAsync();
+        await _cacheService.RemoveAsync(CacheKeys.Shared.CategoryLookups());
         return SuccessResponse.Ok(CategoryMsg.Updated);
     }
 
@@ -142,6 +137,7 @@ public class CategoryService : ICategoryService
 
         _unitOfWork.Shared.Categories.Delete(category);
         await _unitOfWork.CompleteAsync();
+        await _cacheService.RemoveAsync(CacheKeys.Shared.CategoryLookups());
         return SuccessResponse.Ok(CategoryMsg.Deleted);
     }
 }

@@ -22,6 +22,7 @@ namespace EPMS.Domain.Repository.Auth
         {
             var query = _dbSet
                 .Include(u => u.Role)
+                .Include(u => u.Profile)
                 .Where(u => u.Email == email && u.IsActive);
 
             if (!trackChanges)

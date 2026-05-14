@@ -82,7 +82,10 @@
             if (result.Success && result.Data != null)
             {
                 await TokenStorage.SetTokensAsync(result.Data.Tokens.AccessToken, result.Data.Tokens.RefreshToken);
-                ((JwtAuthenticationStateProvider)AuthenticationStateProvider).MarkUserAsAuthenticated(_loginModel.Email);
+                var displayName = !string.IsNullOrWhiteSpace(result.Data.User.StaffName)
+                    ? result.Data.User.StaffName
+                    : result.Data.User.Email;
+                ((JwtAuthenticationStateProvider)AuthenticationStateProvider).MarkUserAsAuthenticated(displayName);
                 Navigation.NavigateTo("/dashboard");
                 Snackbar.Add("Login successful!", Severity.Success);
             }

@@ -11,23 +11,29 @@ public class CategoryRepository : GenericRepository<Category>, ICategoryReposito
 {
     public CategoryRepository(AppDbContext context) : base(context) { }
 
-    public async Task<IEnumerable<(long Id, string Code, bool IsActive)>> GetLookupAsync()
+    public async Task<IEnumerable<LookUpDto>> GetLookupAsync()
     {
         return await _dbSet
-            .Select(x => new ValueTuple<long, string, bool>(x.Id, x.Code, x.IsActive))
+            .AsNoTracking()
+            .Select(x => new LookUpDto
+            {
+                Id = x.Id,
+                Code = x.Code,
+                IsActive = x.IsActive,
+            })
             .ToListAsync();
     }        
-    public async Task<bool> ExistsByCodeAsync(string code, string module, long? excludeId = null)
+    public async Task<bool> ExistsByCodeAsync(string code, long? excludeId = null)
     {
-        var query = _dbSet.Where(c => c.Code == code && c.Module == module);
+        var query = _dbSet.Where(c => c.Code == code);
         if (excludeId.HasValue)
             query = query.Where(c => c.Id != excludeId.Value);
         return await query.AnyAsync();
     }
 
-    public async Task<bool> ExistsByNameAsync(string name, string module, long? excludeId = null)
+    public async Task<bool> ExistsByNameAsync(string name, long? excludeId = null)
     {
-        var query = _dbSet.Where(c => c.Name == name && c.Module == module);
+        var query = _dbSet.Where(c => c.Name == name);
         if (excludeId.HasValue)
             query = query.Where(c => c.Id != excludeId.Value);
         return await query.AnyAsync();

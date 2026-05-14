@@ -541,18 +541,33 @@
             var content = new MultipartFormDataContent();
             content.Add(new ByteArrayContent(_importFileBytes), "file", _importFileName ?? "import.xlsx");
 
-            var result = await EmployeeProfileApiClient.ImportAsync(content);
-
-            if (result.Success && result.Data != null)
+            var response = await EmployeeProfileApiClient.ImportAsync(content);
+            if (!response.Success || response.Data == null)
             {
-                var msg = result.Data.Errors.Count > 0
-                    ? $"{result.Data.SuccessCount} created, {result.Data.ErrorCount} errors."
-                    : $"{result.Data.SuccessCount} employees imported successfully.";
-                Snackbar.Add(msg, result.Data.ErrorCount > 0 ? Severity.Warning : Severity.Success);
+                Snackbar.Add(response?.Message ?? "Import failed to queue.", Severity.Error);
+                return;
             }
-            else
+
+            var jobId = response.Data;
+
+            while (true)
             {
-                Snackbar.Add(result.Message ?? "Import failed.", Severity.Error);
+                await Task.Delay(3000);
+                var status = await EmployeeProfileApiClient.GetImportStatusAsync(jobId);
+                if (status.Success && status.Data != null)
+                {
+                    var msg = status.Data.Errors.Count > 0
+                        ? $"{status.Data.SuccessCount} created, {status.Data.ErrorCount} errors."
+                        : $"{status.Data.SuccessCount} employees imported successfully.";
+                    Snackbar.Add(msg, status.Data.ErrorCount > 0 ? Severity.Warning : Severity.Success);
+                    await RefreshDataAsync();
+                    break;
+                }
+                if (!status.Success)
+                {
+                    Snackbar.Add(status.Message ?? "Import failed.", Severity.Error);
+                    break;
+                }
             }
         }
         catch (Exception ex)

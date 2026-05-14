@@ -163,17 +163,6 @@ public static class ServiceResponseMessages
         public static string NotFound(long id) => $"Category with ID '{id}' was not found.";
     }
 
-    public static class TagMsg
-    {
-        public const string Created = "Tag created successfully.";
-        public const string Updated = "Tag updated successfully.";
-        public const string Deleted = "Tag deleted successfully.";
-        public const string Retrieved = "Tag retrieved successfully.";
-        public const string RetrievedAll = "Tags retrieved successfully.";
-        public const string DuplicateName = "Tag with name '{0}' already exists.";
-        public static string NotFound(long id) => $"Tag with ID '{id}' was not found.";
-    }
-
     public static class RatingScaleMsg
     {
         public const string Created = "Rating scale created successfully.";

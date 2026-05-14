@@ -5,13 +5,6 @@ namespace EPMS.Shared.Validators;
 
 public static class SharedValidationExtensions
 {
-    public static IRuleBuilderOptions<T, string> ApplyCategoryModuleRules<T>(this IRuleBuilder<T, string> ruleBuilder)
-    {
-        return ruleBuilder
-            .NotEmpty().WithMessage(SharedValidationMessages.Category.ModuleRequired)
-            .MaximumLength(50).WithMessage(SharedValidationMessages.Category.ModuleMaxLength);
-    }
-
     public static IRuleBuilderOptions<T, string> ApplyCategoryCodeRules<T>(this IRuleBuilder<T, string> ruleBuilder)
     {
         return ruleBuilder
@@ -38,20 +31,6 @@ public static class SharedValidationExtensions
         return ruleBuilder
             .Must(pid => !pid.HasValue || pid.Value > 0)
             .WithMessage(SharedValidationMessages.Category.ParentIdInvalid);
-    }
-
-    public static IRuleBuilderOptions<T, string> ApplyTagNameRules<T>(this IRuleBuilder<T, string> ruleBuilder)
-    {
-        return ruleBuilder
-            .NotEmpty().WithMessage(SharedValidationMessages.Tag.NameRequired)
-            .MaximumLength(50).WithMessage(SharedValidationMessages.Tag.NameMaxLength);
-    }
-
-    public static IRuleBuilderOptions<T, string?> ApplyTagOptionalModuleRules<T>(this IRuleBuilder<T, string?> ruleBuilder)
-    {
-        return ruleBuilder
-            .Must(s => s == null || string.IsNullOrWhiteSpace(s) || s.Length <= 50)
-            .WithMessage(SharedValidationMessages.Tag.ModuleMaxLength);
     }
 
     public static IRuleBuilderOptions<T, string> ApplyEntityTypeRules<T>(this IRuleBuilder<T, string> ruleBuilder)

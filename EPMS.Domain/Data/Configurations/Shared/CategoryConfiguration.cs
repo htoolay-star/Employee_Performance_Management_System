@@ -20,13 +20,15 @@ namespace EPMS.Domain.Data.Configurations.Shared
             entity.Property(e => e.PublicId).IsRequired();
             entity.HasIndex(e => e.PublicId).IsUnique().HasFilter("[IsDeleted] = 0");
 
-            entity.HasIndex(e => new { e.Module, e.Code }).IsUnique().HasFilter("[IsDeleted] = 0");
+            entity.HasIndex(e => e.Code).IsUnique().HasFilter("[IsDeleted] = 0");
 
-            entity.Property(e => e.Module).HasMaxLength(50).IsRequired();
             entity.Property(e => e.Code).HasMaxLength(50).IsRequired();
             entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
             entity.Property(e => e.Description).HasMaxLength(250);
             entity.Property(e => e.IsActive).HasDefaultValue(true);
+
+            entity.HasIndex(e => e.Name);
+            entity.HasIndex(e => e.IsActive);
 
             entity.HasOne(e => e.Parent)
                   .WithMany(p => p.SubCategories)

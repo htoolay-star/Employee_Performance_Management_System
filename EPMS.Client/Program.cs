@@ -36,6 +36,11 @@ var jsonOptions = new JsonSerializerOptions
 
 builder.Services.AddApiClients(jsonOptions, baseUri);
 
+builder.Services.AddHttpClient("RefreshClient", client =>
+{
+    client.BaseAddress = baseUri;
+});
+
 builder.Services.Configure<JsonSerializerOptions>(options =>
 {
     options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
