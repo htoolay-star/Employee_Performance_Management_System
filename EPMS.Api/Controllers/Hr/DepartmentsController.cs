@@ -68,4 +68,10 @@ public class DepartmentsController : ApiControllerBase
         var result = await _service.DeleteAsync(id);
         return HandleResult(result);
     }
+        [HttpPost("{id:long}/restore")]
+        public async Task<ActionResult<SuccessResponse>> Restore(long id)
+        {
+            var result = await _service.RestoreAsync(id);
+            return HandleResult(result);
+        }
 }

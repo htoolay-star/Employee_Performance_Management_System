@@ -38,14 +38,12 @@ namespace EPMS.Domain.Entities.Hr
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }
+        public long? DeletedBy { get; set; }
 
         public byte[] Version { get; private set; } = Array.Empty<byte>();
 
         private readonly List<EmployeeEmployment> _members = new();
         public virtual IReadOnlyCollection<EmployeeEmployment> Members => _members.AsReadOnly();
-
-        private readonly List<TeamKPI> _teamKPIs = new();
-        public virtual IReadOnlyCollection<TeamKPI> TeamKPIs => _teamKPIs.AsReadOnly();
 
         public void Rename(string newName)
         {

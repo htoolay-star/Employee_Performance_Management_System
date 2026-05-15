@@ -329,6 +329,30 @@ public class AppraisalCycleService : IAppraisalCycleService
 
         cycle.LockCycle();
         _uow.Perf.AppraisalCycles.Update(cycle);
+
+        // Snapshot all EntityKPI assignments to history for this cycle
+        var entityKPIs = await _uow.Perf.EntityKPIs.GetAllAsync();
+        var employeeKPIs = await _uow.Perf.EmployeeKPIs.GetAllAsync();
+        var now = DateTimeOffset.UtcNow;
+
+        foreach (var kpi in entityKPIs)
+        {
+            _uow.Perf.EntityKPIHistories.Add(new EntityKPIHistory(
+                kpi.EntityType, kpi.EntityId, id,
+                kpi.KPIId, kpi.PriorityId, kpi.Weightage,
+                kpi.TargetValue, kpi.TargetUnit, now
+            ));
+        }
+
+        foreach (var kpi in employeeKPIs)
+        {
+            _uow.Perf.EmployeeKPIHistories.Add(new EmployeeKPIHistory(
+                kpi.EmployeeId, id,
+                kpi.KPIId, kpi.PriorityId, kpi.Weightage,
+                kpi.TargetValue, kpi.TargetUnit, now
+            ));
+        }
+
         await _uow.CompleteAsync();
 
         return SuccessResponse.Ok(AppraisalCycleMsg.Locked);
@@ -373,4 +397,19 @@ public class AppraisalCycleService : IAppraisalCycleService
 
         return SuccessResponse.Ok(AppraisalCycleMsg.Reactivated);
     }
+        public async Task<SuccessResponse> RestoreAsync(long id)
+        {
+            var entity = await _uow.Perf.AppraisalCycles.GetByIdAsync(id);
+            if (entity == null)
+                return SuccessResponse.Fail(AppraisalCycleMsg.NotFound(id), ErrorType.NotFound);
+            if (!entity.IsDeleted)
+                return SuccessResponse.Fail("Item is not deleted.", ErrorType.Validation);
+            entity.IsDeleted = false;
+            entity.DeletedAt = null;
+            entity.DeletedBy = null;
+            _uow.Perf.AppraisalCycles.Update(entity);
+            await _uow.CompleteAsync();
+            return SuccessResponse.Ok(AppraisalCycleMsg.Updated);
+        }
+
 }

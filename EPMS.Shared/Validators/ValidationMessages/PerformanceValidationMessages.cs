@@ -156,33 +156,12 @@ namespace EPMS.Shared.Validators.ValidationMessages
             public const string ActionItemsMaxLength = "Action items cannot exceed 2000 characters.";
         }
 
-        public static class PositionKPI
+        public static class EntityKPI
         {
-            public const string IdRequired = "Position KPI ID is required.";
-            public const string PositionIdRequired = "Position is required.";
-            public const string KPIIdRequired = "KPI is required.";
-            public const string PriorityIdRequired = "Priority is required.";
-            public const string WeightageInvalid = "Weightage must be between 0 and 100.";
-            public const string WeightageExceedsPriorityMax = "Weightage exceeds the maximum allowed for this priority level.";
-            public const string TargetValueMaxLength = "Target value cannot exceed 100 characters.";
-            public const string TargetUnitMaxLength = "Target unit cannot exceed 50 characters.";
-        }
-
-        public static class DeptKPI
-        {
-            public const string IdRequired = "Department KPI ID is required.";
-            public const string DeptIdRequired = "Department is required.";
-            public const string KPIIdRequired = "KPI is required.";
-            public const string PriorityIdRequired = "Priority is required.";
-            public const string WeightageInvalid = "Weightage must be between 0 and 100.";
-            public const string TargetValueMaxLength = "Target value cannot exceed 100 characters.";
-            public const string TargetUnitMaxLength = "Target unit cannot exceed 50 characters.";
-        }
-
-        public static class TeamKPI
-        {
-            public const string IdRequired = "Team KPI ID is required.";
-            public const string TeamIdRequired = "Team is required.";
+            public const string IdRequired = "Entity KPI ID is required.";
+            public const string EntityTypeRequired = "Entity type is required.";
+            public const string EntityTypeMaxLength = "Entity type cannot exceed 50 characters.";
+            public const string EntityIdRequired = "Entity is required.";
             public const string KPIIdRequired = "KPI is required.";
             public const string PriorityIdRequired = "Priority is required.";
             public const string WeightageInvalid = "Weightage must be between 0 and 100.";

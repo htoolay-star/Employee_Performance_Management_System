@@ -75,4 +75,10 @@ public class TeamsController : ApiControllerBase
         var result = await _teamService.DeleteAsync(id);
         return HandleResult(result);
     }
+        [HttpPost("{id:long}/restore")]
+        public async Task<ActionResult<SuccessResponse>> Restore(long id)
+        {
+            var result = await _teamService.RestoreAsync(id);
+            return HandleResult(result);
+        }
 }

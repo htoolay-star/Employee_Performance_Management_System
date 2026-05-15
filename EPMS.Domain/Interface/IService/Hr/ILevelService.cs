@@ -10,5 +10,6 @@ public interface ILevelService
     Task<SuccessResponse<LevelDto>> GetByIdAsync(long id);
     Task<SuccessResponse<long>> CreateAsync(CreateLevelDto dto);
     Task<SuccessResponse> UpdateAsync(long id, UpdateLevelDto dto);
-    Task<SuccessResponse> DeleteAsync(long id);
+    Task<SuccessResponse> RestoreAsync(long id);
+        Task<SuccessResponse> DeleteAsync(long id);
 }

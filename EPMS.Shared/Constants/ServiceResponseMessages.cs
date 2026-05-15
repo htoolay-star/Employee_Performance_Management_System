@@ -287,42 +287,28 @@ public static string AlreadyCompleted = "Meeting is already completed.";
         public static string AlreadyCancelled = "Meeting is already cancelled.";
     }
 
-    public static class PositionKPIMsg
+    public static class EntityKPIMsg
     {
-        public const string Created = "Position KPI added successfully.";
-        public const string Updated = "Position KPI updated successfully.";
-        public const string Deleted = "Position KPI removed successfully.";
-        public const string Retrieved = "Position KPI retrieved successfully.";
-        public const string RetrievedAll = "Position KPIs retrieved successfully.";
-        public const string RetrievedByPosition = "Position KPIs retrieved successfully.";
-        public static string NotFound(long id) => $"Position KPI with ID '{id}' was not found.";
-public static string DuplicateEntry = "KPI already assigned to this position.";
+        public const string Created = "KPI assignment added successfully.";
+        public const string Updated = "KPI assignment updated successfully.";
+        public const string Deleted = "KPI assignment removed successfully.";
+        public const string Retrieved = "KPI assignment retrieved successfully.";
+        public const string RetrievedAll = "KPI assignments retrieved successfully.";
+        public static string NotFound(long id) => $"KPI assignment with ID '{id}' was not found.";
+        public static string DuplicateEntry = "KPI already assigned to this entity.";
         public static string PriorityNotFound = "Priority not found.";
+        public static string InvalidEntityType = "Invalid entity type. Must be Position, Department, or Team.";
     }
 
-    public static class DeptKPIMsg
+    public static class EmployeeKPIMsg
     {
-        public const string Created = "Department KPI added successfully.";
-        public const string Updated = "Department KPI updated successfully.";
-        public const string Deleted = "Department KPI removed successfully.";
-        public const string Retrieved = "Department KPI retrieved successfully.";
-        public const string RetrievedAll = "Department KPIs retrieved successfully.";
-        public const string RetrievedByDept = "Department KPIs retrieved successfully.";
-        public static string NotFound(long id) => $"Department KPI with ID '{id}' was not found.";
-        public static string DuplicateEntry = "KPI already assigned to this department.";
-        public static string PriorityNotFound = "Priority not found.";
-    }
-
-    public static class TeamKPIMsg
-    {
-        public const string Created = "Team KPI added successfully.";
-        public const string Updated = "Team KPI updated successfully.";
-        public const string Deleted = "Team KPI removed successfully.";
-        public const string Retrieved = "Team KPI retrieved successfully.";
-        public const string RetrievedAll = "Team KPIs retrieved successfully.";
-        public const string RetrievedByTeam = "Team KPIs retrieved successfully.";
-        public static string NotFound(long id) => $"Team KPI with ID '{id}' was not found.";
-        public static string DuplicateEntry = "KPI already assigned to this team.";
+        public const string Created = "Employee KPI added successfully.";
+        public const string Updated = "Employee KPI updated successfully.";
+        public const string Deleted = "Employee KPI removed successfully.";
+        public const string Retrieved = "Employee KPI retrieved successfully.";
+        public const string RetrievedAll = "Employee KPIs retrieved successfully.";
+        public static string NotFound(long id) => $"Employee KPI with ID '{id}' was not found.";
+        public static string DuplicateEntry = "KPI already assigned to this employee for this cycle.";
         public static string PriorityNotFound = "Priority not found.";
     }
 

@@ -46,18 +46,22 @@ namespace EPMS.Domain.Data.Interceptors
             return base.SavingChangesAsync(eventData, result, cancellationToken);
         }
 
-        private static void UpdateTimestamps(DbContext context, DateTimeOffset utcNow)
+        private void UpdateTimestamps(DbContext context, DateTimeOffset utcNow)
         {
+            var userId = currentUserService.UserId;
             foreach (var entry in context.ChangeTracker.Entries<IAuditableEntity>())
             {
                 if (entry.State == EntityState.Added)
                 {
                     entry.Entity.CreatedAt = utcNow;
                     entry.Entity.UpdatedAt = utcNow;
+                    entry.Entity.CreatedBy = userId;
+                    entry.Entity.UpdatedBy = userId;
                 }
                 else if (entry.State == EntityState.Modified)
                 {
                     entry.Entity.UpdatedAt = utcNow;
+                    entry.Entity.UpdatedBy = userId;
                 }
             }
         }
@@ -79,8 +83,9 @@ namespace EPMS.Domain.Data.Interceptors
             context.Set<AuditLog>().AddRange(auditLogs);
         }
 
-        private static void ApplySoftDeleteLogic(DbContext context, DateTimeOffset utcNow)
+        private void ApplySoftDeleteLogic(DbContext context, DateTimeOffset utcNow)
         {
+            var userId = currentUserService.UserId;
             foreach (var entry in context.ChangeTracker.Entries<ISoftDeletable>())
             {
                 if (entry.State == EntityState.Deleted)
@@ -88,6 +93,7 @@ namespace EPMS.Domain.Data.Interceptors
                     entry.State = EntityState.Modified;
                     entry.Entity.IsDeleted = true;
                     entry.Entity.DeletedAt = utcNow;
+                    entry.Entity.DeletedBy = userId;
                 }
             }
         }

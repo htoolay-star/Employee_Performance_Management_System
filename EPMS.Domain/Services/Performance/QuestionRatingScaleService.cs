@@ -113,4 +113,19 @@ public class QuestionRatingScaleService : IQuestionRatingScaleService
 
         return SuccessResponse.Ok(QuestionRatingScaleMsg.Updated);
     }
+        public async Task<SuccessResponse> RestoreAsync(long id)
+        {
+            var entity = await _uow.Perf.QuestionRatingScales.GetByIdAsync(id);
+            if (entity == null)
+                return SuccessResponse.Fail(QuestionRatingScaleMsg.NotFound(id), ErrorType.NotFound);
+            if (!entity.IsDeleted)
+                return SuccessResponse.Fail("Item is not deleted.", ErrorType.Validation);
+            entity.IsDeleted = false;
+            entity.DeletedAt = null;
+            entity.DeletedBy = null;
+            _uow.Perf.QuestionRatingScales.Update(entity);
+            await _uow.CompleteAsync();
+            return SuccessResponse.Ok(QuestionRatingScaleMsg.Updated);
+        }
+
 }

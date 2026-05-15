@@ -11,4 +11,5 @@ public interface ICategoryService
     Task<SuccessResponse<long>> CreateCategoryAsync(CreateCategoryDto dto);
     Task<SuccessResponse> UpdateCategoryAsync(long id, UpdateCategoryDto dto);
     Task<SuccessResponse> DeleteCategoryAsync(long id);
+    Task<SuccessResponse> RestoreCategoryAsync(long id);
 }

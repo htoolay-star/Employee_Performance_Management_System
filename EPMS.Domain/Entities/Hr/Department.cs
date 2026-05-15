@@ -35,6 +35,7 @@ namespace EPMS.Domain.Entities.Hr
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }
+        public long? DeletedBy { get; set; }
 
         public byte[] Version { get; private set; } = Array.Empty<byte>();
 
@@ -58,9 +59,6 @@ namespace EPMS.Domain.Entities.Hr
         public void Reactivate() => IsActive = true;
         private readonly List<Team> _teams = new();
         public virtual IReadOnlyCollection<Team> Teams => _teams.AsReadOnly();
-
-        private readonly List<DeptKPI> _deptKPIs = new();
-        public virtual IReadOnlyCollection<DeptKPI> DeptKPIs => _deptKPIs.AsReadOnly();
 
         public void AddTeam(string code, string teamName)
         {

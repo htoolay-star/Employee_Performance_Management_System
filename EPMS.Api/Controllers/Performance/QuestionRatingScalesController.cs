@@ -73,4 +73,10 @@ public class QuestionRatingScalesController : ApiControllerBase
         var result = await _questionRatingScaleService.ReactivateAsync(id);
         return HandleResult(result);
     }
+        [HttpPost("{id:long}/restore")]
+        public async Task<ActionResult<SuccessResponse>> Restore(long id)
+        {
+            var result = await _questionRatingScaleService.RestoreAsync(id);
+            return HandleResult(result);
+        }
 }

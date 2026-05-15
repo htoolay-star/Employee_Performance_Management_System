@@ -53,10 +53,8 @@ namespace EPMS.Domain.Data
 
         // Performance Schema
         public DbSet<KPIMaster> KPIMasters => Set<KPIMaster>();
-        public DbSet<PositionKPI> PositionKPIs => Set<PositionKPI>();
-        public DbSet<DeptKPI> DeptKPIs => Set<DeptKPI>();
-        public DbSet<TeamKPI> TeamKPIs => Set<TeamKPI>();
-        public DbSet<PositionKPIHistory> PositionKPIHistories => Set<PositionKPIHistory>();
+        public DbSet<EntityKPI> EntityKPIs => Set<EntityKPI>();
+        public DbSet<EntityKPIHistory> EntityKPIHistories => Set<EntityKPIHistory>();
         public DbSet<KPIWeightPriority> KPIWeightPriorities => Set<KPIWeightPriority>();
         public DbSet<AppraisalCycle> AppraisalCycles => Set<AppraisalCycle>();
         public DbSet<Appraisal> Appraisals => Set<Appraisal>();
@@ -66,6 +64,7 @@ namespace EPMS.Domain.Data
         public DbSet<FormQuestion> FormQuestions => Set<FormQuestion>();
         public DbSet<EvaluationResponse> EvaluationResponses => Set<EvaluationResponse>();
         public DbSet<EmployeeKPI> EmployeeKPIs => Set<EmployeeKPI>();
+        public DbSet<EmployeeKPIHistory> EmployeeKPIHistories => Set<EmployeeKPIHistory>();
         public DbSet<ContinuousFeedback> ContinuousFeedbacks => Set<ContinuousFeedback>();
         public DbSet<OneOnOneMeeting> OneOnOneMeetings => Set<OneOnOneMeeting>();
         public DbSet<PIP> PIPs => Set<PIP>();

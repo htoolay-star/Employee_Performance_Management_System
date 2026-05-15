@@ -47,13 +47,10 @@ public static class ServiceCollectionExtensions
         services.AddSecureRefitClient<IRatingScaleApiClient>(refitSettings, baseUri);
         services.AddSecureRefitClient<IKPIWeightPriorityApiClient>(refitSettings, baseUri);
         services.AddSecureRefitClient<IQuestionRatingScaleApiClient>(refitSettings, baseUri);
-
-        // Info
-        services.AddSecureRefitClient<IEmployeeProfileApiClient>(refitSettings, baseUri);
-        services.AddSecureRefitClient<IEmployeeEmploymentApiClient>(refitSettings, baseUri);
-        services.AddSecureRefitClient<IEmployeeContactApiClient>(refitSettings, baseUri);
-        services.AddSecureRefitClient<IEmployeeFamilyInfoApiClient>(refitSettings, baseUri);
-        services.AddSecureRefitClient<IEmployeePayrollInfoApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IEntityKPIApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IKPIMasterApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IEmployeeKPIApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IRecycleBinApiClient>(refitSettings, baseUri);
 
         return services;
     }

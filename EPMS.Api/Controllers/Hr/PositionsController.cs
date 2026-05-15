@@ -90,4 +90,10 @@ public class PositionsController : ApiControllerBase
         var result = await _service.RemovePermissionFromPositionAsync(positionId, permissionId);
         return HandleResult(result);
     }
+        [HttpPost("{id:long}/restore")]
+        public async Task<ActionResult<SuccessResponse>> Restore(long id)
+        {
+            var result = await _service.RestoreAsync(id);
+            return HandleResult(result);
+        }
 }

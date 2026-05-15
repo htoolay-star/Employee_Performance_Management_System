@@ -153,4 +153,19 @@ public class TeamService : ITeamService
         await _cacheService.RemoveAsync(CacheKeys.Hr.TeamLookups());
         return SuccessResponse.Ok(TeamMsg.Deleted);
     }
+        public async Task<SuccessResponse> RestoreAsync(long id)
+        {
+            var entity = await _uow.HR.Teams.GetByIdAsync(id);
+            if (entity == null)
+                return SuccessResponse.Fail(TeamMsg.NotFound(id), ErrorType.NotFound);
+            if (!entity.IsDeleted)
+                return SuccessResponse.Fail("Item is not deleted.", ErrorType.Validation);
+            entity.IsDeleted = false;
+            entity.DeletedAt = null;
+            entity.DeletedBy = null;
+            _uow.HR.Teams.Update(entity);
+            await _uow.CompleteAsync();
+            return SuccessResponse.Ok(TeamMsg.Updated);
+        }
+
 }

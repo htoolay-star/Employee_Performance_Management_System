@@ -6,9 +6,8 @@ using EPMS.Shared.DTOs.AuthDTOs.PositionPermissionDTOs;
 using EPMS.Shared.DTOs.DepartmentDTOs;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using EPMS.Shared.DTOs.FormDTOs;
-using EPMS.Shared.DTOs.Performance.DeptKPI;
-using EPMS.Shared.DTOs.Performance.PositionKPI;
-using EPMS.Shared.DTOs.Performance.TeamKPI;
+using EPMS.Shared.DTOs.Performance.EntityKPI;
+using EPMS.Shared.DTOs.Performance.EmployeeKPI;
 using EPMS.Shared.DTOs.PerformanceDTOs.ContinuousFeedbackDTOs;
 using EPMS.Shared.DTOs.PerformanceDTOs.FormQuestionDTOs;
 using EPMS.Shared.DTOs.PerformanceDTOs.KPIMasterDTOs;
@@ -43,17 +42,12 @@ public static class MapsterConfig
             .Map(dest => dest.LeadTeamName, src => src.LeadTeam != null ? src.LeadTeam.StaffName : null);
 
         // Performance KPIs
-        TypeAdapterConfig<PositionKPI, PositionKPIDto>.NewConfig()
+        TypeAdapterConfig<EntityKPI, EntityKPIDto>.NewConfig()
             .Map(dest => dest.KPIName, src => src.KPI != null ? src.KPI.Name : string.Empty)
             .Map(dest => dest.KPICode, src => src.KPI != null ? src.KPI.Code : string.Empty)
             .Map(dest => dest.PriorityName, src => src.Priority != null ? src.Priority.LevelName : string.Empty);
 
-        TypeAdapterConfig<DeptKPI, DeptKPIDto>.NewConfig()
-            .Map(dest => dest.KPIName, src => src.KPI != null ? src.KPI.Name : string.Empty)
-            .Map(dest => dest.KPICode, src => src.KPI != null ? src.KPI.Code : string.Empty)
-            .Map(dest => dest.PriorityName, src => src.Priority != null ? src.Priority.LevelName : string.Empty);
-
-        TypeAdapterConfig<TeamKPI, TeamKPIDto>.NewConfig()
+        TypeAdapterConfig<EmployeeKPI, EmployeeKPIDto>.NewConfig()
             .Map(dest => dest.KPIName, src => src.KPI != null ? src.KPI.Name : string.Empty)
             .Map(dest => dest.KPICode, src => src.KPI != null ? src.KPI.Code : string.Empty)
             .Map(dest => dest.PriorityName, src => src.Priority != null ? src.Priority.LevelName : string.Empty);

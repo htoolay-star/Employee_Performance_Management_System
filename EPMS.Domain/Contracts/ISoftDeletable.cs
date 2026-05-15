@@ -10,5 +10,6 @@ namespace EPMS.Domain.Contracts
     {
         bool IsDeleted { get; set; }
         DateTimeOffset? DeletedAt { get; set; }
+        long? DeletedBy { get; set; }
     }
 }

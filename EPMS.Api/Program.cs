@@ -16,6 +16,7 @@ builder.Services
     .AddWebApi();
 
 builder.Services.AddScoped<EmployeeImportJob>();
+builder.Services.AddScoped<NightlyMaintenanceJob>();
 builder.Services.AddHangfire(cfg => cfg
     .UseSqlServerStorage(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddHangfireServer(options =>
@@ -62,5 +63,9 @@ using (var scope = app.Services.CreateScope())
     var seeder = scope.ServiceProvider.GetRequiredService<IDbSeeder>();
     await seeder.SeedAsync();
 }
+
+// Register recurring jobs
+RecurringJob.AddOrUpdate<NightlyMaintenanceJob>("nightly-maintenance",
+    job => job.RunAsync(), "0 0 * * *"); // daily at 12 AM
 
 app.Run();

@@ -62,6 +62,7 @@ namespace EPMS.Domain.Entities.Shared
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }
+        public long? DeletedBy { get; set; }
 
         public byte[] Version { get; private set; } = Array.Empty<byte>();
 

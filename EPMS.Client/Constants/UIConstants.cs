@@ -177,6 +177,54 @@
             public const string NoDataFound = "Try adjusting your search or add a new rating scale.";
         }
 
+        public static class EntityKPI
+        {
+            public const string PageTitle = "KPI Assignments";
+            public const string SearchPlaceholder = "Search by KPI name...";
+            public const string AddButton = "Add KPI Assignment";
+            public const string CreateDialogTitle = "Assign KPI";
+            public const string EditDialogTitle = "Edit KPI Assignment";
+            public const string DeleteDialogTitle = "Delete KPI Assignment";
+
+            public const string ColumnEntityType = "Type";
+            public const string ColumnEntity = "Entity";
+            public const string ColumnKPI = "KPI";
+            public const string ColumnPriority = "Priority";
+            public const string ColumnWeightage = "Weight";
+            public const string ColumnTarget = "Target";
+
+            public const string NoDataFound = "Select an entity type and entity to see KPI assignments.";
+        }
+
+        public static class RecycleBin
+        {
+            public const string PageTitle = "Recycle Bin";
+            public const string SearchPlaceholder = "Search by name...";
+            public const string ColumnEntityType = "Type";
+            public const string ColumnName = "Name";
+            public const string ColumnDeletedAt = "Deleted At";
+            public const string ColumnDaysLeft = "Days Left";
+
+            public const string NoDataFound = "No deleted items found. The recycle bin is empty.";
+        }
+
+        public static class EmployeeKPI
+        {
+            public const string PageTitle = "Employee KPI Assignments";
+            public const string AddButton = "Add KPI";
+            public const string CreateDialogTitle = "Assign KPI to Employee";
+            public const string EditDialogTitle = "Edit Employee KPI";
+            public const string DeleteDialogTitle = "Delete Employee KPI";
+
+            public const string ColumnEmployee = "Employee";
+            public const string ColumnKPI = "KPI";
+            public const string ColumnPriority = "Priority";
+            public const string ColumnWeightage = "Weight";
+            public const string ColumnTarget = "Target";
+
+            public const string NoDataFound = "Select an employee and cycle to see KPI assignments.";
+        }
+
         public static class KPIWeightPriority
         {
             public const string PageTitle = "KPI Weight Priority Management";
