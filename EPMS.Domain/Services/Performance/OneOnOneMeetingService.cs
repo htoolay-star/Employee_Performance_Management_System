@@ -1,4 +1,3 @@
-using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Performance;
 using EPMS.Domain.Interface.IService.Performance;
@@ -8,32 +7,31 @@ using EPMS.Shared.Enums;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 using static EPMS.Shared.Constants.MeetingStatuses;
 
+using Mapster;
 namespace EPMS.Domain.Services.Performance
 {
     public class OneOnOneMeetingService : IOneOnOneMeetingService
     {
         private readonly IUnitOfWork _uow;
-        private readonly IMapper _mapper;
-        private readonly TimeProvider _timeProvider;
+                private readonly TimeProvider _timeProvider;
 
-        public OneOnOneMeetingService(IUnitOfWork uow, IMapper mapper, TimeProvider timeProvider)
+        public OneOnOneMeetingService(IUnitOfWork uow, TimeProvider timeProvider)
         {
             _uow = uow;
-            _mapper = mapper;
             _timeProvider = timeProvider;
         }
 
         public async Task<SuccessResponse<IEnumerable<OneOnOneMeetingDto>>> GetAllAsync()
         {
             var meetings = await _uow.Perf.OneOnOneMeetings.GetAllAsync();
-            var dtos = _mapper.Map<IEnumerable<OneOnOneMeetingDto>>(meetings);
+            var dtos = meetings.Adapt<IEnumerable<OneOnOneMeetingDto>>();
             return SuccessResponse<IEnumerable<OneOnOneMeetingDto>>.Ok(dtos, OneOnOneMeetingMsg.RetrievedAll);
         }
 
         public async Task<SuccessResponse<IEnumerable<OneOnOneMeetingDto>>> GetUpcomingAsync()
         {
             var meetings = await _uow.Perf.OneOnOneMeetings.GetUpcomingAsync();
-            var dtos = _mapper.Map<IEnumerable<OneOnOneMeetingDto>>(meetings);
+            var dtos = meetings.Adapt<IEnumerable<OneOnOneMeetingDto>>();
             return SuccessResponse<IEnumerable<OneOnOneMeetingDto>>.Ok(dtos, OneOnOneMeetingMsg.RetrievedUpcoming);
         }
 
@@ -44,21 +42,21 @@ namespace EPMS.Domain.Services.Performance
             if (meeting == null)
                 return SuccessResponse<OneOnOneMeetingDto>.Fail(OneOnOneMeetingMsg.NotFound(id), ErrorType.NotFound);
 
-            var dto = _mapper.Map<OneOnOneMeetingDto>(meeting);
+            var dto = meeting.Adapt<OneOnOneMeetingDto>();
             return SuccessResponse<OneOnOneMeetingDto>.Ok(dto, OneOnOneMeetingMsg.Retrieved);
         }
 
         public async Task<SuccessResponse<IEnumerable<OneOnOneMeetingDto>>> GetByEmployeeIdAsync(long employeeId)
         {
             var meetings = await _uow.Perf.OneOnOneMeetings.GetByEmployeeIdAsync(employeeId);
-            var dtos = _mapper.Map<IEnumerable<OneOnOneMeetingDto>>(meetings);
+            var dtos = meetings.Adapt<IEnumerable<OneOnOneMeetingDto>>();
             return SuccessResponse<IEnumerable<OneOnOneMeetingDto>>.Ok(dtos, OneOnOneMeetingMsg.RetrievedAll);
         }
 
         public async Task<SuccessResponse<IEnumerable<OneOnOneMeetingDto>>> GetByManagerIdAsync(long managerId)
         {
             var meetings = await _uow.Perf.OneOnOneMeetings.GetByManagerIdAsync(managerId);
-            var dtos = _mapper.Map<IEnumerable<OneOnOneMeetingDto>>(meetings);
+            var dtos = meetings.Adapt<IEnumerable<OneOnOneMeetingDto>>();
             return SuccessResponse<IEnumerable<OneOnOneMeetingDto>>.Ok(dtos, OneOnOneMeetingMsg.RetrievedAll);
         }
 

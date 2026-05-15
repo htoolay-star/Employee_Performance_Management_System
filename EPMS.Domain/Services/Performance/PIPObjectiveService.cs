@@ -1,4 +1,3 @@
-using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Performance;
 using EPMS.Domain.Interface.IService.Performance;
@@ -7,23 +6,22 @@ using EPMS.Shared.DTOs.PerformanceDTOs.PIPObjectiveDTOs;
 using EPMS.Shared.Enums;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 
+using Mapster;
 namespace EPMS.Domain.Services.Performance;
 
 public class PIPObjectiveService : IPIPObjectiveService
 {
     private readonly IUnitOfWork _uow;
-    private readonly IMapper _mapper;
-
-    public PIPObjectiveService(IUnitOfWork uow, IMapper mapper)
+    
+    public PIPObjectiveService(IUnitOfWork uow)
     {
         _uow = uow;
-        _mapper = mapper;
     }
 
     public async Task<SuccessResponse<IEnumerable<PIPObjectiveDto>>> GetAllAsync()
     {
         var objectives = await _uow.Perf.PIPObjectives.GetAllAsync();
-        var dtos = _mapper.Map<IEnumerable<PIPObjectiveDto>>(objectives);
+        var dtos = objectives.Adapt<IEnumerable<PIPObjectiveDto>>();
         return SuccessResponse<IEnumerable<PIPObjectiveDto>>.Ok(dtos, PIPObjectiveMsg.RetrievedAll);
     }
 
@@ -34,14 +32,14 @@ public class PIPObjectiveService : IPIPObjectiveService
         if (objective == null)
             return SuccessResponse<PIPObjectiveDto>.Fail(PIPObjectiveMsg.NotFound(id), ErrorType.NotFound);
 
-        var dto = _mapper.Map<PIPObjectiveDto>(objective);
+        var dto = objective.Adapt<PIPObjectiveDto>();
         return SuccessResponse<PIPObjectiveDto>.Ok(dto, PIPObjectiveMsg.Retrieved);
     }
 
     public async Task<SuccessResponse<IEnumerable<PIPObjectiveDto>>> GetByPIPIdAsync(long pipId)
     {
         var objectives = await _uow.Perf.PIPObjectives.GetByPIPIdAsync(pipId);
-        var dtos = _mapper.Map<IEnumerable<PIPObjectiveDto>>(objectives);
+        var dtos = objectives.Adapt<IEnumerable<PIPObjectiveDto>>();
         return SuccessResponse<IEnumerable<PIPObjectiveDto>>.Ok(dtos, PIPObjectiveMsg.RetrievedByPIP);
     }
 

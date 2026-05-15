@@ -300,6 +300,32 @@ public static string DuplicateEntry = "KPI already assigned to this position.";
         public static string PriorityNotFound = "Priority not found.";
     }
 
+    public static class DeptKPIMsg
+    {
+        public const string Created = "Department KPI added successfully.";
+        public const string Updated = "Department KPI updated successfully.";
+        public const string Deleted = "Department KPI removed successfully.";
+        public const string Retrieved = "Department KPI retrieved successfully.";
+        public const string RetrievedAll = "Department KPIs retrieved successfully.";
+        public const string RetrievedByDept = "Department KPIs retrieved successfully.";
+        public static string NotFound(long id) => $"Department KPI with ID '{id}' was not found.";
+        public static string DuplicateEntry = "KPI already assigned to this department.";
+        public static string PriorityNotFound = "Priority not found.";
+    }
+
+    public static class TeamKPIMsg
+    {
+        public const string Created = "Team KPI added successfully.";
+        public const string Updated = "Team KPI updated successfully.";
+        public const string Deleted = "Team KPI removed successfully.";
+        public const string Retrieved = "Team KPI retrieved successfully.";
+        public const string RetrievedAll = "Team KPIs retrieved successfully.";
+        public const string RetrievedByTeam = "Team KPIs retrieved successfully.";
+        public static string NotFound(long id) => $"Team KPI with ID '{id}' was not found.";
+        public static string DuplicateEntry = "KPI already assigned to this team.";
+        public static string PriorityNotFound = "Priority not found.";
+    }
+
     public static class PermissionMsg
     {
         public const string Created = "Permission created successfully.";

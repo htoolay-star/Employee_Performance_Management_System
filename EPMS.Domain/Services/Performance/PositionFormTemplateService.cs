@@ -1,4 +1,3 @@
-using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Performance;
 using EPMS.Domain.Interface.IService.Performance;
@@ -7,23 +6,22 @@ using EPMS.Shared.DTOs.PerformanceDTOs.PositionFormTemplateDTOs;
 using EPMS.Shared.Enums;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 
+using Mapster;
 namespace EPMS.Domain.Services.Performance;
 
 public class PositionFormTemplateService : IPositionFormTemplateService
 {
     private readonly IUnitOfWork _uow;
-    private readonly IMapper _mapper;
-
-    public PositionFormTemplateService(IUnitOfWork uow, IMapper mapper)
+    
+    public PositionFormTemplateService(IUnitOfWork uow)
     {
         _uow = uow;
-        _mapper = mapper;
     }
 
     public async Task<SuccessResponse<IEnumerable<PositionFormTemplateDto>>> GetAllAsync()
     {
         var templates = await _uow.Perf.PositionFormTemplates.GetAllAsync();
-        var dtos = _mapper.Map<IEnumerable<PositionFormTemplateDto>>(templates);
+        var dtos = templates.Adapt<IEnumerable<PositionFormTemplateDto>>();
         return SuccessResponse<IEnumerable<PositionFormTemplateDto>>.Ok(dtos, PositionFormTemplateMsg.RetrievedAll);
     }
 
@@ -34,14 +32,14 @@ public class PositionFormTemplateService : IPositionFormTemplateService
         if (template == null)
             return SuccessResponse<PositionFormTemplateDto>.Fail(PositionFormTemplateMsg.NotFound(id), ErrorType.NotFound);
 
-        var dto = _mapper.Map<PositionFormTemplateDto>(template);
+        var dto = template.Adapt<PositionFormTemplateDto>();
         return SuccessResponse<PositionFormTemplateDto>.Ok(dto, PositionFormTemplateMsg.Retrieved);
     }
 
     public async Task<SuccessResponse<IEnumerable<PositionFormTemplateDto>>> GetByPositionIdAsync(long positionId)
     {
         var templates = await _uow.Perf.PositionFormTemplates.GetByPositionIdAsync(positionId);
-        var dtos = _mapper.Map<IEnumerable<PositionFormTemplateDto>>(templates);
+        var dtos = templates.Adapt<IEnumerable<PositionFormTemplateDto>>();
         return SuccessResponse<IEnumerable<PositionFormTemplateDto>>.Ok(dtos, PositionFormTemplateMsg.RetrievedAll);
     }
 

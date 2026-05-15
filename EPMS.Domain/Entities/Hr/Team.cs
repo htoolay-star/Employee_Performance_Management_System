@@ -1,5 +1,6 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.EmployeeInfo;
+using EPMS.Domain.Entities.Performance;
 using System;
 using System.Collections.Generic;
 
@@ -42,6 +43,9 @@ namespace EPMS.Domain.Entities.Hr
 
         private readonly List<EmployeeEmployment> _members = new();
         public virtual IReadOnlyCollection<EmployeeEmployment> Members => _members.AsReadOnly();
+
+        private readonly List<TeamKPI> _teamKPIs = new();
+        public virtual IReadOnlyCollection<TeamKPI> TeamKPIs => _teamKPIs.AsReadOnly();
 
         public void Rename(string newName)
         {

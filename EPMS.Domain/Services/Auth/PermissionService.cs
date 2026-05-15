@@ -1,4 +1,3 @@
-using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Auth;
 using EPMS.Domain.Interface.IService.Auth;
@@ -7,23 +6,22 @@ using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.Enums;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 
+using Mapster;
 namespace EPMS.Domain.Services.Auth
 {
     public class PermissionService : IPermissionService
     {
         private readonly IUnitOfWork _uow;
-        private readonly IMapper _mapper;
-
-        public PermissionService(IUnitOfWork uow, IMapper mapper)
+        
+        public PermissionService(IUnitOfWork uow)
         {
             _uow = uow;
-            _mapper = mapper;
         }
 
         public async Task<SuccessResponse<IEnumerable<PermissionDto>>> GetAllPermissionsAsync()
         {
             var permissions = await _uow.Auth.Permissions.GetAllAsync();
-            var dtos = _mapper.Map<IEnumerable<PermissionDto>>(permissions);
+            var dtos = permissions.Adapt<IEnumerable<PermissionDto>>();
             return SuccessResponse<IEnumerable<PermissionDto>>.Ok(dtos, PermissionMsg.RetrievedAll);
         }
 
@@ -34,7 +32,7 @@ namespace EPMS.Domain.Services.Auth
             if (permission == null)
                 return SuccessResponse<PermissionDto>.Fail(PermissionMsg.NotFound, ErrorType.NotFound);
 
-            var dto = _mapper.Map<PermissionDto>(permission);
+            var dto = permission.Adapt<PermissionDto>();
             return SuccessResponse<PermissionDto>.Ok(dto, PermissionMsg.Retrieved);
         }
     }

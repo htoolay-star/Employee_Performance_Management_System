@@ -158,6 +158,73 @@
             public const string NoDataFound = "No appraisal cycles found. Add one to get started.";
         }
 
+        public static class QuestionRatingScale
+        {
+            public const string PageTitle = "Question Rating Scale Management";
+            public const string SearchPlaceholder = "Search by name...";
+            public const string AddButton = "Add Rating Scale";
+            public const string CreateDialogTitle = "Create Rating Scale";
+            public const string EditDialogTitle = "Edit Rating Scale";
+            public const string DeleteDialogTitle = "Delete Rating Scale";
+
+            public const string NameLabel = "Name";
+            public const string MinScoreLabel = "Min Score";
+            public const string MaxScoreLabel = "Max Score";
+
+            public const string ColumnMinScore = "Min Score";
+            public const string ColumnMaxScore = "Max Score";
+
+            public const string NoDataFound = "Try adjusting your search or add a new rating scale.";
+        }
+
+        public static class KPIWeightPriority
+        {
+            public const string PageTitle = "KPI Weight Priority Management";
+            public const string SearchPlaceholder = "Search by level name...";
+            public const string AddButton = "Add Priority";
+            public const string CreateDialogTitle = "Create Priority";
+            public const string EditDialogTitle = "Edit Priority";
+            public const string DeleteDialogTitle = "Delete Priority";
+
+            public const string LevelNameLabel = "Priority Level";
+            public const string MinWeightLabel = "Min Weight (%)";
+            public const string MaxWeightLabel = "Max Weight (%)";
+            public const string ColorLabel = "Color";
+
+            public const string ColumnLevel = "Priority Level";
+            public const string ColumnMinWeight = "Min Weight";
+            public const string ColumnMaxWeight = "Max Weight";
+            public const string ColumnColor = "Color";
+
+            public const string NoDataFound = "Try adjusting your search or add a new priority.";
+        }
+
+        public static class RatingScale
+        {
+            public const string PageTitle = "Rating Scale Management";
+            public const string SearchPlaceholder = "Search by label or rating...";
+            public const string AddButton = "Add Rating Scale";
+            public const string CreateDialogTitle = "Create Rating Scale";
+            public const string EditDialogTitle = "Edit Rating Scale";
+            public const string DeleteDialogTitle = "Delete Rating Scale";
+
+            public const string RatingLabel = "Rating";
+            public const string LabelLabel = "Label";
+            public const string MinScoreLabel = "Min Score";
+            public const string MaxScoreLabel = "Max Score";
+            public const string PerformanceLevelLabel = "Performance Level";
+            public const string PromotionEligibilityLabel = "Promotion Eligibility";
+
+            public const string ColumnRating = "Rating";
+            public const string ColumnLabel = "Label";
+            public const string ColumnMinScore = "Min Score";
+            public const string ColumnMaxScore = "Max Score";
+            public const string ColumnPerformanceLevel = "Perf. Level";
+            public const string ColumnPromotionEligibility = "Promotion";
+
+            public const string NoDataFound = "Try adjusting your search or add a new rating scale.";
+        }
+
         public static class Employee
         {
             public const string PageTitle = "Employee Directory";

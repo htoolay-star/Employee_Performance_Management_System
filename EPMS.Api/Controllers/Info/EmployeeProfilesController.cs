@@ -7,6 +7,7 @@ using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using EPMS.Shared.Enums;
 using Hangfire;
+using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Distributed;
@@ -18,6 +19,14 @@ namespace EPMS.Api.Controllers.Info;
 [ApiController]
 public class EmployeeProfilesController : ApiControllerBase
 {
+    private static readonly string[] _allowedExtensions = { ".xlsx", ".xlsm", ".csv" };
+
+    private static bool IsValidExcelFile(IFormFile file)
+    {
+        var ext = Path.GetExtension(file.FileName)?.ToLowerInvariant();
+        return ext != null && _allowedExtensions.Contains(ext);
+    }
+
     private readonly IEmployeeProfileService _profileService;
     private readonly IExcelService _excelService;
 
@@ -139,6 +148,9 @@ public class EmployeeProfilesController : ApiControllerBase
         if (file == null || file.Length == 0)
             return BadRequest(SuccessResponse<ImportPreviewResult>.Fail("No file uploaded.", ErrorType.Validation));
 
+        if (!IsValidExcelFile(file))
+            return BadRequest(SuccessResponse<ImportPreviewResult>.Fail("Only .xlsx, .xlsm, and .csv files are allowed.", ErrorType.Validation));
+
         using var stream = file.OpenReadStream();
         var importResult = await _excelService.ImportAsync<EmployeeFullImportRow>(stream);
         if (!importResult.Success || importResult.Data == null)
@@ -153,6 +165,9 @@ public class EmployeeProfilesController : ApiControllerBase
     {
         if (file == null || file.Length == 0)
             return BadRequest(SuccessResponse<string>.Fail("No file uploaded.", ErrorType.Validation));
+
+        if (!IsValidExcelFile(file))
+            return BadRequest(SuccessResponse<string>.Fail("Only .xlsx, .xlsm, and .csv files are allowed.", ErrorType.Validation));
 
         using var ms = new MemoryStream();
         await file.CopyToAsync(ms);

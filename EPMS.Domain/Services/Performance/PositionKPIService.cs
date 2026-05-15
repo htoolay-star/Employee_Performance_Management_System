@@ -1,4 +1,3 @@
-using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Performance;
 using EPMS.Domain.Services.Performance;
@@ -9,6 +8,7 @@ using EPMS.Shared.Enums;
 using System.Collections.Generic;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 
+using Mapster;
 namespace EPMS.Domain.Services.Performance
 {
     public interface IPositionKPIService
@@ -24,18 +24,16 @@ namespace EPMS.Domain.Services.Performance
     public class PositionKPIService : IPositionKPIService
     {
         private readonly IUnitOfWork _uow;
-        private readonly IMapper _mapper;
-
-        public PositionKPIService(IUnitOfWork uow, IMapper mapper)
+        
+        public PositionKPIService(IUnitOfWork uow)
         {
             _uow = uow;
-            _mapper = mapper;
         }
 
         public async Task<SuccessResponse<IEnumerable<PositionKPIDto>>> GetAllAsync()
         {
             var positionKPIs = await _uow.Perf.PositionKPIs.GetAllAsync();
-            var dtos = _mapper.Map<IEnumerable<PositionKPIDto>>(positionKPIs);
+            var dtos = positionKPIs.Adapt<IEnumerable<PositionKPIDto>>();
             return SuccessResponse<IEnumerable<PositionKPIDto>>.Ok(dtos, PositionKPIMsg.RetrievedAll);
         }
 
@@ -45,14 +43,14 @@ namespace EPMS.Domain.Services.Performance
             if (positionKPI == null)
                 return SuccessResponse<PositionKPIDto>.Fail(PositionKPIMsg.NotFound(id), ErrorType.NotFound);
 
-            var dto = _mapper.Map<PositionKPIDto>(positionKPI);
+            var dto = positionKPI.Adapt<PositionKPIDto>();
             return SuccessResponse<PositionKPIDto>.Ok(dto, PositionKPIMsg.Retrieved);
         }
 
         public async Task<SuccessResponse<IEnumerable<PositionKPIDto>>> GetByPositionIdAsync(long positionId)
         {
             var positionKPIs = await _uow.Perf.PositionKPIs.GetByPositionIdAsync(positionId);
-            var dtos = _mapper.Map<IEnumerable<PositionKPIDto>>(positionKPIs);
+            var dtos = positionKPIs.Adapt<IEnumerable<PositionKPIDto>>();
             return SuccessResponse<IEnumerable<PositionKPIDto>>.Ok(dtos, PositionKPIMsg.RetrievedByPosition);
         }
 

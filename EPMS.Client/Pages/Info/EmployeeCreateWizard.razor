@@ -21,22 +21,120 @@
         </MudStack>
     </TitleContent>
     <DialogContent>
-        @* ── Section 1: Profile ── *@
-            <MudText Typo="Typo.subtitle1" Class="mb-1 mt-2">Profile</MudText>
-            <MudText Typo="Typo.body2" Class="mb-4 mud-text-secondary">Basic info & identification</MudText>
-            <MudForm @ref="_profileForm" Model="@_profileModel" Validation="@ValidateProfileField">
+        <MudForm @ref="_form" Model="@_model" Validation="@ValidateField">
+            <MudStack Spacing="3">
+
+                @* ── ✏️ Text Fields ── *@
+                <MudText Typo="Typo.subtitle1" Class="mt-2">Text Fields</MudText>
+                <MudText Typo="Typo.body2" Class="mb-2 mud-text-secondary">Enter text values</MudText>
                 <MudGrid>
                     <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_profileModel.StaffNo" Label="Staff No" Variant="Variant.Outlined" For="@(() => _profileModel.StaffNo)" />
+                        <MudTextField @bind-Value="_model.StaffNo" Label="Staff No" Variant="Variant.Outlined" For="@(() => _model.StaffNo)" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_profileModel.StaffName" Label="Staff Name" Variant="Variant.Outlined" For="@(() => _profileModel.StaffName)" />
+                        <MudTextField @bind-Value="_model.StaffName" Label="Staff Name" Variant="Variant.Outlined" For="@(() => _model.StaffName)" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_profileModel.OtherName" Label="Other Name" Variant="Variant.Outlined" For="@(() => _profileModel.OtherName)" />
+                        <MudTextField @bind-Value="_model.OtherName" Label="Other Name" Variant="Variant.Outlined" For="@(() => _model.OtherName)" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudSelect T="string" @bind-Value="_profileModel.Gender" Label="Gender" Variant="Variant.Outlined" For="@(() => _profileModel.Gender)">
+                        <MudTextField @bind-Value="_model.NRCNo" Label="NRC No" Variant="Variant.Outlined" For="@(() => _model.NRCNo)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.Race" Label="Race" Variant="Variant.Outlined" For="@(() => _model.Race)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.Religion" Label="Religion" Variant="Variant.Outlined" For="@(() => _model.Religion)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.Nationality" Label="Nationality" Variant="Variant.Outlined" For="@(() => _model.Nationality)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.BirthPlace" Label="Birth Place" Variant="Variant.Outlined" For="@(() => _model.BirthPlace)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.EmailAddress" Label="Email Address" Variant="Variant.Outlined" For="@(() => _model.EmailAddress)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.PassportNo" Label="Passport No" Variant="Variant.Outlined" For="@(() => _model.PassportNo)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.WorkPermitNo" Label="Work Permit No" Variant="Variant.Outlined" For="@(() => _model.WorkPermitNo)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.LabourRegistrationNo" Label="Labour Registration No" Variant="Variant.Outlined" For="@(() => _model.LabourRegistrationNo)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.PhoneNo" Label="Phone No" Variant="Variant.Outlined" For="@(() => _model.PhoneNo)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.PermanentPhoneNo" Label="Permanent Phone" Variant="Variant.Outlined" For="@(() => _model.PermanentPhoneNo)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.PresentPhoneNo" Label="Present Phone" Variant="Variant.Outlined" For="@(() => _model.PresentPhoneNo)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.InternalPhoneNo" Label="Internal Phone" Variant="Variant.Outlined" For="@(() => _model.InternalPhoneNo)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.EmergencyMobileNo" Label="Emergency Mobile" Variant="Variant.Outlined" For="@(() => _model.EmergencyMobileNo)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.FingerPrintId" Label="Finger Print ID" Variant="Variant.Outlined" For="@(() => _model.FingerPrintId)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.ProductProject" Label="Product/Project" Variant="Variant.Outlined" For="@(() => _model.ProductProject)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.SpouseName" Label="Spouse Name" Variant="Variant.Outlined" For="@(() => _model.SpouseName)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.SpouseNRCNo" Label="Spouse NRC No" Variant="Variant.Outlined" For="@(() => _model.SpouseNRCNo)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.SpouseOccupation" Label="Spouse Occupation" Variant="Variant.Outlined" For="@(() => _model.SpouseOccupation)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.FatherName" Label="Father Name" Variant="Variant.Outlined" For="@(() => _model.FatherName)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.FatherNRCNo" Label="Father NRC No" Variant="Variant.Outlined" For="@(() => _model.FatherNRCNo)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.FatherOccupation" Label="Father Occupation" Variant="Variant.Outlined" For="@(() => _model.FatherOccupation)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.CostAllocate" Label="Cost Allocate" Variant="Variant.Outlined" For="@(() => _model.CostAllocate)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.PayByBacklog" Label="Pay By Backlog" Variant="Variant.Outlined" For="@(() => _model.PayByBacklog)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.TaxStatus" Label="Tax Status" Variant="Variant.Outlined" For="@(() => _model.TaxStatus)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.TaxNo" Label="Tax No" Variant="Variant.Outlined" For="@(() => _model.TaxNo)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.SSBStatus" Label="SSB Status" Variant="Variant.Outlined" For="@(() => _model.SSBStatus)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudTextField @bind-Value="_model.SSCBNo" Label="SSCB No" Variant="Variant.Outlined" For="@(() => _model.SSCBNo)" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="_model.ContactAddress" Label="Contact Address" Variant="Variant.Outlined" For="@(() => _model.ContactAddress)" Lines="2" />
+                    </MudItem>
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="_model.PermanentAddress" Label="Permanent Address" Variant="Variant.Outlined" For="@(() => _model.PermanentAddress)" Lines="2" />
+                    </MudItem>
+                </MudGrid>
+
+                @* ── ▼ Select Fields ── *@
+                <MudText Typo="Typo.subtitle1" Class="mt-4">Select Fields</MudText>
+                <MudText Typo="Typo.body2" Class="mb-2 mud-text-secondary">Choose from list</MudText>
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudSelect T="string" @bind-Value="_model.Gender" Label="Gender" Variant="Variant.Outlined" For="@(() => _model.Gender)">
                             @foreach (var g in Genders.All)
                             {
                                 <MudSelectItem Value="@g" />
@@ -44,22 +142,7 @@
                         </MudSelect>
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudDatePicker @bind-Date="_profileModel.DateOfBirthProxy" Label="Date of Birth" Variant="Variant.Outlined" For="@(() => _profileModel.DateOfBirthProxy)" Style="text-align: center;" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_profileModel.EmailAddress" Label="Email Address" Variant="Variant.Outlined" For="@(() => _profileModel.EmailAddress)" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_profileModel.NRCNo" Label="NRC No" Variant="Variant.Outlined" For="@(() => _profileModel.NRCNo)" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_profileModel.LabourRegistrationNo" Label="Labour Registration No" Variant="Variant.Outlined" For="@(() => _profileModel.LabourRegistrationNo)" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_profileModel.Race" Label="Race" Variant="Variant.Outlined" For="@(() => _profileModel.Race)" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudSelect T="string" @bind-Value="_profileModel.Religion" Label="Religion" Variant="Variant.Outlined" For="@(() => _profileModel.Religion)">
+                        <MudSelect T="string" @bind-Value="_model.Religion" Label="Religion" Variant="Variant.Outlined" For="@(() => _model.Religion)">
                             @foreach (var r in Religions.All)
                             {
                                 <MudSelectItem Value="@r" />
@@ -67,38 +150,23 @@
                         </MudSelect>
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_profileModel.Nationality" Label="Nationality" Variant="Variant.Outlined" For="@(() => _profileModel.Nationality)" />
+                        <MudSelect T="string" @bind-Value="_model.MaritalStatus" Label="Marital Status" Variant="Variant.Outlined" For="@(() => _model.MaritalStatus)">
+                            @foreach (var m in MaritalStatuses.All)
+                            {
+                                <MudSelectItem Value="@m" />
+                            }
+                        </MudSelect>
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_profileModel.BirthPlace" Label="Birth Place" Variant="Variant.Outlined" For="@(() => _profileModel.BirthPlace)" />
+                        <MudSelect T="string" @bind-Value="_model.RelationWithEmergencyContact" Label="Emergency Contact Relation" Variant="Variant.Outlined" For="@(() => _model.RelationWithEmergencyContact)">
+                            @foreach (var r in RelationWithEmergencyContact.All)
+                            {
+                                <MudSelectItem Value="@r" />
+                            }
+                        </MudSelect>
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_profileModel.PassportNo" Label="Passport No" Variant="Variant.Outlined" For="@(() => _profileModel.PassportNo)" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudDatePicker @bind-Date="_profileModel.PassportExpireDateProxy" Label="Passport Expiry" Variant="Variant.Outlined" For="@(() => _profileModel.PassportExpireDateProxy)" Style="text-align: center;" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_profileModel.WorkPermitNo" Label="Work Permit No" Variant="Variant.Outlined" For="@(() => _profileModel.WorkPermitNo)" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudDatePicker @bind-Date="_profileModel.WorkPermitValidDateProxy" Label="Work Permit Valid Date" Variant="Variant.Outlined" For="@(() => _profileModel.WorkPermitValidDateProxy)" Style="text-align: center;" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudDatePicker @bind-Date="_profileModel.WorkPermitExpireDateProxy" Label="Work Permit Expire Date" Variant="Variant.Outlined" For="@(() => _profileModel.WorkPermitExpireDateProxy)" Style="text-align: center;" />
-                    </MudItem>
-                </MudGrid>
-            </MudForm>
-
-            <MudDivider Class="my-4" />
-
-            @* ── Section 2: Employment ── *@
-            <MudText Typo="Typo.subtitle1" Class="mb-1">Employment</MudText>
-            <MudText Typo="Typo.body2" Class="mb-4 mud-text-secondary">Employment details</MudText>
-            <MudForm @ref="_employmentForm" Model="@_employmentModel" Validation="@ValidateEmploymentField">
-                <MudGrid>
-                    <MudItem xs="12" sm="6">
-                        <MudSelect T="string" @bind-Value="_employmentModel.EmploymentStatus" Label="Employment Status" Variant="Variant.Outlined" For="@(() => _employmentModel.EmploymentStatus)">
+                        <MudSelect T="string" @bind-Value="_model.EmploymentStatus" Label="Employment Status" Variant="Variant.Outlined" For="@(() => _model.EmploymentStatus)">
                             @foreach (var s in EmploymentStatuses.All)
                             {
                                 <MudSelectItem Value="@s" />
@@ -106,7 +174,7 @@
                         </MudSelect>
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudSelect T="string" @bind-Value="_employmentModel.StaffType" Label="Staff Type" Variant="Variant.Outlined" For="@(() => _employmentModel.StaffType)">
+                        <MudSelect T="string" @bind-Value="_model.StaffType" Label="Staff Type" Variant="Variant.Outlined" For="@(() => _model.StaffType)">
                             @foreach (var s in StaffTypes.All)
                             {
                                 <MudSelectItem Value="@s" />
@@ -114,10 +182,7 @@
                         </MudSelect>
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudNumericField @bind-Value="_employmentModel.ProbationMonth" Label="Probation Months" Variant="Variant.Outlined" For="@(() => _employmentModel.ProbationMonth)" Style="text-align: right;" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudSelect T="string" @bind-Value="_employmentModel.Shift" Label="Shift" Variant="Variant.Outlined" For="@(() => _employmentModel.Shift)">
+                        <MudSelect T="string" @bind-Value="_model.Shift" Label="Shift" Variant="Variant.Outlined" For="@(() => _model.Shift)">
                             @foreach (var s in Shift.All)
                             {
                                 <MudSelectItem Value="@s" />
@@ -125,11 +190,33 @@
                         </MudSelect>
                     </MudItem>
                     <MudItem xs="12" sm="6">
+                        <MudSelect T="string" @bind-Value="_model.Currency" Label="Currency" Variant="Variant.Outlined" For="@(() => _model.Currency)">
+                            @foreach (var c in Currency.All)
+                            {
+                                <MudSelectItem Value="@c" />
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudSelect T="string" @bind-Value="_model.PayType" Label="Pay Type" Variant="Variant.Outlined" For="@(() => _model.PayType)">
+                            @foreach (var p in PayType.All)
+                            {
+                                <MudSelectItem Value="@p" />
+                            }
+                        </MudSelect>
+                    </MudItem>
+                </MudGrid>
+
+                @* ── 🔍 Search Fields ── *@
+                <MudText Typo="Typo.subtitle1" Class="mt-4">Search Fields</MudText>
+                <MudText Typo="Typo.body2" Class="mb-2 mud-text-secondary">Type to search and select</MudText>
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
                         <MudAutocomplete T="long"
-                           @bind-Value="_employmentModel.DepartmentId"
+                           @bind-Value="_model.DepartmentId"
                            Label="Department"
                            Variant="Variant.Outlined"
-                           For="@(() => _employmentModel.DepartmentId)"
+                           For="@(() => _model.DepartmentId)"
                            SearchFunc="SearchDepartments"
                            ToStringFunc="GetDepartmentDisplay"
                            OpenIcon="@Icons.Material.Filled.ArrowDropDown">
@@ -144,10 +231,10 @@
                      </MudItem>
                      <MudItem xs="12" sm="6">
                          <MudAutocomplete T="long"
-                            @bind-Value="_employmentModel.ParentDepartmentId"
+                            @bind-Value="_model.ParentDepartmentId"
                             Label="Parent Department"
                             Variant="Variant.Outlined"
-                            For="@(() => _employmentModel.ParentDepartmentId)"
+                            For="@(() => _model.ParentDepartmentId)"
                             SearchFunc="SearchDepartments"
                             ToStringFunc="GetDepartmentDisplay"
                             OpenIcon="@Icons.Material.Filled.ArrowDropDown">
@@ -162,10 +249,10 @@
                     </MudItem>
                     <MudItem xs="12" sm="6">
                         <MudAutocomplete T="long"
-                           @bind-Value="_employmentModel.PositionId"
+                           @bind-Value="_model.PositionId"
                            Label="Position"
                            Variant="Variant.Outlined"
-                           For="@(() => _employmentModel.PositionId)"
+                           For="@(() => _model.PositionId)"
                            SearchFunc="SearchPositions"
                            ToStringFunc="GetPositionDisplay"
                            OpenIcon="@Icons.Material.Filled.ArrowDropDown">
@@ -180,10 +267,10 @@
                      </MudItem>
                      <MudItem xs="12" sm="6">
                          <MudAutocomplete T="long?"
-                            @bind-Value="_employmentModel.TeamId"
+                            @bind-Value="_model.TeamId"
                             Label="Team"
                             Variant="Variant.Outlined"
-                            For="@(() => _employmentModel.TeamId)"
+                            For="@(() => _model.TeamId)"
                             Clearable="true"
                             SearchFunc="SearchTeams"
                             ToStringFunc="GetTeamDisplay"
@@ -200,10 +287,10 @@
                     </MudItem>
                     <MudItem xs="12" sm="6">
                         <MudAutocomplete T="long?"
-                           @bind-Value="_employmentModel.DirectManagerId"
+                           @bind-Value="_model.DirectManagerId"
                            Label="Direct Manager"
                            Variant="Variant.Outlined"
-                           For="@(() => _employmentModel.DirectManagerId)"
+                           For="@(() => _model.DirectManagerId)"
                            Clearable="true"
                            SearchFunc="SearchEmployees"
                            ToStringFunc="GetEmployeeDisplay"
@@ -218,154 +305,64 @@
                             </ItemTemplate>
                         </MudAutocomplete>
                     </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudDatePicker @bind-Date="_employmentModel.DateOfAppointmentProxy" Label="Date of Appointment" Variant="Variant.Outlined" For="@(() => _employmentModel.DateOfAppointmentProxy)" Style="text-align: center;" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudDatePicker @bind-Date="_employmentModel.DateOfConfirmationProxy" Label="Date of Confirmation" Variant="Variant.Outlined" For="@(() => _employmentModel.DateOfConfirmationProxy)" Style="text-align: center;" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudDatePicker @bind-Date="_employmentModel.DateOfPromotionProxy" Label="Date of Promotion" Variant="Variant.Outlined" For="@(() => _employmentModel.DateOfPromotionProxy)" Style="text-align: center;" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_employmentModel.FingerPrintId" Label="Finger Print ID" Variant="Variant.Outlined" For="@(() => _employmentModel.FingerPrintId)" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_employmentModel.ProductProject" Label="Product/Project" Variant="Variant.Outlined" For="@(() => _employmentModel.ProductProject)" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudSwitch @bind-Value="_employmentModel.MobileAttendance" Label="Mobile Attendance" Color="Color.Success" />
-                    </MudItem>
                 </MudGrid>
-            </MudForm>
 
-            <MudDivider Class="my-4" />
-
-            @* ── Section 3: Contact ── *@
-            <MudText Typo="Typo.subtitle1" Class="mb-1">Contact</MudText>
-            <MudText Typo="Typo.body2" Class="mb-4 mud-text-secondary">Contact information</MudText>
-            <MudForm @ref="_contactForm" Model="@_contactModel" Validation="@ValidateContactField">
+                @* ── 🔢 Number Fields ── *@
+                <MudText Typo="Typo.subtitle1" Class="mt-4">Number Fields</MudText>
+                <MudText Typo="Typo.body2" Class="mb-2 mud-text-secondary">Enter numeric values</MudText>
                 <MudGrid>
                     <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_contactModel.ContactAddress" Label="Contact Address" Variant="Variant.Outlined" For="@(() => _contactModel.ContactAddress)" Lines="3" />
+                        <MudNumericField @bind-Value="_model.ProbationMonth" Label="Probation Months" Variant="Variant.Outlined" For="@(() => _model.ProbationMonth)" Style="text-align: right;" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_contactModel.PermanentAddress" Label="Permanent Address" Variant="Variant.Outlined" For="@(() => _contactModel.PermanentAddress)" Lines="3" />
+                        <MudNumericField @bind-Value="_model.Salary" Label="Salary" Variant="Variant.Outlined" For="@(() => _model.Salary)" Style="text-align: right;" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_contactModel.PhoneNo" Label="Phone No" Variant="Variant.Outlined" For="@(() => _contactModel.PhoneNo)" />
+                        <MudNumericField @bind-Value="_model.ComplianceEarnedPoints" Label="Compliance Earned Points" Variant="Variant.Outlined" For="@(() => _model.ComplianceEarnedPoints)" Style="text-align: right;" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_contactModel.PermanentPhoneNo" Label="Permanent Phone" Variant="Variant.Outlined" For="@(() => _contactModel.PermanentPhoneNo)" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_contactModel.PresentPhoneNo" Label="Present Phone" Variant="Variant.Outlined" For="@(() => _contactModel.PresentPhoneNo)" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_contactModel.InternalPhoneNo" Label="Internal Phone" Variant="Variant.Outlined" For="@(() => _contactModel.InternalPhoneNo)" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_contactModel.EmergencyMobileNo" Label="Emergency Mobile" Variant="Variant.Outlined" For="@(() => _contactModel.EmergencyMobileNo)" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudSelect T="string" @bind-Value="_contactModel.RelationWithEmergencyContact" Label="Emergency Contact Relation" Variant="Variant.Outlined" For="@(() => _contactModel.RelationWithEmergencyContact)">
-                            @foreach (var r in RelationWithEmergencyContact.All)
-                            {
-                                <MudSelectItem Value="@r" />
-                            }
-                        </MudSelect>
+                        <MudNumericField @bind-Value="_model.ComplianceBalancePoints" Label="Compliance Balance Points" Variant="Variant.Outlined" For="@(() => _model.ComplianceBalancePoints)" Style="text-align: right;" />
                     </MudItem>
                 </MudGrid>
-            </MudForm>
 
-            <MudDivider Class="my-4" />
-
-            @* ── Section 4: Family ── *@
-            <MudText Typo="Typo.subtitle1" Class="mb-1">Family</MudText>
-            <MudText Typo="Typo.body2" Class="mb-4 mud-text-secondary">Family information</MudText>
-            <MudForm @ref="_familyForm" Model="@_familyModel" Validation="@ValidateFamilyField">
+                @* ── 📅 Date Fields ── *@
+                <MudText Typo="Typo.subtitle1" Class="mt-4">Date Fields</MudText>
+                <MudText Typo="Typo.body2" Class="mb-2 mud-text-secondary">Pick dates</MudText>
                 <MudGrid>
                     <MudItem xs="12" sm="6">
-                        <MudSelect T="string" @bind-Value="_familyModel.MaritalStatus" Label="Marital Status" Variant="Variant.Outlined" For="@(() => _familyModel.MaritalStatus)">
-                            @foreach (var m in MaritalStatuses.All)
-                            {
-                                <MudSelectItem Value="@m" />
-                            }
-                        </MudSelect>
+                        <MudDatePicker @bind-Date="_model.DateOfBirthProxy" Label="Date of Birth" Variant="Variant.Outlined" For="@(() => _model.DateOfBirthProxy)" Style="text-align: center;" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_familyModel.SpouseName" Label="Spouse Name" Variant="Variant.Outlined" For="@(() => _familyModel.SpouseName)" />
+                        <MudDatePicker @bind-Date="_model.PassportExpireDateProxy" Label="Passport Expiry" Variant="Variant.Outlined" For="@(() => _model.PassportExpireDateProxy)" Style="text-align: center;" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_familyModel.SpouseNRCNo" Label="Spouse NRC No" Variant="Variant.Outlined" For="@(() => _familyModel.SpouseNRCNo)" />
+                        <MudDatePicker @bind-Date="_model.WorkPermitValidDateProxy" Label="Work Permit Valid Date" Variant="Variant.Outlined" For="@(() => _model.WorkPermitValidDateProxy)" Style="text-align: center;" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_familyModel.SpouseOccupation" Label="Spouse Occupation" Variant="Variant.Outlined" For="@(() => _familyModel.SpouseOccupation)" />
+                        <MudDatePicker @bind-Date="_model.WorkPermitExpireDateProxy" Label="Work Permit Expire Date" Variant="Variant.Outlined" For="@(() => _model.WorkPermitExpireDateProxy)" Style="text-align: center;" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_familyModel.FatherName" Label="Father Name" Variant="Variant.Outlined" For="@(() => _familyModel.FatherName)" />
+                        <MudDatePicker @bind-Date="_model.DateOfAppointmentProxy" Label="Date of Appointment" Variant="Variant.Outlined" For="@(() => _model.DateOfAppointmentProxy)" Style="text-align: center;" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_familyModel.FatherNRCNo" Label="Father NRC No" Variant="Variant.Outlined" For="@(() => _familyModel.FatherNRCNo)" />
+                        <MudDatePicker @bind-Date="_model.DateOfConfirmationProxy" Label="Date of Confirmation" Variant="Variant.Outlined" For="@(() => _model.DateOfConfirmationProxy)" Style="text-align: center;" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_familyModel.FatherOccupation" Label="Father Occupation" Variant="Variant.Outlined" For="@(() => _familyModel.FatherOccupation)" />
+                        <MudDatePicker @bind-Date="_model.DateOfPromotionProxy" Label="Date of Promotion" Variant="Variant.Outlined" For="@(() => _model.DateOfPromotionProxy)" Style="text-align: center;" />
                     </MudItem>
                 </MudGrid>
-            </MudForm>
 
-            <MudDivider Class="my-4" />
-
-            @* ── Section 5: Payroll ── *@
-            <MudText Typo="Typo.subtitle1" Class="mb-1">Payroll</MudText>
-            <MudText Typo="Typo.body2" Class="mb-4 mud-text-secondary">Payroll details</MudText>
-            <MudForm @ref="_payrollForm" Model="@_payrollModel" Validation="@ValidatePayrollField">
+                @* ── ⬆ Toggle ── *@
+                <MudText Typo="Typo.subtitle1" Class="mt-4">Toggle</MudText>
+                <MudText Typo="Typo.body2" Class="mb-2 mud-text-secondary">Turn on or off</MudText>
                 <MudGrid>
-                    <MudItem xs="12" sm="6">
-                        <MudNumericField @bind-Value="_payrollModel.Salary" Label="Salary" Variant="Variant.Outlined" For="@(() => _payrollModel.Salary)" Style="text-align: right;" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudSelect T="string" @bind-Value="_payrollModel.Currency" Label="Currency" Variant="Variant.Outlined" For="@(() => _payrollModel.Currency)">
-                            @foreach (var c in Currency.All)
-                            {
-                                <MudSelectItem Value="@c" />
-                            }
-                        </MudSelect>
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudSelect T="string" @bind-Value="_payrollModel.PayType" Label="Pay Type" Variant="Variant.Outlined" For="@(() => _payrollModel.PayType)">
-                            @foreach (var p in PayType.All)
-                            {
-                                <MudSelectItem Value="@p" />
-                            }
-                        </MudSelect>
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_payrollModel.CostAllocate" Label="Cost Allocate" Variant="Variant.Outlined" For="@(() => _payrollModel.CostAllocate)" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_payrollModel.PayByBacklog" Label="Pay By Backlog" Variant="Variant.Outlined" For="@(() => _payrollModel.PayByBacklog)" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_payrollModel.TaxStatus" Label="Tax Status" Variant="Variant.Outlined" For="@(() => _payrollModel.TaxStatus)" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_payrollModel.TaxNo" Label="Tax No" Variant="Variant.Outlined" For="@(() => _payrollModel.TaxNo)" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_payrollModel.SSBStatus" Label="SSB Status" Variant="Variant.Outlined" For="@(() => _payrollModel.SSBStatus)" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudTextField @bind-Value="_payrollModel.SSCBNo" Label="SSCB No" Variant="Variant.Outlined" For="@(() => _payrollModel.SSCBNo)" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudNumericField @bind-Value="_payrollModel.ComplianceEarnedPoints" Label="Compliance Earned Points" Variant="Variant.Outlined" For="@(() => _payrollModel.ComplianceEarnedPoints)" Style="text-align: right;" />
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudNumericField @bind-Value="_payrollModel.ComplianceBalancePoints" Label="Compliance Balance Points" Variant="Variant.Outlined" For="@(() => _payrollModel.ComplianceBalancePoints)" Style="text-align: right;" />
+                    <MudItem xs="12">
+                        <MudSwitch @bind-Value="_model.MobileAttendance" Label="Mobile Attendance" Color="Color.Success" />
                     </MudItem>
                 </MudGrid>
-            </MudForm>
+
+            </MudStack>
+        </MudForm>
     </DialogContent>
     <DialogActions>
         <MudButton Variant="Variant.Text" OnClick="Cancel">Cancel</MudButton>
@@ -387,19 +384,10 @@
 
     private void Cancel() => _mudDialog?.Cancel();
 
-    // ── Form references ──
-    private MudForm? _profileForm;
-    private MudForm? _employmentForm;
-    private MudForm? _contactForm;
-    private MudForm? _familyForm;
-    private MudForm? _payrollForm;
-
-    // ── Form models ──
-    private EmployeeProfileFormModel _profileModel = new();
-    private EmployeeEmploymentFormModel _employmentModel = new();
-    private EmployeeContactFormModel _contactModel = new();
-    private EmployeeFamilyFormModel _familyModel = new();
-    private EmployeePayrollFormModel _payrollModel = new();
+    // ── Form ──
+    private MudForm? _form;
+    private EmployeeCreateFormModel _model = new();
+    private Dictionary<string, string> _serverErrors = new();
 
     // ── Validators ──
     private readonly CreateEmployeeProfileValidator _profileValidator = new();
@@ -408,7 +396,7 @@
     private readonly CreateEmployeeFamilyInfoValidator _familyValidator = new();
     private readonly CreateEmployeePayrollInfoValidator _payrollValidator = new();
 
-    // ── Lookup data (loaded on init) ──
+    // ── Lookup data ──
     private List<LookUpDto> _departments = new();
     private List<LookUpDto> _positions = new();
     private List<LookUpDto> _teams = new();
@@ -422,43 +410,85 @@
         _employees = await LookupState.GetEmployeesAsync();
     }
 
-    // ── Per-field validation delegates (used by MudForm) ──
+    // ── Validation ──
 
-    private async Task<IEnumerable<string>> ValidateProfileField(object model, string propertyName)
+    private async Task<IEnumerable<string>> ValidateField(object model, string propertyName)
     {
         if (string.IsNullOrEmpty(propertyName)) return Array.Empty<string>();
-        var actualName = propertyName.EndsWith("Proxy") ? propertyName.Replace("Proxy", "") : propertyName;
-        return await _profileValidator.ValidateMappedValue<EmployeeProfileFormModel, CreateEmployeeProfileDto>(
-            _profileModel, new Dictionary<string, string>())(model, actualName);
+
+        var allErrors = new List<string>();
+
+        var profileErrors = await _profileValidator.ValidateMappedValue<EmployeeCreateFormModel, CreateEmployeeProfileDto>(
+            _model, _serverErrors)(model, propertyName);
+        allErrors.AddRange(profileErrors);
+
+        var employmentErrors = await _employmentValidator.ValidateMappedValue<EmployeeCreateFormModel, CreateEmployeeEmploymentDto>(
+            _model, _serverErrors)(model, propertyName);
+        allErrors.AddRange(employmentErrors);
+
+        var contactErrors = await _contactValidator.ValidateMappedValue<EmployeeCreateFormModel, CreateEmployeeContactDto>(
+            _model, _serverErrors)(model, propertyName);
+        allErrors.AddRange(contactErrors);
+
+        var familyErrors = await _familyValidator.ValidateMappedValue<EmployeeCreateFormModel, CreateEmployeeFamilyInfoDto>(
+            _model, _serverErrors)(model, propertyName);
+        allErrors.AddRange(familyErrors);
+
+        var payrollErrors = await _payrollValidator.ValidateMappedValue<EmployeeCreateFormModel, CreateEmployeePayrollInfoDto>(
+            _model, _serverErrors)(model, propertyName);
+        allErrors.AddRange(payrollErrors);
+
+        if (_serverErrors.TryGetValue(propertyName, out var serverError))
+            allErrors.Add(serverError);
+
+        return allErrors;
     }
 
-    private async Task<IEnumerable<string>> ValidateEmploymentField(object model, string propertyName)
-    {
-        if (string.IsNullOrEmpty(propertyName)) return Array.Empty<string>();
-        var actualName = propertyName.EndsWith("Proxy") ? propertyName.Replace("Proxy", "") : propertyName;
-        return await _employmentValidator.ValidateMappedValue<EmployeeEmploymentFormModel, CreateEmployeeEmploymentDto>(
-            _employmentModel, new Dictionary<string, string>())(model, actualName);
-    }
+    // ── Save ──
 
-    private async Task<IEnumerable<string>> ValidateContactField(object model, string propertyName)
+    private async Task Save()
     {
-        if (string.IsNullOrEmpty(propertyName)) return Array.Empty<string>();
-        return await _contactValidator.ValidateMappedValue<EmployeeContactFormModel, CreateEmployeeContactDto>(
-            _contactModel, new Dictionary<string, string>())(model, propertyName);
-    }
+        if (_saving) return;
 
-    private async Task<IEnumerable<string>> ValidateFamilyField(object model, string propertyName)
-    {
-        if (string.IsNullOrEmpty(propertyName)) return Array.Empty<string>();
-        return await _familyValidator.ValidateMappedValue<EmployeeFamilyFormModel, CreateEmployeeFamilyInfoDto>(
-            _familyModel, new Dictionary<string, string>())(model, propertyName);
-    }
+        _serverErrors.Clear();
+        await _form!.Validate();
+        if (!_form.IsValid)
+        {
+            Snackbar.Add("Please fix all validation errors before saving.", Severity.Warning);
+            return;
+        }
 
-    private async Task<IEnumerable<string>> ValidatePayrollField(object model, string propertyName)
-    {
-        if (string.IsNullOrEmpty(propertyName)) return Array.Empty<string>();
-        return await _payrollValidator.ValidateMappedValue<EmployeePayrollFormModel, CreateEmployeePayrollInfoDto>(
-            _payrollModel, new Dictionary<string, string>())(model, propertyName);
+        _saving = true;
+        try
+        {
+            var dto = new CreateFullEmployeeDto
+            {
+                Profile = _model.Adapt<CreateEmployeeProfileDto>(),
+                Employment = _model.Adapt<CreateEmployeeEmploymentDto>(),
+                Contact = _model.Adapt<CreateEmployeeContactDto>(),
+                Family = _model.Adapt<CreateEmployeeFamilyInfoDto>(),
+                Payroll = _model.Adapt<CreateEmployeePayrollInfoDto>()
+            };
+
+            var response = await EmployeeProfileApiClient.CreateFullAsync(dto);
+            if (response.Success)
+            {
+                Snackbar.Add("Employee created successfully", Severity.Success);
+                _mudDialog?.Close(DialogResult.Ok(response.Data));
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? "Failed to create employee", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
     }
 
     // ── Lookup search/display helpers ──
@@ -526,56 +556,5 @@
         var emp = _employees.FirstOrDefault(x => x.Id == id);
         if (emp == null) return string.Empty;
         return $"{emp.StaffNo} - {emp.StaffName}";
-    }
-
-    // ── Save ──
-
-    private async Task Save()
-    {
-        if (_saving) return;
-
-        await _profileForm!.Validate();
-        await _employmentForm!.Validate();
-        await _contactForm!.Validate();
-        await _familyForm!.Validate();
-        await _payrollForm!.Validate();
-
-        if (!_profileForm.IsValid || !_employmentForm.IsValid || !_contactForm.IsValid || !_familyForm.IsValid || !_payrollForm.IsValid)
-        {
-            Snackbar.Add("Please fix all validation errors before saving.", Severity.Warning);
-            return;
-        }
-
-        _saving = true;
-        try
-        {
-            var dto = new CreateFullEmployeeDto
-            {
-                Profile = _profileModel.Adapt<CreateEmployeeProfileDto>(),
-                Employment = _employmentModel.Adapt<CreateEmployeeEmploymentDto>(),
-                Contact = _contactModel.Adapt<CreateEmployeeContactDto>(),
-                Family = _familyModel.Adapt<CreateEmployeeFamilyInfoDto>(),
-                Payroll = _payrollModel.Adapt<CreateEmployeePayrollInfoDto>()
-            };
-
-            var response = await EmployeeProfileApiClient.CreateFullAsync(dto);
-            if (response.Success)
-            {
-                Snackbar.Add("Employee created successfully", Severity.Success);
-                _mudDialog?.Close(DialogResult.Ok(response.Data));
-            }
-            else
-            {
-                Snackbar.Add(response.Message ?? "Failed to create employee", Severity.Error);
-            }
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
-        }
-        finally
-        {
-            _saving = false;
-        }
     }
 }

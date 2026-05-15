@@ -1,5 +1,6 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.EmployeeInfo;
+using EPMS.Domain.Entities.Performance;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -57,6 +58,9 @@ namespace EPMS.Domain.Entities.Hr
         public void Reactivate() => IsActive = true;
         private readonly List<Team> _teams = new();
         public virtual IReadOnlyCollection<Team> Teams => _teams.AsReadOnly();
+
+        private readonly List<DeptKPI> _deptKPIs = new();
+        public virtual IReadOnlyCollection<DeptKPI> DeptKPIs => _deptKPIs.AsReadOnly();
 
         public void AddTeam(string code, string teamName)
         {

@@ -1,4 +1,3 @@
-using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Performance;
 using EPMS.Domain.Interface.IService.Performance;
@@ -8,25 +7,24 @@ using EPMS.Shared.Enums;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 using static EPMS.Shared.Constants.FeedbackVisibility;
 
+using Mapster;
 namespace EPMS.Domain.Services.Performance
 {
     public class ContinuousFeedbackService : IContinuousFeedbackService
     {
         private readonly IUnitOfWork _uow;
-        private readonly IMapper _mapper;
-        private readonly TimeProvider _timeProvider;
+                private readonly TimeProvider _timeProvider;
 
-        public ContinuousFeedbackService(IUnitOfWork uow, IMapper mapper, TimeProvider timeProvider)
+        public ContinuousFeedbackService(IUnitOfWork uow, TimeProvider timeProvider)
         {
             _uow = uow;
-            _mapper = mapper;
             _timeProvider = timeProvider;
         }
 
         public async Task<SuccessResponse<IEnumerable<ContinuousFeedbackDto>>> GetAllAsync()
         {
             var feedbacks = await _uow.Perf.ContinuousFeedbacks.GetAllAsync();
-            var dtos = _mapper.Map<IEnumerable<ContinuousFeedbackDto>>(feedbacks);
+            var dtos = feedbacks.Adapt<IEnumerable<ContinuousFeedbackDto>>();
             return SuccessResponse<IEnumerable<ContinuousFeedbackDto>>.Ok(dtos, ContinuousFeedbackMsg.RetrievedAll);
         }
 
@@ -37,21 +35,21 @@ namespace EPMS.Domain.Services.Performance
             if (feedback == null)
                 return SuccessResponse<ContinuousFeedbackDto>.Fail(ContinuousFeedbackMsg.NotFound(id), ErrorType.NotFound);
 
-            var dto = _mapper.Map<ContinuousFeedbackDto>(feedback);
+            var dto = feedback.Adapt<ContinuousFeedbackDto>();
             return SuccessResponse<ContinuousFeedbackDto>.Ok(dto, ContinuousFeedbackMsg.Retrieved);
         }
 
         public async Task<SuccessResponse<IEnumerable<ContinuousFeedbackDto>>> GetByEmployeeIdAsync(long employeeId)
         {
             var feedbacks = await _uow.Perf.ContinuousFeedbacks.GetByEmployeeIdAsync(employeeId);
-            var dtos = _mapper.Map<IEnumerable<ContinuousFeedbackDto>>(feedbacks);
+            var dtos = feedbacks.Adapt<IEnumerable<ContinuousFeedbackDto>>();
             return SuccessResponse<IEnumerable<ContinuousFeedbackDto>>.Ok(dtos, ContinuousFeedbackMsg.RetrievedAll);
         }
 
         public async Task<SuccessResponse<IEnumerable<ContinuousFeedbackDto>>> GetByUserIdAsync(long userId)
         {
             var feedbacks = await _uow.Perf.ContinuousFeedbacks.GetGivenByUserIdAsync(userId);
-            var dtos = _mapper.Map<IEnumerable<ContinuousFeedbackDto>>(feedbacks);
+            var dtos = feedbacks.Adapt<IEnumerable<ContinuousFeedbackDto>>();
             return SuccessResponse<IEnumerable<ContinuousFeedbackDto>>.Ok(dtos, ContinuousFeedbackMsg.RetrievedAll);
         }
 

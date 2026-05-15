@@ -1,4 +1,3 @@
-using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.App;
 using EPMS.Domain.Interface.IService.App;
@@ -7,32 +6,31 @@ using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.Enums;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 
+using Mapster;
 namespace EPMS.Domain.Services.App;
 
 public class NotificationService : INotificationService
 {
     private readonly IUnitOfWork _uow;
-    private readonly IMapper _mapper;
-    private readonly TimeProvider _timeProvider;
+        private readonly TimeProvider _timeProvider;
 
-    public NotificationService(IUnitOfWork uow, IMapper mapper, TimeProvider timeProvider)
+    public NotificationService(IUnitOfWork uow, TimeProvider timeProvider)
     {
         _uow = uow;
-        _mapper = mapper;
         _timeProvider = timeProvider;
     }
 
     public async Task<SuccessResponse<IEnumerable<NotificationDto>>> GetAllByUserIdAsync(long userId)
     {
         var notifications = await _uow.App.Notifications.GetByUserIdAsync(userId);
-        var dtos = _mapper.Map<IEnumerable<NotificationDto>>(notifications);
+        var dtos = notifications.Adapt<IEnumerable<NotificationDto>>();
         return SuccessResponse<IEnumerable<NotificationDto>>.Ok(dtos, NotificationMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<IEnumerable<NotificationDto>>> GetUnreadByUserIdAsync(long userId)
     {
         var notifications = await _uow.App.Notifications.GetUnreadByUserIdAsync(userId);
-        var dtos = _mapper.Map<IEnumerable<NotificationDto>>(notifications);
+        var dtos = notifications.Adapt<IEnumerable<NotificationDto>>();
         return SuccessResponse<IEnumerable<NotificationDto>>.Ok(dtos, NotificationMsg.RetrievedAll);
     }
 
@@ -43,7 +41,7 @@ public class NotificationService : INotificationService
         if (notification == null)
             return SuccessResponse<NotificationDto>.Fail(NotificationMsg.NotFound(id), ErrorType.NotFound);
 
-        var dto = _mapper.Map<NotificationDto>(notification);
+        var dto = notification.Adapt<NotificationDto>();
         return SuccessResponse<NotificationDto>.Ok(dto, NotificationMsg.Retrieved);
     }
 

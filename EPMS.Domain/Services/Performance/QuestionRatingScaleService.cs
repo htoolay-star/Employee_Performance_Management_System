@@ -1,4 +1,3 @@
-using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Performance;
 using EPMS.Domain.Interface.IService.Performance;
@@ -7,23 +6,22 @@ using EPMS.Shared.DTOs.PerformanceDTOs.QuestionRatingScaleDTOs;
 using EPMS.Shared.Enums;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 
+using Mapster;
 namespace EPMS.Domain.Services.Performance;
 
 public class QuestionRatingScaleService : IQuestionRatingScaleService
 {
     private readonly IUnitOfWork _uow;
-    private readonly IMapper _mapper;
-
-    public QuestionRatingScaleService(IUnitOfWork uow, IMapper mapper)
+    
+    public QuestionRatingScaleService(IUnitOfWork uow)
     {
         _uow = uow;
-        _mapper = mapper;
     }
 
     public async Task<SuccessResponse<IEnumerable<QuestionRatingScaleDto>>> GetAllAsync()
     {
         var scales = await _uow.Perf.QuestionRatingScales.GetAllAsync();
-        var dtos = _mapper.Map<IEnumerable<QuestionRatingScaleDto>>(scales);
+        var dtos = scales.Adapt<IEnumerable<QuestionRatingScaleDto>>();
         return SuccessResponse<IEnumerable<QuestionRatingScaleDto>>.Ok(dtos, QuestionRatingScaleMsg.RetrievedAll);
     }
 
@@ -34,7 +32,7 @@ public class QuestionRatingScaleService : IQuestionRatingScaleService
         if (scale == null)
             return SuccessResponse<QuestionRatingScaleDto>.Fail(QuestionRatingScaleMsg.NotFound(id), ErrorType.NotFound);
 
-        var dto = _mapper.Map<QuestionRatingScaleDto>(scale);
+        var dto = scale.Adapt<QuestionRatingScaleDto>();
         return SuccessResponse<QuestionRatingScaleDto>.Ok(dto, QuestionRatingScaleMsg.Retrieved);
     }
 
@@ -42,7 +40,7 @@ public class QuestionRatingScaleService : IQuestionRatingScaleService
     {
         var scales = await _uow.Perf.QuestionRatingScales.GetAllAsync();
         var activeScales = scales.Where(s => s.IsActive).ToList();
-        var dtos = _mapper.Map<IEnumerable<QuestionRatingScaleDto>>(activeScales);
+        var dtos = activeScales.Adapt<IEnumerable<QuestionRatingScaleDto>>();
         return SuccessResponse<IEnumerable<QuestionRatingScaleDto>>.Ok(dtos, QuestionRatingScaleMsg.RetrievedAll);
     }
 

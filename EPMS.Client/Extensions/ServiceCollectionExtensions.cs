@@ -44,6 +44,9 @@ public static class ServiceCollectionExtensions
 
         // Performance
         services.AddSecureRefitClient<IAppraisalCycleApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IRatingScaleApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IKPIWeightPriorityApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IQuestionRatingScaleApiClient>(refitSettings, baseUri);
 
         // Info
         services.AddSecureRefitClient<IEmployeeProfileApiClient>(refitSettings, baseUri);

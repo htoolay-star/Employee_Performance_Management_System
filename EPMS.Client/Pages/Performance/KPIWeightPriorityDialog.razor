@@ -1,0 +1,206 @@
+@using EPMS.Client.Constants
+@using EPMS.Client.Extensions
+@using EPMS.Client.Models.Performance
+@using EPMS.Client.Services.Performance
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.PerformanceDTOs.KPIWeightPriorityDTOs
+@using EPMS.Shared.Validators.PerformanceDTOs.KPIWeightPriorityDTOs
+@using Mapster
+@using MudBlazor
+
+@inject IKPIWeightPriorityApiClient KPIWeightPriorityApiClient
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="_form" Model="@_model" Validation="@ValidateField">
+            <MudStack Spacing="3">
+
+                @if (!IsEdit)
+                {
+                    <MudTextField @bind-Value="_model.LevelName"
+                                  Label="@UIConstants.KPIWeightPriority.LevelNameLabel"
+                                  For="@(() => _model.LevelName)"
+                                  Variant="Variant.Outlined" />
+                }
+                else
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Primary">
+                        <strong>@UIConstants.KPIWeightPriority.LevelNameLabel:</strong> @_model.LevelName
+                    </MudText>
+                }
+
+                <MudNumericField @bind-Value="_model.MaxWeight"
+                                Label="@UIConstants.KPIWeightPriority.MaxWeightLabel"
+                                For="@(() => _model.MaxWeight)"
+                                Variant="Variant.Outlined" />
+
+                <MudNumericField @bind-Value="_model.MinWeight"
+                                Label="@UIConstants.KPIWeightPriority.MinWeightLabel"
+                                For="@(() => _model.MinWeight)"
+                                Variant="Variant.Outlined" />
+
+                <MudSelect @bind-Value="_model.ColorCode"
+                           Label="@UIConstants.KPIWeightPriority.ColorLabel"
+                           Variant="Variant.Outlined"
+                           Clearable="true">
+                    @foreach (var c in PresetColors)
+                    {
+                        <MudSelectItem Value="@c.Code">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                <span style="width: 16px; height: 16px; border-radius: 50%; display: inline-block; background: @c.Code; border: 1px solid #ccc;"></span>
+                                <MudText>@c.Name</MudText>
+                            </MudStack>
+                        </MudSelectItem>
+                    }
+                </MudSelect>
+
+                @if (IsEdit)
+                {
+                    <MudSwitch @bind-Value="_model.IsActive"
+                               Label="@UIConstants.Common.Active"
+                               Color="Color.Success" />
+                }
+
+            </MudStack>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@UIConstants.Common.Cancel</MudButton>
+        <MudButton Color="Color.Primary"
+                   OnClick="Submit"
+                   Disabled="@(_saving || !HasChanged())">
+            @if (_saving)
+            {
+                <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @(IsEdit ? UIConstants.Common.Update : UIConstants.Common.Create)
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter] private IMudDialogInstance? _mudDialog { get; set; }
+
+    [Parameter] public KPIWeightPriorityDto? Priority { get; set; }
+
+    private bool IsEdit => Priority is not null;
+
+    private MudForm? _form;
+    private bool _saving;
+    private KPIWeightPriorityFormModel _model = new();
+    private Dictionary<string, string> _serverErrors = new();
+
+    private readonly CreateKPIWeightPriorityValidator _createValidator = new();
+    private readonly UpdateKPIWeightPriorityValidator _updateValidator = new();
+
+    private static readonly List<(string Name, string Code)> PresetColors = new()
+    {
+        ("Red", "#FF0000"),
+        ("Dark Red", "#8B0000"),
+        ("Orange", "#FFA500"),
+        ("Yellow", "#FFD700"),
+        ("Green", "#008000"),
+        ("Dark Green", "#006400"),
+        ("Blue", "#0000FF"),
+        ("Purple", "#800080"),
+        ("Cyan", "#00CED1"),
+        ("Gray", "#808080")
+    };
+
+    protected override Task OnInitializedAsync()
+    {
+        if (Priority is not null)
+            _model = Priority.Adapt<KPIWeightPriorityFormModel>();
+
+        return base.OnInitializedAsync();
+    }
+
+    private async Task Submit()
+    {
+        _serverErrors.Clear();
+
+        await _form!.Validate();
+        if (!_form.IsValid)
+        {
+            Snackbar.Add(UIConstants.Common.ValidationFailed, Severity.Warning);
+            return;
+        }
+
+        _saving = true;
+        try
+        {
+            if (IsEdit)
+            {
+                var dto = _model.Adapt<UpdateKPIWeightPriorityDto>();
+                var response = await KPIWeightPriorityApiClient.UpdateAsync(Priority!.Id, dto);
+
+                if (response.Success)
+                    _mudDialog?.Close(DialogResult.Ok(true));
+                else
+                    Snackbar.Add(response.Message ?? UIConstants.Common.UpdateFailed, Severity.Error);
+            }
+            else
+            {
+                var dto = _model.Adapt<CreateKPIWeightPriorityDto>();
+                var response = await KPIWeightPriorityApiClient.CreateAsync(dto);
+
+                if (response.Success)
+                    _mudDialog?.Close(DialogResult.Ok(true));
+                else
+                    Snackbar.Add(response.Message ?? UIConstants.Common.CreateFailed, Severity.Error);
+            }
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.BadRequest)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ValidationFailed, Severity.Error);
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            _serverErrors[nameof(_model.LevelName)] = error?.Message ?? UIConstants.Common.DuplicateEntry;
+            await _form!.Validate();
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void Cancel() => _mudDialog?.Cancel();
+
+    private async Task<IEnumerable<string>> ValidateField(object model, string propertyName)
+    {
+        IEnumerable<string> fluentErrors;
+
+        if (IsEdit)
+        {
+            var fn = _updateValidator.ValidateMappedValue<KPIWeightPriorityFormModel, UpdateKPIWeightPriorityDto>(_model, _serverErrors);
+            fluentErrors = await fn(model, propertyName);
+        }
+        else
+        {
+            var fn = _createValidator.ValidateMappedValue<KPIWeightPriorityFormModel, CreateKPIWeightPriorityDto>(_model, _serverErrors);
+            fluentErrors = await fn(model, propertyName);
+        }
+
+        var errorList = fluentErrors.ToList();
+
+        if (_serverErrors.TryGetValue(propertyName, out var serverError))
+            errorList.Add(serverError);
+
+        return errorList;
+    }
+
+    private bool HasChanged()
+    {
+        if (!IsEdit) return true;
+
+        return _model.MinWeight != Priority!.MinWeight
+            || _model.MaxWeight != Priority.MaxWeight
+            || _model.ColorCode != Priority.ColorCode
+            || _model.IsActive != Priority.IsActive;
+    }
+}

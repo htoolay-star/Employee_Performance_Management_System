@@ -10,7 +10,6 @@ namespace EPMS.Api.Controllers.Performance;
 
 [Route("api/performance/kpi-weight-priorities")]
 [ApiController]
-[Authorize(Roles = RoleConstants.Admin)]
 public class KPIWeightPrioritiesController : ApiControllerBase
 {
     private readonly IKPIWeightPriorityService _kpiWeightPriorityService;

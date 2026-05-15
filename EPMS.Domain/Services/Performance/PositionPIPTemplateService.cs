@@ -1,4 +1,3 @@
-using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Performance;
 using EPMS.Domain.Interface.IService.Performance;
@@ -7,23 +6,22 @@ using EPMS.Shared.DTOs.PerformanceDTOs.PositionPIPTemplateDTOs;
 using EPMS.Shared.Enums;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 
+using Mapster;
 namespace EPMS.Domain.Services.Performance;
 
 public class PositionPIPTemplateService : IPositionPIPTemplateService
 {
     private readonly IUnitOfWork _uow;
-    private readonly IMapper _mapper;
-
-    public PositionPIPTemplateService(IUnitOfWork uow, IMapper mapper)
+    
+    public PositionPIPTemplateService(IUnitOfWork uow)
     {
         _uow = uow;
-        _mapper = mapper;
     }
 
     public async Task<SuccessResponse<IEnumerable<PositionPIPTemplateDto>>> GetAllAsync()
     {
         var templates = await _uow.Perf.PositionPIPTemplates.GetAllAsync();
-        var dtos = _mapper.Map<IEnumerable<PositionPIPTemplateDto>>(templates);
+        var dtos = templates.Adapt<IEnumerable<PositionPIPTemplateDto>>();
         return SuccessResponse<IEnumerable<PositionPIPTemplateDto>>.Ok(dtos, PositionPIPTemplateMsg.RetrievedAll);
     }
 
@@ -34,21 +32,21 @@ public class PositionPIPTemplateService : IPositionPIPTemplateService
         if (template == null)
             return SuccessResponse<PositionPIPTemplateDto>.Fail(PositionPIPTemplateMsg.NotFound(id), ErrorType.NotFound);
 
-        var dto = _mapper.Map<PositionPIPTemplateDto>(template);
+        var dto = template.Adapt<PositionPIPTemplateDto>();
         return SuccessResponse<PositionPIPTemplateDto>.Ok(dto, PositionPIPTemplateMsg.Retrieved);
     }
 
     public async Task<SuccessResponse<IEnumerable<PositionPIPTemplateDto>>> GetByPositionIdAsync(long positionId)
     {
         var templates = await _uow.Perf.PositionPIPTemplates.GetByPositionIdAsync(positionId);
-        var dtos = _mapper.Map<IEnumerable<PositionPIPTemplateDto>>(templates);
+        var dtos = templates.Adapt<IEnumerable<PositionPIPTemplateDto>>();
         return SuccessResponse<IEnumerable<PositionPIPTemplateDto>>.Ok(dtos, PositionPIPTemplateMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<IEnumerable<PositionPIPTemplateDto>>> GetActiveByPositionIdAsync(long positionId)
     {
         var templates = await _uow.Perf.PositionPIPTemplates.GetActiveByPositionIdAsync(positionId);
-        var dtos = _mapper.Map<IEnumerable<PositionPIPTemplateDto>>(templates);
+        var dtos = templates.Adapt<IEnumerable<PositionPIPTemplateDto>>();
         return SuccessResponse<IEnumerable<PositionPIPTemplateDto>>.Ok(dtos, PositionPIPTemplateMsg.RetrievedActive);
     }
 

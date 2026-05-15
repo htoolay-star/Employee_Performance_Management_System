@@ -1,4 +1,3 @@
-using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Performance;
 using EPMS.Domain.Interface.IService.Performance;
@@ -7,30 +6,29 @@ using EPMS.Shared.DTOs.PerformanceDTOs.FormTemplateDTOs;
 using EPMS.Shared.Enums;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 
+using Mapster;
 namespace EPMS.Domain.Services.Performance
 {
     public class FormTemplateService : IFormTemplateService
     {
         private readonly IUnitOfWork _uow;
-        private readonly IMapper _mapper;
-
-        public FormTemplateService(IUnitOfWork uow, IMapper mapper)
+        
+        public FormTemplateService(IUnitOfWork uow)
         {
             _uow = uow;
-            _mapper = mapper;
         }
 
         public async Task<SuccessResponse<IEnumerable<FormTemplateDto>>> GetAllAsync()
         {
             var templates = await _uow.Perf.FormTemplates.GetAllAsync();
-            var dtos = _mapper.Map<IEnumerable<FormTemplateDto>>(templates);
+            var dtos = templates.Adapt<IEnumerable<FormTemplateDto>>();
             return SuccessResponse<IEnumerable<FormTemplateDto>>.Ok(dtos, FormTemplateMsg.RetrievedAll);
         }
 
         public async Task<SuccessResponse<IEnumerable<FormTemplateDto>>> GetActiveAsync()
         {
             var templates = await _uow.Perf.FormTemplates.GetActiveAsync();
-            var dtos = _mapper.Map<IEnumerable<FormTemplateDto>>(templates);
+            var dtos = templates.Adapt<IEnumerable<FormTemplateDto>>();
             return SuccessResponse<IEnumerable<FormTemplateDto>>.Ok(dtos, FormTemplateMsg.RetrievedActive);
         }
 
@@ -41,7 +39,7 @@ namespace EPMS.Domain.Services.Performance
             if (template == null)
                 return SuccessResponse<FormTemplateDto>.Fail(FormTemplateMsg.NotFound(id), ErrorType.NotFound);
 
-            var dto = _mapper.Map<FormTemplateDto>(template);
+            var dto = template.Adapt<FormTemplateDto>();
             dto.QuestionCount = template.Questions?.Count ?? 0;
             return SuccessResponse<FormTemplateDto>.Ok(dto, FormTemplateMsg.Retrieved);
         }

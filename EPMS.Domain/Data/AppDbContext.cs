@@ -54,6 +54,8 @@ namespace EPMS.Domain.Data
         // Performance Schema
         public DbSet<KPIMaster> KPIMasters => Set<KPIMaster>();
         public DbSet<PositionKPI> PositionKPIs => Set<PositionKPI>();
+        public DbSet<DeptKPI> DeptKPIs => Set<DeptKPI>();
+        public DbSet<TeamKPI> TeamKPIs => Set<TeamKPI>();
         public DbSet<PositionKPIHistory> PositionKPIHistories => Set<PositionKPIHistory>();
         public DbSet<KPIWeightPriority> KPIWeightPriorities => Set<KPIWeightPriority>();
         public DbSet<AppraisalCycle> AppraisalCycles => Set<AppraisalCycle>();

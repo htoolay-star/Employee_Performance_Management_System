@@ -1,5 +1,4 @@
-﻿using EPMS.Api.MappingProfiles;
-using EPMS.Domain.Contracts;
+﻿using EPMS.Domain.Contracts;
 using EPMS.Domain.Data.Seeding;
 using EPMS.Domain.Factories;
 using EPMS.Domain.Interface.IService.Auth;
@@ -21,8 +20,6 @@ namespace EPMS.Api.Extensions
 
             services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
             services.AddValidatorsFromAssembly(typeof(AuthValidationExtensions).Assembly);
-            services.AddAutoMapper(cfg => cfg.AddMaps(typeof(MappingProfile).Assembly));
-
             services.AddTransient(typeof(Lazy<>), typeof(LazyResolution<>));
             services.AddTransient<IDbSeeder, DbSeeder>();
             services.AddSingleton<IAuditLogFactory, AuditLogFactory>();

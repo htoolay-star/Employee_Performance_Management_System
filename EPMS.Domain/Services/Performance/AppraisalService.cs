@@ -1,4 +1,3 @@
-﻿using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Performance;
 using EPMS.Domain.Interface.IService.App;
@@ -10,24 +9,22 @@ using EPMS.Shared.Enums;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 using EPMS.Domain.Interface.IService.Performance;
 
+using Mapster;
 namespace EPMS.Domain.Services.Performance;
 
 public class AppraisalService : IAppraisalService
 {
     private readonly IUnitOfWork _uow;
     private readonly TimeProvider _timeProvider;
-    private readonly IMapper _mapper;
-    private readonly ICurrentEmployeeContextService _currentEmployee;
+        private readonly ICurrentEmployeeContextService _currentEmployee;
 
     public AppraisalService(
         IUnitOfWork uow,
         TimeProvider timeProvider,
-        IMapper mapper,
         ICurrentEmployeeContextService currentEmployee)
     {
         _uow = uow;
         _timeProvider = timeProvider;
-        _mapper = mapper;
         _currentEmployee = currentEmployee;
     }
 
@@ -95,14 +92,14 @@ public class AppraisalService : IAppraisalService
         if (appraisal == null)
             return SuccessResponse.Fail(AppraisalMsg.NotFound(id), ErrorType.NotFound);
 
-        var dto = _mapper.Map<AppraisalDto>(appraisal);
+        var dto = appraisal.Adapt<AppraisalDto>();
         return SuccessResponse<AppraisalDto>.Ok(dto, AppraisalMsg.Retrieved);
     }
 
     public async Task<SuccessResponse> GetAllAsync()
     {
         var appraisals = await _uow.Perf.Appraisals.GetAllAsync();
-        var dtos = _mapper.Map<IEnumerable<AppraisalDto>>(appraisals.Where(a => !a.IsDeleted));
+        var dtos = appraisals.Where(a => !a.IsDeleted).Adapt<IEnumerable<AppraisalDto>>();
         return SuccessResponse<IEnumerable<AppraisalDto>>.Ok(dtos, AppraisalMsg.RetrievedAll);
     }
 
@@ -113,7 +110,7 @@ public class AppraisalService : IAppraisalService
             return SuccessResponse.Fail(EmployeeProfileMsg.NotFound(employeeId), ErrorType.NotFound);
 
         var appraisals = await _uow.Perf.Appraisals.GetEmployeeAppraisalsAsync(employeeId, 0);
-        var dtos = _mapper.Map<IEnumerable<AppraisalDto>>(appraisals.Where(a => !a.IsDeleted));
+        var dtos = appraisals.Where(a => !a.IsDeleted).Adapt<IEnumerable<AppraisalDto>>();
         return SuccessResponse<IEnumerable<AppraisalDto>>.Ok(dtos, AppraisalMsg.RetrievedByEmployee);
     }
 

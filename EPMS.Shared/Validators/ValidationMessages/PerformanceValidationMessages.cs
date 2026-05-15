@@ -168,6 +168,28 @@ namespace EPMS.Shared.Validators.ValidationMessages
             public const string TargetUnitMaxLength = "Target unit cannot exceed 50 characters.";
         }
 
+        public static class DeptKPI
+        {
+            public const string IdRequired = "Department KPI ID is required.";
+            public const string DeptIdRequired = "Department is required.";
+            public const string KPIIdRequired = "KPI is required.";
+            public const string PriorityIdRequired = "Priority is required.";
+            public const string WeightageInvalid = "Weightage must be between 0 and 100.";
+            public const string TargetValueMaxLength = "Target value cannot exceed 100 characters.";
+            public const string TargetUnitMaxLength = "Target unit cannot exceed 50 characters.";
+        }
+
+        public static class TeamKPI
+        {
+            public const string IdRequired = "Team KPI ID is required.";
+            public const string TeamIdRequired = "Team is required.";
+            public const string KPIIdRequired = "KPI is required.";
+            public const string PriorityIdRequired = "Priority is required.";
+            public const string WeightageInvalid = "Weightage must be between 0 and 100.";
+            public const string TargetValueMaxLength = "Target value cannot exceed 100 characters.";
+            public const string TargetUnitMaxLength = "Target unit cannot exceed 50 characters.";
+        }
+
         public static class QuestionRatingScale
         {
             public const string NameRequired = "Question rating scale name is required.";

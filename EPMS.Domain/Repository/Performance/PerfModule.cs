@@ -1,4 +1,3 @@
-﻿using AutoMapper;
 using EPMS.Domain.Data;
 using EPMS.Domain.Interface.Irepo.Info;
 using EPMS.Domain.Interface.Irepo.Performance;
@@ -26,6 +25,8 @@ public class PerfModule(IServiceProvider serviceProvider) : IPerfModule
     private IContinuousFeedbackRepository? _perfContinuousFeedbackRepository;
     private IOneOnOneMeetingRepository? _perfOneOnOneMeetingRepository;
     private IPositionKPIRepository? _perfPositionKPIRepository;
+    private IDeptKPIRepository? _perfDeptKPIRepository;
+    private ITeamKPIRepository? _perfTeamKPIRepository;
     private IQuestionRatingScaleRepository? _perfQuestionRatingScaleRepository;
     private IPositionPIPTemplateRepository? _perfPositionPIPTemplateRepository;
     private IPositionFormTemplateRepository? _perfPositionFormTemplateRepository;
@@ -69,6 +70,12 @@ public class PerfModule(IServiceProvider serviceProvider) : IPerfModule
 
     public IPositionKPIRepository PositionKPIs =>
         _perfPositionKPIRepository ??= serviceProvider.GetRequiredService<IPositionKPIRepository>();
+
+    public IDeptKPIRepository DeptKPIs =>
+        _perfDeptKPIRepository ??= serviceProvider.GetRequiredService<IDeptKPIRepository>();
+
+    public ITeamKPIRepository TeamKPIs =>
+        _perfTeamKPIRepository ??= serviceProvider.GetRequiredService<ITeamKPIRepository>();
 
     public IQuestionRatingScaleRepository QuestionRatingScales =>
         _perfQuestionRatingScaleRepository ??= serviceProvider.GetRequiredService<IQuestionRatingScaleRepository>();

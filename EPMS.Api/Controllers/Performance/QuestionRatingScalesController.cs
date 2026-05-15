@@ -9,7 +9,6 @@ namespace EPMS.Api.Controllers.Performance;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize]
 public class QuestionRatingScalesController : ApiControllerBase
 {
     private readonly IQuestionRatingScaleService _questionRatingScaleService;

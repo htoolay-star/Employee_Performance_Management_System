@@ -1,4 +1,3 @@
-using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Hr;
 using EPMS.Domain.Interface.Irepo.Hr;

@@ -1,4 +1,3 @@
-using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Performance;
 using EPMS.Domain.Interface.IService.App;
@@ -11,49 +10,47 @@ using EPMS.Shared.Enums;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 using static EPMS.Shared.Constants.PIPStatuses;
 
+using Mapster;
 namespace EPMS.Domain.Services.Performance
 {
     public class PIPService : IPIPService
     {
         private readonly IUnitOfWork _uow;
-        private readonly IMapper _mapper;
-        private readonly ICurrentEmployeeContextService _currentEmployee;
+                private readonly ICurrentEmployeeContextService _currentEmployee;
 
         public PIPService(
             IUnitOfWork uow,
-            IMapper mapper,
             ICurrentEmployeeContextService currentEmployee)
         {
             _uow = uow;
-            _mapper = mapper;
             _currentEmployee = currentEmployee;
         }
 
         public async Task<SuccessResponse<IEnumerable<PIPDto>>> GetAllAsync()
         {
             var pips = await _uow.Perf.PIPs.GetAllAsync();
-            var dtos = _mapper.Map<IEnumerable<PIPDto>>(pips);
+            var dtos = pips.Adapt<IEnumerable<PIPDto>>();
             return SuccessResponse<IEnumerable<PIPDto>>.Ok(dtos, PIPMsg.RetrievedAll);
         }
 
         public async Task<SuccessResponse<IEnumerable<PIPDto>>> GetActivePIPsAsync()
         {
             var pips = await _uow.Perf.PIPs.GetActivePIPsAsync();
-            var dtos = _mapper.Map<IEnumerable<PIPDto>>(pips);
+            var dtos = pips.Adapt<IEnumerable<PIPDto>>();
             return SuccessResponse<IEnumerable<PIPDto>>.Ok(dtos, PIPMsg.RetrievedActive);
         }
 
         public async Task<SuccessResponse<IEnumerable<PIPDto>>> GetByEmployeeIdAsync(long employeeId)
         {
             var pips = await _uow.Perf.PIPs.GetByEmployeeIdAsync(employeeId);
-            var dtos = _mapper.Map<IEnumerable<PIPDto>>(pips);
+            var dtos = pips.Adapt<IEnumerable<PIPDto>>();
             return SuccessResponse<IEnumerable<PIPDto>>.Ok(dtos, PIPMsg.RetrievedAll);
         }
 
         public async Task<SuccessResponse<IEnumerable<PIPDto>>> GetByManagerIdAsync(long managerId)
         {
             var pips = await _uow.Perf.PIPs.GetByManagerIdAsync(managerId);
-            var dtos = _mapper.Map<IEnumerable<PIPDto>>(pips);
+            var dtos = pips.Adapt<IEnumerable<PIPDto>>();
             return SuccessResponse<IEnumerable<PIPDto>>.Ok(dtos, PIPMsg.RetrievedAll);
         }
 
@@ -64,7 +61,7 @@ namespace EPMS.Domain.Services.Performance
             if (pip == null)
                 return SuccessResponse<PIPDto>.Fail(PIPMsg.NotFound(id), ErrorType.NotFound);
 
-            var dto = _mapper.Map<PIPDto>(pip);
+            var dto = pip.Adapt<PIPDto>();
             return SuccessResponse<PIPDto>.Ok(dto, PIPMsg.Retrieved);
         }
 

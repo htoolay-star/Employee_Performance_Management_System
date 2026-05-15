@@ -21,6 +21,8 @@ public interface IPerfModule
     IContinuousFeedbackRepository ContinuousFeedbacks { get; }
     IOneOnOneMeetingRepository OneOnOneMeetings { get; }
     IPositionKPIRepository PositionKPIs { get; }
+    IDeptKPIRepository DeptKPIs { get; }
+    ITeamKPIRepository TeamKPIs { get; }
     IQuestionRatingScaleRepository QuestionRatingScales { get; }
     IPositionPIPTemplateRepository PositionPIPTemplates { get; }
     IPositionFormTemplateRepository PositionFormTemplates { get; }

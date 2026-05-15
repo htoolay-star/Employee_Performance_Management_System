@@ -10,7 +10,6 @@ namespace EPMS.Api.Controllers.Performance;
 
 [Route("api/performance/rating-scales")]
 [ApiController]
-[Authorize(Roles = RoleConstants.Admin)]
 public class RatingScalesController : ApiControllerBase
 {
     private readonly IRatingScaleService _ratingScaleService;

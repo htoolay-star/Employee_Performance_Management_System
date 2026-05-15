@@ -1,4 +1,3 @@
-using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Performance;
 using EPMS.Domain.Interface.IService.Performance;
@@ -7,30 +6,29 @@ using EPMS.Shared.DTOs.PerformanceDTOs.KPIMasterDTOs;
 using EPMS.Shared.Enums;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 
+using Mapster;
 namespace EPMS.Domain.Services.Performance
 {
     public class KPIMasterService : IKPIMasterService
     {
         private readonly IUnitOfWork _uow;
-        private readonly IMapper _mapper;
-
-        public KPIMasterService(IUnitOfWork uow, IMapper mapper)
+        
+        public KPIMasterService(IUnitOfWork uow)
         {
             _uow = uow;
-            _mapper = mapper;
         }
 
         public async Task<SuccessResponse<IEnumerable<KPIMasterDto>>> GetAllAsync()
         {
             var kpis = await _uow.Perf.KPIMasters.GetAllAsync();
-            var dtos = _mapper.Map<IEnumerable<KPIMasterDto>>(kpis);
+            var dtos = kpis.Adapt<IEnumerable<KPIMasterDto>>();
             return SuccessResponse<IEnumerable<KPIMasterDto>>.Ok(dtos, KPIMasterMsg.RetrievedAll);
         }
 
         public async Task<SuccessResponse<IEnumerable<KPIMasterDto>>> GetActiveAsync()
         {
             var kpis = await _uow.Perf.KPIMasters.GetActiveAsync();
-            var dtos = _mapper.Map<IEnumerable<KPIMasterDto>>(kpis);
+            var dtos = kpis.Adapt<IEnumerable<KPIMasterDto>>();
             return SuccessResponse<IEnumerable<KPIMasterDto>>.Ok(dtos, KPIMasterMsg.RetrievedActive);
         }
 
@@ -41,7 +39,7 @@ namespace EPMS.Domain.Services.Performance
             if (kpi == null)
                 return SuccessResponse<KPIMasterDto>.Fail(KPIMasterMsg.NotFound(id), ErrorType.NotFound);
 
-            var dto = _mapper.Map<KPIMasterDto>(kpi);
+            var dto = kpi.Adapt<KPIMasterDto>();
             return SuccessResponse<KPIMasterDto>.Ok(dto, KPIMasterMsg.Retrieved);
         }
 

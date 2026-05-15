@@ -1,4 +1,3 @@
-using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Performance;
 using EPMS.Domain.Interface.IService.Performance;
@@ -8,30 +7,29 @@ using EPMS.Shared.DTOs.PerformanceDTOs.AppraisalCycleDTOs;
 using EPMS.Shared.Enums;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 
+using Mapster;
 namespace EPMS.Domain.Services.Performance;
 
 public class AppraisalCycleService : IAppraisalCycleService
 {
     private readonly IUnitOfWork _uow;
-    private readonly IMapper _mapper;
-
-    public AppraisalCycleService(IUnitOfWork uow, IMapper mapper)
+    
+    public AppraisalCycleService(IUnitOfWork uow)
     {
         _uow = uow;
-        _mapper = mapper;
     }
 
     public async Task<SuccessResponse<IEnumerable<AppraisalCycleDto>>> GetAllAsync()
     {
         var cycles = await _uow.Perf.AppraisalCycles.GetAllAsync();
-        var dtos = _mapper.Map<IEnumerable<AppraisalCycleDto>>(cycles);
+        var dtos = cycles.Adapt<IEnumerable<AppraisalCycleDto>>();
         return SuccessResponse<IEnumerable<AppraisalCycleDto>>.Ok(dtos, AppraisalCycleMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<IEnumerable<AppraisalCycleDto>>> GetActiveCyclesAsync()
     {
         var cycles = await _uow.Perf.AppraisalCycles.GetActiveCyclesAsync();
-        var dtos = _mapper.Map<IEnumerable<AppraisalCycleDto>>(cycles);
+        var dtos = cycles.Adapt<IEnumerable<AppraisalCycleDto>>();
         return SuccessResponse<IEnumerable<AppraisalCycleDto>>.Ok(dtos, AppraisalCycleMsg.RetrievedActive);
     }
 
@@ -42,7 +40,7 @@ public class AppraisalCycleService : IAppraisalCycleService
         if (cycle == null)
             return SuccessResponse<AppraisalCycleDto>.Fail(AppraisalCycleMsg.NotFound(id), ErrorType.NotFound);
 
-        var dto = _mapper.Map<AppraisalCycleDto>(cycle);
+        var dto = cycle.Adapt<AppraisalCycleDto>();
         return SuccessResponse<AppraisalCycleDto>.Ok(dto, AppraisalCycleMsg.Retrieved);
     }
 

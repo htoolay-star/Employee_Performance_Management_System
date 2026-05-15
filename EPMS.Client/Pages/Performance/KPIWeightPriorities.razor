@@ -1,0 +1,327 @@
+@page "/performance/kpi-weight-priorities"
+@using EPMS.Client.Constants
+@using EPMS.Client.Services.Performance
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.PerformanceDTOs.KPIWeightPriorityDTOs
+@using MudBlazor
+@using Refit
+@using static EPMS.Shared.Constants.ServiceResponseMessages
+
+@inject IKPIWeightPriorityApiClient KPIWeightPriorityApiClient
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>@UIConstants.KPIWeightPriority.PageTitle</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.KPIWeightPriority.PageTitle</MudText>
+
+    <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+            <MudTextField @bind-Value="_searchString"
+                          Placeholder="@UIConstants.KPIWeightPriority.SearchPlaceholder"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          IconSize="Size.Medium"
+                          Variant="Variant.Outlined"
+                          Clearable="true"
+                          Immediate="true"
+                          DebounceInterval="500"
+                          Style="max-width: 300px;" />
+
+            <MudSelect T="bool"
+                       Value="@_statusFilter"
+                       ValueChanged="OnStatusFilterChanged"
+                       Variant="Variant.Outlined"
+                       Style="max-width: 150px;">
+                <MudSelectItem T="bool" Value="@(true)">@UIConstants.Common.Active</MudSelectItem>
+                <MudSelectItem T="bool" Value="@(false)">@UIConstants.Common.Inactive</MudSelectItem>
+            </MudSelect>
+
+            <TableSortControl SortBy="@_sortBy"
+                              SortDirection="@_sortDirection"
+                              SortColumns="@_sortableColumns"
+                              OnSortChanged="HandleSortChanged" />
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenCreateDialog">
+                @UIConstants.KPIWeightPriority.AddButton
+            </MudButton>
+        </MudStack>
+
+        <MudDataGrid Items="@_items"
+                     QuickFilter="@QuickFilter"
+                     Loading="@_loading"
+                     SortMode="SortMode.None"
+                     Hover="true"
+                     Elevation="0">
+            <Columns>
+                <TemplateColumn Title="@UIConstants.Common.ColumnNo" Sortable="false">
+                    <CellTemplate>
+                        <span style="display: block; text-align: right;">@_rowNumbers.GetValueOrDefault(context.Item.Id)</span>
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.LevelName" Title="@UIConstants.KPIWeightPriority.ColumnLevel" />
+                <PropertyColumn Property="x => x.MinWeight" Title="@UIConstants.KPIWeightPriority.ColumnMinWeight" Sortable="true" />
+                <PropertyColumn Property="x => x.MaxWeight" Title="@UIConstants.KPIWeightPriority.ColumnMaxWeight" Sortable="true" />
+                <TemplateColumn Title="@UIConstants.KPIWeightPriority.ColumnColor">
+                    <CellTemplate>
+                        @if (!string.IsNullOrEmpty(context.Item.ColorCode))
+                        {
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                <span style="width: 14px; height: 14px; border-radius: 50%; display: inline-block; background: @context.Item.ColorCode; border: 1px solid #ccc;"></span>
+                                <MudText Typo="Typo.body2">@context.Item.ColorCode</MudText>
+                            </MudStack>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Default">-</MudText>
+                        }
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="@UIConstants.Common.Status">
+                    <CellTemplate>
+                        <MudChip Color="@(context.Item.IsActive ? Color.Success : Color.Default)"
+                                 Size="Size.Small">
+                            @(context.Item.IsActive ? UIConstants.Common.Active : UIConstants.Common.Inactive)
+                        </MudChip>
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="@UIConstants.Common.Actions" Sortable="false">
+                    <CellTemplate>
+                        <MudStack Row="true" Spacing="0">
+                            <MudTooltip Text="Edit Priority" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Color="Color.Primary"
+                                               Size="Size.Small"
+                                               OnClick="@(() => OpenEditDialog(context.Item))" />
+                            </MudTooltip>
+                            <MudTooltip Text="Delete Priority" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Color="Color.Error"
+                                               Size="Size.Small"
+                                               OnClick="@(() => OpenDeleteDialog(context.Item))" />
+                            </MudTooltip>
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+            <NoRecordsContent>
+                <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
+                    <MudIcon Icon="@Icons.Material.Outlined.Inbox" Style="font-size: 4rem;" Color="Color.Default" />
+                    <MudText Typo="Typo.h6" Color="Color.Default">@UIConstants.Common.NoRecords</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">@UIConstants.KPIWeightPriority.NoDataFound</MudText>
+                </MudStack>
+            </NoRecordsContent>
+            <LoadingContent>
+                <MudStack Spacing="3" Class="w-100">
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                </MudStack>
+            </LoadingContent>
+            <PagerContent>
+                <MudDataGridPager T="KPIWeightPriorityDto" />
+            </PagerContent>
+        </MudDataGrid>
+
+    </MudPaper>
+</MudContainer>
+
+@code {
+
+    private static readonly DialogOptions _formDialogOptions = new()
+    {
+        CloseOnEscapeKey = true,
+        MaxWidth = MaxWidth.Small,
+        FullWidth = true
+    };
+    private static readonly DialogOptions _confirmDialogOptions = new()
+    {
+        CloseOnEscapeKey = true
+    };
+
+    private List<KPIWeightPriorityDto> _allItems = new();
+    private List<KPIWeightPriorityDto> _items = new();
+    private bool _loading = true;
+    private string _searchString = string.Empty;
+    private Dictionary<long, int> _rowNumbers = new();
+    private bool _statusFilter = true;
+
+    private string _sortBy = "MinWeight";
+    private string _sortDirection = "asc";
+    private Dictionary<string, string> _sortableColumns = new()
+    {
+        { "LevelName", "Level" },
+        { "MinWeight", "Min Weight" },
+        { "MaxWeight", "Max Weight" }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private bool QuickFilter(KPIWeightPriorityDto x)
+    {
+        if (x.IsActive != _statusFilter)
+            return false;
+
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+
+        return x.LevelName.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task HandleSortChanged((string SortBy, string SortDirection) sortData)
+    {
+        _loading = true;
+        await Task.Yield();
+
+        _sortBy = sortData.SortBy;
+        _sortDirection = sortData.SortDirection;
+
+        _loading = false;
+        ApplyFiltersAndSort();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _loading = true;
+        StateHasChanged();
+        try
+        {
+            var response = await KPIWeightPriorityApiClient.GetAllAsync();
+            if (response.Success && response.Data != null)
+            {
+                _allItems = response.Data.ToList();
+                ApplyFiltersAndSort();
+            }
+            else
+                Snackbar.Add(response.Message ?? UIConstants.Common.LoadFailed, Severity.Error);
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DeleteItemAsync(long id)
+    {
+        try
+        {
+            var response = await KPIWeightPriorityApiClient.DeleteAsync(id);
+            if (response.Success)
+            {
+                Snackbar.Add(KPIWeightPriorityMsg.Deleted, Severity.Success);
+                await LoadDataAsync();
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? UIConstants.Common.DeleteFailed, Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+    }
+
+    private async Task OpenCreateDialog()
+    {
+        var dialog = await DialogService.ShowAsync<KPIWeightPriorityDialog>(
+            UIConstants.KPIWeightPriority.CreateDialogTitle, _formDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+        {
+            Snackbar.Add(KPIWeightPriorityMsg.Created, Severity.Success);
+            await LoadDataAsync();
+        }
+    }
+
+    private async Task OpenEditDialog(KPIWeightPriorityDto item)
+    {
+        var parameters = new DialogParameters<KPIWeightPriorityDialog>
+        {
+            { x => x.Priority, item }
+        };
+
+        var dialog = await DialogService.ShowAsync<KPIWeightPriorityDialog>(
+            UIConstants.KPIWeightPriority.EditDialogTitle, parameters, _formDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+        {
+            Snackbar.Add(KPIWeightPriorityMsg.Updated, Severity.Success);
+            await LoadDataAsync();
+        }
+    }
+
+    private async Task OpenDeleteDialog(KPIWeightPriorityDto item)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, string.Format(UIConstants.Common.DeleteConfirmationFormat, item.LevelName) },
+            { x => x.ButtonText, UIConstants.Common.Delete },
+            { x => x.Color, Color.Error }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(
+            UIConstants.KPIWeightPriority.DeleteDialogTitle, parameters, _confirmDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+            await DeleteItemAsync(item.Id);
+    }
+
+    private void ApplyFiltersAndSort()
+    {
+        if (!_allItems.Any()) return;
+
+        var filteredList = _allItems.Where(x => x.IsActive == _statusFilter).ToList();
+
+        filteredList = _sortBy switch
+        {
+            "LevelName" => _sortDirection == "asc"
+                ? filteredList.OrderBy(x => x.LevelName).ToList()
+                : filteredList.OrderByDescending(x => x.LevelName).ToList(),
+            "MaxWeight" => _sortDirection == "asc"
+                ? filteredList.OrderBy(x => x.MaxWeight).ToList()
+                : filteredList.OrderByDescending(x => x.MaxWeight).ToList(),
+            _ => _sortDirection == "asc"
+                ? filteredList.OrderBy(x => x.MinWeight).ToList()
+                : filteredList.OrderByDescending(x => x.MinWeight).ToList(),
+        };
+
+        _items = filteredList;
+
+        _rowNumbers = filteredList
+            .Select((x, i) => (x.Id, Index: i + 1))
+            .ToDictionary(x => x.Id, x => x.Index);
+    }
+
+    private async Task OnStatusFilterChanged(bool value)
+    {
+        _statusFilter = value;
+        _loading = true;
+        await Task.Yield();
+        ApplyFiltersAndSort();
+        _loading = false;
+    }
+}

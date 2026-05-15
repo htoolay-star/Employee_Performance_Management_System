@@ -1,4 +1,3 @@
-using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Performance;
 using EPMS.Domain.Interface.IService.Performance;
@@ -7,30 +6,29 @@ using EPMS.Shared.DTOs.PerformanceDTOs.KPIWeightPriorityDTOs;
 using EPMS.Shared.Enums;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 
+using Mapster;
 namespace EPMS.Domain.Services.Performance;
 
 public class KPIWeightPriorityService : IKPIWeightPriorityService
 {
     private readonly IUnitOfWork _uow;
-    private readonly IMapper _mapper;
-
-    public KPIWeightPriorityService(IUnitOfWork uow, IMapper mapper)
+    
+    public KPIWeightPriorityService(IUnitOfWork uow)
     {
         _uow = uow;
-        _mapper = mapper;
     }
 
     public async Task<SuccessResponse<IEnumerable<KPIWeightPriorityDto>>> GetAllAsync()
     {
         var priorities = await _uow.Perf.KPIWeightPriorities.GetAllAsync();
-        var dtos = _mapper.Map<IEnumerable<KPIWeightPriorityDto>>(priorities);
+        var dtos = priorities.Adapt<IEnumerable<KPIWeightPriorityDto>>();
         return SuccessResponse<IEnumerable<KPIWeightPriorityDto>>.Ok(dtos, KPIWeightPriorityMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<IEnumerable<KPIWeightPriorityDto>>> GetActiveAsync()
     {
         var priorities = await _uow.Perf.KPIWeightPriorities.GetActiveAsync();
-        var dtos = _mapper.Map<IEnumerable<KPIWeightPriorityDto>>(priorities);
+        var dtos = priorities.Adapt<IEnumerable<KPIWeightPriorityDto>>();
         return SuccessResponse<IEnumerable<KPIWeightPriorityDto>>.Ok(dtos, KPIWeightPriorityMsg.RetrievedActive);
     }
 
@@ -41,7 +39,7 @@ public class KPIWeightPriorityService : IKPIWeightPriorityService
         if (priority == null)
             return SuccessResponse<KPIWeightPriorityDto>.Fail(KPIWeightPriorityMsg.NotFound(id), ErrorType.NotFound);
 
-        var dto = _mapper.Map<KPIWeightPriorityDto>(priority);
+        var dto = priority.Adapt<KPIWeightPriorityDto>();
         return SuccessResponse<KPIWeightPriorityDto>.Ok(dto, KPIWeightPriorityMsg.Retrieved);
     }
 
@@ -52,7 +50,7 @@ public class KPIWeightPriorityService : IKPIWeightPriorityService
         if (priority == null)
             return SuccessResponse<KPIWeightPriorityDto>.Fail(KPIWeightPriorityMsg.NotFoundByLevelName(levelName), ErrorType.NotFound);
 
-        var dto = _mapper.Map<KPIWeightPriorityDto>(priority);
+        var dto = priority.Adapt<KPIWeightPriorityDto>();
         return SuccessResponse<KPIWeightPriorityDto>.Ok(dto, KPIWeightPriorityMsg.Retrieved);
     }
 

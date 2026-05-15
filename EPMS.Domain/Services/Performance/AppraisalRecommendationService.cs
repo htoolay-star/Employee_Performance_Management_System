@@ -1,4 +1,3 @@
-using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Performance;
 using EPMS.Shared.Constants;
@@ -8,19 +7,18 @@ using EPMS.Shared.Enums;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 using EPMS.Domain.Interface.IService.Performance;
 
+using Mapster;
 namespace EPMS.Domain.Services.Performance;
 
 public class AppraisalRecommendationService : IAppraisalRecommendationService
 {
     private readonly IUnitOfWork _uow;
     private readonly TimeProvider _timeProvider;
-    private readonly IMapper _mapper;
-
-    public AppraisalRecommendationService(IUnitOfWork uow, TimeProvider timeProvider, IMapper mapper)
+    
+    public AppraisalRecommendationService(IUnitOfWork uow, TimeProvider timeProvider)
     {
         _uow = uow;
         _timeProvider = timeProvider;
-        _mapper = mapper;
     }
 
     public async Task<SuccessResponse> CreateAsync(CreateAppraisalRecommendationDto dto)
@@ -82,14 +80,14 @@ public class AppraisalRecommendationService : IAppraisalRecommendationService
         if (recommendation == null)
             return SuccessResponse.Fail(AppraisalRecommendationMsg.NotFound(id), ErrorType.NotFound);
 
-        var dto = _mapper.Map<AppraisalRecommendationDto>(recommendation);
+        var dto = recommendation.Adapt<AppraisalRecommendationDto>();
         return SuccessResponse<AppraisalRecommendationDto>.Ok(dto, AppraisalRecommendationMsg.Retrieved);
     }
 
     public async Task<SuccessResponse> GetAllAsync()
     {
         var recommendations = await _uow.Perf.AppraisalRecommendations.GetAllAsync();
-        var dtos = _mapper.Map<IEnumerable<AppraisalRecommendationDto>>(recommendations.Where(r => !r.IsDeleted));
+        var dtos = recommendations.Where(r => !r.IsDeleted).Adapt<IEnumerable<AppraisalRecommendationDto>>();
         return SuccessResponse<IEnumerable<AppraisalRecommendationDto>>.Ok(dtos, AppraisalRecommendationMsg.RetrievedAll);
     }
 
@@ -100,7 +98,7 @@ public class AppraisalRecommendationService : IAppraisalRecommendationService
             return SuccessResponse.Fail(AppraisalMsg.NotFound(appraisalId), ErrorType.NotFound);
 
         var recommendations = await _uow.Perf.AppraisalRecommendations.GetByAppraisalIdAsync(appraisalId);
-        var dtos = _mapper.Map<IEnumerable<AppraisalRecommendationDto>>(recommendations.Where(r => !r.IsDeleted));
+        var dtos = recommendations.Where(r => !r.IsDeleted).Adapt<IEnumerable<AppraisalRecommendationDto>>();
         return SuccessResponse<IEnumerable<AppraisalRecommendationDto>>.Ok(dtos, AppraisalRecommendationMsg.RetrievedByAppraisal);
     }
 
