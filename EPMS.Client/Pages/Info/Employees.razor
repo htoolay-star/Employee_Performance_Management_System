@@ -170,7 +170,7 @@
                      RowsPerPage="10">
             <Columns>
                 <TemplateColumn Title="No." Sortable="true" Class="text-center" HeaderClass="text-center" Style="width: 60px;">
-                    <CellTemplate>@context.Item.RowIndex</CellTemplate>
+                    <CellTemplate><span style="display: block; text-align: right;">@context.Item.RowIndex</span></CellTemplate>
                 </TemplateColumn>
 
                 <PropertyColumn Property="x => x.StaffNo" Title="@UIConstants.Employee.ColumnStaffNo" />

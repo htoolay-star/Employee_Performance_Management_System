@@ -95,12 +95,14 @@
                                    Label="@UIConstants.AppraisalCycle.EvalStart"
                                    For="@(() => _model.EvaluationStartDateProxy)"
                                    Variant="Variant.Outlined"
-                                   Class="flex-1" />
+                                   Class="flex-1"
+                                   Style="text-align: center;" />
                     <MudDatePicker @bind-Date="_model.EvaluationEndDateProxy"
                                    Label="@UIConstants.AppraisalCycle.EvalEnd"
                                    For="@(() => _model.EvaluationEndDateProxy)"
                                    Variant="Variant.Outlined"
-                                   Class="flex-1" />
+                                   Class="flex-1"
+                                   Style="text-align: center;" />
                 </MudStack>
 
                 <MudText Typo="Typo.subtitle1" Class="mt-2">Appraisal Window</MudText>
@@ -110,12 +112,14 @@
                                    Label="@UIConstants.AppraisalCycle.WindowStart"
                                    For="@(() => _model.WindowStartDateProxy)"
                                    Variant="Variant.Outlined"
-                                   Class="flex-1" />
+                                   Class="flex-1"
+                                   Style="text-align: center;" />
                     <MudDatePicker @bind-Date="_model.WindowEndDateProxy"
                                    Label="@UIConstants.AppraisalCycle.WindowEnd"
                                    For="@(() => _model.WindowEndDateProxy)"
                                    Variant="Variant.Outlined"
-                                   Class="flex-1" />
+                                   Class="flex-1"
+                                   Style="text-align: center;" />
                 </MudStack>
 
                 <MudText Typo="Typo.subtitle1" Class="mt-2">@UIConstants.AppraisalCycle.SelfReview (Optional)</MudText>
@@ -125,12 +129,14 @@
                                    Label="Start"
                                    For="@(() => _model.SelfReviewStartDateProxy)"
                                    Variant="Variant.Outlined"
-                                   Class="flex-1" />
+                                   Class="flex-1"
+                                   Style="text-align: center;" />
                     <MudDatePicker @bind-Date="_model.SelfReviewDeadlineProxy"
                                    Label="Deadline"
                                    For="@(() => _model.SelfReviewDeadlineProxy)"
                                    Variant="Variant.Outlined"
-                                   Class="flex-1" />
+                                   Class="flex-1"
+                                   Style="text-align: center;" />
                 </MudStack>
 
                 <MudText Typo="Typo.subtitle1" Class="mt-2">@UIConstants.AppraisalCycle.ManagerReview (Optional)</MudText>
@@ -140,12 +146,14 @@
                                    Label="Start"
                                    For="@(() => _model.ManagerReviewStartDateProxy)"
                                    Variant="Variant.Outlined"
-                                   Class="flex-1" />
+                                   Class="flex-1"
+                                   Style="text-align: center;" />
                     <MudDatePicker @bind-Date="_model.ManagerReviewDeadlineProxy"
                                    Label="Deadline"
                                    For="@(() => _model.ManagerReviewDeadlineProxy)"
                                    Variant="Variant.Outlined"
-                                   Class="flex-1" />
+                                   Class="flex-1"
+                                   Style="text-align: center;" />
                 </MudStack>
 
                 <MudText Typo="Typo.subtitle1" Class="mt-2">@UIConstants.AppraisalCycle.PeerReview (Optional)</MudText>
@@ -155,12 +163,14 @@
                                    Label="Start"
                                    For="@(() => _model.PeerReviewStartDateProxy)"
                                    Variant="Variant.Outlined"
-                                   Class="flex-1" />
+                                   Class="flex-1"
+                                   Style="text-align: center;" />
                     <MudDatePicker @bind-Date="_model.PeerReviewDeadlineProxy"
                                    Label="Deadline"
                                    For="@(() => _model.PeerReviewDeadlineProxy)"
                                    Variant="Variant.Outlined"
-                                   Class="flex-1" />
+                                   Class="flex-1"
+                                   Style="text-align: center;" />
                 </MudStack>
 
             </MudStack>

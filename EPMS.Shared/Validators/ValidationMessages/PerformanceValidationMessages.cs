@@ -91,6 +91,9 @@ namespace EPMS.Shared.Validators.ValidationMessages
             public const string EvaluationPeriodExceedsMax = "Evaluation period ({0} days) exceeds the maximum of {1} days allowed for {2} appraisal.";
             public const string EvaluationPeriodBelowMinimum = "Evaluation period ({0} days) is below the minimum of {1} days required for {2} appraisal.";
             public const string EvaluationDateOutsideYearRange = "Evaluation date must be within {0:dd/MM/yyyy} to {1:dd/MM/yyyy} for year '{2}'.";
+            public const string SelfReviewOutsideWindow = "Self-review dates must fall within the appraisal window ({0:dd/MM/yyyy} to {1:dd/MM/yyyy}).";
+            public const string ManagerReviewOutsideWindow = "Manager review dates must fall within the appraisal window ({0:dd/MM/yyyy} to {1:dd/MM/yyyy}).";
+            public const string PeerReviewOutsideWindow = "Peer review dates must fall within the appraisal window ({0:dd/MM/yyyy} to {1:dd/MM/yyyy}).";
         }
 
         public static class KPIMaster

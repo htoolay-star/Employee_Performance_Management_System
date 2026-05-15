@@ -107,7 +107,7 @@
             <Columns>
                 @* RowIndex is computed server-side *@
                 <TemplateColumn Title="@UIConstants.Common.ColumnNo" Sortable="false">
-                    <CellTemplate>@context.Item.RowIndex</CellTemplate>
+                    <CellTemplate><span style="display: block; text-align: right;">@context.Item.RowIndex</span></CellTemplate>
                 </TemplateColumn>
                 <PropertyColumn Property="x => x.Code" Title="@UIConstants.Team.ColumnCode" />
                 <PropertyColumn Property="x => x.Name" Title="@UIConstants.Team.ColumnName" />

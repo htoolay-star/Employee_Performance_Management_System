@@ -35,7 +35,7 @@ else
                     @if (!_editMode)
                     {
                         <MudText Typo="Typo.caption" Class="mud-text-secondary">Salary</MudText>
-                        <MudText Typo="Typo.body1">@_payrollInfo.Salary.ToString("N2")</MudText>
+                        <MudText Typo="Typo.body1" Style="text-align: right;">@_payrollInfo.Salary.ToString("N2")</MudText>
                     }
                     else
                     {
@@ -44,7 +44,8 @@ else
                                          Variant="Variant.Outlined"
                                          Adornment="Adornment.Start"
                                          AdornmentText="$"
-                                         For="@(() => _model.Salary)" />
+                                         For="@(() => _model.Salary)"
+                                         Style="text-align: right;" />
                     }
                 </MudItem>
                 <MudItem xs="12" sm="6">
@@ -175,28 +176,30 @@ else
                     @if (!_editMode)
                     {
                         <MudText Typo="Typo.caption" Class="mud-text-secondary">Compliance Earned Points</MudText>
-                        <MudText Typo="Typo.body1">@(_payrollInfo.ComplianceEarnedPoints?.ToString() ?? "-")</MudText>
+                        <MudText Typo="Typo.body1" Style="text-align: right;">@(_payrollInfo.ComplianceEarnedPoints?.ToString() ?? "-")</MudText>
                     }
                     else
                     {
                         <MudNumericField @bind-Value="_model.ComplianceEarnedPoints"
                                          Label="Compliance Earned Points"
                                          Variant="Variant.Outlined"
-                                         For="@(() => _model.ComplianceEarnedPoints)" />
+                                         For="@(() => _model.ComplianceEarnedPoints)"
+                                         Style="text-align: right;" />
                     }
                 </MudItem>
                 <MudItem xs="12" sm="6">
                     @if (!_editMode)
                     {
                         <MudText Typo="Typo.caption" Class="mud-text-secondary">Compliance Balance Points</MudText>
-                        <MudText Typo="Typo.body1">@(_payrollInfo.ComplianceBalancePoints?.ToString() ?? "-")</MudText>
+                        <MudText Typo="Typo.body1" Style="text-align: right;">@(_payrollInfo.ComplianceBalancePoints?.ToString() ?? "-")</MudText>
                     }
                     else
                     {
                         <MudNumericField @bind-Value="_model.ComplianceBalancePoints"
                                          Label="Compliance Balance Points"
                                          Variant="Variant.Outlined"
-                                         For="@(() => _model.ComplianceBalancePoints)" />
+                                         For="@(() => _model.ComplianceBalancePoints)"
+                                         Style="text-align: right;" />
                     }
                 </MudItem>
 

@@ -44,7 +44,7 @@
                         </MudSelect>
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudDatePicker @bind-Date="_profileModel.DateOfBirthProxy" Label="Date of Birth" Variant="Variant.Outlined" For="@(() => _profileModel.DateOfBirthProxy)" />
+                        <MudDatePicker @bind-Date="_profileModel.DateOfBirthProxy" Label="Date of Birth" Variant="Variant.Outlined" For="@(() => _profileModel.DateOfBirthProxy)" Style="text-align: center;" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
                         <MudTextField @bind-Value="_profileModel.EmailAddress" Label="Email Address" Variant="Variant.Outlined" For="@(() => _profileModel.EmailAddress)" />
@@ -76,16 +76,16 @@
                         <MudTextField @bind-Value="_profileModel.PassportNo" Label="Passport No" Variant="Variant.Outlined" For="@(() => _profileModel.PassportNo)" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudDatePicker @bind-Date="_profileModel.PassportExpireDateProxy" Label="Passport Expiry" Variant="Variant.Outlined" For="@(() => _profileModel.PassportExpireDateProxy)" />
+                        <MudDatePicker @bind-Date="_profileModel.PassportExpireDateProxy" Label="Passport Expiry" Variant="Variant.Outlined" For="@(() => _profileModel.PassportExpireDateProxy)" Style="text-align: center;" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
                         <MudTextField @bind-Value="_profileModel.WorkPermitNo" Label="Work Permit No" Variant="Variant.Outlined" For="@(() => _profileModel.WorkPermitNo)" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudDatePicker @bind-Date="_profileModel.WorkPermitValidDateProxy" Label="Work Permit Valid Date" Variant="Variant.Outlined" For="@(() => _profileModel.WorkPermitValidDateProxy)" />
+                        <MudDatePicker @bind-Date="_profileModel.WorkPermitValidDateProxy" Label="Work Permit Valid Date" Variant="Variant.Outlined" For="@(() => _profileModel.WorkPermitValidDateProxy)" Style="text-align: center;" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudDatePicker @bind-Date="_profileModel.WorkPermitExpireDateProxy" Label="Work Permit Expire Date" Variant="Variant.Outlined" For="@(() => _profileModel.WorkPermitExpireDateProxy)" />
+                        <MudDatePicker @bind-Date="_profileModel.WorkPermitExpireDateProxy" Label="Work Permit Expire Date" Variant="Variant.Outlined" For="@(() => _profileModel.WorkPermitExpireDateProxy)" Style="text-align: center;" />
                     </MudItem>
                 </MudGrid>
             </MudForm>
@@ -114,7 +114,7 @@
                         </MudSelect>
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudNumericField @bind-Value="_employmentModel.ProbationMonth" Label="Probation Months" Variant="Variant.Outlined" For="@(() => _employmentModel.ProbationMonth)" />
+                        <MudNumericField @bind-Value="_employmentModel.ProbationMonth" Label="Probation Months" Variant="Variant.Outlined" For="@(() => _employmentModel.ProbationMonth)" Style="text-align: right;" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
                         <MudSelect T="string" @bind-Value="_employmentModel.Shift" Label="Shift" Variant="Variant.Outlined" For="@(() => _employmentModel.Shift)">
@@ -219,13 +219,13 @@
                         </MudAutocomplete>
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudDatePicker @bind-Date="_employmentModel.DateOfAppointmentProxy" Label="Date of Appointment" Variant="Variant.Outlined" For="@(() => _employmentModel.DateOfAppointmentProxy)" />
+                        <MudDatePicker @bind-Date="_employmentModel.DateOfAppointmentProxy" Label="Date of Appointment" Variant="Variant.Outlined" For="@(() => _employmentModel.DateOfAppointmentProxy)" Style="text-align: center;" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudDatePicker @bind-Date="_employmentModel.DateOfConfirmationProxy" Label="Date of Confirmation" Variant="Variant.Outlined" For="@(() => _employmentModel.DateOfConfirmationProxy)" />
+                        <MudDatePicker @bind-Date="_employmentModel.DateOfConfirmationProxy" Label="Date of Confirmation" Variant="Variant.Outlined" For="@(() => _employmentModel.DateOfConfirmationProxy)" Style="text-align: center;" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudDatePicker @bind-Date="_employmentModel.DateOfPromotionProxy" Label="Date of Promotion" Variant="Variant.Outlined" For="@(() => _employmentModel.DateOfPromotionProxy)" />
+                        <MudDatePicker @bind-Date="_employmentModel.DateOfPromotionProxy" Label="Date of Promotion" Variant="Variant.Outlined" For="@(() => _employmentModel.DateOfPromotionProxy)" Style="text-align: center;" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
                         <MudTextField @bind-Value="_employmentModel.FingerPrintId" Label="Finger Print ID" Variant="Variant.Outlined" For="@(() => _employmentModel.FingerPrintId)" />
@@ -322,7 +322,7 @@
             <MudForm @ref="_payrollForm" Model="@_payrollModel" Validation="@ValidatePayrollField">
                 <MudGrid>
                     <MudItem xs="12" sm="6">
-                        <MudNumericField @bind-Value="_payrollModel.Salary" Label="Salary" Variant="Variant.Outlined" For="@(() => _payrollModel.Salary)" />
+                        <MudNumericField @bind-Value="_payrollModel.Salary" Label="Salary" Variant="Variant.Outlined" For="@(() => _payrollModel.Salary)" Style="text-align: right;" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
                         <MudSelect T="string" @bind-Value="_payrollModel.Currency" Label="Currency" Variant="Variant.Outlined" For="@(() => _payrollModel.Currency)">
@@ -359,10 +359,10 @@
                         <MudTextField @bind-Value="_payrollModel.SSCBNo" Label="SSCB No" Variant="Variant.Outlined" For="@(() => _payrollModel.SSCBNo)" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudNumericField @bind-Value="_payrollModel.ComplianceEarnedPoints" Label="Compliance Earned Points" Variant="Variant.Outlined" For="@(() => _payrollModel.ComplianceEarnedPoints)" />
+                        <MudNumericField @bind-Value="_payrollModel.ComplianceEarnedPoints" Label="Compliance Earned Points" Variant="Variant.Outlined" For="@(() => _payrollModel.ComplianceEarnedPoints)" Style="text-align: right;" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudNumericField @bind-Value="_payrollModel.ComplianceBalancePoints" Label="Compliance Balance Points" Variant="Variant.Outlined" For="@(() => _payrollModel.ComplianceBalancePoints)" />
+                        <MudNumericField @bind-Value="_payrollModel.ComplianceBalancePoints" Label="Compliance Balance Points" Variant="Variant.Outlined" For="@(() => _payrollModel.ComplianceBalancePoints)" Style="text-align: right;" />
                     </MudItem>
                 </MudGrid>
             </MudForm>

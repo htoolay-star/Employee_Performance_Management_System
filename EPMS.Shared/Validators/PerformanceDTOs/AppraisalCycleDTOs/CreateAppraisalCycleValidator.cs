@@ -152,14 +152,56 @@ public class CreateAppraisalCycleValidator : AbstractValidator<CreateAppraisalCy
             .When(x => x.SelfReviewStartDate.HasValue && x.SelfReviewDeadline.HasValue)
             .WithMessage(PerformanceValidationMessages.AppraisalCycle.SelfReviewStartBeforeDeadline);
 
+        RuleFor(x => x.SelfReviewStartDate)
+            .GreaterThanOrEqualTo(x => x.WindowStartDate)
+            .When(x => x.SelfReviewStartDate.HasValue)
+            .WithMessage(x => string.Format(
+                PerformanceValidationMessages.AppraisalCycle.SelfReviewOutsideWindow,
+                x.WindowStartDate, x.WindowEndDate));
+
+        RuleFor(x => x.SelfReviewDeadline)
+            .LessThanOrEqualTo(x => x.WindowEndDate)
+            .When(x => x.SelfReviewDeadline.HasValue)
+            .WithMessage(x => string.Format(
+                PerformanceValidationMessages.AppraisalCycle.SelfReviewOutsideWindow,
+                x.WindowStartDate, x.WindowEndDate));
+
         RuleFor(x => x.ManagerReviewStartDate)
             .LessThanOrEqualTo(x => x.ManagerReviewDeadline)
             .When(x => x.ManagerReviewStartDate.HasValue && x.ManagerReviewDeadline.HasValue)
             .WithMessage(PerformanceValidationMessages.AppraisalCycle.ManagerReviewStartBeforeDeadline);
 
+        RuleFor(x => x.ManagerReviewStartDate)
+            .GreaterThanOrEqualTo(x => x.WindowStartDate)
+            .When(x => x.ManagerReviewStartDate.HasValue)
+            .WithMessage(x => string.Format(
+                PerformanceValidationMessages.AppraisalCycle.ManagerReviewOutsideWindow,
+                x.WindowStartDate, x.WindowEndDate));
+
+        RuleFor(x => x.ManagerReviewDeadline)
+            .LessThanOrEqualTo(x => x.WindowEndDate)
+            .When(x => x.ManagerReviewDeadline.HasValue)
+            .WithMessage(x => string.Format(
+                PerformanceValidationMessages.AppraisalCycle.ManagerReviewOutsideWindow,
+                x.WindowStartDate, x.WindowEndDate));
+
         RuleFor(x => x.PeerReviewStartDate)
             .LessThanOrEqualTo(x => x.PeerReviewDeadline)
             .When(x => x.PeerReviewStartDate.HasValue && x.PeerReviewDeadline.HasValue)
             .WithMessage(PerformanceValidationMessages.AppraisalCycle.PeerReviewStartBeforeDeadline);
+
+        RuleFor(x => x.PeerReviewStartDate)
+            .GreaterThanOrEqualTo(x => x.WindowStartDate)
+            .When(x => x.PeerReviewStartDate.HasValue)
+            .WithMessage(x => string.Format(
+                PerformanceValidationMessages.AppraisalCycle.PeerReviewOutsideWindow,
+                x.WindowStartDate, x.WindowEndDate));
+
+        RuleFor(x => x.PeerReviewDeadline)
+            .LessThanOrEqualTo(x => x.WindowEndDate)
+            .When(x => x.PeerReviewDeadline.HasValue)
+            .WithMessage(x => string.Format(
+                PerformanceValidationMessages.AppraisalCycle.PeerReviewOutsideWindow,
+                x.WindowStartDate, x.WindowEndDate));
     }
 }

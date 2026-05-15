@@ -26,7 +26,7 @@
                             <th style="padding: 8px 12px; text-align: center; border-bottom: 2px solid #e0e0e0;"></th>
                             @foreach (var prop in _rowProperties)
                             {
-                                <th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid #e0e0e0;">@FormatHeader(prop.Name)</th>
+                                <th style="padding: 8px 12px; text-align: @(IsNumericType(prop) ? "right" : "left"); border-bottom: 2px solid #e0e0e0;">@FormatHeader(prop.Name)</th>
                             }
                         </tr>
                     </thead>
@@ -51,7 +51,7 @@
                                 @foreach (var prop in _rowProperties)
                                 {
                                     var val = prop.GetValue(row.Data);
-                                    <td style="padding: 4px 12px; @bg">@(val?.ToString() ?? "")</td>
+                                    <td style="padding: 4px 12px; text-align: @(IsNumericType(prop) ? "right" : "left"); @bg">@(val?.ToString() ?? "")</td>
                                 }
                             </tr>
                             @if (!row.IsValid && row.Errors.Count > 0)
@@ -92,6 +92,15 @@
     private static readonly Regex _headerRegex = new("(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])", RegexOptions.Compiled);
 
     private static string FormatHeader(string name) => _headerRegex.Replace(name, " ");
+
+    private static bool IsNumericType(PropertyInfo prop)
+    {
+        var t = prop.PropertyType;
+        if (t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Nullable<>))
+            t = Nullable.GetUnderlyingType(t) ?? t;
+        return t == typeof(int) || t == typeof(long) || t == typeof(short)
+            || t == typeof(decimal) || t == typeof(double) || t == typeof(float);
+    }
 
     private void Confirm() => _mudDialog?.Close(DialogResult.Ok(true));
 

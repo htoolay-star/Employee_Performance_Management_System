@@ -110,19 +110,34 @@ public class AppraisalCycleService : IAppraisalCycleService
             dto.WindowEndDate
         );
 
-        if (dto.SelfReviewStartDate.HasValue && dto.SelfReviewDeadline.HasValue)
+        try
         {
-            cycle.ConfigureSelfReviewWindow(dto.SelfReviewStartDate.Value, dto.SelfReviewDeadline.Value);
+            if (dto.SelfReviewStartDate.HasValue && dto.SelfReviewDeadline.HasValue)
+                cycle.ConfigureSelfReviewWindow(dto.SelfReviewStartDate.Value, dto.SelfReviewDeadline.Value);
+        }
+        catch (ArgumentException ex)
+        {
+            return SuccessResponse<long>.Fail(ex.Message, ErrorType.Validation);
         }
 
-        if (dto.ManagerReviewStartDate.HasValue && dto.ManagerReviewDeadline.HasValue)
+        try
         {
-            cycle.ConfigureManagerReviewWindow(dto.ManagerReviewStartDate.Value, dto.ManagerReviewDeadline.Value);
+            if (dto.ManagerReviewStartDate.HasValue && dto.ManagerReviewDeadline.HasValue)
+                cycle.ConfigureManagerReviewWindow(dto.ManagerReviewStartDate.Value, dto.ManagerReviewDeadline.Value);
+        }
+        catch (ArgumentException ex)
+        {
+            return SuccessResponse<long>.Fail(ex.Message, ErrorType.Validation);
         }
 
-        if (dto.PeerReviewStartDate.HasValue && dto.PeerReviewDeadline.HasValue)
+        try
         {
-            cycle.ConfigurePeerReviewWindow(dto.PeerReviewStartDate.Value, dto.PeerReviewDeadline.Value);
+            if (dto.PeerReviewStartDate.HasValue && dto.PeerReviewDeadline.HasValue)
+                cycle.ConfigurePeerReviewWindow(dto.PeerReviewStartDate.Value, dto.PeerReviewDeadline.Value);
+        }
+        catch (ArgumentException ex)
+        {
+            return SuccessResponse<long>.Fail(ex.Message, ErrorType.Validation);
         }
 
         _uow.Perf.AppraisalCycles.Add(cycle);
@@ -246,19 +261,34 @@ public class AppraisalCycleService : IAppraisalCycleService
                      dto.EvaluationStartDate, dto.EvaluationEndDate,
                      dto.WindowStartDate, dto.WindowEndDate);
 
-        if (dto.SelfReviewStartDate.HasValue && dto.SelfReviewDeadline.HasValue)
+        try
         {
-            cycle.ConfigureSelfReviewWindow(dto.SelfReviewStartDate.Value, dto.SelfReviewDeadline.Value);
+            if (dto.SelfReviewStartDate.HasValue && dto.SelfReviewDeadline.HasValue)
+                cycle.ConfigureSelfReviewWindow(dto.SelfReviewStartDate.Value, dto.SelfReviewDeadline.Value);
+        }
+        catch (ArgumentException ex)
+        {
+            return SuccessResponse.Fail(ex.Message, ErrorType.Validation);
         }
 
-        if (dto.ManagerReviewStartDate.HasValue && dto.ManagerReviewDeadline.HasValue)
+        try
         {
-            cycle.ConfigureManagerReviewWindow(dto.ManagerReviewStartDate.Value, dto.ManagerReviewDeadline.Value);
+            if (dto.ManagerReviewStartDate.HasValue && dto.ManagerReviewDeadline.HasValue)
+                cycle.ConfigureManagerReviewWindow(dto.ManagerReviewStartDate.Value, dto.ManagerReviewDeadline.Value);
+        }
+        catch (ArgumentException ex)
+        {
+            return SuccessResponse.Fail(ex.Message, ErrorType.Validation);
         }
 
-        if (dto.PeerReviewStartDate.HasValue && dto.PeerReviewDeadline.HasValue)
+        try
         {
-            cycle.ConfigurePeerReviewWindow(dto.PeerReviewStartDate.Value, dto.PeerReviewDeadline.Value);
+            if (dto.PeerReviewStartDate.HasValue && dto.PeerReviewDeadline.HasValue)
+                cycle.ConfigurePeerReviewWindow(dto.PeerReviewStartDate.Value, dto.PeerReviewDeadline.Value);
+        }
+        catch (ArgumentException ex)
+        {
+            return SuccessResponse.Fail(ex.Message, ErrorType.Validation);
         }
 
         _uow.Perf.AppraisalCycles.Update(cycle);
