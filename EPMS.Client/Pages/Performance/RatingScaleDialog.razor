@@ -155,7 +155,10 @@
                 var response = await RatingScaleApiClient.UpdateAsync(RatingScale!.Id, dto);
 
                 if (response.Success)
+                {
                     _mudDialog?.Close(DialogResult.Ok(true));
+                    return;
+                }
                 else
                     Snackbar.Add(response.Message ?? UIConstants.Common.UpdateFailed, Severity.Error);
             }
@@ -165,7 +168,10 @@
                 var response = await RatingScaleApiClient.CreateAsync(dto);
 
                 if (response.Success)
+                {
                     _mudDialog?.Close(DialogResult.Ok(true));
+                    return;
+                }
                 else
                     Snackbar.Add(response.Message ?? UIConstants.Common.CreateFailed, Severity.Error);
             }

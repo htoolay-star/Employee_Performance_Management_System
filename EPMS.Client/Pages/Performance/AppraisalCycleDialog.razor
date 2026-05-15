@@ -49,7 +49,7 @@
                                Variant="Variant.Outlined">
                         @foreach (var year in AvailableYears)
                         {
-                            <MudSelectItem T="string" Value="@year">@year</MudSelectItem>
+                            <MudSelectItem T="string" Value="@year" @key="year">@year</MudSelectItem>
                         }
                     </MudSelect>
 
@@ -90,7 +90,7 @@
                                Variant="Variant.Outlined">
                         @foreach (var year in AvailableYears)
                         {
-                            <MudSelectItem T="string" Value="@year">@year</MudSelectItem>
+                            <MudSelectItem T="string" Value="@year" @key="year">@year</MudSelectItem>
                         }
                     </MudSelect>
 
@@ -270,7 +270,18 @@
                 var response = await AppraisalCycleApiClient.CreateAsync(dto);
 
                 if (response.Success)
+                {
                     _mudDialog?.Close(DialogResult.Ok(true));
+                    return;
+                }
+                else
+                    Snackbar.Add(response.Message ?? UIConstants.Common.UpdateFailed, Severity.Error);
+
+                if (response.Success)
+                {
+                    _mudDialog?.Close(DialogResult.Ok(true));
+                    return;
+                }
                 else
                     Snackbar.Add(response.Message ?? UIConstants.Common.CreateFailed, Severity.Error);
             }

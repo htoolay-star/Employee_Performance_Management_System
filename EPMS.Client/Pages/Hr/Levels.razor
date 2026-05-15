@@ -76,7 +76,7 @@
                 {{!-- (like Positions does with RowIndex) and switch to ServerData.  --}} *@
                 <TemplateColumn Title="@UIConstants.Common.ColumnNo" Sortable="false">
                     <CellTemplate>
-                        <span style="display: block; text-align: right;">@_rowNumbers.GetValueOrDefault(context.Item.Id)</span>
+                        <span style="display: block; text-align: left;">@_rowNumbers.GetValueOrDefault(context.Item.Id)</span>
                     </CellTemplate>
                 </TemplateColumn>
                 <PropertyColumn Property="x => x.Code" Title="@UIConstants.Level.ColumnCode" />

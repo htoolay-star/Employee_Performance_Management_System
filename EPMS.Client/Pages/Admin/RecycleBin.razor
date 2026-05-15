@@ -14,8 +14,8 @@
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
     <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.RecycleBin.PageTitle</MudText>
 
-    <MudAlert Severity="Severity.Info" Class="mb-4">
-        Items are automatically permanently deleted after 30 days by the nightly maintenance job.
+    <MudAlert Severity="Severity.Error" Class="mb-4">
+        Items are automatically permanently deleted after 30 days.
     </MudAlert>
 
     <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
@@ -25,42 +25,46 @@
                           Placeholder="@UIConstants.RecycleBin.SearchPlaceholder"
                           Adornment="Adornment.Start"
                           AdornmentIcon="@Icons.Material.Filled.Search"
-                               Variant="Variant.Outlined"
-                               Immediate="true"
-                               Style="max-width: 300px;" />
+                          Variant="Variant.Outlined"
+                          Immediate="true"
+                          DebounceInterval="500"
+                          Style="max-width: 300px;" />
 
-            <MudSelect T="string"
-                       @bind-Value="_entityTypeFilter"
-                       Label="Entity Type"
-                               Variant="Variant.Outlined"
-                               Style="max-width: 200px;">
-                @foreach (var t in _entityTypes)
-                {
-                    <MudSelectItem Value="@t">@t</MudSelectItem>
-                }
-            </MudSelect>
+            <MudAutocomplete T="string"
+                             Value="@_entityTypeFilter"
+                             ValueChanged="OnEntityTypeFilterChanged"
+                             Label="Type"
+                             Variant="Variant.Outlined"
+                             Style="max-width: 200px;"
+                             Clearable="true"
+                             SearchFunc="SearchEntityTypes"
+                             ToStringFunc="(string s) => s" />
 
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LoadDataAsync">
-                Refresh
-            </MudButton>
+            <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                           Color="Color.Primary"
+                           Size="Size.Medium"
+                           OnClick="LoadDataAsync" />
         </MudStack>
 
-        <MudDataGrid Items="@_filteredItems"
+        <MudDataGrid Items="@_items"
+                     QuickFilter="@QuickFilter"
                      Loading="@_loading"
                      Hover="true"
                      Elevation="0"
                      SortMode="SortMode.None">
             <Columns>
-                <TemplateColumn Title="@UIConstants.Common.ColumnNo" Sortable="false">
+                <TemplateColumn Title="@UIConstants.Common.ColumnNo" Sortable="false" Style="width: 60px;">
                     <CellTemplate>
-                        <span style="display: block; text-align: right;">@(_filteredItems.IndexOf(context.Item) + 1)</span>
+                        <span style="display: block; text-align: left; padding-right: 12px;">
+                            @_rowNumbers.GetValueOrDefault($"{context.Item.EntityType}-{context.Item.EntityId}")
+                        </span>
                     </CellTemplate>
                 </TemplateColumn>
                 <PropertyColumn Property="x => x.EntityType" Title="@UIConstants.RecycleBin.ColumnEntityType" />
                 <PropertyColumn Property="x => x.DisplayName" Title="@UIConstants.RecycleBin.ColumnName" />
                 <PropertyColumn Property="x => x.DeletedAt" Title="@UIConstants.RecycleBin.ColumnDeletedAt" Sortable="true">
                     <CellTemplate>
-                        @context.Item.DeletedAt.ToString("dd/MM/yyyy HH:mm")
+                        @context.Item.DeletedAt.ToOffset(TimeSpan.FromHours(6.5)).ToString("dd/MM/yyyy hh:mm tt")
                     </CellTemplate>
                 </PropertyColumn>
                 <TemplateColumn Title="@UIConstants.RecycleBin.ColumnDaysLeft" Sortable="true">
@@ -73,10 +77,13 @@
                 </TemplateColumn>
                 <TemplateColumn Title="@UIConstants.Common.Actions" Sortable="false">
                     <CellTemplate>
-                        <MudIconButton Icon="@Icons.Material.Filled.Restore"
-                                       Color="Color.Success"
-                                       Size="Size.Small"
-                                       OnClick="@(() => RestoreItem(context.Item))" />
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Success"
+                                   Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.Restore"
+                                   OnClick="@(() => RestoreItem(context.Item))">
+                            Restore
+                        </MudButton>
                     </CellTemplate>
                 </TemplateColumn>
             </Columns>
@@ -107,23 +114,39 @@
     private string? _entityTypeFilter;
 
     private List<RecycleBinItemDto> _allItems = new();
-    private List<RecycleBinItemDto> _filteredItems
+    private List<RecycleBinItemDto> _items = new();
+    private Dictionary<string, int> _rowNumbers = new();
+    private List<string> _entityTypes = new();
+
+    private Task<IEnumerable<string>> SearchEntityTypes(string value, CancellationToken _)
     {
-        get
-        {
-            var filtered = _allItems
-                .Where(x => string.IsNullOrEmpty(_entityTypeFilter) || x.EntityType == _entityTypeFilter)
-                .Where(x => string.IsNullOrWhiteSpace(_searchString) || x.DisplayName.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-            return filtered;
-        }
+        var result = string.IsNullOrEmpty(value)
+            ? _entityTypes
+            : _entityTypes.Where(x => x.Contains(value, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(result.AsEnumerable());
     }
 
-    private List<string> _entityTypes = new();
+    private async Task OnEntityTypeFilterChanged(string v)
+    {
+        _entityTypeFilter = v;
+        await LoadDataAsync();
+    }
 
     protected override async Task OnInitializedAsync()
     {
         await LoadDataAsync();
+    }
+
+    private bool QuickFilter(RecycleBinItemDto x)
+    {
+        if (!string.IsNullOrEmpty(_entityTypeFilter) && x.EntityType != _entityTypeFilter)
+            return false;
+
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+
+        return x.DisplayName.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
+            || x.EntityType.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task LoadDataAsync()
@@ -137,9 +160,15 @@
             {
                 _allItems = response.Data.ToList();
                 _entityTypes = _allItems.Select(x => x.EntityType).Distinct().OrderBy(x => x).ToList();
+                ApplyFilters();
             }
             else
                 Snackbar.Add(response.Message ?? UIConstants.Common.LoadFailed, Severity.Error);
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
         }
         catch (Exception ex)
         {
@@ -152,6 +181,18 @@
         }
     }
 
+    private void ApplyFilters()
+    {
+        var filtered = _allItems
+            .Where(x => string.IsNullOrEmpty(_entityTypeFilter) || x.EntityType == _entityTypeFilter)
+            .ToList();
+
+        _items = filtered;
+        _rowNumbers = filtered
+            .Select((x, i) => (Key: $"{x.EntityType}-{x.EntityId}", Index: i + 1))
+            .ToDictionary(x => x.Key, x => x.Index);
+    }
+
     private async Task RestoreItem(RecycleBinItemDto item)
     {
         try
@@ -160,11 +201,15 @@
             if (response.Success)
             {
                 Snackbar.Add($"{item.DisplayName} restored successfully.", Severity.Success);
-                _allItems.Remove(item);
-                StateHasChanged();
+                await LoadDataAsync();
             }
             else
                 Snackbar.Add(response.Message ?? "Failed to restore.", Severity.Error);
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Failed to restore.", Severity.Error);
         }
         catch (Exception ex)
         {

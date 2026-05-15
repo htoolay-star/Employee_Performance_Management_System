@@ -27,8 +27,8 @@
                 {
                     <MudSelect T="string"
                                Value="@_model.EntityType"
-                               ValueChanged="@(v => { _model.EntityType = v; _model.EntityId = 0; _selectedEntityId = null; })"
-                               Label="Entity Type"
+                               ValueChanged="@(v => { _model.EntityType = v; _model.EntityId = null; _selectedEntityId = null; })"
+                               Label="Type"
                                For="@(() => _model.EntityType)"
                                Variant="Variant.Outlined">
                         <MudSelectItem T="string" Value="@AppraisalConstants.EntityTypes.Position">Position</MudSelectItem>
@@ -38,8 +38,8 @@
 
                     <MudAutocomplete T="long?"
                                      Value="@_selectedEntityId"
-                                     ValueChanged="@(v => { _selectedEntityId = v; _model.EntityId = v ?? 0; })"
-                                     Label="Entity"
+                                     ValueChanged="@(v => { _selectedEntityId = v; _model.EntityId = v; })"
+                                     Label="Assigned To"
                                      For="@(() => _model.EntityId)"
                                      Variant="Variant.Outlined"
                                      SearchFunc="SearchEntities"
@@ -48,7 +48,7 @@
 
                     <MudAutocomplete T="long?"
                                      Value="@_selectedKPIId"
-                                     ValueChanged="@(v => { _selectedKPIId = v; _model.KPIId = v ?? 0; })"
+                                     ValueChanged="@(v => { _selectedKPIId = v; _model.KPIId = v; })"
                                      Label="KPI"
                                      For="@(() => _model.KPIId)"
                                      Variant="Variant.Outlined"
@@ -63,7 +63,7 @@
                                Variant="Variant.Outlined">
                         @foreach (var p in _priorities)
                         {
-                            <MudSelectItem Value="@p.Id">@p.LevelName (@p.MinWeight%-@p.MaxWeight%)</MudSelectItem>
+                            <MudSelectItem T="long" Value="@p.Id" @key="p.Id">@p.LevelName (@p.MinWeight%-@p.MaxWeight%)</MudSelectItem>
                         }
                     </MudSelect>
 
@@ -98,7 +98,7 @@
                                Variant="Variant.Outlined">
                         @foreach (var p in _priorities)
                         {
-                            <MudSelectItem Value="@p.Id">@p.LevelName (@p.MinWeight%-@p.MaxWeight%)</MudSelectItem>
+                            <MudSelectItem T="long" Value="@p.Id" @key="p.Id">@p.LevelName (@p.MinWeight%-@p.MaxWeight%)</MudSelectItem>
                         }
                     </MudSelect>
 
@@ -217,7 +217,10 @@
                 var response = await EntityKPIApiClient.UpdateAsync(KpiAssignment!.Id, dto);
 
                 if (response.Success)
+                {
                     _mudDialog?.Close(DialogResult.Ok(true));
+                    return;
+                }
                 else
                     Snackbar.Add(response.Message ?? UIConstants.Common.UpdateFailed, Severity.Error);
             }
@@ -227,7 +230,10 @@
                 var response = await EntityKPIApiClient.CreateAsync(dto);
 
                 if (response.Success)
+                {
                     _mudDialog?.Close(DialogResult.Ok(true));
+                    return;
+                }
                 else
                     Snackbar.Add(response.Message ?? UIConstants.Common.CreateFailed, Severity.Error);
             }
@@ -295,7 +301,7 @@
         var query = source.AsEnumerable();
         if (!string.IsNullOrWhiteSpace(value))
             query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
-        return Task.FromResult(query.Select(x => (long?)x.Id));
+        return Task.FromResult(query.Select(x => (long?)x.Id).ToList().AsEnumerable());
     }
 
     private string GetEntityDisplay(long? id)
@@ -318,7 +324,7 @@
         if (!string.IsNullOrWhiteSpace(value))
             query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase)
                                   || x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
-        return Task.FromResult(query.Select(x => (long?)x.Id));
+        return Task.FromResult(query.Select(x => (long?)x.Id).ToList().AsEnumerable());
     }
 
     private string GetKPIDisplay(long? id)

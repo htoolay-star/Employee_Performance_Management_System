@@ -46,7 +46,7 @@
                            Clearable="true">
                     @foreach (var c in PresetColors)
                     {
-                        <MudSelectItem Value="@c.Code">
+                        <MudSelectItem Value="@c.Code" @key="c.Name">
                             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                                 <span style="width: 16px; height: 16px; border-radius: 50%; display: inline-block; background: @c.Code; border: 1px solid #ccc;"></span>
                                 <MudText>@c.Name</MudText>
@@ -137,7 +137,10 @@
                 var response = await KPIWeightPriorityApiClient.UpdateAsync(Priority!.Id, dto);
 
                 if (response.Success)
+                {
                     _mudDialog?.Close(DialogResult.Ok(true));
+                    return;
+                }
                 else
                     Snackbar.Add(response.Message ?? UIConstants.Common.UpdateFailed, Severity.Error);
             }
@@ -147,7 +150,10 @@
                 var response = await KPIWeightPriorityApiClient.CreateAsync(dto);
 
                 if (response.Success)
+                {
                     _mudDialog?.Close(DialogResult.Ok(true));
+                    return;
+                }
                 else
                     Snackbar.Add(response.Message ?? UIConstants.Common.CreateFailed, Severity.Error);
             }

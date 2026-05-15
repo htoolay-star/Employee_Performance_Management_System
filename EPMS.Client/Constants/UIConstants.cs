@@ -187,7 +187,7 @@
             public const string DeleteDialogTitle = "Delete KPI Assignment";
 
             public const string ColumnEntityType = "Type";
-            public const string ColumnEntity = "Entity";
+            public const string ColumnEntity = "Assigned To";
             public const string ColumnKPI = "KPI";
             public const string ColumnPriority = "Priority";
             public const string ColumnWeightage = "Weight";

@@ -28,7 +28,7 @@
                 {
                     <MudAutocomplete T="long?"
                                      Value="@_selectedEmployeeId"
-                                     ValueChanged="@(v => { _selectedEmployeeId = v; _model.EmployeeId = v ?? 0; })"
+                                     ValueChanged="@(v => { _selectedEmployeeId = v; _model.EmployeeId = v; })"
                                      Label="Employee"
                                      For="@(() => _model.EmployeeId)"
                                      Variant="Variant.Outlined"
@@ -44,13 +44,13 @@
                                Variant="Variant.Outlined">
                         @foreach (var c in _cycles)
                         {
-                            <MudSelectItem Value="@c.Id">@c.Name</MudSelectItem>
+                            <MudSelectItem Value="@c.Id" @key="c.Id">@c.Name</MudSelectItem>
                         }
                     </MudSelect>
 
                     <MudAutocomplete T="long?"
                                      Value="@_selectedKPIId"
-                                     ValueChanged="@(v => { _selectedKPIId = v; _model.KPIId = v ?? 0; })"
+                                     ValueChanged="@(v => { _selectedKPIId = v; _model.KPIId = v; })"
                                      Label="KPI"
                                      For="@(() => _model.KPIId)"
                                      Variant="Variant.Outlined"
@@ -65,7 +65,7 @@
                                Variant="Variant.Outlined">
                         @foreach (var p in _priorities)
                         {
-                            <MudSelectItem Value="@p.Id">@p.LevelName (@p.MinWeight%-@p.MaxWeight%)</MudSelectItem>
+                            <MudSelectItem Value="@p.Id" @key="p.Id">@p.LevelName (@p.MinWeight%-@p.MaxWeight%)</MudSelectItem>
                         }
                     </MudSelect>
 
@@ -100,7 +100,7 @@
                                Variant="Variant.Outlined">
                         @foreach (var p in _priorities)
                         {
-                            <MudSelectItem Value="@p.Id">@p.LevelName (@p.MinWeight%-@p.MaxWeight%)</MudSelectItem>
+                            <MudSelectItem T="long" Value="@p.Id" @key="p.Id">@p.LevelName (@p.MinWeight%-@p.MaxWeight%)</MudSelectItem>
                         }
                     </MudSelect>
 
@@ -183,7 +183,7 @@
         else
         {
             _selectedEmployeeId = PrefilledEmployeeId;
-            _model.EmployeeId = PrefilledEmployeeId ?? 0;
+            _model.EmployeeId = PrefilledEmployeeId;
             if (PrefilledCycleId.HasValue)
                 _model.CycleId = PrefilledCycleId.Value;
             else if (_cycles.Any())
@@ -211,7 +211,10 @@
                 var dto = _model.Adapt<UpdateEmployeeKPIDto>();
                 var response = await EmployeeKPIApiClient.UpdateAsync(Kpi!.Id, dto);
                 if (response.Success)
+                {
                     _mudDialog?.Close(DialogResult.Ok(true));
+                    return;
+                }
                 else
                     Snackbar.Add(response.Message ?? UIConstants.Common.UpdateFailed, Severity.Error);
             }
@@ -220,7 +223,10 @@
                 var dto = _model.Adapt<CreateEmployeeKPIDto>();
                 var response = await EmployeeKPIApiClient.CreateAsync(dto);
                 if (response.Success)
+                {
                     _mudDialog?.Close(DialogResult.Ok(true));
+                    return;
+                }
                 else
                     Snackbar.Add(response.Message ?? UIConstants.Common.CreateFailed, Severity.Error);
             }
@@ -247,7 +253,7 @@
     {
         // Simple validation — just check required fields
         var errors = new List<string>();
-        if (propertyName == nameof(_model.EmployeeId) && _model.EmployeeId <= 0)
+        if (propertyName == nameof(_model.EmployeeId) && _model.EmployeeId.GetValueOrDefault() <= 0)
             errors.Add("Employee is required.");
         if (propertyName == nameof(_model.CycleId) && _model.CycleId <= 0)
             errors.Add("Cycle is required.");
@@ -279,7 +285,7 @@
         if (!string.IsNullOrWhiteSpace(value))
             query = query.Where(x => x.StaffNo.Contains(value, StringComparison.OrdinalIgnoreCase)
                                   || x.StaffName.Contains(value, StringComparison.OrdinalIgnoreCase));
-        return Task.FromResult(query.Select(x => (long?)x.Id));
+        return Task.FromResult(query.Select(x => (long?)x.Id).ToList().AsEnumerable());
     }
 
     private string GetEmployeeDisplay(long? id)
@@ -295,7 +301,7 @@
         if (!string.IsNullOrWhiteSpace(value))
             query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase)
                                   || x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
-        return Task.FromResult(query.Select(x => (long?)x.Id));
+        return Task.FromResult(query.Select(x => (long?)x.Id).ToList().AsEnumerable());
     }
 
     private string GetKPIDisplay(long? id)

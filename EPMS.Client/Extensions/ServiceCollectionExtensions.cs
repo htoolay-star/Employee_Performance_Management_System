@@ -52,6 +52,13 @@ public static class ServiceCollectionExtensions
         services.AddSecureRefitClient<IEmployeeKPIApiClient>(refitSettings, baseUri);
         services.AddSecureRefitClient<IRecycleBinApiClient>(refitSettings, baseUri);
 
+        // Info
+        services.AddSecureRefitClient<IEmployeeProfileApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IEmployeeEmploymentApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IEmployeeContactApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IEmployeeFamilyInfoApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IEmployeePayrollInfoApiClient>(refitSettings, baseUri);
+
         return services;
     }
 }

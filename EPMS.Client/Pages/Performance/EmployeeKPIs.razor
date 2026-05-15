@@ -26,7 +26,7 @@
             <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
                 <MudAutocomplete T="long?"
                                  Value="@_selectedEmployeeId"
-                                 ValueChanged="@(async v => { _selectedEmployeeId = v; await LoadDataAsync(); })"
+                                 ValueChanged="OnEmployeeFilterChanged"
                                  Label="Employee"
                                  Variant="Variant.Outlined"
                                  Style="max-width: 250px;"
@@ -36,15 +36,15 @@
                                  ResetValueOnEmptyText="true" />
 
                 <MudSelect T="long?"
-                           Value="@_selectedCycleId"
-                           ValueChanged="@(async v => { _selectedCycleId = v; await LoadDataAsync(); })"
-                           Label="Cycle"
-                           Variant="Variant.Outlined"
-                           Style="max-width: 200px;"
-                           Clearable="true">
+                            Value="@_selectedCycleId"
+                            ValueChanged="OnCycleFilterChanged"
+                            Label="Cycle"
+                            Variant="Variant.Outlined"
+                            Style="max-width: 200px;"
+                            Clearable="true">
                     @foreach (var c in _cycles)
                     {
-                        <MudSelectItem Value="@((long?)c.Id)">@c.Name</MudSelectItem>
+                        <MudSelectItem Value="@((long?)c.Id)" @key="c.Id">@c.Name</MudSelectItem>
                     }
                 </MudSelect>
             </MudStack>
@@ -63,9 +63,9 @@
                      Elevation="0"
                      SortMode="SortMode.None">
             <Columns>
-                <TemplateColumn Title="@UIConstants.Common.ColumnNo" Sortable="false">
+                <TemplateColumn Title="@UIConstants.Common.ColumnNo" Sortable="false" Style="width: 60px;">
                     <CellTemplate>
-                        <span style="display: block; text-align: right;">@_rowNumbers.GetValueOrDefault(context.Item.Id)</span>
+                        <span style="display: block; text-align: left; padding-right: 12px;">@_rowNumbers.GetValueOrDefault(context.Item.Id)</span>
                     </CellTemplate>
                 </TemplateColumn>
                 <PropertyColumn Property="x => x.EmployeeName" Title="@UIConstants.EmployeeKPI.ColumnEmployee" />
@@ -136,6 +136,18 @@
     private List<AppraisalCycleDto> _cycles = new();
     private List<EmployeeLookupDto> _employees = new();
 
+    private async Task OnEmployeeFilterChanged(long? v)
+    {
+        _selectedEmployeeId = v;
+        await LoadDataAsync();
+    }
+
+    private async Task OnCycleFilterChanged(long? v)
+    {
+        _selectedCycleId = v;
+        await LoadDataAsync();
+    }
+
     protected override async Task OnInitializedAsync()
     {
         _employees = await LookupState.GetEmployeesAsync();
@@ -185,7 +197,7 @@
         if (!string.IsNullOrWhiteSpace(value))
             query = query.Where(x => x.StaffNo.Contains(value, StringComparison.OrdinalIgnoreCase)
                                   || x.StaffName.Contains(value, StringComparison.OrdinalIgnoreCase));
-        return Task.FromResult(query.Select(x => (long?)x.Id));
+        return Task.FromResult(query.Select(x => (long?)x.Id).ToList().AsEnumerable());
     }
 
     private string GetEmployeeDisplay(long? id)

@@ -30,5 +30,6 @@ namespace EPMS.Domain.Contracts
         void Delete(T entity);
         Task<bool> AnyAsync(Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default);
         Task<IEnumerable<T>> GetAllDeletedAsync(CancellationToken cancellationToken = default);
+        Task<T?> GetByIdDeletedAsync(object id, CancellationToken cancellationToken = default);
     }
 }

@@ -75,6 +75,19 @@ namespace EPMS.Domain.Repository.Base
 
             return await _dbSet.IgnoreQueryFilters().Where(predicate).ToListAsync(cancellationToken);
         }
+
+        public async Task<T?> GetByIdDeletedAsync(object id, CancellationToken cancellationToken = default)
+        {
+            if (!typeof(ISoftDeletable).IsAssignableFrom(typeof(T)))
+                return await GetByIdAsync(id, cancellationToken);
+
+            var param = Expression.Parameter(typeof(T), "e");
+            var idProp = Expression.Property(param, "Id");
+            var idBody = Expression.Equal(idProp, Expression.Constant(Convert.ToInt64(id)));
+            var idPredicate = Expression.Lambda<Func<T, bool>>(idBody, param);
+
+            return await _dbSet.IgnoreQueryFilters().FirstOrDefaultAsync(idPredicate, cancellationToken);
+        }
     }
 
 }

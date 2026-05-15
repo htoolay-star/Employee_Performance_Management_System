@@ -90,7 +90,7 @@ namespace EPMS.Domain.Services.Shared
         private async Task<SuccessResponse> RestoreViaService<T>(IGenericRepository<T> repo, long id)
             where T : class, ISoftDeletable
         {
-            var entity = await repo.GetByIdAsync(id);
+            var entity = await repo.GetByIdDeletedAsync(id);
             if (entity == null)
                 return SuccessResponse.Fail("Item not found.", ErrorType.NotFound);
             if (!entity.IsDeleted)
