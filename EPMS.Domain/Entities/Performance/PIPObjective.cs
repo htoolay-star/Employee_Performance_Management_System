@@ -1,4 +1,4 @@
-﻿using EPMS.Domain.Contracts;
+using EPMS.Domain.Contracts;
 using EPMS.Shared.Constants;
 using System;
 using System.Collections.Generic;
@@ -35,6 +35,7 @@ namespace EPMS.Domain.Entities.Performance
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }
+        public long? DeletedBy { get; set; }
 
         public byte[] Version { get; private set; } = Array.Empty<byte>();
 

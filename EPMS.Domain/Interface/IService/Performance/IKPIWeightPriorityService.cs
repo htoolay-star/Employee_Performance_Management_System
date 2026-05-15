@@ -11,7 +11,8 @@ public interface IKPIWeightPriorityService
     Task<SuccessResponse<KPIWeightPriorityDto>> GetByLevelNameAsync(string levelName);
     Task<SuccessResponse<long>> CreateAsync(CreateKPIWeightPriorityDto dto);
     Task<SuccessResponse> UpdateAsync(long id, UpdateKPIWeightPriorityDto dto);
-    Task<SuccessResponse> DeleteAsync(long id);
+    Task<SuccessResponse> RestoreAsync(long id);
+        Task<SuccessResponse> DeleteAsync(long id);
     Task<SuccessResponse> DeactivateAsync(long id);
     Task<SuccessResponse> ReactivateAsync(long id);
 }

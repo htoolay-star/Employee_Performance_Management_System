@@ -45,9 +45,6 @@ namespace EPMS.Domain.Data.Configurations.Hr
                   .HasForeignKey(e => e.LevelId)
                   .OnDelete(DeleteBehavior.Restrict);
 
-            entity.Metadata.FindNavigation(nameof(Position.PositionKPIs))?
-                  .SetPropertyAccessMode(PropertyAccessMode.Field);
-
             entity.Metadata.FindNavigation(nameof(Position.PositionPermissions))?
                   .SetPropertyAccessMode(PropertyAccessMode.Field);
 

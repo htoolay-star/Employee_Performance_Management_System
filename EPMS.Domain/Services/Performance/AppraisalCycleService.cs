@@ -1,4 +1,3 @@
-using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Performance;
 using EPMS.Domain.Interface.IService.Performance;
@@ -8,30 +7,29 @@ using EPMS.Shared.DTOs.PerformanceDTOs.AppraisalCycleDTOs;
 using EPMS.Shared.Enums;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 
+using Mapster;
 namespace EPMS.Domain.Services.Performance;
 
 public class AppraisalCycleService : IAppraisalCycleService
 {
     private readonly IUnitOfWork _uow;
-    private readonly IMapper _mapper;
-
-    public AppraisalCycleService(IUnitOfWork uow, IMapper mapper)
+    
+    public AppraisalCycleService(IUnitOfWork uow)
     {
         _uow = uow;
-        _mapper = mapper;
     }
 
     public async Task<SuccessResponse<IEnumerable<AppraisalCycleDto>>> GetAllAsync()
     {
         var cycles = await _uow.Perf.AppraisalCycles.GetAllAsync();
-        var dtos = _mapper.Map<IEnumerable<AppraisalCycleDto>>(cycles);
+        var dtos = cycles.Adapt<IEnumerable<AppraisalCycleDto>>();
         return SuccessResponse<IEnumerable<AppraisalCycleDto>>.Ok(dtos, AppraisalCycleMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<IEnumerable<AppraisalCycleDto>>> GetActiveCyclesAsync()
     {
         var cycles = await _uow.Perf.AppraisalCycles.GetActiveCyclesAsync();
-        var dtos = _mapper.Map<IEnumerable<AppraisalCycleDto>>(cycles);
+        var dtos = cycles.Adapt<IEnumerable<AppraisalCycleDto>>();
         return SuccessResponse<IEnumerable<AppraisalCycleDto>>.Ok(dtos, AppraisalCycleMsg.RetrievedActive);
     }
 
@@ -42,7 +40,7 @@ public class AppraisalCycleService : IAppraisalCycleService
         if (cycle == null)
             return SuccessResponse<AppraisalCycleDto>.Fail(AppraisalCycleMsg.NotFound(id), ErrorType.NotFound);
 
-        var dto = _mapper.Map<AppraisalCycleDto>(cycle);
+        var dto = cycle.Adapt<AppraisalCycleDto>();
         return SuccessResponse<AppraisalCycleDto>.Ok(dto, AppraisalCycleMsg.Retrieved);
     }
 
@@ -110,19 +108,34 @@ public class AppraisalCycleService : IAppraisalCycleService
             dto.WindowEndDate
         );
 
-        if (dto.SelfReviewStartDate.HasValue && dto.SelfReviewDeadline.HasValue)
+        try
         {
-            cycle.ConfigureSelfReviewWindow(dto.SelfReviewStartDate.Value, dto.SelfReviewDeadline.Value);
+            if (dto.SelfReviewStartDate.HasValue && dto.SelfReviewDeadline.HasValue)
+                cycle.ConfigureSelfReviewWindow(dto.SelfReviewStartDate.Value, dto.SelfReviewDeadline.Value);
+        }
+        catch (ArgumentException ex)
+        {
+            return SuccessResponse<long>.Fail(ex.Message, ErrorType.Validation);
         }
 
-        if (dto.ManagerReviewStartDate.HasValue && dto.ManagerReviewDeadline.HasValue)
+        try
         {
-            cycle.ConfigureManagerReviewWindow(dto.ManagerReviewStartDate.Value, dto.ManagerReviewDeadline.Value);
+            if (dto.ManagerReviewStartDate.HasValue && dto.ManagerReviewDeadline.HasValue)
+                cycle.ConfigureManagerReviewWindow(dto.ManagerReviewStartDate.Value, dto.ManagerReviewDeadline.Value);
+        }
+        catch (ArgumentException ex)
+        {
+            return SuccessResponse<long>.Fail(ex.Message, ErrorType.Validation);
         }
 
-        if (dto.PeerReviewStartDate.HasValue && dto.PeerReviewDeadline.HasValue)
+        try
         {
-            cycle.ConfigurePeerReviewWindow(dto.PeerReviewStartDate.Value, dto.PeerReviewDeadline.Value);
+            if (dto.PeerReviewStartDate.HasValue && dto.PeerReviewDeadline.HasValue)
+                cycle.ConfigurePeerReviewWindow(dto.PeerReviewStartDate.Value, dto.PeerReviewDeadline.Value);
+        }
+        catch (ArgumentException ex)
+        {
+            return SuccessResponse<long>.Fail(ex.Message, ErrorType.Validation);
         }
 
         _uow.Perf.AppraisalCycles.Add(cycle);
@@ -246,19 +259,34 @@ public class AppraisalCycleService : IAppraisalCycleService
                      dto.EvaluationStartDate, dto.EvaluationEndDate,
                      dto.WindowStartDate, dto.WindowEndDate);
 
-        if (dto.SelfReviewStartDate.HasValue && dto.SelfReviewDeadline.HasValue)
+        try
         {
-            cycle.ConfigureSelfReviewWindow(dto.SelfReviewStartDate.Value, dto.SelfReviewDeadline.Value);
+            if (dto.SelfReviewStartDate.HasValue && dto.SelfReviewDeadline.HasValue)
+                cycle.ConfigureSelfReviewWindow(dto.SelfReviewStartDate.Value, dto.SelfReviewDeadline.Value);
+        }
+        catch (ArgumentException ex)
+        {
+            return SuccessResponse.Fail(ex.Message, ErrorType.Validation);
         }
 
-        if (dto.ManagerReviewStartDate.HasValue && dto.ManagerReviewDeadline.HasValue)
+        try
         {
-            cycle.ConfigureManagerReviewWindow(dto.ManagerReviewStartDate.Value, dto.ManagerReviewDeadline.Value);
+            if (dto.ManagerReviewStartDate.HasValue && dto.ManagerReviewDeadline.HasValue)
+                cycle.ConfigureManagerReviewWindow(dto.ManagerReviewStartDate.Value, dto.ManagerReviewDeadline.Value);
+        }
+        catch (ArgumentException ex)
+        {
+            return SuccessResponse.Fail(ex.Message, ErrorType.Validation);
         }
 
-        if (dto.PeerReviewStartDate.HasValue && dto.PeerReviewDeadline.HasValue)
+        try
         {
-            cycle.ConfigurePeerReviewWindow(dto.PeerReviewStartDate.Value, dto.PeerReviewDeadline.Value);
+            if (dto.PeerReviewStartDate.HasValue && dto.PeerReviewDeadline.HasValue)
+                cycle.ConfigurePeerReviewWindow(dto.PeerReviewStartDate.Value, dto.PeerReviewDeadline.Value);
+        }
+        catch (ArgumentException ex)
+        {
+            return SuccessResponse.Fail(ex.Message, ErrorType.Validation);
         }
 
         _uow.Perf.AppraisalCycles.Update(cycle);
@@ -301,6 +329,30 @@ public class AppraisalCycleService : IAppraisalCycleService
 
         cycle.LockCycle();
         _uow.Perf.AppraisalCycles.Update(cycle);
+
+        // Snapshot all EntityKPI assignments to history for this cycle
+        var entityKPIs = await _uow.Perf.EntityKPIs.GetAllAsync();
+        var employeeKPIs = await _uow.Perf.EmployeeKPIs.GetAllAsync();
+        var now = DateTimeOffset.UtcNow;
+
+        foreach (var kpi in entityKPIs)
+        {
+            _uow.Perf.EntityKPIHistories.Add(new EntityKPIHistory(
+                kpi.EntityType, kpi.EntityId, id,
+                kpi.KPIId, kpi.PriorityId, kpi.Weightage,
+                kpi.TargetValue, kpi.TargetUnit, now
+            ));
+        }
+
+        foreach (var kpi in employeeKPIs)
+        {
+            _uow.Perf.EmployeeKPIHistories.Add(new EmployeeKPIHistory(
+                kpi.EmployeeId, id,
+                kpi.KPIId, kpi.PriorityId, kpi.Weightage,
+                kpi.TargetValue, kpi.TargetUnit, now
+            ));
+        }
+
         await _uow.CompleteAsync();
 
         return SuccessResponse.Ok(AppraisalCycleMsg.Locked);
@@ -345,4 +397,19 @@ public class AppraisalCycleService : IAppraisalCycleService
 
         return SuccessResponse.Ok(AppraisalCycleMsg.Reactivated);
     }
+        public async Task<SuccessResponse> RestoreAsync(long id)
+        {
+            var entity = await _uow.Perf.AppraisalCycles.GetByIdAsync(id);
+            if (entity == null)
+                return SuccessResponse.Fail(AppraisalCycleMsg.NotFound(id), ErrorType.NotFound);
+            if (!entity.IsDeleted)
+                return SuccessResponse.Fail("Item is not deleted.", ErrorType.Validation);
+            entity.IsDeleted = false;
+            entity.DeletedAt = null;
+            entity.DeletedBy = null;
+            _uow.Perf.AppraisalCycles.Update(entity);
+            await _uow.CompleteAsync();
+            return SuccessResponse.Ok(AppraisalCycleMsg.Updated);
+        }
+
 }

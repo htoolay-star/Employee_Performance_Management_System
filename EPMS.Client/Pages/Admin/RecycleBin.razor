@@ -1,0 +1,219 @@
+@page "/admin/recycle-bin"
+@using EPMS.Client.Constants
+@using EPMS.Client.Services.Shared
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.RecycleBin
+@using MudBlazor
+@using Refit
+
+@inject IRecycleBinApiClient RecycleBinApiClient
+@inject ISnackbar Snackbar
+
+<PageTitle>@UIConstants.RecycleBin.PageTitle</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.RecycleBin.PageTitle</MudText>
+
+    <MudAlert Severity="Severity.Error" Class="mb-4">
+        Items are automatically permanently deleted after 30 days.
+    </MudAlert>
+
+    <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+            <MudTextField @bind-Value="_searchString"
+                          Placeholder="@UIConstants.RecycleBin.SearchPlaceholder"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Variant="Variant.Outlined"
+                          Immediate="true"
+                          DebounceInterval="500"
+                          Style="max-width: 300px;" />
+
+            <MudAutocomplete T="string"
+                             Value="@_entityTypeFilter"
+                             ValueChanged="OnEntityTypeFilterChanged"
+                             Label="Type"
+                             Variant="Variant.Outlined"
+                             Style="max-width: 200px;"
+                             Clearable="true"
+                             SearchFunc="SearchEntityTypes"
+                             ToStringFunc="(string s) => s" />
+
+            <MudIconButton Icon="@Icons.Material.Filled.Refresh"
+                           Color="Color.Primary"
+                           Size="Size.Medium"
+                           OnClick="LoadDataAsync" />
+        </MudStack>
+
+        <MudDataGrid Items="@_items"
+                     QuickFilter="@QuickFilter"
+                     Loading="@_loading"
+                     Hover="true"
+                     Elevation="0"
+                     SortMode="SortMode.None">
+            <Columns>
+                <TemplateColumn Title="@UIConstants.Common.ColumnNo" Sortable="false" Style="width: 60px;">
+                    <CellTemplate>
+                        <span style="display: block; text-align: left; padding-right: 12px;">
+                            @_rowNumbers.GetValueOrDefault($"{context.Item.EntityType}-{context.Item.EntityId}")
+                        </span>
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.EntityType" Title="@UIConstants.RecycleBin.ColumnEntityType" />
+                <PropertyColumn Property="x => x.DisplayName" Title="@UIConstants.RecycleBin.ColumnName" />
+                <PropertyColumn Property="x => x.DeletedAt" Title="@UIConstants.RecycleBin.ColumnDeletedAt" Sortable="true">
+                    <CellTemplate>
+                        @context.Item.DeletedAt.ToOffset(TimeSpan.FromHours(6.5)).ToString("dd/MM/yyyy hh:mm tt")
+                    </CellTemplate>
+                </PropertyColumn>
+                <TemplateColumn Title="@UIConstants.RecycleBin.ColumnDaysLeft" Sortable="true">
+                    <CellTemplate>
+                        <MudChip Size="Size.Small"
+                                 Color="@(context.Item.DaysRemaining <= 5 ? Color.Error : context.Item.DaysRemaining <= 15 ? Color.Warning : Color.Default)">
+                            @context.Item.DaysRemaining days
+                        </MudChip>
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="@UIConstants.Common.Actions" Sortable="false">
+                    <CellTemplate>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Success"
+                                   Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.Restore"
+                                   OnClick="@(() => RestoreItem(context.Item))">
+                            Restore
+                        </MudButton>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+            <NoRecordsContent>
+                <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
+                    <MudIcon Icon="@Icons.Material.Outlined.Inbox" Style="font-size: 4rem;" Color="Color.Default" />
+                    <MudText Typo="Typo.h6" Color="Color.Default">@UIConstants.RecycleBin.NoDataFound</MudText>
+                </MudStack>
+            </NoRecordsContent>
+            <LoadingContent>
+                <MudStack Spacing="3" Class="w-100">
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                </MudStack>
+            </LoadingContent>
+            <PagerContent>
+                <MudDataGridPager T="RecycleBinItemDto" />
+            </PagerContent>
+        </MudDataGrid>
+
+    </MudPaper>
+</MudContainer>
+
+@code {
+
+    private bool _loading = true;
+    private string _searchString = string.Empty;
+    private string? _entityTypeFilter;
+
+    private List<RecycleBinItemDto> _allItems = new();
+    private List<RecycleBinItemDto> _items = new();
+    private Dictionary<string, int> _rowNumbers = new();
+    private List<string> _entityTypes = new();
+
+    private Task<IEnumerable<string>> SearchEntityTypes(string value, CancellationToken _)
+    {
+        var result = string.IsNullOrEmpty(value)
+            ? _entityTypes
+            : _entityTypes.Where(x => x.Contains(value, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(result.AsEnumerable());
+    }
+
+    private async Task OnEntityTypeFilterChanged(string v)
+    {
+        _entityTypeFilter = v;
+        await LoadDataAsync();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private bool QuickFilter(RecycleBinItemDto x)
+    {
+        if (!string.IsNullOrEmpty(_entityTypeFilter) && x.EntityType != _entityTypeFilter)
+            return false;
+
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+
+        return x.DisplayName.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
+            || x.EntityType.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _loading = true;
+        StateHasChanged();
+        try
+        {
+            var response = await RecycleBinApiClient.GetAllAsync();
+            if (response.Success && response.Data != null)
+            {
+                _allItems = response.Data.ToList();
+                _entityTypes = _allItems.Select(x => x.EntityType).Distinct().OrderBy(x => x).ToList();
+                ApplyFilters();
+            }
+            else
+                Snackbar.Add(response.Message ?? UIConstants.Common.LoadFailed, Severity.Error);
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        var filtered = _allItems
+            .Where(x => string.IsNullOrEmpty(_entityTypeFilter) || x.EntityType == _entityTypeFilter)
+            .ToList();
+
+        _items = filtered;
+        _rowNumbers = filtered
+            .Select((x, i) => (Key: $"{x.EntityType}-{x.EntityId}", Index: i + 1))
+            .ToDictionary(x => x.Key, x => x.Index);
+    }
+
+    private async Task RestoreItem(RecycleBinItemDto item)
+    {
+        try
+        {
+            var response = await RecycleBinApiClient.RestoreAsync(item.EntityType, item.EntityId);
+            if (response.Success)
+            {
+                Snackbar.Add($"{item.DisplayName} restored successfully.", Severity.Success);
+                await LoadDataAsync();
+            }
+            else
+                Snackbar.Add(response.Message ?? "Failed to restore.", Severity.Error);
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Failed to restore.", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+    }
+}

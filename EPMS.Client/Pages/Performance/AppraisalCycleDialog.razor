@@ -33,7 +33,7 @@
 
                     <MudSelect T="string"
                                Value="@_model.CalendarType"
-                               ValueChanged="@(v => { _model.CalendarType = v; AutoFillEvaluationDates(); AutoGenerateName(); })"
+                               ValueChanged="@(v => { _model.CalendarType = v; _model.YearLabel = null; AutoFillEvaluationDates(); AutoGenerateName(); })"
                                Label="@UIConstants.AppraisalCycle.CalendarTypeLabel"
                                For="@(() => _model.CalendarType)"
                                Variant="Variant.Outlined">
@@ -41,11 +41,17 @@
                         <MudSelectItem T="string" Value="@AppraisalConstants.CalendarTypes.FiscalYear">Fiscal Year Calendar</MudSelectItem>
                     </MudSelect>
 
-                    <MudTextField @bind-Value="_model.YearLabel"
-                                  For="@(() => _model.YearLabel)"
-                                  Label="@UIConstants.AppraisalCycle.YearLabelLabel"
-                                  Variant="Variant.Outlined"
-                                  OnBlur="@(() => { AutoFillEvaluationDates(); AutoGenerateName(); })" />
+                    <MudSelect T="string"
+                               Value="@_model.YearLabel"
+                               ValueChanged="@(v => { _model.YearLabel = v; AutoFillEvaluationDates(); AutoGenerateName(); })"
+                               Label="@UIConstants.AppraisalCycle.YearLabelLabel"
+                               For="@(() => _model.YearLabel)"
+                               Variant="Variant.Outlined">
+                        @foreach (var year in AvailableYears)
+                        {
+                            <MudSelectItem T="string" Value="@year" @key="year">@year</MudSelectItem>
+                        }
+                    </MudSelect>
 
                     <MudTextField @bind-Value="_model.Name"
                                   Label="@UIConstants.AppraisalCycle.NameLabel"
@@ -68,7 +74,7 @@
 
                     <MudSelect T="string"
                                Value="@_model.CalendarType"
-                               ValueChanged="@(v => { _model.CalendarType = v; AutoFillEvaluationDates(); AutoGenerateName(); })"
+                               ValueChanged="@(v => { _model.CalendarType = v; _model.YearLabel = null; AutoFillEvaluationDates(); AutoGenerateName(); })"
                                Label="@UIConstants.AppraisalCycle.CalendarTypeLabel"
                                For="@(() => _model.CalendarType)"
                                Variant="Variant.Outlined">
@@ -76,11 +82,17 @@
                         <MudSelectItem T="string" Value="@AppraisalConstants.CalendarTypes.FiscalYear">Fiscal Year Calendar</MudSelectItem>
                     </MudSelect>
 
-                    <MudTextField @bind-Value="_model.YearLabel"
-                                  For="@(() => _model.YearLabel)"
-                                  Label="@UIConstants.AppraisalCycle.YearLabelLabel"
-                                  Variant="Variant.Outlined"
-                                  OnBlur="@(() => { AutoFillEvaluationDates(); AutoGenerateName(); })" />
+                    <MudSelect T="string"
+                               Value="@_model.YearLabel"
+                               ValueChanged="@(v => { _model.YearLabel = v; AutoFillEvaluationDates(); AutoGenerateName(); })"
+                               Label="@UIConstants.AppraisalCycle.YearLabelLabel"
+                               For="@(() => _model.YearLabel)"
+                               Variant="Variant.Outlined">
+                        @foreach (var year in AvailableYears)
+                        {
+                            <MudSelectItem T="string" Value="@year" @key="year">@year</MudSelectItem>
+                        }
+                    </MudSelect>
 
                     <MudTextField @bind-Value="_model.Name"
                                   Label="@UIConstants.AppraisalCycle.NameLabel"
@@ -95,12 +107,14 @@
                                    Label="@UIConstants.AppraisalCycle.EvalStart"
                                    For="@(() => _model.EvaluationStartDateProxy)"
                                    Variant="Variant.Outlined"
-                                   Class="flex-1" />
+                                   Class="flex-1"
+                                   Style="text-align: center;" />
                     <MudDatePicker @bind-Date="_model.EvaluationEndDateProxy"
                                    Label="@UIConstants.AppraisalCycle.EvalEnd"
                                    For="@(() => _model.EvaluationEndDateProxy)"
                                    Variant="Variant.Outlined"
-                                   Class="flex-1" />
+                                   Class="flex-1"
+                                   Style="text-align: center;" />
                 </MudStack>
 
                 <MudText Typo="Typo.subtitle1" Class="mt-2">Appraisal Window</MudText>
@@ -110,12 +124,14 @@
                                    Label="@UIConstants.AppraisalCycle.WindowStart"
                                    For="@(() => _model.WindowStartDateProxy)"
                                    Variant="Variant.Outlined"
-                                   Class="flex-1" />
+                                   Class="flex-1"
+                                   Style="text-align: center;" />
                     <MudDatePicker @bind-Date="_model.WindowEndDateProxy"
                                    Label="@UIConstants.AppraisalCycle.WindowEnd"
                                    For="@(() => _model.WindowEndDateProxy)"
                                    Variant="Variant.Outlined"
-                                   Class="flex-1" />
+                                   Class="flex-1"
+                                   Style="text-align: center;" />
                 </MudStack>
 
                 <MudText Typo="Typo.subtitle1" Class="mt-2">@UIConstants.AppraisalCycle.SelfReview (Optional)</MudText>
@@ -125,12 +141,14 @@
                                    Label="Start"
                                    For="@(() => _model.SelfReviewStartDateProxy)"
                                    Variant="Variant.Outlined"
-                                   Class="flex-1" />
+                                   Class="flex-1"
+                                   Style="text-align: center;" />
                     <MudDatePicker @bind-Date="_model.SelfReviewDeadlineProxy"
                                    Label="Deadline"
                                    For="@(() => _model.SelfReviewDeadlineProxy)"
                                    Variant="Variant.Outlined"
-                                   Class="flex-1" />
+                                   Class="flex-1"
+                                   Style="text-align: center;" />
                 </MudStack>
 
                 <MudText Typo="Typo.subtitle1" Class="mt-2">@UIConstants.AppraisalCycle.ManagerReview (Optional)</MudText>
@@ -140,12 +158,14 @@
                                    Label="Start"
                                    For="@(() => _model.ManagerReviewStartDateProxy)"
                                    Variant="Variant.Outlined"
-                                   Class="flex-1" />
+                                   Class="flex-1"
+                                   Style="text-align: center;" />
                     <MudDatePicker @bind-Date="_model.ManagerReviewDeadlineProxy"
                                    Label="Deadline"
                                    For="@(() => _model.ManagerReviewDeadlineProxy)"
                                    Variant="Variant.Outlined"
-                                   Class="flex-1" />
+                                   Class="flex-1"
+                                   Style="text-align: center;" />
                 </MudStack>
 
                 <MudText Typo="Typo.subtitle1" Class="mt-2">@UIConstants.AppraisalCycle.PeerReview (Optional)</MudText>
@@ -155,12 +175,14 @@
                                    Label="Start"
                                    For="@(() => _model.PeerReviewStartDateProxy)"
                                    Variant="Variant.Outlined"
-                                   Class="flex-1" />
+                                   Class="flex-1"
+                                   Style="text-align: center;" />
                     <MudDatePicker @bind-Date="_model.PeerReviewDeadlineProxy"
                                    Label="Deadline"
                                    For="@(() => _model.PeerReviewDeadlineProxy)"
                                    Variant="Variant.Outlined"
-                                   Class="flex-1" />
+                                   Class="flex-1"
+                                   Style="text-align: center;" />
                 </MudStack>
 
             </MudStack>
@@ -195,6 +217,19 @@
 
     private readonly CreateAppraisalCycleValidator _createValidator = new();
     private readonly UpdateAppraisalCycleValidator _updateValidator = new();
+
+    private List<string> AvailableYears
+    {
+        get
+        {
+            var currentYear = DateTime.Now.Year;
+            var isFiscalAnnual = _model.CalendarType == AppraisalConstants.CalendarTypes.FiscalYear
+                              && _model.AppraisalType == AppraisalConstants.AppraisalTypes.Annual;
+            return Enumerable.Range(currentYear, 11).Select(year =>
+                isFiscalAnnual ? $"{year}-{year + 1}" : year.ToString()
+            ).ToList();
+        }
+    }
 
     protected override Task OnInitializedAsync()
     {
@@ -235,7 +270,18 @@
                 var response = await AppraisalCycleApiClient.CreateAsync(dto);
 
                 if (response.Success)
+                {
                     _mudDialog?.Close(DialogResult.Ok(true));
+                    return;
+                }
+                else
+                    Snackbar.Add(response.Message ?? UIConstants.Common.UpdateFailed, Severity.Error);
+
+                if (response.Success)
+                {
+                    _mudDialog?.Close(DialogResult.Ok(true));
+                    return;
+                }
                 else
                     Snackbar.Add(response.Message ?? UIConstants.Common.CreateFailed, Severity.Error);
             }

@@ -10,7 +10,6 @@ namespace EPMS.Api.Controllers.Performance;
 
 [Route("api/performance/kpi-weight-priorities")]
 [ApiController]
-[Authorize(Roles = RoleConstants.Admin)]
 public class KPIWeightPrioritiesController : ApiControllerBase
 {
     private readonly IKPIWeightPriorityService _kpiWeightPriorityService;
@@ -82,4 +81,10 @@ public class KPIWeightPrioritiesController : ApiControllerBase
         var result = await _kpiWeightPriorityService.ReactivateAsync(id);
         return HandleResult(result);
     }
+        [HttpPost("{id:long}/restore")]
+        public async Task<ActionResult<SuccessResponse>> Restore(long id)
+        {
+            var result = await _kpiWeightPriorityService.RestoreAsync(id);
+            return HandleResult(result);
+        }
 }

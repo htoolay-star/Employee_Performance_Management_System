@@ -1,0 +1,232 @@
+@using EPMS.Client.Constants
+@using EPMS.Client.Extensions
+@using EPMS.Client.Models.Performance
+@using EPMS.Client.Services.Performance
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.PerformanceDTOs.RatingScaleDTOs
+@using EPMS.Shared.Validators.PerformanceDTOs.RatingScaleDTOs
+@using Mapster
+@using MudBlazor
+
+@inject IRatingScaleApiClient RatingScaleApiClient
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="_form" Model="@_model" Validation="@ValidateField">
+            <MudStack Spacing="3">
+
+                @if (!IsEdit)
+                {
+                    <MudTextField @bind-Value="_model.Label"
+                                  Label="@UIConstants.RatingScale.LabelLabel"
+                                  For="@(() => _model.Label)"
+                                  Variant="Variant.Outlined" />
+
+                    <MudNumericField @bind-Value="_model.Rating"
+                                    Label="@UIConstants.RatingScale.RatingLabel"
+                                    For="@(() => _model.Rating)"
+                                    Variant="Variant.Outlined" />
+                }
+                else
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Primary">
+                        <strong>@UIConstants.RatingScale.RatingLabel:</strong> @_model.Rating &mdash; @_model.Label
+                    </MudText>
+                }
+
+                <MudNumericField @bind-Value="_model.MaxScore"
+                                Label="@UIConstants.RatingScale.MaxScoreLabel"
+                                For="@(() => _model.MaxScore)"
+                                Variant="Variant.Outlined" />
+
+                <MudNumericField @bind-Value="_model.MinScore"
+                                Label="@UIConstants.RatingScale.MinScoreLabel"
+                                For="@(() => _model.MinScore)"
+                                Variant="Variant.Outlined" />
+
+                <MudAutocomplete @bind-Value="_model.PerformanceLevel"
+                                Label="@UIConstants.RatingScale.PerformanceLevelLabel"
+                                For="@(() => _model.PerformanceLevel)"
+                                Variant="Variant.Outlined"
+                                SearchFunc="SearchPerformanceLevels"
+                                Clearable="true" />
+
+                <MudAutocomplete @bind-Value="_model.PromotionEligibility"
+                                Label="@UIConstants.RatingScale.PromotionEligibilityLabel"
+                                For="@(() => _model.PromotionEligibility)"
+                                Variant="Variant.Outlined"
+                                SearchFunc="SearchPromotionEligibility"
+                                Clearable="true" />
+
+                <MudTextField @bind-Value="_model.Description"
+                              Label="@UIConstants.Common.Description"
+                              For="@(() => _model.Description)"
+                              Variant="Variant.Outlined"
+                              Lines="3" />
+
+                @if (IsEdit)
+                {
+                    <MudSwitch @bind-Value="_model.IsActive"
+                               Label="@UIConstants.Common.Active"
+                               Color="Color.Success" />
+                }
+
+            </MudStack>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@UIConstants.Common.Cancel</MudButton>
+        <MudButton Color="Color.Primary"
+                   OnClick="Submit"
+                   Disabled="@(_saving || !HasChanged())">
+            @if (_saving)
+            {
+                <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @(IsEdit ? UIConstants.Common.Update : UIConstants.Common.Create)
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter] private IMudDialogInstance? _mudDialog { get; set; }
+
+    [Parameter] public RatingScaleDto? RatingScale { get; set; }
+
+    private bool IsEdit => RatingScale is not null;
+
+    private MudForm? _form;
+    private bool _saving;
+    private RatingScaleFormModel _model = new();
+    private Dictionary<string, string> _serverErrors = new();
+
+    private readonly CreateRatingScaleValidator _createValidator = new();
+    private readonly UpdateRatingScaleValidator _updateValidator = new();
+
+    private static readonly List<string> _performanceLevels = new()
+        { "Excellent", "Good", "Meets Requirements", "Needs Improvement", "Unsatisfactory" };
+
+    private static readonly List<string> _promotionEligibility = new()
+        { "Strongly Recommended", "Eligible", "Possible", "Not Eligible" };
+
+    private Task<IEnumerable<string?>> SearchPerformanceLevels(string value, CancellationToken _)
+    {
+        IEnumerable<string?> result = string.IsNullOrEmpty(value)
+            ? _performanceLevels
+            : _performanceLevels.Where(x => x.Contains(value, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(result);
+    }
+
+    private Task<IEnumerable<string?>> SearchPromotionEligibility(string value, CancellationToken _)
+    {
+        IEnumerable<string?> result = string.IsNullOrEmpty(value)
+            ? _promotionEligibility
+            : _promotionEligibility.Where(x => x.Contains(value, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(result);
+    }
+
+    protected override Task OnInitializedAsync()
+    {
+        if (RatingScale is not null)
+            _model = RatingScale.Adapt<RatingScaleFormModel>();
+
+        return base.OnInitializedAsync();
+    }
+
+    private async Task Submit()
+    {
+        _serverErrors.Clear();
+
+        await _form!.Validate();
+        if (!_form.IsValid)
+        {
+            Snackbar.Add(UIConstants.Common.ValidationFailed, Severity.Warning);
+            return;
+        }
+
+        _saving = true;
+        try
+        {
+            if (IsEdit)
+            {
+                var dto = _model.Adapt<UpdateRatingScaleDto>();
+                var response = await RatingScaleApiClient.UpdateAsync(RatingScale!.Id, dto);
+
+                if (response.Success)
+                {
+                    _mudDialog?.Close(DialogResult.Ok(true));
+                    return;
+                }
+                else
+                    Snackbar.Add(response.Message ?? UIConstants.Common.UpdateFailed, Severity.Error);
+            }
+            else
+            {
+                var dto = _model.Adapt<CreateRatingScaleDto>();
+                var response = await RatingScaleApiClient.CreateAsync(dto);
+
+                if (response.Success)
+                {
+                    _mudDialog?.Close(DialogResult.Ok(true));
+                    return;
+                }
+                else
+                    Snackbar.Add(response.Message ?? UIConstants.Common.CreateFailed, Severity.Error);
+            }
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.BadRequest)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ValidationFailed, Severity.Error);
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            _serverErrors[nameof(_model.Rating)] = error?.Message ?? UIConstants.Common.DuplicateEntry;
+            await _form!.Validate();
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void Cancel() => _mudDialog?.Cancel();
+
+    private async Task<IEnumerable<string>> ValidateField(object model, string propertyName)
+    {
+        IEnumerable<string> fluentErrors;
+
+        if (IsEdit)
+        {
+            var fn = _updateValidator.ValidateMappedValue<RatingScaleFormModel, UpdateRatingScaleDto>(_model, _serverErrors);
+            fluentErrors = await fn(model, propertyName);
+        }
+        else
+        {
+            var fn = _createValidator.ValidateMappedValue<RatingScaleFormModel, CreateRatingScaleDto>(_model, _serverErrors);
+            fluentErrors = await fn(model, propertyName);
+        }
+
+        var errorList = fluentErrors.ToList();
+
+        if (_serverErrors.TryGetValue(propertyName, out var serverError))
+            errorList.Add(serverError);
+
+        return errorList;
+    }
+
+    private bool HasChanged()
+    {
+        if (!IsEdit) return true;
+
+        return _model.MinScore != RatingScale!.MinScore
+            || _model.MaxScore != RatingScale.MaxScore
+            || _model.PerformanceLevel != RatingScale.PerformanceLevel
+            || _model.PromotionEligibility != RatingScale.PromotionEligibility
+            || _model.Description != RatingScale.Description
+            || _model.IsActive != RatingScale.IsActive;
+    }
+}

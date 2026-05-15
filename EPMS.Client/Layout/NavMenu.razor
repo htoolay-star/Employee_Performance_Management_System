@@ -1,6 +1,7 @@
 @using MudBlazor
 
-<MudNavMenu>
+<div style="display: flex; flex-direction: column; height: 100%;">
+<MudNavMenu Style="flex: 1;">
     <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
     <MudNavLink Href="dashboard" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
     
@@ -18,4 +19,12 @@
 
     <MudText Typo="Typo.subtitle2" Class="px-4 py-2">Performance Management</MudText>
     <MudNavLink Href="performance/appraisal-cycles" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.CalendarMonth">Appraisal Cycles</MudNavLink>
+    <MudNavLink Href="performance/rating-scales" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Star">Rating Scales</MudNavLink>
+    <MudNavLink Href="performance/entity-kpis" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Assignment">KPI Assignments</MudNavLink>
+    <MudNavLink Href="performance/employee-kpis" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PersonPin">Employee KPI Assignments</MudNavLink>
+    <MudNavLink Href="performance/kpi-weight-priorities" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Scale">KPI Weight Priorities</MudNavLink>
+    <MudNavLink Href="performance/question-rating-scales" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.RateReview">Question Rating Scales</MudNavLink>
 </MudNavMenu>
+
+<MudNavLink Href="admin/recycle-bin" Icon="@Icons.Material.Filled.DeleteSweep">Recycle Bin</MudNavLink>
+</div>

@@ -1,4 +1,3 @@
-using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Performance;
 using EPMS.Shared.Constants;
@@ -8,19 +7,18 @@ using EPMS.Shared.Enums;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 using EPMS.Domain.Interface.IService.Performance;
 
+using Mapster;
 namespace EPMS.Domain.Services.Performance;
 
 public class EvaluationResponseService : IEvaluationResponseService
 {
     private readonly IUnitOfWork _uow;
     private readonly TimeProvider _timeProvider;
-    private readonly IMapper _mapper;
-
-    public EvaluationResponseService(IUnitOfWork uow, TimeProvider timeProvider, IMapper mapper)
+    
+    public EvaluationResponseService(IUnitOfWork uow, TimeProvider timeProvider)
     {
         _uow = uow;
         _timeProvider = timeProvider;
-        _mapper = mapper;
     }
 
     public async Task<SuccessResponse> CreateAsync(CreateEvaluationResponseDto dto)
@@ -101,14 +99,14 @@ public class EvaluationResponseService : IEvaluationResponseService
         if (response == null)
             return SuccessResponse.Fail(EvaluationResponseMsg.NotFound(id), ErrorType.NotFound);
 
-        var dto = _mapper.Map<EvaluationResponseDto>(response);
+        var dto = response.Adapt<EvaluationResponseDto>();
         return SuccessResponse<EvaluationResponseDto>.Ok(dto, EvaluationResponseMsg.Retrieved);
     }
 
     public async Task<SuccessResponse> GetAllAsync()
     {
         var responses = await _uow.Perf.EvaluationResponses.GetAllAsync();
-        var dtos = _mapper.Map<IEnumerable<EvaluationResponseDto>>(responses.Where(r => !r.IsDeleted));
+        var dtos = responses.Where(r => !r.IsDeleted).Adapt<IEnumerable<EvaluationResponseDto>>();
         return SuccessResponse<IEnumerable<EvaluationResponseDto>>.Ok(dtos, EvaluationResponseMsg.RetrievedAll);
     }
 
@@ -119,21 +117,21 @@ public class EvaluationResponseService : IEvaluationResponseService
             return SuccessResponse.Fail(AppraisalMsg.NotFound(appraisalId), ErrorType.NotFound);
 
         var responses = await _uow.Perf.EvaluationResponses.GetByAppraisalIdAsync(appraisalId);
-        var dtos = _mapper.Map<IEnumerable<EvaluationResponseDto>>(responses.Where(r => !r.IsDeleted));
+        var dtos = responses.Where(r => !r.IsDeleted).Adapt<IEnumerable<EvaluationResponseDto>>();
         return SuccessResponse<IEnumerable<EvaluationResponseDto>>.Ok(dtos, EvaluationResponseMsg.RetrievedByAppraisal);
     }
 
     public async Task<SuccessResponse> GetByTemplateIdAsync(long templateId)
     {
         var responses = await _uow.Perf.EvaluationResponses.GetByTemplateIdAsync(templateId);
-        var dtos = _mapper.Map<IEnumerable<EvaluationResponseDto>>(responses.Where(r => !r.IsDeleted));
+        var dtos = responses.Where(r => !r.IsDeleted).Adapt<IEnumerable<EvaluationResponseDto>>();
         return SuccessResponse<IEnumerable<EvaluationResponseDto>>.Ok(dtos, EvaluationResponseMsg.RetrievedByTemplate);
     }
 
     public async Task<SuccessResponse> GetByQuestionIdAsync(long questionId)
     {
         var responses = await _uow.Perf.EvaluationResponses.GetByQuestionIdAsync(questionId);
-        var dtos = _mapper.Map<IEnumerable<EvaluationResponseDto>>(responses.Where(r => !r.IsDeleted));
+        var dtos = responses.Where(r => !r.IsDeleted).Adapt<IEnumerable<EvaluationResponseDto>>();
         return SuccessResponse<IEnumerable<EvaluationResponseDto>>.Ok(dtos, EvaluationResponseMsg.RetrievedByQuestion);
     }
 }

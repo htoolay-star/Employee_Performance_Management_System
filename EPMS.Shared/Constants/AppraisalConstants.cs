@@ -19,4 +19,13 @@ public static class AppraisalConstants
 
         public static readonly HashSet<string> All = [Standard, FiscalYear];
     }
+
+    public static class EntityTypes
+    {
+        public const string Position = "POSITION";
+        public const string Department = "DEPARTMENT";
+        public const string Team = "TEAM";
+
+        public static readonly HashSet<string> All = [Position, Department, Team];
+    }
 }

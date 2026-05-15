@@ -1,4 +1,3 @@
-using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Hr;
 using EPMS.Domain.Interface.IService.Performance;
@@ -7,30 +6,29 @@ using EPMS.Shared.DTOs.PerformanceDTOs.RatingScaleDTOs;
 using EPMS.Shared.Enums;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 
+using Mapster;
 namespace EPMS.Domain.Services.Performance;
 
 public class RatingScaleService : IRatingScaleService
 {
     private readonly IUnitOfWork _uow;
-    private readonly IMapper _mapper;
-
-    public RatingScaleService(IUnitOfWork uow, IMapper mapper)
+    
+    public RatingScaleService(IUnitOfWork uow)
     {
         _uow = uow;
-        _mapper = mapper;
     }
 
     public async Task<SuccessResponse<IEnumerable<RatingScaleDto>>> GetAllAsync()
     {
         var ratingScales = await _uow.Perf.RatingScales.GetAllAsync();
-        var dtos = _mapper.Map<IEnumerable<RatingScaleDto>>(ratingScales);
+        var dtos = ratingScales.Adapt<IEnumerable<RatingScaleDto>>();
         return SuccessResponse<IEnumerable<RatingScaleDto>>.Ok(dtos, RatingScaleMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<IEnumerable<RatingScaleDto>>> GetActiveAsync()
     {
         var ratingScales = await _uow.Perf.RatingScales.GetActiveAsync();
-        var dtos = _mapper.Map<IEnumerable<RatingScaleDto>>(ratingScales);
+        var dtos = ratingScales.Adapt<IEnumerable<RatingScaleDto>>();
         return SuccessResponse<IEnumerable<RatingScaleDto>>.Ok(dtos, RatingScaleMsg.RetrievedActive);
     }
 
@@ -41,7 +39,7 @@ public class RatingScaleService : IRatingScaleService
         if (ratingScale == null)
             return SuccessResponse<RatingScaleDto>.Fail(RatingScaleMsg.NotFound(id), ErrorType.NotFound);
 
-        var dto = _mapper.Map<RatingScaleDto>(ratingScale);
+        var dto = ratingScale.Adapt<RatingScaleDto>();
         return SuccessResponse<RatingScaleDto>.Ok(dto, RatingScaleMsg.Retrieved);
     }
 
@@ -52,7 +50,7 @@ public class RatingScaleService : IRatingScaleService
         if (ratingScale == null)
             return SuccessResponse<RatingScaleDto>.Fail(RatingScaleMsg.NotFoundByRating(rating), ErrorType.NotFound);
 
-        var dto = _mapper.Map<RatingScaleDto>(ratingScale);
+        var dto = ratingScale.Adapt<RatingScaleDto>();
         return SuccessResponse<RatingScaleDto>.Ok(dto, RatingScaleMsg.Retrieved);
     }
 
@@ -138,4 +136,19 @@ public class RatingScaleService : IRatingScaleService
 
         return SuccessResponse.Ok(RatingScaleMsg.Reactivated);
     }
+        public async Task<SuccessResponse> RestoreAsync(long id)
+        {
+            var entity = await _uow.Perf.RatingScales.GetByIdAsync(id);
+            if (entity == null)
+                return SuccessResponse.Fail(RatingScaleMsg.NotFound(id), ErrorType.NotFound);
+            if (!entity.IsDeleted)
+                return SuccessResponse.Fail("Item is not deleted.", ErrorType.Validation);
+            entity.IsDeleted = false;
+            entity.DeletedAt = null;
+            entity.DeletedBy = null;
+            _uow.Perf.RatingScales.Update(entity);
+            await _uow.CompleteAsync();
+            return SuccessResponse.Ok(RatingScaleMsg.Updated);
+        }
+
 }

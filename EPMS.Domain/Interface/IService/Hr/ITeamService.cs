@@ -12,6 +12,7 @@ public interface ITeamService
     Task<SuccessResponse<TeamDto>> GetByIdAsync(long id);
     Task<SuccessResponse<long>> CreateAsync(CreateTeamDto dto);
     Task<SuccessResponse> UpdateAsync(long id, UpdateTeamDto dto);
-    Task<SuccessResponse> DeleteAsync(long id);
+    Task<SuccessResponse> RestoreAsync(long id);
+        Task<SuccessResponse> DeleteAsync(long id);
     Task<SuccessResponse<PaginatedResponse<TeamGridItemDto>>> GetPagedAsync(TeamQueryParameters parameters);
 }

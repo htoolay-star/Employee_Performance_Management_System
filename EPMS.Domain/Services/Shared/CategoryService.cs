@@ -1,4 +1,3 @@
-﻿using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Shared;
 using EPMS.Domain.Interface.Irepo.Shared;
@@ -10,19 +9,18 @@ using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.Enums;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 
+using Mapster;
 namespace EPMS.Domain.Services.Shared;
 
 public class CategoryService : ICategoryService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICacheService _cacheService;
-    private readonly IMapper _mapper;
-
-    public CategoryService(IUnitOfWork unitOfWork, ICacheService cacheService, IMapper mapper)
+    
+    public CategoryService(IUnitOfWork unitOfWork, ICacheService cacheService)
     {
         _unitOfWork = unitOfWork;
         _cacheService = cacheService;
-        _mapper = mapper;
     }
     public async Task<SuccessResponse<IEnumerable<LookUpDto>>> GetLookupAsync()
     {
@@ -59,7 +57,7 @@ public class CategoryService : ICategoryService
         if (category == null)
             return SuccessResponse<CategoryDto>.Fail(CategoryMsg.NotFound(id), ErrorType.NotFound);
 
-        var dto = _mapper.Map<CategoryDto>(category);
+        var dto = category.Adapt<CategoryDto>();
         return SuccessResponse<CategoryDto>.Ok(dto, CategoryMsg.Retrieved);
     }
 
@@ -140,4 +138,19 @@ public class CategoryService : ICategoryService
         await _cacheService.RemoveAsync(CacheKeys.Shared.CategoryLookups());
         return SuccessResponse.Ok(CategoryMsg.Deleted);
     }
+        public async Task<SuccessResponse> RestoreCategoryAsync(long id)
+        {
+            var entity = await _unitOfWork.Shared.Categories.GetByIdAsync(id);
+            if (entity == null)
+                return SuccessResponse.Fail(CategoryMsg.NotFound(id), ErrorType.NotFound);
+            if (!entity.IsDeleted)
+                return SuccessResponse.Fail("Item is not deleted.", ErrorType.Validation);
+            entity.IsDeleted = false;
+            entity.DeletedAt = null;
+            entity.DeletedBy = null;
+            _unitOfWork.Shared.Categories.Update(entity);
+            await _unitOfWork.CompleteAsync();
+            return SuccessResponse.Ok(CategoryMsg.Updated);
+        }
+
 }

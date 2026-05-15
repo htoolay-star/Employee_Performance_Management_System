@@ -47,7 +47,7 @@
             <Columns>
                 <TemplateColumn Title="@UIConstants.Common.ColumnNo" Sortable="false">
                     <CellTemplate>
-                        @_rowNumbers.GetValueOrDefault(context.Item.Id)
+                        <span style="display: block; text-align: left;">@_rowNumbers.GetValueOrDefault(context.Item.Id)</span>
                     </CellTemplate>
                 </TemplateColumn>
                 <PropertyColumn Property="x => x.Name" Title="@UIConstants.AppraisalCycle.ColumnName" />

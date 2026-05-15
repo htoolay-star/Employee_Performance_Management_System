@@ -1,4 +1,4 @@
-﻿using EPMS.Api.Controllers.Common;
+using EPMS.Api.Controllers.Common;
 using EPMS.Domain.Interface.IService.Shared;
 using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.CategoryDTOs;
@@ -60,4 +60,10 @@ public class CategoriesController : ApiControllerBase
         var result = await _categoryService.DeleteCategoryAsync(id);
         return HandleResult(result);
     }
+        [HttpPost("{id:long}/restore")]
+        public async Task<ActionResult<SuccessResponse>> Restore(long id)
+        {
+            var result = await _categoryService.RestoreCategoryAsync(id);
+            return HandleResult(result);
+        }
 }

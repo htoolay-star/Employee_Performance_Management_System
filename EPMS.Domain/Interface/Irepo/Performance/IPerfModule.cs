@@ -20,7 +20,10 @@ public interface IPerfModule
     IFormQuestionRepository FormQuestions { get; }
     IContinuousFeedbackRepository ContinuousFeedbacks { get; }
     IOneOnOneMeetingRepository OneOnOneMeetings { get; }
-    IPositionKPIRepository PositionKPIs { get; }
+    IEntityKPIRepository EntityKPIs { get; }
+    IEntityKPIHistoryRepository EntityKPIHistories { get; }
+    IEmployeeKPIRepository EmployeeKPIs { get; }
+    IEmployeeKPIHistoryRepository EmployeeKPIHistories { get; }
     IQuestionRatingScaleRepository QuestionRatingScales { get; }
     IPositionPIPTemplateRepository PositionPIPTemplates { get; }
     IPositionFormTemplateRepository PositionFormTemplates { get; }

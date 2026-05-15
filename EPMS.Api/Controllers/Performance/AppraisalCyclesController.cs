@@ -79,5 +79,12 @@ namespace EPMS.Api.Controllers.Performance
             var result = await _appraisalCycleService.ReactivateAsync(id);
             return HandleResult(result);
         }
+
+        [HttpPost("{id:long}/restore")]
+        public async Task<ActionResult<SuccessResponse>> Restore(long id)
+        {
+            var result = await _appraisalCycleService.RestoreAsync(id);
+            return HandleResult(result);
+        }
     }
 }

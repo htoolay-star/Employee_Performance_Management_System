@@ -1,4 +1,3 @@
-﻿using AutoMapper;
 using EPMS.Domain.Data;
 using EPMS.Domain.Interface.Irepo.Info;
 using EPMS.Domain.Interface.Irepo.Performance;
@@ -25,7 +24,10 @@ public class PerfModule(IServiceProvider serviceProvider) : IPerfModule
     private IFormQuestionRepository? _perfFormQuestionRepository;
     private IContinuousFeedbackRepository? _perfContinuousFeedbackRepository;
     private IOneOnOneMeetingRepository? _perfOneOnOneMeetingRepository;
-    private IPositionKPIRepository? _perfPositionKPIRepository;
+    private IEntityKPIRepository? _perfEntityKPIRepository;
+    private IEntityKPIHistoryRepository? _perfEntityKPIHistoryRepository;
+    private IEmployeeKPIRepository? _perfEmployeeKPIRepository;
+    private IEmployeeKPIHistoryRepository? _perfEmployeeKPIHistoryRepository;
     private IQuestionRatingScaleRepository? _perfQuestionRatingScaleRepository;
     private IPositionPIPTemplateRepository? _perfPositionPIPTemplateRepository;
     private IPositionFormTemplateRepository? _perfPositionFormTemplateRepository;
@@ -67,8 +69,17 @@ public class PerfModule(IServiceProvider serviceProvider) : IPerfModule
     public IOneOnOneMeetingRepository OneOnOneMeetings =>
         _perfOneOnOneMeetingRepository ??= serviceProvider.GetRequiredService<IOneOnOneMeetingRepository>();
 
-    public IPositionKPIRepository PositionKPIs =>
-        _perfPositionKPIRepository ??= serviceProvider.GetRequiredService<IPositionKPIRepository>();
+    public IEntityKPIRepository EntityKPIs =>
+        _perfEntityKPIRepository ??= serviceProvider.GetRequiredService<IEntityKPIRepository>();
+
+    public IEntityKPIHistoryRepository EntityKPIHistories =>
+        _perfEntityKPIHistoryRepository ??= serviceProvider.GetRequiredService<IEntityKPIHistoryRepository>();
+
+    public IEmployeeKPIRepository EmployeeKPIs =>
+        _perfEmployeeKPIRepository ??= serviceProvider.GetRequiredService<IEmployeeKPIRepository>();
+
+    public IEmployeeKPIHistoryRepository EmployeeKPIHistories =>
+        _perfEmployeeKPIHistoryRepository ??= serviceProvider.GetRequiredService<IEmployeeKPIHistoryRepository>();
 
     public IQuestionRatingScaleRepository QuestionRatingScales =>
         _perfQuestionRatingScaleRepository ??= serviceProvider.GetRequiredService<IQuestionRatingScaleRepository>();

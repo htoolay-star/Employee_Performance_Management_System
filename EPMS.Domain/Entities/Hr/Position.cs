@@ -36,6 +36,7 @@ namespace EPMS.Domain.Entities.Hr
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }
+        public long? DeletedBy { get; set; }
 
         public byte[] Version { get; private set; } = Array.Empty<byte>();
 
@@ -63,9 +64,6 @@ namespace EPMS.Domain.Entities.Hr
 
         private readonly List<PositionRole> _positionRoles = new();
         public virtual IReadOnlyCollection<PositionRole> PositionRoles => _positionRoles.AsReadOnly();
-
-        private readonly List<PositionKPI> _positionKPIs = new();
-        public virtual IReadOnlyCollection<PositionKPI> PositionKPIs => _positionKPIs.AsReadOnly();
 
         private readonly List<PositionFormTemplate> _positionFormTemplates = new();
         public virtual IReadOnlyCollection<PositionFormTemplate> PositionFormTemplates => _positionFormTemplates.AsReadOnly();

@@ -78,7 +78,7 @@
             <Columns>
                 <TemplateColumn Title="@UIConstants.Common.ColumnNo" Sortable="false">
                     <CellTemplate>
-                        @_rowNumbers.GetValueOrDefault(context.Item.Id)
+                        <span style="display: block; text-align: left;">@_rowNumbers.GetValueOrDefault(context.Item.Id)</span>
                     </CellTemplate>
                 </TemplateColumn>
                 <PropertyColumn Property="x => x.Code" Title="@UIConstants.Department.ColumnCode" />
@@ -210,7 +210,7 @@
             
                             <Virtualize Items="@FilteredTeams" Context="team" OverscanCount="10">
                                 <tr>
-                                    <td>@(FilteredTeams.IndexOf(team) + 1)</td>
+                                    <td style="text-align: left;">@(FilteredTeams.IndexOf(team) + 1)</td>
                                     <td>@team.Name</td>
                                     <td>
                                         <MudChip T="string" Color="@(team.IsActive ? Color.Success : Color.Default)"

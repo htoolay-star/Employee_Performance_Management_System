@@ -1,0 +1,277 @@
+@page "/performance/employee-kpis"
+@using EPMS.Client.Constants
+@using EPMS.Client.Services.Auth
+@using EPMS.Client.Services.Performance
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.Performance.EmployeeKPI
+@using EPMS.Shared.DTOs.PerformanceDTOs.AppraisalCycleDTOs
+@using EPMS.Shared.DTOs.EmployeeInfoDTOs
+@using MudBlazor
+@using Refit
+
+@inject IEmployeeKPIApiClient EmployeeKPIApiClient
+@inject IAppraisalCycleApiClient AppraisalCycleApiClient
+@inject LookupStateService LookupState
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>@UIConstants.EmployeeKPI.PageTitle</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.EmployeeKPI.PageTitle</MudText>
+
+    <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4" Wrap="Wrap.Wrap">
+            <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                <MudAutocomplete T="long?"
+                                 Value="@_selectedEmployeeId"
+                                 ValueChanged="OnEmployeeFilterChanged"
+                                 Label="Employee"
+                                 Variant="Variant.Outlined"
+                                 Style="max-width: 250px;"
+                                 Clearable="true"
+                                 SearchFunc="SearchEmployees"
+                                 ToStringFunc="GetEmployeeDisplay"
+                                 ResetValueOnEmptyText="true" />
+
+                <MudSelect T="long?"
+                            Value="@_selectedCycleId"
+                            ValueChanged="OnCycleFilterChanged"
+                            Label="Cycle"
+                            Variant="Variant.Outlined"
+                            Style="max-width: 200px;"
+                            Clearable="true">
+                    @foreach (var c in _cycles)
+                    {
+                        <MudSelectItem Value="@((long?)c.Id)" @key="c.Id">@c.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudStack>
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenCreateDialog">
+                @UIConstants.EmployeeKPI.AddButton
+            </MudButton>
+        </MudStack>
+
+        <MudDataGrid Items="@_items"
+                     Loading="@_loading"
+                     Hover="true"
+                     Elevation="0"
+                     SortMode="SortMode.None">
+            <Columns>
+                <TemplateColumn Title="@UIConstants.Common.ColumnNo" Sortable="false" Style="width: 60px;">
+                    <CellTemplate>
+                        <span style="display: block; text-align: left; padding-right: 12px;">@_rowNumbers.GetValueOrDefault(context.Item.Id)</span>
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.EmployeeName" Title="@UIConstants.EmployeeKPI.ColumnEmployee" />
+                <PropertyColumn Property="x => x.KPIName" Title="@UIConstants.EmployeeKPI.ColumnKPI" />
+                <PropertyColumn Property="x => x.PriorityName" Title="@UIConstants.EmployeeKPI.ColumnPriority" />
+                <PropertyColumn Property="x => x.Weightage" Title="@UIConstants.EmployeeKPI.ColumnWeightage" Sortable="true" />
+                <PropertyColumn Property="x => x.TargetValue" Title="@UIConstants.EmployeeKPI.ColumnTarget" />
+                <TemplateColumn Title="@UIConstants.Common.Actions" Sortable="false">
+                    <CellTemplate>
+                        <MudStack Row="true" Spacing="0">
+                            <MudTooltip Text="Edit" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Color="Color.Primary"
+                                               Size="Size.Small"
+                                               OnClick="@(() => OpenEditDialog(context.Item))" />
+                            </MudTooltip>
+                            <MudTooltip Text="Delete" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Color="Color.Error"
+                                               Size="Size.Small"
+                                               OnClick="@(() => OpenDeleteDialog(context.Item))" />
+                            </MudTooltip>
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+            <NoRecordsContent>
+                <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
+                    <MudIcon Icon="@Icons.Material.Outlined.Inbox" Style="font-size: 4rem;" Color="Color.Default" />
+                    <MudText Typo="Typo.h6" Color="Color.Default">@UIConstants.Common.NoRecords</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">@UIConstants.EmployeeKPI.NoDataFound</MudText>
+                </MudStack>
+            </NoRecordsContent>
+            <LoadingContent>
+                <MudStack Spacing="3" Class="w-100">
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                </MudStack>
+            </LoadingContent>
+            <PagerContent>
+                <MudDataGridPager T="EmployeeKPIDto" />
+            </PagerContent>
+        </MudDataGrid>
+
+    </MudPaper>
+</MudContainer>
+
+@code {
+
+    private static readonly DialogOptions _formDialogOptions = new()
+    {
+        CloseOnEscapeKey = true,
+        MaxWidth = MaxWidth.Small,
+        FullWidth = true
+    };
+    private static readonly DialogOptions _confirmDialogOptions = new()
+    {
+        CloseOnEscapeKey = true
+    };
+
+    private long? _selectedEmployeeId;
+    private long? _selectedCycleId;
+    private List<EmployeeKPIDto> _items = new();
+    private Dictionary<long, int> _rowNumbers = new();
+    private bool _loading = true;
+
+    private List<AppraisalCycleDto> _cycles = new();
+    private List<EmployeeLookupDto> _employees = new();
+
+    private async Task OnEmployeeFilterChanged(long? v)
+    {
+        _selectedEmployeeId = v;
+        await LoadDataAsync();
+    }
+
+    private async Task OnCycleFilterChanged(long? v)
+    {
+        _selectedCycleId = v;
+        await LoadDataAsync();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _employees = await LookupState.GetEmployeesAsync();
+        var cycleResponse = await AppraisalCycleApiClient.GetActiveAsync();
+        if (cycleResponse.Success && cycleResponse.Data != null)
+            _cycles = cycleResponse.Data.ToList();
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _loading = true;
+        StateHasChanged();
+        try
+        {
+            SuccessResponse<IEnumerable<EmployeeKPIDto>>? response;
+
+            if (_selectedEmployeeId.HasValue && _selectedCycleId.HasValue)
+                response = await EmployeeKPIApiClient.GetByEmployeeAndCycleAsync(_selectedEmployeeId.Value, _selectedCycleId.Value);
+            else if (_selectedCycleId.HasValue)
+                response = await EmployeeKPIApiClient.GetByCycleAsync(_selectedCycleId.Value);
+            else
+                response = await EmployeeKPIApiClient.GetAllAsync();
+
+            if (response.Success && response.Data != null)
+            {
+                _items = response.Data.ToList();
+                _rowNumbers = _items.Select((x, i) => (x.Id, Index: i + 1)).ToDictionary(x => x.Id, x => x.Index);
+            }
+            else
+                Snackbar.Add(response.Message ?? UIConstants.Common.LoadFailed, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private Task<IEnumerable<long?>> SearchEmployees(string value, CancellationToken _)
+    {
+        var query = _employees.AsEnumerable();
+        if (!string.IsNullOrWhiteSpace(value))
+            query = query.Where(x => x.StaffNo.Contains(value, StringComparison.OrdinalIgnoreCase)
+                                  || x.StaffName.Contains(value, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(query.Select(x => (long?)x.Id).ToList().AsEnumerable());
+    }
+
+    private string GetEmployeeDisplay(long? id)
+    {
+        if (id == null) return string.Empty;
+        var emp = _employees.FirstOrDefault(x => x.Id == id);
+        return emp != null ? $"{emp.StaffNo} - {emp.StaffName}" : id.ToString()!;
+    }
+
+    private async Task OpenCreateDialog()
+    {
+        var parameters = new DialogParameters<EmployeeKPIDialog>
+        {
+            { x => x.PrefilledEmployeeId, _selectedEmployeeId },
+            { x => x.PrefilledCycleId, _selectedCycleId }
+        };
+
+        var dialog = await DialogService.ShowAsync<EmployeeKPIDialog>(
+            UIConstants.EmployeeKPI.CreateDialogTitle, parameters, _formDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+        {
+            Snackbar.Add("Employee KPI created successfully.", Severity.Success);
+            await LoadDataAsync();
+        }
+    }
+
+    private async Task OpenEditDialog(EmployeeKPIDto item)
+    {
+        var parameters = new DialogParameters<EmployeeKPIDialog>
+        {
+            { x => x.Kpi, item }
+        };
+
+        var dialog = await DialogService.ShowAsync<EmployeeKPIDialog>(
+            UIConstants.EmployeeKPI.EditDialogTitle, parameters, _formDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+        {
+            Snackbar.Add("Employee KPI updated successfully.", Severity.Success);
+            await LoadDataAsync();
+        }
+    }
+
+    private async Task OpenDeleteDialog(EmployeeKPIDto item)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, string.Format(UIConstants.Common.DeleteConfirmationFormat,
+                $"{item.EmployeeName} - {item.KPIName}") },
+            { x => x.ButtonText, UIConstants.Common.Delete },
+            { x => x.Color, Color.Error }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(
+            UIConstants.EmployeeKPI.DeleteDialogTitle, parameters, _confirmDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+        {
+            try
+            {
+                var response = await EmployeeKPIApiClient.DeleteAsync(item.Id);
+                if (response.Success)
+                {
+                    Snackbar.Add("Employee KPI deleted.", Severity.Success);
+                    await LoadDataAsync();
+                }
+                else
+                    Snackbar.Add(response.Message ?? UIConstants.Common.DeleteFailed, Severity.Error);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+            }
+        }
+    }
+}

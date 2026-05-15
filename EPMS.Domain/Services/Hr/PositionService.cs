@@ -1,4 +1,3 @@
-using AutoMapper;
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Auth;
 using EPMS.Domain.Entities.Hr;
@@ -188,4 +187,19 @@ public class PositionService : IPositionService
 
         return columnMap.TryGetValue(sortByFromDto, out var mappedColumn) ? mappedColumn : "Name";
     }
+        public async Task<SuccessResponse> RestoreAsync(long id)
+        {
+            var entity = await _uow.HR.Positions.GetByIdAsync(id);
+            if (entity == null)
+                return SuccessResponse.Fail(PositionMsg.NotFound(id), ErrorType.NotFound);
+            if (!entity.IsDeleted)
+                return SuccessResponse.Fail("Item is not deleted.", ErrorType.Validation);
+            entity.IsDeleted = false;
+            entity.DeletedAt = null;
+            entity.DeletedBy = null;
+            _uow.HR.Positions.Update(entity);
+            await _uow.CompleteAsync();
+            return SuccessResponse.Ok(PositionMsg.Updated);
+        }
+
 }

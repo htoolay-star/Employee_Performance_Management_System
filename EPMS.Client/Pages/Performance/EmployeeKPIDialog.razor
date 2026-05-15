@@ -1,0 +1,313 @@
+@using EPMS.Client.Constants
+@using EPMS.Client.Extensions
+@using EPMS.Client.Models.Performance
+@using EPMS.Client.Services.Auth
+@using EPMS.Client.Services.Performance
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.Performance.EmployeeKPI
+@using EPMS.Shared.DTOs.PerformanceDTOs.AppraisalCycleDTOs
+@using EPMS.Shared.DTOs.PerformanceDTOs.KPIMasterDTOs
+@using EPMS.Shared.DTOs.PerformanceDTOs.KPIWeightPriorityDTOs
+@using EPMS.Shared.DTOs.EmployeeInfoDTOs
+@using Mapster
+@using MudBlazor
+
+@inject IEmployeeKPIApiClient EmployeeKPIApiClient
+@inject IKPIMasterApiClient KPIMasterApiClient
+@inject IKPIWeightPriorityApiClient KPIWeightPriorityApiClient
+@inject IAppraisalCycleApiClient AppraisalCycleApiClient
+@inject LookupStateService LookupState
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="_form" Model="@_model" Validation="@ValidateField">
+            <MudStack Spacing="3">
+
+                @if (!IsEdit)
+                {
+                    <MudAutocomplete T="long?"
+                                     Value="@_selectedEmployeeId"
+                                     ValueChanged="@(v => { _selectedEmployeeId = v; _model.EmployeeId = v; })"
+                                     Label="Employee"
+                                     For="@(() => _model.EmployeeId)"
+                                     Variant="Variant.Outlined"
+                                     SearchFunc="SearchEmployees"
+                                     ToStringFunc="GetEmployeeDisplay"
+                                     ResetValueOnEmptyText="true" />
+
+                    <MudSelect T="long"
+                               Value="@_model.CycleId"
+                               ValueChanged="@(v => _model.CycleId = v)"
+                               Label="Cycle"
+                               For="@(() => _model.CycleId)"
+                               Variant="Variant.Outlined">
+                        @foreach (var c in _cycles)
+                        {
+                            <MudSelectItem Value="@c.Id" @key="c.Id">@c.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+
+                    <MudAutocomplete T="long?"
+                                     Value="@_selectedKPIId"
+                                     ValueChanged="@(v => { _selectedKPIId = v; _model.KPIId = v; })"
+                                     Label="KPI"
+                                     For="@(() => _model.KPIId)"
+                                     Variant="Variant.Outlined"
+                                     SearchFunc="SearchKPIs"
+                                     ToStringFunc="GetKPIDisplay"
+                                     ResetValueOnEmptyText="true" />
+
+                    <MudSelect T="long"
+                               @bind-Value="_model.PriorityId"
+                               Label="Priority"
+                               For="@(() => _model.PriorityId)"
+                               Variant="Variant.Outlined">
+                        @foreach (var p in _priorities)
+                        {
+                            <MudSelectItem Value="@p.Id" @key="p.Id">@p.LevelName (@p.MinWeight%-@p.MaxWeight%)</MudSelectItem>
+                        }
+                    </MudSelect>
+
+                    <MudNumericField @bind-Value="_model.Weightage"
+                                     Label="Weightage (%)"
+                                     For="@(() => _model.Weightage)"
+                                     Variant="Variant.Outlined" />
+
+                    <MudTextField @bind-Value="_model.TargetValue"
+                                  Label="Target Value"
+                                  For="@(() => _model.TargetValue)"
+                                  Variant="Variant.Outlined" />
+
+                    <MudTextField @bind-Value="_model.TargetUnit"
+                                  Label="Target Unit"
+                                  For="@(() => _model.TargetUnit)"
+                                  Variant="Variant.Outlined" />
+                }
+                else
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Primary">
+                        <strong>Employee:</strong> @Kpi!.EmployeeName
+                    </MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Primary">
+                        <strong>KPI:</strong> @Kpi.KPIName (@Kpi.KPICode)
+                    </MudText>
+
+                    <MudSelect T="long"
+                               @bind-Value="_model.PriorityId"
+                               Label="Priority"
+                               For="@(() => _model.PriorityId)"
+                               Variant="Variant.Outlined">
+                        @foreach (var p in _priorities)
+                        {
+                            <MudSelectItem T="long" Value="@p.Id" @key="p.Id">@p.LevelName (@p.MinWeight%-@p.MaxWeight%)</MudSelectItem>
+                        }
+                    </MudSelect>
+
+                    <MudNumericField @bind-Value="_model.Weightage"
+                                     Label="Weightage (%)"
+                                     For="@(() => _model.Weightage)"
+                                     Variant="Variant.Outlined" />
+
+                    <MudTextField @bind-Value="_model.TargetValue"
+                                  Label="Target Value"
+                                  For="@(() => _model.TargetValue)"
+                                  Variant="Variant.Outlined" />
+
+                    <MudTextField @bind-Value="_model.TargetUnit"
+                                  Label="Target Unit"
+                                  For="@(() => _model.TargetUnit)"
+                                  Variant="Variant.Outlined" />
+                }
+
+            </MudStack>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@UIConstants.Common.Cancel</MudButton>
+        <MudButton Color="Color.Primary"
+                   OnClick="Submit"
+                   Disabled="@(_saving || !HasChanged())">
+            @if (_saving)
+            {
+                <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @(IsEdit ? UIConstants.Common.Update : UIConstants.Common.Create)
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter] private IMudDialogInstance? _mudDialog { get; set; }
+
+    [Parameter] public EmployeeKPIDto? Kpi { get; set; }
+    [Parameter] public long? PrefilledEmployeeId { get; set; }
+    [Parameter] public long? PrefilledCycleId { get; set; }
+
+    private bool IsEdit => Kpi is not null;
+
+    private MudForm? _form;
+    private bool _saving;
+    private EmployeeKPIFormModel _model = new();
+    private Dictionary<string, string> _serverErrors = new();
+
+    private long? _selectedEmployeeId;
+    private long? _selectedKPIId;
+
+    private List<AppraisalCycleDto> _cycles = new();
+    private List<KPIMasterDto> _kpis = new();
+    private List<KPIWeightPriorityDto> _priorities = new();
+    private List<EmployeeLookupDto> _employees = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var empTask = LookupState.GetEmployeesAsync();
+        var cycleTask = AppraisalCycleApiClient.GetActiveAsync();
+        var kpiTask = KPIMasterApiClient.GetActiveAsync();
+        var priorityTask = KPIWeightPriorityApiClient.GetActiveAsync();
+
+        await Task.WhenAll(empTask, cycleTask, kpiTask, priorityTask);
+
+        _employees = await empTask;
+        _cycles = (await cycleTask).Data?.ToList() ?? new();
+        _kpis = (await kpiTask).Data?.ToList() ?? new();
+        _priorities = (await priorityTask).Data?.ToList() ?? new();
+
+        if (IsEdit)
+        {
+            _model = Kpi!.Adapt<EmployeeKPIFormModel>();
+            _selectedKPIId = Kpi.KPIId;
+            _selectedEmployeeId = Kpi.EmployeeId;
+        }
+        else
+        {
+            _selectedEmployeeId = PrefilledEmployeeId;
+            _model.EmployeeId = PrefilledEmployeeId;
+            if (PrefilledCycleId.HasValue)
+                _model.CycleId = PrefilledCycleId.Value;
+            else if (_cycles.Any())
+                _model.CycleId = _cycles.First().Id;
+            if (_priorities.Any())
+                _model.PriorityId = _priorities.First().Id;
+        }
+    }
+
+    private async Task Submit()
+    {
+        _serverErrors.Clear();
+        await _form!.Validate();
+        if (!_form.IsValid)
+        {
+            Snackbar.Add(UIConstants.Common.ValidationFailed, Severity.Warning);
+            return;
+        }
+
+        _saving = true;
+        try
+        {
+            if (IsEdit)
+            {
+                var dto = _model.Adapt<UpdateEmployeeKPIDto>();
+                var response = await EmployeeKPIApiClient.UpdateAsync(Kpi!.Id, dto);
+                if (response.Success)
+                {
+                    _mudDialog?.Close(DialogResult.Ok(true));
+                    return;
+                }
+                else
+                    Snackbar.Add(response.Message ?? UIConstants.Common.UpdateFailed, Severity.Error);
+            }
+            else
+            {
+                var dto = _model.Adapt<CreateEmployeeKPIDto>();
+                var response = await EmployeeKPIApiClient.CreateAsync(dto);
+                if (response.Success)
+                {
+                    _mudDialog?.Close(DialogResult.Ok(true));
+                    return;
+                }
+                else
+                    Snackbar.Add(response.Message ?? UIConstants.Common.CreateFailed, Severity.Error);
+            }
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            _serverErrors[nameof(_model.KPIId)] = error?.Message ?? UIConstants.Common.DuplicateEntry;
+            await _form!.Validate();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void Cancel() => _mudDialog?.Cancel();
+
+    private async Task<IEnumerable<string>> ValidateField(object model, string propertyName)
+    {
+        // Simple validation — just check required fields
+        var errors = new List<string>();
+        if (propertyName == nameof(_model.EmployeeId) && _model.EmployeeId.GetValueOrDefault() <= 0)
+            errors.Add("Employee is required.");
+        if (propertyName == nameof(_model.CycleId) && _model.CycleId <= 0)
+            errors.Add("Cycle is required.");
+        if (propertyName == nameof(_model.KPIId) && _model.KPIId <= 0)
+            errors.Add("KPI is required.");
+        if (propertyName == nameof(_model.PriorityId) && _model.PriorityId <= 0)
+            errors.Add("Priority is required.");
+        if (propertyName == nameof(_model.Weightage) && (_model.Weightage < 0 || _model.Weightage > 100))
+            errors.Add("Weightage must be between 0 and 100.");
+
+        if (_serverErrors.TryGetValue(propertyName, out var serverError))
+            errors.Add(serverError);
+
+        return errors;
+    }
+
+    private bool HasChanged()
+    {
+        if (!IsEdit) return true;
+        return _model.PriorityId != Kpi!.PriorityId
+            || _model.Weightage != Kpi.Weightage
+            || _model.TargetValue != Kpi.TargetValue
+            || _model.TargetUnit != Kpi.TargetUnit;
+    }
+
+    private Task<IEnumerable<long?>> SearchEmployees(string value, CancellationToken _)
+    {
+        var query = _employees.AsEnumerable();
+        if (!string.IsNullOrWhiteSpace(value))
+            query = query.Where(x => x.StaffNo.Contains(value, StringComparison.OrdinalIgnoreCase)
+                                  || x.StaffName.Contains(value, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(query.Select(x => (long?)x.Id).ToList().AsEnumerable());
+    }
+
+    private string GetEmployeeDisplay(long? id)
+    {
+        if (id == null) return string.Empty;
+        var emp = _employees.FirstOrDefault(x => x.Id == id);
+        return emp != null ? $"{emp.StaffNo} - {emp.StaffName}" : id.ToString()!;
+    }
+
+    private Task<IEnumerable<long?>> SearchKPIs(string value, CancellationToken _)
+    {
+        var query = _kpis.AsEnumerable();
+        if (!string.IsNullOrWhiteSpace(value))
+            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase)
+                                  || x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(query.Select(x => (long?)x.Id).ToList().AsEnumerable());
+    }
+
+    private string GetKPIDisplay(long? id)
+    {
+        if (id == null) return string.Empty;
+        var kpi = _kpis.FirstOrDefault(x => x.Id == id);
+        return kpi != null ? $"{kpi.Code} - {kpi.Name}" : id.ToString()!;
+    }
+}

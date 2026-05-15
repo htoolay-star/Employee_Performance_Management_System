@@ -34,6 +34,7 @@ public class EmployeeKPI : AuditableEntity, ISoftDeletable
 
     public bool IsDeleted { get; set; }
     public DateTimeOffset? DeletedAt { get; set; }
+        public long? DeletedBy { get; set; }
     public byte[] Version { get; private set; } = Array.Empty<byte>();
 
     public virtual EmployeeProfile Employee { get; private set; } = null!;
