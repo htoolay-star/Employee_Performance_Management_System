@@ -1,12 +1,18 @@
 @inherits LayoutComponentBase
 @using MudBlazor
 @using EPMS.Client.Themes
+@inject IJSRuntime JS
+
+<MudThemeProvider Theme="EPMSTheme.GetTheme()" IsDarkMode="@_isDarkMode" />
 
 <MudLayout>
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="ToggleDrawer" />
         <MudText Typo="Typo.h5" Class="ml-3">EPMS</MudText>
         <MudSpacer />
+        <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.DarkMode : Icons.Material.Filled.LightMode)"
+                       Color="Color.Inherit"
+                       OnClick="ToggleTheme" />
         <LoginDisplay />
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" Elevation="2">
@@ -25,9 +31,29 @@
 
 @code {
     bool _drawerOpen = true;
+    bool _isDarkMode = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var stored = await JS.InvokeAsync<string>("localStorage.getItem", "epms-dark-mode");
+            _isDarkMode = stored == "true";
+        }
+        catch
+        {
+            _isDarkMode = false;
+        }
+    }
 
     void ToggleDrawer()
     {
         _drawerOpen = !_drawerOpen;
+    }
+
+    async Task ToggleTheme()
+    {
+        _isDarkMode = !_isDarkMode;
+        await JS.InvokeVoidAsync("localStorage.setItem", "epms-dark-mode", _isDarkMode.ToString().ToLower());
     }
 }
