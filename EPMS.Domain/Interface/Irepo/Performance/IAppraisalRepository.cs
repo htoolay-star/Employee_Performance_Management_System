@@ -7,6 +7,6 @@ namespace EPMS.Domain.Interface.Irepo.Performance
     {
         Task<Appraisal?> GetAppraisalWithDetailsAsync(long id);
         Task<IEnumerable<Appraisal>> GetEmployeeAppraisalsAsync(long employeeId, int cycleId);
-        Task<bool> HasAlreadySubmittedAsync(long employeeId, long appraiserId, int cycleId, string role);
+        Task<bool> ExistsByEmployeeAndCycleAsync(long employeeId, long cycleId);
     }
 }

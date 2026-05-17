@@ -1,0 +1,253 @@
+@page "/performance/appraisals/{AppraisalId:long}/fill"
+@using EPMS.Client.Constants
+@using EPMS.Client.Models.Performance
+@using EPMS.Client.Services.Performance
+@using EPMS.Shared.Constants
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.FormDTOs
+@using Mapster
+@using MudBlazor
+@using Refit
+
+@inject IAppraisalApiClient AppraisalApiClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>@UIConstants.AppraisalFill.PageTitle</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+
+    <MudText Typo="Typo.h4" Class="mb-4">
+        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" OnClick="GoBack" Class="mr-2" />
+        @UIConstants.AppraisalFill.PageTitle
+    </MudText>
+
+    @if (_loading)
+    {
+        <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+            <MudStack Spacing="3">
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+            </MudStack>
+        </MudPaper>
+    }
+    else if (_error)
+    {
+        <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+            <MudText Color="Color.Error" Typo="Typo.body1">@_errorMessage</MudText>
+        </MudPaper>
+    }
+    else
+    {
+        <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+            <MudForm @ref="_form">
+                @* Header *@
+                <MudStack Row="true" Spacing="4" Class="mb-4" Wrap="Wrap.Wrap">
+                    <MudText Typo="Typo.body1">
+                        <strong>@UIConstants.AppraisalFill.EmployeeLabel:</strong> @_model.EmployeeName
+                    </MudText>
+                    <MudText Typo="Typo.body1">
+                        <strong>@UIConstants.AppraisalFill.CycleLabel:</strong> @_model.CycleName
+                    </MudText>
+                    <MudText Typo="Typo.body1">
+                        <strong>@UIConstants.AppraisalFill.StatusLabel:</strong>
+                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(_model.Status)">@_model.Status</MudChip>
+                    </MudText>
+                </MudStack>
+
+                @* KPI Details Grid *@
+                <MudTable Items="@_model.Details"
+                          Hover="true"
+                          Elevation="0"
+                          Class="mb-4">
+                    <ColGroup>
+                        <col style="width: 40px;" />
+                        <col />
+                        <col style="width: 80px;" />
+                        <col style="width: 80px;" />
+                        <col style="width: 20px;" />
+                        <col style="width: 100px;" />
+                        <col style="width: 80px;" />
+                        <col style="width: 100px;" />
+                        <col />
+                    </ColGroup>
+                    <HeaderContent>
+                        <MudTh>#</MudTh>
+                        <MudTh>@UIConstants.AppraisalFill.ColumnKPI</MudTh>
+                        <MudTh>@UIConstants.AppraisalFill.ColumnWeight</MudTh>
+                        <MudTh>@UIConstants.AppraisalFill.ColumnTarget</MudTh>
+                        <MudTh>@UIConstants.AppraisalFill.ColumnDirection</MudTh>
+                        <MudTh>@UIConstants.AppraisalFill.ColumnActual</MudTh>
+                        <MudTh>@UIConstants.AppraisalFill.ColumnScore</MudTh>
+                        <MudTh>@UIConstants.AppraisalFill.ColumnWeighted</MudTh>
+                        <MudTh>@UIConstants.AppraisalFill.ColumnRemarks</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="#">@(_model.Details.IndexOf(context) + 1)</MudTd>
+                        <MudTd DataLabel="KPI">@context.KPIName</MudTd>
+                        <MudTd DataLabel="Weight">@context.Weightage%</MudTd>
+                        <MudTd DataLabel="Target">@context.TargetValue</MudTd>
+                        <MudTd DataLabel="Direction" Style="text-align: center;">
+                            <MudTooltip Text="@GetDirectionTooltip(context.ScoringDirection)">
+                                <MudIcon Icon="@GetDirectionIcon(context.ScoringDirection)"
+                                         Size="Size.Small"
+                                         Color="Color.Primary" />
+                            </MudTooltip>
+                        </MudTd>
+                        <MudTd DataLabel="Actual">
+                            <MudTextField @bind-Value="context.ActualValue"
+                                          Variant="Variant.Outlined"
+                                          Placeholder="Enter value"
+                                          Margin="Margin.Dense" />
+                        </MudTd>
+                        <MudTd DataLabel="Score">
+                            <MudText Typo="Typo.body2" Align="Align.Right">@context.Score.ToString("F2")</MudText>
+                        </MudTd>
+                        <MudTd DataLabel="Weighted">
+                            <MudText Typo="Typo.body2" Align="Align.Right">@context.WeightedScore.ToString("F2")</MudText>
+                        </MudTd>
+                        <MudTd DataLabel="Remarks">
+                            <MudTextField @bind-Value="context.Remarks"
+                                          Variant="Variant.Outlined"
+                                          Placeholder="Notes"
+                                          Margin="Margin.Dense" />
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+
+                @* Submit Button *@
+                <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               OnClick="Submit"
+                               Disabled="@(_submitting || _model.IsLocked || _model.Details.Count == 0)">
+                        @if (_submitting)
+                        {
+                            <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
+                        }
+                        @UIConstants.AppraisalFill.SubmitButton
+                    </MudButton>
+                </MudStack>
+            </MudForm>
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+
+    [Parameter] public long AppraisalId { get; set; }
+
+    private MudForm? _form;
+    private AppraisalFillFormModel _model = new();
+    private bool _loading = true;
+    private bool _error;
+    private string _errorMessage = string.Empty;
+    private bool _submitting;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _error = false;
+        StateHasChanged();
+
+        try
+        {
+            var response = await AppraisalApiClient.GetFillAsync(AppraisalId);
+            if (response.Success && response.Data != null)
+            {
+                _model = response.Data.Adapt<AppraisalFillFormModel>();
+            }
+            else
+            {
+                _error = true;
+                _errorMessage = response.Message ?? UIConstants.Common.LoadFailed;
+            }
+        }
+        catch (ApiException ex)
+        {
+            _error = true;
+            _errorMessage = $"Error loading appraisal: {ex.StatusCode}";
+        }
+        catch (Exception ex)
+        {
+            _error = true;
+            _errorMessage = string.Format(UIConstants.Common.ErrorFormat, ex.Message);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task Submit()
+    {
+        _submitting = true;
+        try
+        {
+            var dto = new AppraisalSubmissionDto
+            {
+                Id = _model.Id,
+                Details = _model.Details
+                    .Where(d => d.KPIId.HasValue)
+                    .Select(d => new AppraisalDetailDto
+                    {
+                        KPIId = d.KPIId,
+                        ActualValue = d.ActualValue,
+                        Comment = d.Remarks,
+                    })
+                    .ToList()
+            };
+
+            var response = await AppraisalApiClient.SubmitAsync(dto);
+            if (response.Success)
+            {
+                Snackbar.Add(UIConstants.AppraisalFill.SubmitSuccess, Severity.Success);
+                await LoadAsync();
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _submitting = false;
+        }
+    }
+
+    private void GoBack() => Navigation.NavigateTo("/performance/appraisals");
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        "Draft" => Color.Warning,
+        "InProgress" => Color.Info,
+        "Finalized" => Color.Success,
+        _ => Color.Default
+    };
+
+    private string GetDirectionTooltip(string direction) =>
+        direction == AppraisalConstants.ScoringDirections.LowerIsBetter
+            ? "Lower is better"
+            : "Higher is better";
+
+    private string GetDirectionIcon(string direction) =>
+        direction == AppraisalConstants.ScoringDirections.LowerIsBetter
+            ? Icons.Material.Filled.TrendingDown
+            : Icons.Material.Filled.TrendingUp;
+}

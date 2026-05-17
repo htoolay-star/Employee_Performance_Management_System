@@ -10,7 +10,9 @@ namespace EPMS.Domain.Entities.Performance
 
         public AppraisalCycle(string name, string appraisalType, string calendarType, string yearLabel,
                               DateOnly evalStart, DateOnly evalEnd,
-                              DateOnly windowStart, DateOnly windowEnd)
+                              DateOnly windowStart, DateOnly windowEnd,
+                              decimal kpiWeight = 50m, decimal selfWeight = 15m,
+                              decimal peerWeight = 10m, decimal managerWeight = 25m)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(name);
             ArgumentException.ThrowIfNullOrWhiteSpace(appraisalType);
@@ -39,6 +41,8 @@ namespace EPMS.Domain.Entities.Performance
 
             WindowStartDate = windowStart;
             WindowEndDate = windowEnd;
+
+            SetWeights(kpiWeight, selfWeight, peerWeight, managerWeight);
 
             IsActive = true;
             IsLocked = false;
@@ -69,6 +73,11 @@ namespace EPMS.Domain.Entities.Performance
 
         public bool IsActive { get; private set; }
         public bool IsLocked { get; private set; }
+
+        public decimal KpiWeight { get; private set; }
+        public decimal SelfWeight { get; private set; }
+        public decimal PeerWeight { get; private set; }
+        public decimal ManagerWeight { get; private set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }
@@ -117,7 +126,9 @@ namespace EPMS.Domain.Entities.Performance
 
         public void Update(string name, string appraisalType, string calendarType, string yearLabel,
                            DateOnly evalStart, DateOnly evalEnd,
-                           DateOnly windowStart, DateOnly windowEnd)
+                           DateOnly windowStart, DateOnly windowEnd,
+                           decimal? kpiWeight = null, decimal? selfWeight = null,
+                           decimal? peerWeight = null, decimal? managerWeight = null)
         {
             if (IsLocked) throw new InvalidOperationException("Cannot update a locked cycle.");
             ArgumentException.ThrowIfNullOrWhiteSpace(name);
@@ -140,6 +151,28 @@ namespace EPMS.Domain.Entities.Performance
             EvaluationEndDate = evalEnd;
             WindowStartDate = windowStart;
             WindowEndDate = windowEnd;
+
+            if (kpiWeight.HasValue || selfWeight.HasValue || peerWeight.HasValue || managerWeight.HasValue)
+                SetWeights(
+                    kpiWeight ?? KpiWeight,
+                    selfWeight ?? SelfWeight,
+                    peerWeight ?? PeerWeight,
+                    managerWeight ?? ManagerWeight);
+        }
+
+        public void SetWeights(decimal kpiWeight, decimal selfWeight, decimal peerWeight, decimal managerWeight)
+        {
+            var total = kpiWeight + selfWeight + peerWeight + managerWeight;
+            if (total != 100m)
+                throw new ArgumentException($"Weights must sum to 100. Current total: {total}.");
+
+            if (kpiWeight < 0 || selfWeight < 0 || peerWeight < 0 || managerWeight < 0)
+                throw new ArgumentException("Individual weights cannot be negative.");
+
+            KpiWeight = kpiWeight;
+            SelfWeight = selfWeight;
+            PeerWeight = peerWeight;
+            ManagerWeight = managerWeight;
         }
 
         public void LockCycle()

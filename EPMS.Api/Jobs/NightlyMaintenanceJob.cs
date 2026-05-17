@@ -70,7 +70,6 @@ public class NightlyMaintenanceJob
         var tables = new[]
         {
             ("perf.AppraisalCycles", "IsDeleted", "DeletedAt"),
-            ("perf.RatingScales", "IsDeleted", "DeletedAt"),
             ("perf.KPIWeightPriorities", "IsDeleted", "DeletedAt"),
             ("perf.QuestionRatingScales", "IsDeleted", "DeletedAt"),
             ("perf.KPIMaster", "IsDeleted", "DeletedAt"),
@@ -86,7 +85,8 @@ public class NightlyMaintenanceJob
             ("hr.Levels", "IsDeleted", "DeletedAt"),
             ("hr.Departments", "IsDeleted", "DeletedAt"),
             ("hr.Teams", "IsDeleted", "DeletedAt"),
-            ("hr.Categories", "IsDeleted", "DeletedAt"),
+            ("hr.RatingScales", "IsDeleted", "DeletedAt"),
+            ("shared.Categories", "IsDeleted", "DeletedAt"),
             ("shared.DocumentAttachments", "IsDeleted", "DeletedAt")
         };
 

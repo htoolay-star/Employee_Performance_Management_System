@@ -298,6 +298,10 @@ public static string AlreadyCompleted = "Meeting is already completed.";
         public static string DuplicateEntry = "KPI already assigned to this entity.";
         public static string PriorityNotFound = "Priority not found.";
         public static string InvalidEntityType = "Invalid entity type. Must be Position, Department, or Team.";
+        public static string WeightExceeded(decimal current, decimal newWeight) =>
+            $"Total weightage ({current}%) plus new weightage ({newWeight}%) would exceed 100%.";
+        public static string WeightNotComplete(decimal total) =>
+            $"KPI assigned. Total weightage is currently {total}%. Consider completing to 100%.";
     }
 
     public static class EmployeeKPIMsg
@@ -310,6 +314,10 @@ public static string AlreadyCompleted = "Meeting is already completed.";
         public static string NotFound(long id) => $"Employee KPI with ID '{id}' was not found.";
         public static string DuplicateEntry = "KPI already assigned to this employee for this cycle.";
         public static string PriorityNotFound = "Priority not found.";
+        public static string WeightExceeded(decimal current, decimal newWeight) =>
+            $"Total weightage ({current}%) plus new weightage ({newWeight}%) would exceed 100%.";
+        public static string WeightNotComplete(decimal total) =>
+            $"KPI assigned. Total weightage is currently {total}%. Consider completing to 100%.";
     }
 
     public static class PermissionMsg

@@ -1,5 +1,6 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Shared;
+using EPMS.Shared.Constants;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +13,7 @@ namespace EPMS.Domain.Entities.Performance
     {
         private KPIMaster() { }
 
-        public KPIMaster(long categoryId, string code, string name, string? description = null)
+        public KPIMaster(long categoryId, string code, string name, string? description = null, string? scoringDirection = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(code);
             ArgumentException.ThrowIfNullOrWhiteSpace(name);
@@ -21,6 +22,7 @@ namespace EPMS.Domain.Entities.Performance
             Code = code.Trim().ToUpperInvariant();
             Name = name.Trim();
             Description = description?.Trim();
+            ScoringDirection = scoringDirection ?? AppraisalConstants.ScoringDirections.HigherIsBetter;
             IsActive = true;
         }
 
@@ -34,11 +36,12 @@ namespace EPMS.Domain.Entities.Performance
         public DateTimeOffset? DeletedAt { get; set; }
         public long? DeletedBy { get; set; }
 
+        public string ScoringDirection { get; private set; } = AppraisalConstants.ScoringDirections.HigherIsBetter;
         public byte[] Version { get; private set; } = Array.Empty<byte>();
 
         public virtual Category Category { get; private set; } = null!;
 
-        public void Update(long categoryId, string code, string name, string? description)
+        public void Update(long categoryId, string code, string name, string? description, string? scoringDirection = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(code);
             ArgumentException.ThrowIfNullOrWhiteSpace(name);
@@ -47,6 +50,8 @@ namespace EPMS.Domain.Entities.Performance
             Code = code.Trim().ToUpperInvariant();
             Name = name.Trim();
             Description = description?.Trim();
+            if (scoringDirection != null)
+                ScoringDirection = scoringDirection;
         }
 
         public void Deactivate() => IsActive = false;

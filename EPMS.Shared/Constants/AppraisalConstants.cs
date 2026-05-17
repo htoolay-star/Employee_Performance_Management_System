@@ -28,4 +28,21 @@ public static class AppraisalConstants
 
         public static readonly HashSet<string> All = [Position, Department, Team];
     }
+
+    public static class FormTypes
+    {
+        public const string SelfAssessment = "Self-Assessment Form";
+        public const string ThreeSixtyFeedback = "360 Degree Feedback Form";
+        public const string Appraisal = "Appraisal Form";
+
+        public static readonly HashSet<string> All = [SelfAssessment, ThreeSixtyFeedback, Appraisal];
+    }
+
+    public static class ScoringDirections
+    {
+        public const string HigherIsBetter = "HigherIsBetter";
+        public const string LowerIsBetter = "LowerIsBetter";
+
+        public static readonly HashSet<string> All = [HigherIsBetter, LowerIsBetter];
+    }
 }

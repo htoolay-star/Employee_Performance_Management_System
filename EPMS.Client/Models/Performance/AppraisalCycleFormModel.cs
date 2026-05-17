@@ -79,4 +79,9 @@ public class AppraisalCycleFormModel
         get => PeerReviewDeadline?.ToDateTime(TimeOnly.MinValue);
         set => PeerReviewDeadline = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
     }
+
+    public decimal KpiWeight { get; set; } = 50m;
+    public decimal SelfWeight { get; set; } = 15m;
+    public decimal PeerWeight { get; set; } = 10m;
+    public decimal ManagerWeight { get; set; } = 25m;
 }

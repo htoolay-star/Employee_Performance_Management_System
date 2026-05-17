@@ -31,6 +31,13 @@ public class AppraisalController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HttpGet("{id:long}/fill")]
+    public async Task<ActionResult<SuccessResponse>> GetFill(long id)
+    {
+        var result = await _service.GetAppraisalFillAsync(id);
+        return HandleResult(result);
+    }
+
     [HttpGet("employee/{employeeId:long}")]
     public async Task<ActionResult<SuccessResponse>> GetByEmployeeId(long employeeId)
     {
@@ -81,4 +88,3 @@ public class AppraisalController : ApiControllerBase
     }
 }
 
-public record UnlockRequestDto(long AdminId, string Reason);

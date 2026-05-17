@@ -64,7 +64,7 @@ public static class MapsterConfig
         TypeAdapterConfig<Appraisal, AppraisalDto>.NewConfig()
             .Map(dest => dest.EmployeeName, src => src.Employee != null ? src.Employee.StaffName : null)
             .Map(dest => dest.CycleName, src => src.Cycle != null ? src.Cycle.Name : null)
-            .Map(dest => dest.AppraiserName, src => src.Appraiser != null ? src.Appraiser.StaffName : null);
+            .Map(dest => dest.ManagerReviewerName, src => src.ManagerReviewer != null ? src.ManagerReviewer.StaffName : null);
 
         TypeAdapterConfig<AppraisalRecommendation, AppraisalRecommendationDto>.NewConfig()
             .Map(dest => dest.AppraisalEmployeeName, src => src.Appraisal != null && src.Appraisal.Employee != null ? src.Appraisal.Employee.StaffName : null)

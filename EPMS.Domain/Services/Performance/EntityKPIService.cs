@@ -81,12 +81,18 @@ namespace EPMS.Domain.Services.Performance
             if (priority == null)
                 return SuccessResponse<long>.Fail(EntityKPIMsg.PriorityNotFound, ErrorType.NotFound);
 
+            var currentTotal = await _uow.Perf.EntityKPIs.GetTotalWeightageAsync(dto.EntityType, dto.EntityId);
+            if (currentTotal + dto.Weightage > 100)
+                return SuccessResponse<long>.Fail(EntityKPIMsg.WeightExceeded(currentTotal, dto.Weightage), ErrorType.Validation);
+
             var entity = new EntityKPI(dto.EntityType, dto.EntityId, dto.KPIId, priority, dto.Weightage, dto.TargetValue, dto.TargetUnit);
 
             _uow.Perf.EntityKPIs.Add(entity);
             await _uow.CompleteAsync();
 
-            return SuccessResponse<long>.Ok(entity.Id, EntityKPIMsg.Created);
+            var newTotal = currentTotal + dto.Weightage;
+            var message = newTotal == 100 ? EntityKPIMsg.Created : EntityKPIMsg.WeightNotComplete(newTotal);
+            return SuccessResponse<long>.Ok(entity.Id, message);
         }
 
         public async Task<SuccessResponse> UpdateAsync(long id, UpdateEntityKPIDto dto)
@@ -99,12 +105,18 @@ namespace EPMS.Domain.Services.Performance
             if (priority == null)
                 return SuccessResponse.Fail(EntityKPIMsg.PriorityNotFound, ErrorType.NotFound);
 
+            var currentTotal = await _uow.Perf.EntityKPIs.GetTotalWeightageAsync(entity.EntityType, entity.EntityId, id);
+            if (currentTotal + dto.Weightage > 100)
+                return SuccessResponse.Fail(EntityKPIMsg.WeightExceeded(currentTotal, dto.Weightage), ErrorType.Validation);
+
             entity.Update(priority, dto.Weightage, dto.TargetValue, dto.TargetUnit);
 
             _uow.Perf.EntityKPIs.Update(entity);
             await _uow.CompleteAsync();
 
-            return SuccessResponse.Ok(EntityKPIMsg.Updated);
+            var newTotal = currentTotal + dto.Weightage;
+            var message = newTotal == 100 ? EntityKPIMsg.Updated : EntityKPIMsg.WeightNotComplete(newTotal);
+            return SuccessResponse.Ok(message);
         }
 
         public async Task<SuccessResponse> DeleteAsync(long id)

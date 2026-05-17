@@ -31,5 +31,13 @@ namespace EPMS.Domain.Repository.Performance
                 query = query.Where(e => e.Id != excludeId.Value);
             return await query.AnyAsync();
         }
+
+        public async Task<decimal> GetTotalWeightageAsync(long employeeId, long cycleId, long? excludeId = null)
+        {
+            var query = _dbSet.Where(e => e.EmployeeId == employeeId && e.CycleId == cycleId);
+            if (excludeId.HasValue)
+                query = query.Where(e => e.Id != excludeId.Value);
+            return await query.SumAsync(e => (decimal?)e.Weightage) ?? 0;
+        }
     }
 }

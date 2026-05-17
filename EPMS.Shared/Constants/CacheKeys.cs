@@ -28,6 +28,11 @@ namespace EPMS.Shared.Constants
             public static string EmployeeLookups() => "hr:employees:lookups";
         }
 
+        public static class Performance
+        {
+            public static string KPIMasterLookups() => "performance:kpi-masters:lookups";
+        }
+
         public static class Shared
         {
             public static string CategoryLookups() => "shared:categories:lookups";

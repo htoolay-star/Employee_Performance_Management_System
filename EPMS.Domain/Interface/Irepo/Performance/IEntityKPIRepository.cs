@@ -8,5 +8,6 @@ namespace EPMS.Domain.Interface.Irepo.Performance
         Task<IEnumerable<EntityKPI>> GetByEntityAsync(string entityType, long entityId);
         Task<IEnumerable<EntityKPI>> GetByEntityTypeAsync(string entityType);
         Task<bool> ExistsAsync(string entityType, long entityId, long kpiId, long? excludeId = null);
+        Task<decimal> GetTotalWeightageAsync(string entityType, long entityId, long? excludeId = null);
     }
 }

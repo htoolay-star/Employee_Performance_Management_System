@@ -15,18 +15,29 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.Property(e => e.PublicId).IsRequired();
             entity.HasIndex(e => e.PublicId).IsUnique().HasFilter("[IsDeleted] = 0");
 
-            entity.HasIndex(e => new { e.EmployeeId, e.CycleId, e.EvaluatorRole }).IsUnique().HasFilter("[IsDeleted] = 0");
+            entity.HasIndex(e => new { e.EmployeeId, e.CycleId }).IsUnique().HasFilter("[IsDeleted] = 0");
 
             entity.Property(e => e.Status)
                   .HasMaxLength(20)
                   .IsRequired();
 
-            entity.Property(e => e.EvaluatorRole)
-                  .HasMaxLength(50)
-                  .IsRequired();
-
             entity.Property(e => e.TotalScore)
                   .HasPrecision(5, 2);
+
+            entity.Property(e => e.KpiScore)
+                  .HasPrecision(5, 2);
+
+            entity.Property(e => e.SelfScore)
+                  .HasPrecision(5, 2);
+
+            entity.Property(e => e.PeerScore)
+                  .HasPrecision(5, 2);
+
+            entity.Property(e => e.ManagerScore)
+                  .HasPrecision(5, 2);
+
+            entity.Property(e => e.FormulaWeights)
+                  .HasMaxLength(100);
 
             entity.Property(e => e.RatingLabel).HasMaxLength(50);
             entity.Property(e => e.EmployeeComment).HasMaxLength(500);
@@ -47,7 +58,7 @@ namespace EPMS.Domain.Data.Configurations.Performance
 
             entity.HasOne(e => e.Employee).WithMany().HasForeignKey(e => e.EmployeeId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne(e => e.Cycle).WithMany().HasForeignKey(e => e.CycleId).OnDelete(DeleteBehavior.Restrict);
-            entity.HasOne(e => e.Appraiser).WithMany().HasForeignKey(e => e.AppraiserId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(e => e.ManagerReviewer).WithMany().HasForeignKey(e => e.ManagerReviewerId).OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(e => e.FinalRating)
                   .WithMany()

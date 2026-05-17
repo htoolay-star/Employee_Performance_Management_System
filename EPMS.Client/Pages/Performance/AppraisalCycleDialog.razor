@@ -185,6 +185,35 @@
                                    Style="text-align: center;" />
                 </MudStack>
 
+                <MudText Typo="Typo.subtitle1" Class="mt-2">Scoring Weights (must total 100)</MudText>
+
+                <MudStack Row="true" Spacing="2">
+                    <MudNumericField @bind-Value="_model.KpiWeight"
+                                     Label="KPI %"
+                                     For="@(() => _model.KpiWeight)"
+                                     Variant="Variant.Outlined"
+                                     Class="flex-1"
+                                     Min="0" Max="100" />
+                    <MudNumericField @bind-Value="_model.SelfWeight"
+                                     Label="Self %"
+                                     For="@(() => _model.SelfWeight)"
+                                     Variant="Variant.Outlined"
+                                     Class="flex-1"
+                                     Min="0" Max="100" />
+                    <MudNumericField @bind-Value="_model.PeerWeight"
+                                     Label="Peer %"
+                                     For="@(() => _model.PeerWeight)"
+                                     Variant="Variant.Outlined"
+                                     Class="flex-1"
+                                     Min="0" Max="100" />
+                    <MudNumericField @bind-Value="_model.ManagerWeight"
+                                     Label="Manager %"
+                                     For="@(() => _model.ManagerWeight)"
+                                     Variant="Variant.Outlined"
+                                     Class="flex-1"
+                                     Min="0" Max="100" />
+                </MudStack>
+
             </MudStack>
         </MudForm>
     </DialogContent>
@@ -345,7 +374,11 @@
                _model.ManagerReviewStartDate != Cycle.ManagerReviewStartDate ||
                _model.ManagerReviewDeadline != Cycle.ManagerReviewDeadline ||
                _model.PeerReviewStartDate != Cycle.PeerReviewStartDate ||
-               _model.PeerReviewDeadline != Cycle.PeerReviewDeadline;
+               _model.PeerReviewDeadline != Cycle.PeerReviewDeadline ||
+               _model.KpiWeight != Cycle.KpiWeight ||
+               _model.SelfWeight != Cycle.SelfWeight ||
+               _model.PeerWeight != Cycle.PeerWeight ||
+               _model.ManagerWeight != Cycle.ManagerWeight;
     }
 
     private void AutoFillEvaluationDates()

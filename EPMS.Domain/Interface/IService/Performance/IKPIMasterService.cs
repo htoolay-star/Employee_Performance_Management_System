@@ -5,6 +5,7 @@ namespace EPMS.Domain.Interface.IService.Performance
 {
     public interface IKPIMasterService
     {
+        Task<SuccessResponse<IEnumerable<LookUpDto>>> GetLookupAsync();
         Task<SuccessResponse<IEnumerable<KPIMasterDto>>> GetAllAsync();
         Task<SuccessResponse<IEnumerable<KPIMasterDto>>> GetActiveAsync();
         Task<SuccessResponse<KPIMasterDto>> GetByIdAsync(long id);

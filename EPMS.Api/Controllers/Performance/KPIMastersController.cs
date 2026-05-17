@@ -17,6 +17,13 @@ namespace EPMS.Api.Controllers.Performance
             _kpiMasterService = kpiMasterService;
         }
 
+        [HttpGet("lookup")]
+        public async Task<ActionResult<SuccessResponse<IEnumerable<LookUpDto>>>> GetLookup()
+        {
+            var result = await _kpiMasterService.GetLookupAsync();
+            return HandleResult(result);
+        }
+
         [HttpGet]
         public async Task<ActionResult<SuccessResponse<IEnumerable<KPIMasterDto>>>> GetAll()
         {

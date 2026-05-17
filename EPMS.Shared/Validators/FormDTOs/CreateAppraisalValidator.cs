@@ -16,14 +16,8 @@ public class CreateAppraisalValidator : AbstractValidator<CreateAppraisalDto>
             .GreaterThan(0)
             .WithMessage(PerformanceValidationMessages.Appraisal.CycleIdRequired);
 
-        RuleFor(x => x.AppraiserId)
+        RuleFor(x => x.ManagerReviewerId)
             .GreaterThan(0)
-            .WithMessage(PerformanceValidationMessages.Appraisal.AppraiserIdRequired);
-
-        RuleFor(x => x.EvaluatorRole)
-            .NotEmpty()
-            .WithMessage(PerformanceValidationMessages.Appraisal.EvaluatorRoleRequired)
-            .MaximumLength(50)
-            .WithMessage(PerformanceValidationMessages.Appraisal.EvaluatorRoleMaxLength);
+            .WithMessage(PerformanceValidationMessages.Appraisal.ManagerReviewerIdRequired);
     }
 }

@@ -1,0 +1,189 @@
+@* ═══════════════════════════════════════════════════════════════════════════
+   FormTemplateDialog — Create / Edit dialog for the Form Template entity.
+   Shared by both OpenCreateDialog (FormTemplate == null) and OpenEditDialog (FormTemplate != null).
+   Determines mode via the IsEdit computed property.
+   ═══════════════════════════════════════════════════════════════════════════ *@
+@using EPMS.Client.Constants
+@using EPMS.Client.Extensions
+@using EPMS.Client.Models.Performance
+@using EPMS.Client.Services.Performance
+@using EPMS.Shared.Constants
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.PerformanceDTOs.FormTemplateDTOs
+@using EPMS.Shared.Validators.PerformanceDTOs.FormTemplateDTOs
+@using Mapster
+@using MudBlazor
+
+@inject IFormTemplateApiClient FormTemplateApiClient
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="_form" Model="@_model" Validation="@ValidateField">
+            <MudStack Spacing="3">
+
+                <MudTextField @bind-Value="_model.Name"
+                              Label="@UIConstants.FormTemplate.NameLabel"
+                              For="@(() => _model.Name)"
+                              Variant="Variant.Outlined" />
+
+                <MudSelect T="string"
+                           @bind-Value="_model.FormType"
+                           Label="@UIConstants.FormTemplate.FormTypeLabel"
+                           Variant="Variant.Outlined"
+                           For="@(() => _model.FormType)">
+                    <MudSelectItem T="string" Value="@AppraisalConstants.FormTypes.SelfAssessment">Self-Assessment Form</MudSelectItem>
+                    <MudSelectItem T="string" Value="@AppraisalConstants.FormTypes.ThreeSixtyFeedback">360 Degree Feedback Form</MudSelectItem>
+                    <MudSelectItem T="string" Value="@AppraisalConstants.FormTypes.Appraisal">Appraisal Form</MudSelectItem>
+                </MudSelect>
+
+                @if (IsEdit)
+                {
+                    <MudSwitch @bind-Value="_model.IsActive"
+                               Label="@UIConstants.Common.Active"
+                               Color="Color.Success" />
+                }
+
+            </MudStack>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@UIConstants.Common.Cancel</MudButton>
+        <MudButton Color="Color.Primary"
+                   OnClick="Submit"
+                   Disabled="@(_saving || !HasChanged())">
+            @if (_saving)
+            {
+                <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @(IsEdit ? UIConstants.Common.Update : UIConstants.Common.Create)
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    // ── Parameters ────────────────────────────────────────────────────────────
+    [CascadingParameter] private IMudDialogInstance? _mudDialog { get; set; }
+
+    /// <summary>Pass a FormTemplateDto to open in Edit mode. Leave null for Create mode.</summary>
+    [Parameter] public FormTemplateDto? FormTemplate { get; set; }
+
+    // ── Computed ──────────────────────────────────────────────────────────────
+    private bool IsEdit => FormTemplate is not null;
+
+    // ── State ─────────────────────────────────────────────────────────────────
+    private MudForm? _form;
+    private bool _saving;
+    private FormTemplateFormModel _model = new();
+    private Dictionary<string, string> _serverErrors = new();
+
+    // Validators instantiated once; no need to recreate per render.
+    private readonly CreateFormTemplateValidator _createValidator = new();
+    private readonly UpdateFormTemplateValidator _updateValidator = new();
+
+    // ── Lifecycle ─────────────────────────────────────────────────────────────
+    protected override async Task OnInitializedAsync()
+    {
+        if (FormTemplate is not null)
+            _model = FormTemplate.Adapt<FormTemplateFormModel>();
+
+        await base.OnInitializedAsync();
+    }
+
+    // ── Actions ───────────────────────────────────────────────────────────────
+
+    private async Task Submit()
+    {
+        _serverErrors.Clear();
+
+        await _form!.Validate();
+        if (!_form.IsValid)
+        {
+            Snackbar.Add(UIConstants.Common.ValidationFailed, Severity.Warning);
+            return;
+        }
+
+        _saving = true;
+        try
+        {
+            if (IsEdit)
+            {
+                var dto = _model.Adapt<UpdateFormTemplateDto>();
+                var response = await FormTemplateApiClient.UpdateAsync(FormTemplate!.Id, dto);
+
+                if (response.Success)
+                    _mudDialog?.Close(DialogResult.Ok(true));
+                else
+                    Snackbar.Add(response.Message ?? UIConstants.Common.UpdateFailed, Severity.Error);
+            }
+            else
+            {
+                var dto = _model.Adapt<CreateFormTemplateDto>();
+                var response = await FormTemplateApiClient.CreateAsync(dto);
+
+                if (response.Success)
+                    _mudDialog?.Close(DialogResult.Ok(true));
+                else
+                    Snackbar.Add(response.Message ?? UIConstants.Common.CreateFailed, Severity.Error);
+            }
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.BadRequest)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ValidationFailed, Severity.Error);
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            var errorMessage = error?.Message ?? UIConstants.Common.DuplicateEntry;
+
+            if (errorMessage.Contains(nameof(_model.Name), StringComparison.OrdinalIgnoreCase))
+                _serverErrors[nameof(_model.Name)] = errorMessage;
+            else
+                _serverErrors[nameof(_model.Name)] = errorMessage;
+
+            await _form!.Validate();
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void Cancel() => _mudDialog?.Cancel();
+
+    // ── Validation ────────────────────────────────────────────────────────────
+
+    private async Task<IEnumerable<string>> ValidateField(object model, string propertyName)
+    {
+        IEnumerable<string> fluentErrors;
+
+        if (IsEdit)
+        {
+            var fn = _updateValidator.ValidateMappedValue<FormTemplateFormModel, UpdateFormTemplateDto>(_model, _serverErrors);
+            fluentErrors = await fn(model, propertyName);
+        }
+        else
+        {
+            var fn = _createValidator.ValidateMappedValue<FormTemplateFormModel, CreateFormTemplateDto>(_model, _serverErrors);
+            fluentErrors = await fn(model, propertyName);
+        }
+
+        var errorList = fluentErrors.ToList();
+
+        if (_serverErrors.TryGetValue(propertyName, out var serverError))
+            errorList.Add(serverError);
+
+        return errorList;
+    }
+
+    private bool HasChanged()
+    {
+        if (!IsEdit) return true;
+
+        return _model.Name != FormTemplate!.Name ||
+               _model.FormType != FormTemplate.FormType ||
+               _model.IsActive != FormTemplate.IsActive;
+    }
+}

@@ -30,24 +30,37 @@ public class AppraisalService : IAppraisalService
 
     public async Task<SuccessResponse> CreateAsync(CreateAppraisalDto dto)
     {
-        var employee = await _uow.Info.EmployeeProfiles.GetByIdAsync(dto.EmployeeId);
-        if (employee == null)
-            return SuccessResponse.Fail(EmployeeProfileMsg.NotFound(dto.EmployeeId), ErrorType.NotFound);
-
         var cycle = await _uow.Perf.AppraisalCycles.GetByIdAsync(dto.CycleId);
         if (cycle == null)
             return SuccessResponse.Fail(AppraisalCycleMsg.NotFound(dto.CycleId), ErrorType.NotFound);
 
-        var appraiser = await _uow.Info.EmployeeProfiles.GetByIdAsync(dto.AppraiserId);
-        if (appraiser == null)
-            return SuccessResponse.Fail(EmployeeProfileMsg.NotFound(dto.AppraiserId), ErrorType.NotFound);
+        var now = _timeProvider.GetUtcNow();
+        var today = DateOnly.FromDateTime(now.DateTime);
 
-        var hasExisting = await _uow.Perf.Appraisals.HasAlreadySubmittedAsync(
-            dto.EmployeeId, dto.AppraiserId, (int)dto.CycleId, dto.EvaluatorRole);
+        if (today < cycle.EvaluationStartDate)
+            return SuccessResponse.Fail("Evaluation period hasn't started yet.", ErrorType.Validation);
+
+        if (today > cycle.WindowEndDate)
+            return SuccessResponse.Fail("The appraisal window has ended.", ErrorType.Validation);
+
+        if (cycle.IsLocked)
+            return SuccessResponse.Fail("Cycle is locked.", ErrorType.Validation);
+
+        var employee = await _uow.Info.EmployeeProfiles.GetByIdAsync(dto.EmployeeId);
+        if (employee == null)
+            return SuccessResponse.Fail(EmployeeProfileMsg.NotFound(dto.EmployeeId), ErrorType.NotFound);
+
+        var managerReviewer = await _uow.Info.EmployeeProfiles.GetByIdAsync(dto.ManagerReviewerId);
+        if (managerReviewer == null)
+            return SuccessResponse.Fail(EmployeeProfileMsg.NotFound(dto.ManagerReviewerId), ErrorType.NotFound);
+
+        var hasExisting = await _uow.Perf.Appraisals.ExistsByEmployeeAndCycleAsync(dto.EmployeeId, dto.CycleId);
         if (hasExisting)
             return SuccessResponse.Fail(AppraisalMsg.DuplicateEntry, ErrorType.Conflict);
 
-        var appraisal = new Appraisal(dto.EmployeeId, dto.CycleId, dto.AppraiserId, dto.EvaluatorRole);
+        var appraisal = new Appraisal(dto.EmployeeId, dto.CycleId, dto.ManagerReviewerId);
+
+        await ResolveAndAddKPIDetailsAsync(appraisal, dto.CycleId);
 
         _uow.Perf.Appraisals.Add(appraisal);
         await _uow.CompleteAsync();
@@ -114,6 +127,41 @@ public class AppraisalService : IAppraisalService
         return SuccessResponse<IEnumerable<AppraisalDto>>.Ok(dtos, AppraisalMsg.RetrievedByEmployee);
     }
 
+    public async Task<SuccessResponse> GetAppraisalFillAsync(long id)
+    {
+        var appraisal = await _uow.Perf.Appraisals.GetAppraisalWithDetailsAsync(id);
+        if (appraisal == null)
+            return SuccessResponse.Fail(AppraisalMsg.NotFound(id), ErrorType.NotFound);
+
+        var dto = new AppraisalFillDto
+        {
+            Id = appraisal.Id,
+            EmployeeId = appraisal.EmployeeId,
+            EmployeeName = appraisal.Employee?.StaffName,
+            CycleId = appraisal.CycleId,
+            CycleName = appraisal.Cycle?.Name,
+            ManagerReviewerId = appraisal.ManagerReviewerId,
+            ManagerReviewerName = appraisal.ManagerReviewer?.StaffName,
+            Status = appraisal.Status,
+            IsLocked = appraisal.IsLocked,
+            Details = appraisal.Details.Select(d => new AppraisalDetailFillDto
+            {
+                KPIId = d.KPIId,
+                KPIName = d.KPIName,
+                CategoryName = d.CategoryName,
+                Weightage = d.Weightage,
+                TargetValue = d.TargetValue,
+                ScoringDirection = d.ScoringDirection,
+                ActualValue = d.ActualValue,
+                Score = d.Score,
+                WeightedScore = d.WeightedScore,
+                Remarks = d.Remarks,
+            }).ToList()
+        };
+
+        return SuccessResponse<AppraisalFillDto>.Ok(dto, AppraisalMsg.Retrieved);
+    }
+
     public async Task<SuccessResponse> SubmitAsync(AppraisalSubmissionDto dto)
     {
         var positionId = await _currentEmployee.GetPositionIdAsync();
@@ -130,36 +178,18 @@ public class AppraisalService : IAppraisalService
         foreach (var detailDto in dto.Details)
         {
             var detail = appraisal.Details.FirstOrDefault(d =>
-                (detailDto.KPIId.HasValue && d.KPIId == detailDto.KPIId) ||
-                (detailDto.QuestionId.HasValue && d.QuestionId == detailDto.QuestionId));
+                d.KPIId == detailDto.KPIId);
 
             if (detail != null)
             {
-                detail.Evaluate(detailDto.ActualValue, detailDto.Rating, detailDto.Comment);
+                detail.Evaluate(detailDto.ActualValue, detailDto.Comment);
             }
-        }
-
-        var currentTotalScore = appraisal.Details.Sum(d => d.WeightedScore);
-        var scales = await _uow.Perf.RatingScales.GetAllAsync();
-        var matchingScale = scales.FirstOrDefault(s =>
-            currentTotalScore >= s.MinScore && currentTotalScore <= s.MaxScore);
-
-        if (matchingScale != null)
-        {
-            appraisal.CalculateTotalScore(matchingScale);
         }
 
         _uow.Perf.Appraisals.Update(appraisal);
         await _uow.CompleteAsync();
 
-        var response = new AppraisalResponseDto
-        {
-            Id = appraisal.Id,
-            TotalScore = appraisal.TotalScore ?? 0,
-            Grade = appraisal.RatingLabel ?? "N/A"
-        };
-
-        return SuccessResponse<AppraisalResponseDto>.Ok(response, AppraisalMsg.Submitted);
+        return SuccessResponse.Ok(AppraisalMsg.Submitted);
     }
 
     public async Task<SuccessResponse> LockAsync(long id, long adminId, string reason)
@@ -175,7 +205,7 @@ public class AppraisalService : IAppraisalService
         if (appraisal.IsLocked)
             return SuccessResponse.Fail(AppraisalMsg.AlreadyLocked, ErrorType.Conflict);
 
-        appraisal.FinalizeAppraisal(_timeProvider);
+        appraisal.Lock(_timeProvider);
 
         await _uow.CompleteAsync();
         return SuccessResponse.Ok(AppraisalMsg.Locked);
@@ -201,5 +231,54 @@ public class AppraisalService : IAppraisalService
 
         await _uow.CompleteAsync();
         return SuccessResponse.Ok(AppraisalMsg.Unlocked);
+    }
+
+    private async Task ResolveAndAddKPIDetailsAsync(Appraisal appraisal, long cycleId)
+    {
+        var employment = await _uow.Info.EmployeeEmployments.GetByEmployeeIdAsync(appraisal.EmployeeId);
+        if (employment == null) return;
+
+        var employeeKPIs = await _uow.Perf.EmployeeKPIs.GetByEmployeeAndCycleAsync(appraisal.EmployeeId, cycleId);
+
+        var entityKPIs = new List<EntityKPI>();
+        entityKPIs.AddRange(await _uow.Perf.EntityKPIs.GetByEntityAsync(AppraisalConstants.EntityTypes.Position, employment.PositionId));
+        entityKPIs.AddRange(await _uow.Perf.EntityKPIs.GetByEntityAsync(AppraisalConstants.EntityTypes.Department, employment.DepartmentId));
+        if (employment.TeamId.HasValue)
+            entityKPIs.AddRange(await _uow.Perf.EntityKPIs.GetByEntityAsync(AppraisalConstants.EntityTypes.Team, employment.TeamId.Value));
+
+        var usedKPIIds = new HashSet<long>(employeeKPIs.Select(e => e.KPIId));
+        var allKPIIds = new HashSet<long>(employeeKPIs.Select(e => e.KPIId));
+        foreach (var ek in entityKPIs)
+            allKPIIds.Add(ek.KPIId);
+
+        if (allKPIIds.Count == 0) return;
+
+        var kpiMasters = await _uow.Perf.KPIMasters.FindAllAsync(
+            k => allKPIIds.Contains(k.Id),
+            includes: k => k.Category);
+
+        var kpiDict = kpiMasters.ToDictionary(k => k.Id);
+
+        foreach (var ekpi in employeeKPIs)
+        {
+            if (!kpiDict.TryGetValue(ekpi.KPIId, out var kpi)) continue;
+            var detail = new AppraisalDetail(
+                appraisal.Id, ekpi.KPIId, kpi.Name, kpi.Category?.Name,
+                ekpi.Weightage, ekpi.TargetValue,
+                scoringDirection: kpi.ScoringDirection,
+                employeeKPIId: ekpi.Id);
+            appraisal.AddDetail(detail);
+        }
+
+        foreach (var ekpi in entityKPIs)
+        {
+            if (usedKPIIds.Contains(ekpi.KPIId)) continue;
+            if (!kpiDict.TryGetValue(ekpi.KPIId, out var kpi)) continue;
+            var detail = new AppraisalDetail(
+                appraisal.Id, ekpi.KPIId, kpi.Name, kpi.Category?.Name,
+                ekpi.Weightage, ekpi.TargetValue,
+                scoringDirection: kpi.ScoringDirection);
+            appraisal.AddDetail(detail);
+        }
     }
 }

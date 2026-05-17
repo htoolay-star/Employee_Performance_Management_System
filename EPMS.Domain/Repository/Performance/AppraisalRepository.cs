@@ -16,10 +16,9 @@ namespace EPMS.Domain.Repository.Performance
         {
             return await _dbSet
                 .Include(a => a.Employee)
-                .Include(a => a.Appraiser)
+                .Include(a => a.ManagerReviewer)
                 .Include(a => a.Cycle)
                 .Include(a => a.Details)
-                    .ThenInclude(d => d.Question)
                 .FirstOrDefaultAsync(a => a.Id == id);
         }
 
@@ -31,13 +30,11 @@ namespace EPMS.Domain.Repository.Performance
                 .ToListAsync();
         }
 
-        public async Task<bool> HasAlreadySubmittedAsync(long employeeId, long appraiserId, int cycleId, string role)
+        public async Task<bool> ExistsByEmployeeAndCycleAsync(long employeeId, long cycleId)
         {
             return await _dbSet.AnyAsync(a =>
                 a.EmployeeId == employeeId &&
-                a.AppraiserId == appraiserId &&
-                a.CycleId == cycleId &&
-                a.EvaluatorRole == role);
+                a.CycleId == cycleId);
         }
     }
 }

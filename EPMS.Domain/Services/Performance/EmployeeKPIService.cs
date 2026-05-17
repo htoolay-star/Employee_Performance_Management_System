@@ -70,12 +70,18 @@ namespace EPMS.Domain.Services.Performance
             if (priority == null)
                 return SuccessResponse<long>.Fail(EmployeeKPIMsg.PriorityNotFound, ErrorType.NotFound);
 
+            var currentTotal = await _uow.Perf.EmployeeKPIs.GetTotalWeightageAsync(dto.EmployeeId, dto.CycleId);
+            if (currentTotal + dto.Weightage > 100)
+                return SuccessResponse<long>.Fail(EmployeeKPIMsg.WeightExceeded(currentTotal, dto.Weightage), ErrorType.Validation);
+
             var employeeKPI = new EmployeeKPI(priority, dto.EmployeeId, dto.KPIId, dto.CycleId, priority.Id, dto.Weightage, dto.TargetValue, dto.TargetUnit);
 
             _uow.Perf.EmployeeKPIs.Add(employeeKPI);
             await _uow.CompleteAsync();
 
-            return SuccessResponse<long>.Ok(employeeKPI.Id, EmployeeKPIMsg.Created);
+            var newTotal = currentTotal + dto.Weightage;
+            var message = newTotal == 100 ? EmployeeKPIMsg.Created : EmployeeKPIMsg.WeightNotComplete(newTotal);
+            return SuccessResponse<long>.Ok(employeeKPI.Id, message);
         }
 
         public async Task<SuccessResponse> UpdateAsync(long id, UpdateEmployeeKPIDto dto)
@@ -88,12 +94,18 @@ namespace EPMS.Domain.Services.Performance
             if (priority == null)
                 return SuccessResponse.Fail(EmployeeKPIMsg.PriorityNotFound, ErrorType.NotFound);
 
+            var currentTotal = await _uow.Perf.EmployeeKPIs.GetTotalWeightageAsync(employeeKPI.EmployeeId, employeeKPI.CycleId, id);
+            if (currentTotal + dto.Weightage > 100)
+                return SuccessResponse.Fail(EmployeeKPIMsg.WeightExceeded(currentTotal, dto.Weightage), ErrorType.Validation);
+
             employeeKPI.Update(priority, dto.Weightage, dto.TargetValue, dto.TargetUnit);
 
             _uow.Perf.EmployeeKPIs.Update(employeeKPI);
             await _uow.CompleteAsync();
 
-            return SuccessResponse.Ok(EmployeeKPIMsg.Updated);
+            var newTotal = currentTotal + dto.Weightage;
+            var message = newTotal == 100 ? EmployeeKPIMsg.Updated : EmployeeKPIMsg.WeightNotComplete(newTotal);
+            return SuccessResponse.Ok(message);
         }
 
         public async Task<SuccessResponse> DeleteAsync(long id)

@@ -30,10 +30,7 @@ namespace EPMS.Shared.Validators.ValidationMessages
             public const string IdRequired = "Appraisal ID is required.";
             public const string EmployeeIdRequired = "Employee is required.";
             public const string CycleIdRequired = "Appraisal cycle is required.";
-            public const string AppraiserIdRequired = "Appraiser is required.";
-            public const string EvaluatorIdRequired = "Evaluator ID is required.";
-            public const string EvaluatorRoleRequired = "Evaluator role is required.";
-            public const string EvaluatorRoleMaxLength = "Evaluator role cannot exceed 50 characters.";
+            public const string ManagerReviewerIdRequired = "Manager reviewer is required.";
             public const string DetailsRequired = "Assessment scores are required.";
             public const string RatingRange = "Rating must be between 1 and 5.";
             public const string CommentMaxLength = "Comment cannot exceed 1000 characters.";
@@ -94,6 +91,8 @@ namespace EPMS.Shared.Validators.ValidationMessages
             public const string SelfReviewOutsideWindow = "Self-review dates must fall within the appraisal window ({0:dd/MM/yyyy} to {1:dd/MM/yyyy}).";
             public const string ManagerReviewOutsideWindow = "Manager review dates must fall within the appraisal window ({0:dd/MM/yyyy} to {1:dd/MM/yyyy}).";
             public const string PeerReviewOutsideWindow = "Peer review dates must fall within the appraisal window ({0:dd/MM/yyyy} to {1:dd/MM/yyyy}).";
+            public const string WeightsMustSumTo100 = "KPI ({0}) + Self ({1}) + Peer ({2}) + Manager ({3}) must equal 100.";
+            public const string WeightCannotBeNegative = "Individual weights cannot be negative.";
         }
 
         public static class KPIMaster
@@ -105,6 +104,7 @@ namespace EPMS.Shared.Validators.ValidationMessages
             public const string NameRequired = "KPI name is required.";
             public const string NameMaxLength = "KPI name cannot exceed 100 characters.";
             public const string DescriptionMaxLength = "Description cannot exceed 500 characters.";
+            public const string ScoringDirectionInvalid = "Scoring direction must be either 'HigherIsBetter' or 'LowerIsBetter'.";
         }
 
         public static class PIP
@@ -127,6 +127,7 @@ namespace EPMS.Shared.Validators.ValidationMessages
             public const string NameMaxLength = "Form template name cannot exceed 100 characters.";
             public const string FormTypeRequired = "Form type is required.";
             public const string FormTypeMaxLength = "Form type cannot exceed 50 characters.";
+            public const string FormTypeInvalid = "Invalid form type. Allowed: Self-Assessment Form, 360 Degree Feedback Form, or Appraisal Form.";
         }
 
         public static class ContinuousFeedback

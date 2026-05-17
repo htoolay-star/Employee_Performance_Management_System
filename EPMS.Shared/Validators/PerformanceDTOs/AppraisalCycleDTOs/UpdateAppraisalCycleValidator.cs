@@ -203,5 +203,27 @@ public class UpdateAppraisalCycleValidator : AbstractValidator<UpdateAppraisalCy
             .WithMessage(x => string.Format(
                 PerformanceValidationMessages.AppraisalCycle.PeerReviewOutsideWindow,
                 x.WindowStartDate, x.WindowEndDate));
+
+        RuleFor(x => x.KpiWeight)
+            .GreaterThanOrEqualTo(0)
+            .WithMessage(PerformanceValidationMessages.AppraisalCycle.WeightCannotBeNegative);
+
+        RuleFor(x => x.SelfWeight)
+            .GreaterThanOrEqualTo(0)
+            .WithMessage(PerformanceValidationMessages.AppraisalCycle.WeightCannotBeNegative);
+
+        RuleFor(x => x.PeerWeight)
+            .GreaterThanOrEqualTo(0)
+            .WithMessage(PerformanceValidationMessages.AppraisalCycle.WeightCannotBeNegative);
+
+        RuleFor(x => x.ManagerWeight)
+            .GreaterThanOrEqualTo(0)
+            .WithMessage(PerformanceValidationMessages.AppraisalCycle.WeightCannotBeNegative);
+
+        RuleFor(x => x)
+            .Must(x => x.KpiWeight + x.SelfWeight + x.PeerWeight + x.ManagerWeight == 100m)
+            .WithMessage(x => string.Format(
+                PerformanceValidationMessages.AppraisalCycle.WeightsMustSumTo100,
+                x.KpiWeight, x.SelfWeight, x.PeerWeight, x.ManagerWeight));
     }
 }

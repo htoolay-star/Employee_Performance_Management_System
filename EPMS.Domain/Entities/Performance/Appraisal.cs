@@ -14,19 +14,17 @@ namespace EPMS.Domain.Entities.Performance
     {
         private Appraisal() { }
 
-        public Appraisal(long employeeId, long cycleId, long appraiserId, string evaluatorRole)
+        public Appraisal(long employeeId, long cycleId, long managerReviewerId)
         {
             EmployeeId = employeeId;
             CycleId = cycleId;
-            AppraiserId = appraiserId;
-            EvaluatorRole = evaluatorRole;
+            ManagerReviewerId = managerReviewerId;
             Status = AppraisalStatuses.Draft;
         }
 
         public long EmployeeId { get; private set; }
         public long CycleId { get; private set; }
-        public long AppraiserId { get; private set; }
-        public string EvaluatorRole { get; private set; } = string.Empty;
+        public long ManagerReviewerId { get; private set; }
 
         public string Status { get; private set; } = string.Empty;
         public string? RatingLabel { get; private set; }
@@ -51,7 +49,7 @@ namespace EPMS.Domain.Entities.Performance
 
         public virtual EmployeeProfile Employee { get; private set; } = null!;
         public virtual AppraisalCycle Cycle { get; private set; } = null!;
-        public virtual EmployeeProfile Appraiser { get; private set; } = null!;
+        public virtual EmployeeProfile ManagerReviewer { get; private set; } = null!;
 
         public long? FinalRatingId { get; private set; }
         public virtual RatingScale? FinalRating { get; private set; }
@@ -66,47 +64,61 @@ namespace EPMS.Domain.Entities.Performance
         public virtual IReadOnlyCollection<EvaluationResponse> Responses => _responses.AsReadOnly();
 
         public decimal? TotalScore { get; private set; }
-
-        public void CalculateTotalScore(RatingScale matchingScale)
-        {
-            ArgumentNullException.ThrowIfNull(matchingScale);
-
-            if (Details.Any())
-            {
-                TotalScore = Details.Sum(d => d.WeightedScore);
-                FinalRatingId = matchingScale.Id;
-                RatingLabel = matchingScale.Label;
-            }
-        }
-
-public void SubmitManagerReview(string? comment, TimeProvider timeProvider)
-        {
-            ManagerComment = comment?.Trim();
-            Status = AppraisalStatuses.Reviewed;
-            ReviewDate = timeProvider.GetUtcNow();
-        }
-
-        private void RecalculateTotalScore()
-        {
-            TotalScore = _details.Sum(d => d.WeightedScore);
-        }
+        public decimal? KpiScore { get; private set; }
+        public decimal? SelfScore { get; private set; }
+        public decimal? PeerScore { get; private set; }
+        public decimal? ManagerScore { get; private set; }
+        public string? FormulaWeights { get; private set; }
 
         public void AddDetail(AppraisalDetail detail)
         {
             ArgumentNullException.ThrowIfNull(detail);
 
             _details.Add(detail);
-            RecalculateTotalScore();
         }
 
-        public void FinalizeAppraisal(TimeProvider timeProvider)
+        public void Lock(TimeProvider timeProvider)
         {
             if (IsLocked) throw new InvalidOperationException("Appraisal is already locked.");
 
+            IsLocked = true;
+            LockedAt = timeProvider.GetUtcNow();
             Status = AppraisalStatuses.Finalized;
+            FinalizedDate = timeProvider.GetUtcNow();
+        }
+
+        public void FinalizeAppraisal(
+            decimal kpiScore,
+            decimal selfScore,
+            decimal peerScore,
+            decimal managerScore,
+            decimal kpiWeight,
+            decimal selfWeight,
+            decimal peerWeight,
+            decimal managerWeight,
+            RatingScale matchingScale,
+            TimeProvider timeProvider)
+        {
+            if (IsLocked) throw new InvalidOperationException("Appraisal is already locked.");
+
+            KpiScore = kpiScore;
+            SelfScore = selfScore;
+            PeerScore = peerScore;
+            ManagerScore = managerScore;
+
+            TotalScore = (kpiScore * kpiWeight / 100m)
+                       + (selfScore * selfWeight / 100m)
+                       + (peerScore * peerWeight / 100m)
+                       + (managerScore * managerWeight / 100m);
+
+            FormulaWeights = $"{{\"kpi\":{kpiWeight},\"self\":{selfWeight},\"peer\":{peerWeight},\"manager\":{managerWeight}}}";
+
+            FinalRatingId = matchingScale.Id;
+            RatingLabel = matchingScale.Label;
             FinalizedDate = timeProvider.GetUtcNow();
             IsLocked = true;
             LockedAt = timeProvider.GetUtcNow();
+            Status = AppraisalStatuses.Finalized;
         }
 
         public void UnlockAppraisal(long adminId, string reason, TimeProvider timeProvider)

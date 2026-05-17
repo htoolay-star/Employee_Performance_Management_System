@@ -273,6 +273,126 @@
             public const string NoDataFound = "Try adjusting your search or add a new rating scale.";
         }
 
+        public static class FormTemplate
+        {
+            public const string PageTitle = "Form Template Management";
+            public const string SearchPlaceholder = "Search by name...";
+            public const string AddButton = "Add Form Template";
+            public const string CreateDialogTitle = "Create Form Template";
+            public const string EditDialogTitle = "Edit Form Template";
+            public const string DeleteDialogTitle = "Delete Form Template";
+
+            public const string NameLabel = "Template Name";
+            public const string FormTypeLabel = "Form Type";
+
+            public const string ColumnName = "Template Name";
+            public const string ColumnFormType = "Form Type";
+            public const string ColumnQuestions = "Questions";
+
+            public const string NoDataFound = "Try adjusting your search or add a new form template.";
+        }
+
+        public static class PositionFormTemplate
+        {
+            public const string PageTitle = "Position Form Templates";
+            public const string AddButton = "Assign Template";
+            public const string CreateDialogTitle = "Assign Template to Position";
+            public const string EditDialogTitle = "Edit Template Assignment";
+            public const string DeleteDialogTitle = "Delete Assignment";
+
+            public const string FormTemplateLabel = "Form Template";
+            public const string MandatoryLabel = "Mandatory";
+
+            public const string ColumnPosition = "Position";
+            public const string ColumnTemplate = "Template";
+            public const string ColumnMandatory = "Mandatory";
+
+            public const string SelectPosition = "-- Select Position --";
+            public const string NoDataFound = "Select a position to see assigned form templates.";
+        }
+
+        public static class FormQuestion
+        {
+            public const string PageTitle = "Template Questions";
+            public const string AddButton = "Add Question";
+            public const string CreateDialogTitle = "Create Question";
+            public const string EditDialogTitle = "Edit Question";
+            public const string DeleteDialogTitle = "Delete Question";
+
+            public const string QuestionTextLabel = "Question Text";
+            public const string SequenceLabel = "Order";
+            public const string CategoryLabel = "Category";
+            public const string RatingScaleLabel = "Rating Scale";
+            public const string HasYesNoLabel = "Yes/No Response";
+            public const string HasCommentLabel = "Allow Comment";
+
+            public const string ColumnNo = "No.";
+            public const string ColumnQuestion = "Question";
+            public const string ColumnSequence = "Order";
+            public const string ColumnCategory = "Category";
+            public const string ColumnRatingScale = "Rating Scale";
+            public const string ColumnActions = "Actions";
+
+            public const string NoDataFound = "No questions found for this template.";
+        }
+
+        public static class KPIMaster
+        {
+            public const string PageTitle = "KPI Master Management";
+            public const string SearchPlaceholder = "Search by code or name...";
+            public const string AddButton = "Add KPI Master";
+            public const string CreateDialogTitle = "Create KPI Master";
+            public const string EditDialogTitle = "Edit KPI Master";
+            public const string DeleteDialogTitle = "Delete KPI Master";
+
+            public const string CodeLabel = "KPI Code";
+            public const string NameLabel = "KPI Name";
+            public const string CategoryLabel = "Category";
+
+            public const string ColumnCode = "KPI Code";
+            public const string ColumnName = "KPI Name";
+            public const string ColumnCategory = "Category";
+            public const string ColumnDescription = "Description";
+
+            public const string NoDataFound = "Try adjusting your search or add a new KPI master.";
+            public const string ScoringDirectionLabel = "Scoring Direction";
+            public const string ScoringDirectionHigher = "Higher is Better";
+            public const string ScoringDirectionLower = "Lower is Better";
+        }
+
+        public static class AppraisalFill
+        {
+            public const string PageTitle = "KPI Evaluation";
+            public const string EmployeeLabel = "Employee";
+            public const string CycleLabel = "Cycle";
+            public const string StatusLabel = "Status";
+            public const string ColumnKPI = "KPI";
+            public const string ColumnWeight = "Weight";
+            public const string ColumnTarget = "Target";
+            public const string ColumnDirection = "";
+            public const string ColumnActual = "Actual";
+            public const string ColumnScore = "Score";
+            public const string ColumnWeighted = "Weighted";
+            public const string ColumnRemarks = "Remarks";
+            public const string SubmitButton = "Submit Evaluation";
+            public const string SubmitSuccess = "Evaluation submitted successfully.";
+        }
+
+        public static class AppraisalList
+        {
+            public const string PageTitle = "KPI Evaluations";
+            public const string SearchPlaceholder = "Search by employee name...";
+            public const string ColumnEmployee = "Employee";
+            public const string ColumnCycle = "Cycle";
+            public const string ColumnStatus = "Status";
+            public const string ColumnScore = "Score";
+            public const string ColumnLocked = "Locked";
+            public const string FillButton = "Fill";
+            public const string DeleteConfirmFormat = "Are you sure you want to delete appraisal for '{0}'?";
+            public const string DeleteSuccess = "Appraisal deleted successfully.";
+            public const string NoDataFound = "No appraisals found.";
+        }
+
         public static class Employee
         {
             public const string PageTitle = "Employee Directory";

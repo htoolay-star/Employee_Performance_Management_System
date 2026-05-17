@@ -34,6 +34,11 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.IsLocked).HasDefaultValue(false);
 
+            entity.Property(e => e.KpiWeight).HasPrecision(5, 2).HasDefaultValue(50m);
+            entity.Property(e => e.SelfWeight).HasPrecision(5, 2).HasDefaultValue(15m);
+            entity.Property(e => e.PeerWeight).HasPrecision(5, 2).HasDefaultValue(10m);
+            entity.Property(e => e.ManagerWeight).HasPrecision(5, 2).HasDefaultValue(25m);
+
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.Property(e => e.UpdatedAt).IsRequired();
             entity.Property(e => e.Version).IsRowVersion();

@@ -1,0 +1,243 @@
+@* ═══════════════════════════════════════════════════════════════════════════
+   FormQuestionDialog — Create / Edit dialog for Form Questions.
+   Create: receives TemplateId + NextSequence (auto-assigned order).
+   Edit: receives FormQuestionDto to pre-fill.
+   ═══════════════════════════════════════════════════════════════════════════ *@
+@using EPMS.Client.Constants
+@using EPMS.Client.Extensions
+@using EPMS.Client.Models.Performance
+@using EPMS.Client.Services.Auth
+@using EPMS.Client.Services.Performance
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.PerformanceDTOs.FormQuestionDTOs
+@using EPMS.Shared.DTOs.PerformanceDTOs.QuestionRatingScaleDTOs
+@using Mapster
+@using MudBlazor
+
+@inject IFormQuestionApiClient FormQuestionApiClient
+@inject IQuestionRatingScaleApiClient QuestionRatingScaleApiClient
+@inject LookupStateService LookupState
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="_form" Model="@_model" Validation="@(IsEdit ? (Func<object, string, Task<IEnumerable<string>>>)ValidateEditField : ValidateCreateField)">
+            <MudStack Spacing="3">
+
+                <MudTextField @bind-Value="_model.QuestionText"
+                              Label="@UIConstants.FormQuestion.QuestionTextLabel"
+                              For="@(() => _model.QuestionText)"
+                              Variant="Variant.Outlined"
+                              Lines="3" />
+
+                <MudNumericField @bind-Value="_model.Sequence"
+                                 Label="@UIConstants.FormQuestion.SequenceLabel"
+                                 Variant="Variant.Outlined"
+                                 Disabled="true"
+                                 Min="1"
+                                 HelperText="Auto-assigned. Adjust from the list page if needed." />
+
+                <MudAutocomplete T="long?"
+                                 @bind-Value="_model.CategoryId"
+                                 Label="@UIConstants.FormQuestion.CategoryLabel"
+                                 Variant="Variant.Outlined"
+                                 SearchFunc="SearchCategories"
+                                 ToStringFunc="GetCategoryName"
+                                 Clearable="true" />
+
+                <MudAutocomplete T="long?"
+                                 @bind-Value="_model.RatingScaleId"
+                                 Label="@UIConstants.FormQuestion.RatingScaleLabel"
+                                 Variant="Variant.Outlined"
+                                 SearchFunc="SearchRatingScales"
+                                 ToStringFunc="GetRatingScaleName"
+                                 Clearable="true" />
+
+                <MudSwitch @bind-Value="_model.HasYesNo"
+                           Label="@UIConstants.FormQuestion.HasYesNoLabel"
+                           Color="Color.Primary" />
+
+                <MudSwitch @bind-Value="_model.HasComment"
+                           Label="@UIConstants.FormQuestion.HasCommentLabel"
+                           Color="Color.Primary" />
+
+            </MudStack>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@UIConstants.Common.Cancel</MudButton>
+        <MudButton Color="Color.Primary"
+                   OnClick="Submit"
+                   Disabled="@(_saving || !HasChanged())">
+            @if (_saving)
+            {
+                <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @(IsEdit ? UIConstants.Common.Update : UIConstants.Common.Create)
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    // ── Parameters ────────────────────────────────────────────────────────────
+    [CascadingParameter] private IMudDialogInstance? _mudDialog { get; set; }
+
+    [Parameter] public long TemplateId { get; set; }
+    [Parameter] public int NextSequence { get; set; } = 1;
+    [Parameter] public FormQuestionDto? Question { get; set; }
+
+    // ── Computed ──────────────────────────────────────────────────────────────
+    private bool IsEdit => Question is not null;
+
+    // ── State ─────────────────────────────────────────────────────────────────
+    private MudForm? _form;
+    private bool _saving;
+    private FormQuestionFormModel _model = new();
+    private Dictionary<string, string> _serverErrors = new();
+
+    private List<LookUpDto> _categories = new();
+    private List<QuestionRatingScaleDto> _ratingScales = new();
+
+    // ── Lifecycle ─────────────────────────────────────────────────────────────
+    protected override async Task OnInitializedAsync()
+    {
+        _categories = await LookupState.GetCategoriesAsync();
+
+        var scalesResponse = await QuestionRatingScaleApiClient.GetAllAsync();
+        if (scalesResponse.Success && scalesResponse.Data != null)
+            _ratingScales = scalesResponse.Data.Where(s => s.IsActive).ToList();
+
+        if (IsEdit)
+        {
+            _model = Question.Adapt<FormQuestionFormModel>();
+        }
+        else
+        {
+            _model.TemplateId = TemplateId;
+            _model.Sequence = NextSequence;
+        }
+
+        await base.OnInitializedAsync();
+    }
+
+    // ── Actions ───────────────────────────────────────────────────────────────
+
+    private async Task Submit()
+    {
+        _serverErrors.Clear();
+
+        await _form!.Validate();
+        if (!_form.IsValid)
+        {
+            Snackbar.Add(UIConstants.Common.ValidationFailed, Severity.Warning);
+            return;
+        }
+
+        _saving = true;
+        try
+        {
+            if (IsEdit)
+            {
+                var dto = _model.Adapt<UpdateFormQuestionDto>();
+                var response = await FormQuestionApiClient.UpdateAsync(Question!.Id, dto);
+
+                if (response.Success)
+                    _mudDialog?.Close(DialogResult.Ok(true));
+                else
+                    Snackbar.Add(response.Message ?? UIConstants.Common.UpdateFailed, Severity.Error);
+            }
+            else
+            {
+                var dto = _model.Adapt<CreateFormQuestionDto>();
+                var response = await FormQuestionApiClient.CreateAsync(dto);
+
+                if (response.Success)
+                    _mudDialog?.Close(DialogResult.Ok(true));
+                else
+                    Snackbar.Add(response.Message ?? UIConstants.Common.CreateFailed, Severity.Error);
+            }
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.BadRequest)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ValidationFailed, Severity.Error);
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            _serverErrors[nameof(_model.Sequence)] = error?.Message ?? UIConstants.Common.DuplicateEntry;
+            await _form!.Validate();
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void Cancel() => _mudDialog?.Cancel();
+
+    // ── Autocomplete Helpers ──────────────────────────────────────────────────
+
+    private Task<IEnumerable<long?>> SearchCategories(string value, CancellationToken _)
+    {
+        var query = string.IsNullOrWhiteSpace(value)
+            ? _categories
+            : _categories.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(query.Select(x => (long?)x.Id).ToList().AsEnumerable());
+    }
+
+    private string GetCategoryName(long? id)
+    {
+        return _categories.FirstOrDefault(x => x.Id == id)?.Code ?? string.Empty;
+    }
+
+    private Task<IEnumerable<long?>> SearchRatingScales(string value, CancellationToken _)
+    {
+        var query = string.IsNullOrWhiteSpace(value)
+            ? _ratingScales
+            : _ratingScales.Where(x => x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(query.Select(x => (long?)x.Id).ToList().AsEnumerable());
+    }
+
+    private string GetRatingScaleName(long? id)
+    {
+        return _ratingScales.FirstOrDefault(x => x.Id == id)?.Name ?? string.Empty;
+    }
+
+    // ── Validation ────────────────────────────────────────────────────────────
+
+    private async Task<IEnumerable<string>> ValidateCreateField(object model, string propertyName)
+    {
+        var fluentErrors = await new EPMS.Shared.Validators.PerformanceDTOs.FormQuestionDTOs.CreateFormQuestionValidator()
+            .ValidateMappedValue<FormQuestionFormModel, CreateFormQuestionDto>(_model, _serverErrors)(model, propertyName);
+
+        var errorList = fluentErrors.ToList();
+        if (_serverErrors.TryGetValue(propertyName, out var serverError))
+            errorList.Add(serverError);
+        return errorList;
+    }
+
+    private async Task<IEnumerable<string>> ValidateEditField(object model, string propertyName)
+    {
+        var fluentErrors = await new EPMS.Shared.Validators.PerformanceDTOs.FormQuestionDTOs.UpdateFormQuestionValidator()
+            .ValidateMappedValue<FormQuestionFormModel, UpdateFormQuestionDto>(_model, _serverErrors)(model, propertyName);
+
+        var errorList = fluentErrors.ToList();
+        if (_serverErrors.TryGetValue(propertyName, out var serverError))
+            errorList.Add(serverError);
+        return errorList;
+    }
+
+    private bool HasChanged()
+    {
+        if (!IsEdit) return true;
+
+        return _model.QuestionText != Question!.QuestionText ||
+               _model.Sequence != Question.Sequence ||
+               _model.CategoryId != Question.CategoryId ||
+               _model.RatingScaleId != Question.RatingScaleId ||
+               _model.HasYesNo != Question.HasYesNo ||
+               _model.HasComment != Question.HasComment;
+    }
+}

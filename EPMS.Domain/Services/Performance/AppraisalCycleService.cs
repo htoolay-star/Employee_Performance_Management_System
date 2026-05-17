@@ -105,7 +105,11 @@ public class AppraisalCycleService : IAppraisalCycleService
             dto.EvaluationStartDate.Value,
             dto.EvaluationEndDate.Value,
             dto.WindowStartDate,
-            dto.WindowEndDate
+            dto.WindowEndDate,
+            dto.KpiWeight,
+            dto.SelfWeight,
+            dto.PeerWeight,
+            dto.ManagerWeight
         );
 
         try
@@ -257,7 +261,8 @@ public class AppraisalCycleService : IAppraisalCycleService
 
         cycle.Update(dto.Name, dto.AppraisalType, dto.CalendarType, dto.YearLabel,
                      dto.EvaluationStartDate, dto.EvaluationEndDate,
-                     dto.WindowStartDate, dto.WindowEndDate);
+                     dto.WindowStartDate, dto.WindowEndDate,
+                     dto.KpiWeight, dto.SelfWeight, dto.PeerWeight, dto.ManagerWeight);
 
         try
         {

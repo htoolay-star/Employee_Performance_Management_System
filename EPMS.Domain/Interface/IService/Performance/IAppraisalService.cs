@@ -11,6 +11,7 @@ public interface IAppraisalService
     Task<SuccessResponse> GetByIdAsync(long id);
     Task<SuccessResponse> GetAllAsync();
     Task<SuccessResponse> GetByEmployeeIdAsync(long employeeId);
+    Task<SuccessResponse> GetAppraisalFillAsync(long id);
     Task<SuccessResponse> SubmitAsync(AppraisalSubmissionDto dto);
     Task<SuccessResponse> LockAsync(long id, long adminId, string reason);
     Task<SuccessResponse> UnlockAsync(long id, long adminId, string reason);

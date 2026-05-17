@@ -25,6 +25,8 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.Property(e => e.Name).HasMaxLength(250).IsRequired();
             entity.Property(e => e.Description).HasMaxLength(500);
 
+            entity.Property(e => e.ScoringDirection).HasMaxLength(20).IsRequired().HasDefaultValue("HigherIsBetter");
+
             entity.Property(e => e.IsActive).HasDefaultValue(true);
 
             entity.HasOne(e => e.Category)

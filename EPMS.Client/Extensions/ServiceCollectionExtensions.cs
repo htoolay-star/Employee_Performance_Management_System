@@ -50,6 +50,10 @@ public static class ServiceCollectionExtensions
         services.AddSecureRefitClient<IEntityKPIApiClient>(refitSettings, baseUri);
         services.AddSecureRefitClient<IKPIMasterApiClient>(refitSettings, baseUri);
         services.AddSecureRefitClient<IEmployeeKPIApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IFormTemplateApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IFormQuestionApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IPositionFormTemplateApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IAppraisalApiClient>(refitSettings, baseUri);
         services.AddSecureRefitClient<IRecycleBinApiClient>(refitSettings, baseUri);
 
         // Info

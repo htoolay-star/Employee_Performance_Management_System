@@ -1,0 +1,301 @@
+@page "/performance/form-templates"
+@* ═══════════════════════════════════════════════════════════════════════════
+   PATTERN: GetAll + Client-side QuickFilter + Client-side Sorting
+   Use this pattern when the dataset is small (< ~500 rows).
+   - Loads all rows once into memory on page load.
+   - Filtering is done via MudDataGrid QuickFilter (client-side).
+   - Sorting is done via MudDataGrid built-in column headers (client-side, no API call).
+   - After every CUD operation, re-calls LoadAllAsync() to refresh the list.
+   ═══════════════════════════════════════════════════════════════════════════ *@
+@using EPMS.Client.Constants
+@using EPMS.Client.Services.Performance
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.PerformanceDTOs.FormTemplateDTOs
+@using MudBlazor
+@using Refit
+@using static EPMS.Shared.Constants.ServiceResponseMessages
+
+@inject NavigationManager Navigation
+@inject IFormTemplateApiClient FormTemplateApiClient
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>@UIConstants.FormTemplate.PageTitle</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.FormTemplate.PageTitle</MudText>
+
+    <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+
+        @* ── Toolbar ──────────────────────────────────────────────────── *@
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+            <MudTextField @bind-Value="_searchString"
+                          Placeholder="@UIConstants.FormTemplate.SearchPlaceholder"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          IconSize="Size.Medium"
+                          Variant="Variant.Outlined"
+                          Clearable="true"
+                          Immediate="true"
+                          DebounceInterval="500"
+                          Style="max-width: 300px;" />
+
+            <MudSelect T="bool"
+                       Value="@_statusFilter"
+                       ValueChanged="OnStatusFilterChanged"
+                       Variant="Variant.Outlined"
+                       Style="max-width: 150px;">
+                <MudSelectItem T="bool" Value="@(true)">@UIConstants.Common.Active</MudSelectItem>
+                <MudSelectItem T="bool" Value="@(false)">@UIConstants.Common.Inactive</MudSelectItem>
+            </MudSelect>
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenCreateDialog">
+                @UIConstants.FormTemplate.AddButton
+            </MudButton>
+        </MudStack>
+
+        @* ── Data Grid ────────────────────────────────────────────────── *@
+        <MudDataGrid Items="@_templates"
+                     QuickFilter="@QuickFilter"
+                     Loading="@_loading"
+                     SortMode="SortMode.None"
+                     Hover="true"
+                     Elevation="0">
+            <Columns>
+                <TemplateColumn Title="@UIConstants.Common.ColumnNo" Sortable="false">
+                    <CellTemplate>
+                        <span style="display: block; text-align: left;">@_rowNumbers.GetValueOrDefault(context.Item.Id)</span>
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.Name" Title="@UIConstants.FormTemplate.ColumnName" />
+                <PropertyColumn Property="x => x.FormType" Title="@UIConstants.FormTemplate.ColumnFormType" />
+                <PropertyColumn Property="x => x.QuestionCount" Title="@UIConstants.FormTemplate.ColumnQuestions" Sortable="true" />
+                <TemplateColumn Title="@UIConstants.Common.Status">
+                    <CellTemplate>
+                        <MudChip Color="@(context.Item.IsActive ? Color.Success : Color.Default)"
+                                 Size="Size.Small">
+                            @(context.Item.IsActive ? UIConstants.Common.Active : UIConstants.Common.Inactive)
+                        </MudChip>
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="@UIConstants.Common.Actions" Sortable="false">
+                    <CellTemplate>
+                        <MudStack Row="true" Spacing="0">
+                            <MudTooltip Text="Manage Questions" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.ListAlt"
+                                               Color="Color.Info"
+                                               Size="Size.Small"
+                                               OnClick="@(() => NavigateToQuestions(context.Item.Id))" />
+                            </MudTooltip>
+                            <MudTooltip Text="Edit Form Template" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Color="Color.Primary"
+                                               Size="Size.Small"
+                                               OnClick="@(() => OpenEditDialog(context.Item))" />
+                            </MudTooltip>
+                            <MudTooltip Text="Delete Form Template" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Color="Color.Error"
+                                               Size="Size.Small"
+                                               OnClick="@(() => OpenDeleteDialog(context.Item))" />
+                            </MudTooltip>
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+            <NoRecordsContent>
+                <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
+                    <MudIcon Icon="@Icons.Material.Outlined.Inbox" Style="font-size: 4rem;" Color="Color.Default" />
+                    <MudText Typo="Typo.h6" Color="Color.Default">@UIConstants.Common.NoRecords</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">@UIConstants.FormTemplate.NoDataFound</MudText>
+                </MudStack>
+            </NoRecordsContent>
+            <LoadingContent>
+                <MudStack Spacing="3" Class="w-100">
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                </MudStack>
+            </LoadingContent>
+            <PagerContent>
+                <MudDataGridPager T="FormTemplateDto" />
+            </PagerContent>
+        </MudDataGrid>
+
+    </MudPaper>
+</MudContainer>
+
+@code {
+
+    // ── Dialog options ───────────────────────────────────────────────
+    private static readonly DialogOptions _formDialogOptions = new()
+    {
+        CloseOnEscapeKey = true,
+        MaxWidth = MaxWidth.Small,
+        FullWidth = true
+    };
+    private static readonly DialogOptions _confirmDialogOptions = new()
+    {
+        CloseOnEscapeKey = true
+    };
+
+    // ── State ────────────────────────────────────────────────────────
+    private List<FormTemplateDto> _allTemplates = new();
+    private List<FormTemplateDto> _templates = new();
+    private bool _loading = true;
+    private string _searchString = string.Empty;
+    private Dictionary<long, int> _rowNumbers = new();
+    private bool _statusFilter = true;
+
+    // ── Lifecycle ────────────────────────────────────────────────────
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAllAsync();
+    }
+
+    // ── QuickFilter ──────────────────────────────────────────────────
+    private bool QuickFilter(FormTemplateDto x)
+    {
+        if (x.IsActive != _statusFilter)
+            return false;
+
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+
+        return x.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
+          || x.FormType.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+    }
+
+    // ── Data ─────────────────────────────────────────────────────────
+    private async Task LoadAllAsync()
+    {
+        _loading = true;
+        StateHasChanged();
+        try
+        {
+            var response = await FormTemplateApiClient.GetAllAsync();
+            if (response.Success && response.Data != null)
+            {
+                _allTemplates = response.Data.ToList();
+                ApplyFilters();
+            }
+            else
+                Snackbar.Add(response.Message ?? UIConstants.Common.LoadFailed, Severity.Error);
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DeleteAsync(long id)
+    {
+        try
+        {
+            var response = await FormTemplateApiClient.DeleteAsync(id);
+            if (response.Success)
+            {
+                Snackbar.Add(FormTemplateMsg.Deleted, Severity.Success);
+                await LoadAllAsync();
+            }
+            else
+                Snackbar.Add(response.Message ?? UIConstants.Common.DeleteFailed, Severity.Error);
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+    }
+
+    // ── Dialogs ──────────────────────────────────────────────────────
+
+    private async Task OpenCreateDialog()
+    {
+        var dialog = await DialogService.ShowAsync<FormTemplateDialog>(
+          UIConstants.FormTemplate.CreateDialogTitle, _formDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+        {
+            Snackbar.Add(FormTemplateMsg.Created, Severity.Success);
+            await LoadAllAsync();
+        }
+    }
+
+    private async Task OpenEditDialog(FormTemplateDto template)
+    {
+        var parameters = new DialogParameters<FormTemplateDialog>
+        {
+            { x => x.FormTemplate, template }
+        };
+
+        var dialog = await DialogService.ShowAsync<FormTemplateDialog>(
+          UIConstants.FormTemplate.EditDialogTitle, parameters, _formDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+        {
+            Snackbar.Add(FormTemplateMsg.Updated, Severity.Success);
+            await LoadAllAsync();
+        }
+    }
+
+    private void NavigateToQuestions(long templateId)
+    {
+        Navigation.NavigateTo($"/performance/form-templates/{templateId}/questions");
+    }
+
+    private async Task OpenDeleteDialog(FormTemplateDto template)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, string.Format(UIConstants.Common.DeleteConfirmationFormat, template.Name) },
+            { x => x.ButtonText, UIConstants.Common.Delete },
+            { x => x.Color, Color.Error }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(
+          UIConstants.FormTemplate.DeleteDialogTitle, parameters, _confirmDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+            await DeleteAsync(template.Id);
+    }
+
+    private void ApplyFilters()
+    {
+        if (!_allTemplates.Any()) return;
+
+        _templates = _allTemplates
+            .Where(x => x.IsActive == _statusFilter)
+            .ToList();
+
+        _rowNumbers = _templates
+          .Select((x, i) => (x.Id, Index: i + 1))
+          .ToDictionary(x => x.Id, x => x.Index);
+    }
+
+    private async Task OnStatusFilterChanged(bool value)
+    {
+        _statusFilter = value;
+        _loading = true;
+        await Task.Yield();
+        ApplyFilters();
+        _loading = false;
+    }
+}

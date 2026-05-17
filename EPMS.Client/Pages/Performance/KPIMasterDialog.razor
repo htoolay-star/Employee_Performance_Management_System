@@ -1,0 +1,242 @@
+@* ═══════════════════════════════════════════════════════════════════════════
+   KPIMasterDialog — Create / Edit dialog for the KPI Master entity.
+   Shared by both OpenCreateDialog (KPIMaster == null) and OpenEditDialog (KPIMaster != null).
+   Determines mode via the IsEdit computed property.
+   ═══════════════════════════════════════════════════════════════════════════ *@
+@using EPMS.Client.Constants
+@using EPMS.Client.Extensions
+@using EPMS.Client.Models.Performance
+@using EPMS.Client.Services.Auth
+@using EPMS.Client.Services.Performance
+@using EPMS.Shared.Constants
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.PerformanceDTOs.KPIMasterDTOs
+@using EPMS.Shared.Validators.PerformanceDTOs.KPIMasterDTOs
+@using Mapster
+@using MudBlazor
+
+@inject IKPIMasterApiClient KPIMasterApiClient
+@inject ISnackbar Snackbar
+@inject LookupStateService LookupState
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="_form" Model="@_model" Validation="@ValidateField">
+            <MudStack Spacing="3">
+
+                @* {{!-- Code: only shown on Create; read-only/hidden on Edit --}} *@
+                @if (!IsEdit)
+                {
+                    <MudTextField @bind-Value="_model.Code"
+                                  Label="@UIConstants.KPIMaster.CodeLabel"
+                                  For="@(() => _model.Code)"
+                                  Variant="Variant.Outlined" />
+                }
+
+                @* {{!-- Category autocomplete (many items) --}} *@
+                <MudAutocomplete T="long?"
+                                 @bind-Value="_model.CategoryId"
+                                 Label="@UIConstants.KPIMaster.CategoryLabel"
+                                 Variant="Variant.Outlined"
+                                 SearchFunc="SearchCategories"
+                                 ToStringFunc="GetCategoryName"
+                                 Clearable="false" />
+
+                <MudTextField @bind-Value="_model.Name"
+                              Label="@UIConstants.KPIMaster.NameLabel"
+                              For="@(() => _model.Name)"
+                              Variant="Variant.Outlined" />
+
+                <MudTextField @bind-Value="_model.Description"
+                              Label="@UIConstants.Common.Description"
+                              For="@(() => _model.Description)"
+                              Variant="Variant.Outlined"
+                              Lines="3" />
+
+                <MudSelect @bind-Value="_model.ScoringDirection"
+                           Label="@UIConstants.KPIMaster.ScoringDirectionLabel"
+                           Variant="Variant.Outlined">
+                    <MudSelectItem Value="@AppraisalConstants.ScoringDirections.HigherIsBetter">@UIConstants.KPIMaster.ScoringDirectionHigher</MudSelectItem>
+                    <MudSelectItem Value="@AppraisalConstants.ScoringDirections.LowerIsBetter">@UIConstants.KPIMaster.ScoringDirectionLower</MudSelectItem>
+                </MudSelect>
+
+                @* {{!-- IsActive toggle: only shown on Edit --}} *@
+                @if (IsEdit)
+                {
+                    <MudSwitch @bind-Value="_model.IsActive"
+                               Label="@UIConstants.Common.Active"
+                               Color="Color.Success" />
+                }
+
+            </MudStack>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@UIConstants.Common.Cancel</MudButton>
+        <MudButton Color="Color.Primary"
+                   OnClick="Submit"
+                   Disabled="@(_saving || !HasChanged())">
+            @if (_saving)
+            {
+                <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @(IsEdit ? UIConstants.Common.Update : UIConstants.Common.Create)
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    // ── Parameters ────────────────────────────────────────────────────────────
+    [CascadingParameter] private IMudDialogInstance? _mudDialog { get; set; }
+
+    /// <summary>Pass a KPIMasterDto to open in Edit mode. Leave null for Create mode.</summary>
+    [Parameter] public KPIMasterDto? KPIMaster { get; set; }
+
+    // ── Computed ──────────────────────────────────────────────────────────────
+    private bool IsEdit => KPIMaster is not null;
+
+    // ── State ─────────────────────────────────────────────────────────────────
+    private MudForm? _form;
+    private bool _saving;
+    private KPIMasterFormModel _model = new();
+    private Dictionary<string, string> _serverErrors = new();
+    private List<LookUpDto> _categories = new();
+
+    // Validators instantiated once; no need to recreate per render.
+    private readonly CreateKPIMasterValidator _createValidator = new();
+    private readonly UpdateKPIMasterValidator _updateValidator = new();
+
+    // ── Lifecycle ─────────────────────────────────────────────────────────────
+    protected override async Task OnInitializedAsync()
+    {
+        _categories = await LookupState.GetCategoriesAsync();
+
+        if (KPIMaster is not null)
+            _model = KPIMaster.Adapt<KPIMasterFormModel>();
+
+        await base.OnInitializedAsync();
+    }
+
+    // ── Actions ───────────────────────────────────────────────────────────────
+
+    private async Task Submit()
+    {
+        _serverErrors.Clear();
+
+        await _form!.Validate();
+        if (!_form.IsValid)
+        {
+            Snackbar.Add(UIConstants.Common.ValidationFailed, Severity.Warning);
+            return;
+        }
+
+        _saving = true;
+        try
+        {
+            if (IsEdit)
+            {
+                var dto = _model.Adapt<UpdateKPIMasterDto>();
+                var response = await KPIMasterApiClient.UpdateAsync(KPIMaster!.Id, dto);
+
+                if (response.Success)
+                {
+                    LookupState.ClearCategoryCache();
+                    _mudDialog?.Close(DialogResult.Ok(true));
+                }
+                else
+                    Snackbar.Add(response.Message ?? UIConstants.Common.UpdateFailed, Severity.Error);
+            }
+            else
+            {
+                var dto = _model.Adapt<CreateKPIMasterDto>();
+                var response = await KPIMasterApiClient.CreateAsync(dto);
+
+                if (response.Success)
+                {
+                    LookupState.ClearCategoryCache();
+                    _mudDialog?.Close(DialogResult.Ok(true));
+                }
+                else
+                    Snackbar.Add(response.Message ?? UIConstants.Common.CreateFailed, Severity.Error);
+            }
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.BadRequest)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ValidationFailed, Severity.Error);
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            var errorMessage = error?.Message ?? UIConstants.Common.DuplicateEntry;
+
+            if (errorMessage.Contains(nameof(_model.Code), StringComparison.OrdinalIgnoreCase))
+                _serverErrors[nameof(_model.Code)] = errorMessage;
+            else if (errorMessage.Contains(nameof(_model.Name), StringComparison.OrdinalIgnoreCase))
+                _serverErrors[nameof(_model.Name)] = errorMessage;
+            else
+                _serverErrors[nameof(_model.Code)] = errorMessage;
+
+            await _form!.Validate();
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void Cancel() => _mudDialog?.Cancel();
+
+    // ── Category Autocomplete Helpers ─────────────────────────────────────────
+
+    private Task<IEnumerable<long?>> SearchCategories(string value, CancellationToken _)
+    {
+        var query = string.IsNullOrWhiteSpace(value)
+            ? _categories
+            : _categories.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(query.Select(x => (long?)x.Id).ToList().AsEnumerable());
+    }
+
+    private string GetCategoryName(long? id)
+    {
+        return _categories.FirstOrDefault(x => x.Id == id)?.Code ?? string.Empty;
+    }
+
+    // ── Validation ────────────────────────────────────────────────────────────
+
+    private async Task<IEnumerable<string>> ValidateField(object model, string propertyName)
+    {
+        IEnumerable<string> fluentErrors;
+
+        if (IsEdit)
+        {
+            var fn = _updateValidator.ValidateMappedValue<KPIMasterFormModel, UpdateKPIMasterDto>(_model, _serverErrors);
+            fluentErrors = await fn(model, propertyName);
+        }
+        else
+        {
+            var fn = _createValidator.ValidateMappedValue<KPIMasterFormModel, CreateKPIMasterDto>(_model, _serverErrors);
+            fluentErrors = await fn(model, propertyName);
+        }
+
+        var errorList = fluentErrors.ToList();
+
+        if (_serverErrors.TryGetValue(propertyName, out var serverError))
+            errorList.Add(serverError);
+
+        return errorList;
+    }
+
+    private bool HasChanged()
+    {
+        if (!IsEdit) return true;
+
+        return _model.Code != KPIMaster!.Code ||
+               _model.Name != KPIMaster.Name ||
+               _model.CategoryId != KPIMaster.CategoryId ||
+               _model.Description != KPIMaster.Description ||
+               _model.ScoringDirection != KPIMaster.ScoringDirection ||
+               _model.IsActive != KPIMaster.IsActive;
+    }
+}

@@ -20,8 +20,16 @@ namespace EPMS.Domain.Services.Performance
 
         public async Task<SuccessResponse<IEnumerable<FormTemplateDto>>> GetAllAsync()
         {
-            var templates = await _uow.Perf.FormTemplates.GetAllAsync();
-            var dtos = templates.Adapt<IEnumerable<FormTemplateDto>>();
+            var templates = await _uow.Perf.FormTemplates.GetAllWithQuestionsAsync();
+            var dtos = templates.Select(t => new FormTemplateDto
+            {
+                Id = t.Id,
+                Name = t.Name,
+                FormType = t.FormType,
+                IsActive = t.IsActive,
+                CreatedAt = t.CreatedAt,
+                QuestionCount = t.Questions?.Count ?? 0
+            }).ToList();
             return SuccessResponse<IEnumerable<FormTemplateDto>>.Ok(dtos, FormTemplateMsg.RetrievedAll);
         }
 

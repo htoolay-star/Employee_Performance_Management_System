@@ -1,5 +1,6 @@
 ﻿using EPMS.Client.Services.Hr;
 using EPMS.Client.Services.Info;
+using EPMS.Client.Services.Performance;
 using EPMS.Client.Services.Shared;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
@@ -14,15 +15,17 @@ namespace EPMS.Client.Services.Auth
         private readonly ILevelApiClient _levelApi;
         private readonly ICategoryApiClient _categoryApi;
         private readonly IEmployeeProfileApiClient _employeeApi;
+        private readonly IKPIMasterApiClient _kpiMasterApi;
 
         private List<LookUpDto>? _departments;
         private List<LookUpDto>? _teams;
         private List<LookUpDto>? _positions;
         private List<LookUpDto>? _levels;
         private List<LookUpDto>? _categories;
+        private List<LookUpDto>? _kpiMasters;
         private List<EmployeeLookupDto>? _employees;
 
-        public LookupStateService(IDepartmentApiClient deptApi, ITeamApiClient teamApi, IPositionApiClient posApi, ILevelApiClient levelApi, ICategoryApiClient categoryApi, IEmployeeProfileApiClient employeeApi)
+        public LookupStateService(IDepartmentApiClient deptApi, ITeamApiClient teamApi, IPositionApiClient posApi, ILevelApiClient levelApi, ICategoryApiClient categoryApi, IEmployeeProfileApiClient employeeApi, IKPIMasterApiClient kpiMasterApi)
         {
             _deptApi = deptApi;
             _teamApi = teamApi;
@@ -30,6 +33,7 @@ namespace EPMS.Client.Services.Auth
             _levelApi = levelApi;
             _categoryApi = categoryApi;
             _employeeApi = employeeApi;
+            _kpiMasterApi = kpiMasterApi;
         }
 
         public async Task<List<LookUpDto>> GetDepartmentsAsync()
@@ -82,6 +86,16 @@ namespace EPMS.Client.Services.Auth
             return _categories;
         }
 
+        public async Task<List<LookUpDto>> GetKPIMastersAsync()
+        {
+            if (_kpiMasters == null)
+            {
+                var response = await _kpiMasterApi.GetLookupAsync();
+                _kpiMasters = response.Data?.ToList() ?? new List<LookUpDto>();
+            }
+            return _kpiMasters;
+        }
+
         public async Task<List<EmployeeLookupDto>> GetEmployeesAsync()
         {
             if (_employees == null)
@@ -97,6 +111,7 @@ namespace EPMS.Client.Services.Auth
         public void ClearPositionCache() => _positions = null;
         public void ClearLevelCache() => _levels = null;
         public void ClearCategoryCache() => _categories = null;
+        public void ClearKPIMasterCache() => _kpiMasters = null;
         public void ClearEmployeeCache() => _employees = null;
     }
 }

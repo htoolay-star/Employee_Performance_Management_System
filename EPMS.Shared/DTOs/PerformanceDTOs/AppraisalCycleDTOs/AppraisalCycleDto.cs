@@ -21,4 +21,9 @@ public class AppraisalCycleDto
     public bool IsActive { get; set; }
     public bool IsLocked { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
+
+    public decimal KpiWeight { get; set; }
+    public decimal SelfWeight { get; set; }
+    public decimal PeerWeight { get; set; }
+    public decimal ManagerWeight { get; set; }
 }
