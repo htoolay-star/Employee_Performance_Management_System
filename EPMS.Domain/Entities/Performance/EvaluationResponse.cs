@@ -50,12 +50,12 @@ namespace EPMS.Domain.Entities.Performance
         public virtual FormQuestion Question { get; private set; } = null!;
         public virtual EmployeeProfile Evaluator { get; private set; } = null!;
 
-        public void SetRating(int ratingValue, QuestionRatingScale scale)
+        public void SetRating(int ratingValue, QuestionRatingScaleLevel level)
         {
-            ArgumentNullException.ThrowIfNull(scale);
+            ArgumentNullException.ThrowIfNull(level);
 
-            if (!scale.IsValidScore(ratingValue))
-                throw new ArgumentException($"Invalid Rating! Acceptable range is {scale.MinScore} to {scale.MaxScore}. You entered {ratingValue}.");
+            if (!level.IsValidScore(ratingValue))
+                throw new ArgumentException($"Invalid Rating! Acceptable range is {level.MinScore} to {level.MaxScore}. You entered {ratingValue}.");
 
             RatingValue = ratingValue;
         }

@@ -1,5 +1,6 @@
 @page "/performance/question-rating-scales"
 @using EPMS.Client.Constants
+@using EPMS.Client.Services.Auth
 @using EPMS.Client.Services.Performance
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.PerformanceDTOs.QuestionRatingScaleDTOs
@@ -10,6 +11,7 @@
 @inject IQuestionRatingScaleApiClient QuestionRatingScaleApiClient
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject LookupStateService LookupState
 
 <PageTitle>@UIConstants.QuestionRatingScale.PageTitle</PageTitle>
 
@@ -65,8 +67,32 @@
                     </CellTemplate>
                 </TemplateColumn>
                 <PropertyColumn Property="x => x.Name" Title="@UIConstants.Common.ColumnName" />
-                <PropertyColumn Property="x => x.MinScore" Title="@UIConstants.QuestionRatingScale.ColumnMinScore" Sortable="true" />
-                <PropertyColumn Property="x => x.MaxScore" Title="@UIConstants.QuestionRatingScale.ColumnMaxScore" Sortable="true" />
+                <TemplateColumn Title="@UIConstants.QuestionRatingScale.ColumnMinScore">
+                    <CellTemplate>
+                        @if (context.Item.Levels != null && context.Item.Levels.Any())
+                        {
+                            var min = context.Item.Levels.Min(l => l.MinScore);
+                            var max = context.Item.Levels.Max(l => l.MaxScore);
+                            <MudText Typo="Typo.body2">@min - @max</MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Default">--</MudText>
+                        }
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="@UIConstants.QuestionRatingScale.ColumnMaxScore">
+                    <CellTemplate>
+                        @if (context.Item.Levels != null && context.Item.Levels.Any())
+                        {
+                            <MudText Typo="Typo.body2">@context.Item.Levels.Count level(s)</MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Default">--</MudText>
+                        }
+                    </CellTemplate>
+                </TemplateColumn>
                 <TemplateColumn Title="@UIConstants.Common.Status">
                     <CellTemplate>
                         <MudChip Color="@(context.Item.IsActive ? Color.Success : Color.Default)"
@@ -212,6 +238,7 @@
             if (response.Success)
             {
                 Snackbar.Add(QuestionRatingScaleMsg.Deleted, Severity.Success);
+                LookupState.ClearRatingScaleCache();
                 await LoadDataAsync();
             }
             else
@@ -238,6 +265,7 @@
         if (await dialog.Result is { Canceled: false })
         {
             Snackbar.Add(QuestionRatingScaleMsg.Created, Severity.Success);
+            LookupState.ClearRatingScaleCache();
             await LoadDataAsync();
         }
     }
@@ -255,6 +283,7 @@
         if (await dialog.Result is { Canceled: false })
         {
             Snackbar.Add(QuestionRatingScaleMsg.Updated, Severity.Success);
+            LookupState.ClearRatingScaleCache();
             await LoadDataAsync();
         }
     }
@@ -277,18 +306,23 @@
 
     private void ApplyFiltersAndSort()
     {
-        if (!_allItems.Any()) return;
+        if (!_allItems.Any())
+        {
+            _items = new();
+            _rowNumbers = new();
+            return;
+        }
 
         var filteredList = _allItems.Where(x => x.IsActive == _statusFilter).ToList();
 
         filteredList = _sortBy switch
         {
             "MinScore" => _sortDirection == "asc"
-                ? filteredList.OrderBy(x => x.MinScore).ToList()
-                : filteredList.OrderByDescending(x => x.MinScore).ToList(),
+                ? filteredList.OrderBy(x => x.Levels.Any() ? x.Levels.Min(l => l.MinScore) : 0).ToList()
+                : filteredList.OrderByDescending(x => x.Levels.Any() ? x.Levels.Min(l => l.MinScore) : 0).ToList(),
             "MaxScore" => _sortDirection == "asc"
-                ? filteredList.OrderBy(x => x.MaxScore).ToList()
-                : filteredList.OrderByDescending(x => x.MaxScore).ToList(),
+                ? filteredList.OrderBy(x => x.Levels.Any() ? x.Levels.Max(l => l.MaxScore) : 0).ToList()
+                : filteredList.OrderByDescending(x => x.Levels.Any() ? x.Levels.Max(l => l.MaxScore) : 0).ToList(),
             _ => _sortDirection == "asc"
                 ? filteredList.OrderBy(x => x.Name).ToList()
                 : filteredList.OrderByDescending(x => x.Name).ToList(),

@@ -12,7 +12,5 @@ namespace EPMS.Domain.Interface.IService.Performance
         Task<SuccessResponse<long>> CreateAsync(CreateKPIMasterDto dto);
         Task<SuccessResponse> UpdateAsync(long id, UpdateKPIMasterDto dto);
         Task<SuccessResponse> DeleteAsync(long id);
-        Task<SuccessResponse> DeactivateAsync(long id);
-        Task<SuccessResponse> ReactivateAsync(long id);
     }
 }

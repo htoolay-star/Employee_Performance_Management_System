@@ -29,10 +29,6 @@ public class CreateRatingScaleValidator : AbstractValidator<CreateRatingScaleDto
             .LessThanOrEqualTo(x => x.MaxScore)
             .WithMessage(PerformanceValidationMessages.RatingScale.MinScoreGreaterThanMax);
 
-        RuleFor(x => x.PerformanceLevel)
-            .MaximumLength(100)
-            .WithMessage(PerformanceValidationMessages.RatingScale.PerformanceLevelMaxLength);
-
         RuleFor(x => x.PromotionEligibility)
             .MaximumLength(100)
             .WithMessage(PerformanceValidationMessages.RatingScale.PromotionEligibilityMaxLength);

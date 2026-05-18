@@ -165,6 +165,7 @@ public class TeamService : ITeamService
             entity.DeletedBy = null;
             _uow.HR.Teams.Update(entity);
             await _uow.CompleteAsync();
+            await _cacheService.RemoveAsync(CacheKeys.Hr.TeamLookups());
             return SuccessResponse.Ok(TeamMsg.Updated);
         }
 

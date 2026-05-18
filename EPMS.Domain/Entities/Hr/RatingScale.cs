@@ -33,7 +33,6 @@ namespace EPMS.Domain.Entities.Hr
         public decimal MinScore { get; private set; }
         public decimal MaxScore { get; private set; }
 
-        public string? PerformanceLevel { get; private set; }
         public string? PromotionEligibility { get; private set; }
         public string? Description { get; private set; }
 
@@ -47,9 +46,8 @@ namespace EPMS.Domain.Entities.Hr
 
         public bool IsMatch(decimal totalScore) => totalScore >= MinScore && totalScore <= MaxScore;
 
-        public void UpdateDetails(string? performanceLevel, string? eligibility, string? description)
+        public void UpdateDetails(string? eligibility, string? description)
         {
-            PerformanceLevel = performanceLevel?.Trim();
             PromotionEligibility = eligibility?.Trim();
             Description = description?.Trim();
         }

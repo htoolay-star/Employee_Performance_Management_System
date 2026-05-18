@@ -299,6 +299,13 @@ public class AppraisalCycleService : IAppraisalCycleService
         _uow.Perf.AppraisalCycles.Update(cycle);
         await _uow.CompleteAsync();
 
+        if (dto.IsActive.HasValue)
+        {
+            if (dto.IsActive.Value) cycle.Reactivate();
+            else cycle.Deactivate();
+            await _uow.CompleteAsync();
+        }
+
         return SuccessResponse.Ok(AppraisalCycleMsg.Updated);
     }
 
@@ -365,46 +372,7 @@ public class AppraisalCycleService : IAppraisalCycleService
         return SuccessResponse.Ok(AppraisalCycleMsg.Locked);
     }
 
-    public async Task<SuccessResponse> DeactivateAsync(long id)
-    {
-        var cycle = await _uow.Perf.AppraisalCycles.GetByIdAsync(id);
-        if (cycle == null)
-        {
-            return SuccessResponse.Fail(AppraisalCycleMsg.NotFound(id), ErrorType.NotFound);
-        }
-
-        if (!cycle.IsActive)
-        {
-            return SuccessResponse.Fail(AppraisalCycleMsg.AlreadyDeactivated, ErrorType.Validation);
-        }
-
-        cycle.Deactivate();
-        _uow.Perf.AppraisalCycles.Update(cycle);
-        await _uow.CompleteAsync();
-
-        return SuccessResponse.Ok(AppraisalCycleMsg.Deactivated);
-    }
-
-    public async Task<SuccessResponse> ReactivateAsync(long id)
-    {
-        var cycle = await _uow.Perf.AppraisalCycles.GetByIdAsync(id);
-        if (cycle == null)
-        {
-            return SuccessResponse.Fail(AppraisalCycleMsg.NotFound(id), ErrorType.NotFound);
-        }
-
-        if (cycle.IsActive)
-        {
-            return SuccessResponse.Fail(AppraisalCycleMsg.AlreadyActive, ErrorType.Validation);
-        }
-
-        cycle.Reactivate();
-        _uow.Perf.AppraisalCycles.Update(cycle);
-        await _uow.CompleteAsync();
-
-        return SuccessResponse.Ok(AppraisalCycleMsg.Reactivated);
-    }
-        public async Task<SuccessResponse> RestoreAsync(long id)
+    public async Task<SuccessResponse> RestoreAsync(long id)
         {
             var entity = await _uow.Perf.AppraisalCycles.GetByIdAsync(id);
             if (entity == null)

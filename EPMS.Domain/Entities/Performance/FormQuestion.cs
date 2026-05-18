@@ -7,7 +7,7 @@ namespace EPMS.Domain.Entities.Performance
     {
         private FormQuestion() { }
 
-        public FormQuestion(long templateId, string text, int sequence, bool hasYesNo = false, bool hasComment = false, long? categoryId = null, long ratingScaleId = default)
+        public FormQuestion(long templateId, string text, int sequence, long? categoryId = null, long ratingScaleId = default)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(text);
 
@@ -18,8 +18,6 @@ namespace EPMS.Domain.Entities.Performance
             QuestionText = text.Trim();
             Sequence = sequence;
 
-            HasYesNo = hasYesNo;
-            HasComment = hasComment;
             CategoryId = categoryId;
             QuestionRatingScaleId = ratingScaleId;
         }
@@ -30,9 +28,6 @@ namespace EPMS.Domain.Entities.Performance
 
         public string QuestionText { get; private set; } = string.Empty;
         public int Sequence { get; private set; }
-
-        public bool HasYesNo { get; private set; }
-        public bool HasComment { get; private set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }
@@ -58,12 +53,6 @@ namespace EPMS.Domain.Entities.Performance
         {
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(newSequence);
             Sequence = newSequence;
-        }
-
-        public void ToggleUIControls(bool hasYesNo, bool hasComment)
-        {
-            HasYesNo = hasYesNo;
-            HasComment = hasComment;
         }
     }
 }

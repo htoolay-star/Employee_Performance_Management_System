@@ -23,4 +23,5 @@ public class UpdateAppraisalCycleDto
     public decimal ThreeSixtyWeight { get; set; } = 10m;
     public decimal AppraisalWeight { get; set; } = 25m;
     public long? AppraisalReviewerId { get; set; }
+    public bool? IsActive { get; set; }
 }

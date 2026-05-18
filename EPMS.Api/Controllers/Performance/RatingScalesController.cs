@@ -68,23 +68,10 @@ public class RatingScalesController : ApiControllerBase
         return HandleResult(result);
     }
 
-    [HttpPost("{id:long}/deactivate")]
-    public async Task<ActionResult<SuccessResponse>> Deactivate(long id)
+    [HttpPost("{id:long}/restore")]
+    public async Task<ActionResult<SuccessResponse>> Restore(long id)
     {
-        var result = await _ratingScaleService.DeactivateAsync(id);
+        var result = await _ratingScaleService.RestoreAsync(id);
         return HandleResult(result);
     }
-
-    [HttpPost("{id:long}/reactivate")]
-    public async Task<ActionResult<SuccessResponse>> Reactivate(long id)
-    {
-        var result = await _ratingScaleService.ReactivateAsync(id);
-        return HandleResult(result);
-    }
-        [HttpPost("{id:long}/restore")]
-        public async Task<ActionResult<SuccessResponse>> Restore(long id)
-        {
-            var result = await _ratingScaleService.RestoreAsync(id);
-            return HandleResult(result);
-        }
 }

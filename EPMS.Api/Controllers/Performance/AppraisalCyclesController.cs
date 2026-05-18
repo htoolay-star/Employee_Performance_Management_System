@@ -59,32 +59,18 @@ namespace EPMS.Api.Controllers.Performance
             return HandleResult(result);
         }
 
-        [HttpPost("{id:long}/lock")]
-        public async Task<ActionResult<SuccessResponse>> Lock(long id)
-        {
-            var result = await _appraisalCycleService.LockCycleAsync(id);
-            return HandleResult(result);
-        }
-
-        [HttpPost("{id:long}/deactivate")]
-        public async Task<ActionResult<SuccessResponse>> Deactivate(long id)
-        {
-            var result = await _appraisalCycleService.DeactivateAsync(id);
-            return HandleResult(result);
-        }
-
-        [HttpPost("{id:long}/reactivate")]
-        public async Task<ActionResult<SuccessResponse>> Reactivate(long id)
-        {
-            var result = await _appraisalCycleService.ReactivateAsync(id);
-            return HandleResult(result);
-        }
-
-        [HttpPost("{id:long}/restore")]
-        public async Task<ActionResult<SuccessResponse>> Restore(long id)
-        {
-            var result = await _appraisalCycleService.RestoreAsync(id);
-            return HandleResult(result);
-        }
+    [HttpPost("{id:long}/lock")]
+    public async Task<ActionResult<SuccessResponse>> Lock(long id)
+    {
+        var result = await _appraisalCycleService.LockCycleAsync(id);
+        return HandleResult(result);
     }
+
+    [HttpPost("{id:long}/restore")]
+    public async Task<ActionResult<SuccessResponse>> Restore(long id)
+    {
+        var result = await _appraisalCycleService.RestoreAsync(id);
+        return HandleResult(result);
+    }
+}
 }

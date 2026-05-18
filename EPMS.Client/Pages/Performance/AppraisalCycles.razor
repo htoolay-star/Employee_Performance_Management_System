@@ -300,15 +300,43 @@
                                  Color.Warning, UIConstants.AppraisalCycle.Lock,
                                  id => AppraisalCycleApiClient.LockAsync(id), AppraisalCycleMsg.Locked);
 
-    private Task OpenDeactivateDialog(AppraisalCycleDto cycle)
-        => ShowConfirmAndExecute(cycle, "Deactivate this cycle? It can be reactivated later.", "Deactivate",
-                                 Color.Default, UIConstants.AppraisalCycle.Deactivate,
-                                 id => AppraisalCycleApiClient.DeactivateAsync(id), AppraisalCycleMsg.Deactivated);
+    private async Task OpenDeactivateDialog(AppraisalCycleDto cycle)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, "Deactivate this cycle? It can be reactivated later." },
+            { x => x.ButtonText, "Deactivate" },
+            { x => x.Color, Color.Default }
+        };
 
-    private Task OpenReactivateDialog(AppraisalCycleDto cycle)
-        => ShowConfirmAndExecute(cycle, "Reactivate this cycle?", "Reactivate",
-                                 Color.Success, UIConstants.AppraisalCycle.Reactivate,
-                                 id => AppraisalCycleApiClient.ReactivateAsync(id), AppraisalCycleMsg.Reactivated);
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(
+            UIConstants.AppraisalCycle.Deactivate, parameters, _confirmDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+        {
+            var dto = new UpdateAppraisalCycleDto { IsActive = false };
+            await PerformAction(cycle.Id, id => AppraisalCycleApiClient.UpdateAsync(id, dto), AppraisalCycleMsg.Deactivated);
+        }
+    }
+
+    private async Task OpenReactivateDialog(AppraisalCycleDto cycle)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, "Reactivate this cycle?" },
+            { x => x.ButtonText, "Reactivate" },
+            { x => x.Color, Color.Success }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(
+            UIConstants.AppraisalCycle.Reactivate, parameters, _confirmDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+        {
+            var dto = new UpdateAppraisalCycleDto { IsActive = true };
+            await PerformAction(cycle.Id, id => AppraisalCycleApiClient.UpdateAsync(id, dto), AppraisalCycleMsg.Reactivated);
+        }
+    }
 
     private async Task ShowConfirmAndExecute(AppraisalCycleDto cycle, string message, string buttonText,
                                               Color color, string successMsg,

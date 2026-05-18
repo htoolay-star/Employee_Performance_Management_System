@@ -40,10 +40,18 @@
                 </MudSelect>
 
                 <MudNumericField @bind-Value="_model.QuestionsPerEvaluation"
-                                 Label="@UIConstants.FormTemplate.QuestionsPerEvaluationLabel"
-                                 HelperText="@UIConstants.FormTemplate.QuestionsPerEvaluationHelper"
-                                 Variant="Variant.Outlined"
-                                 For="@(() => _model.QuestionsPerEvaluation)" />
+                                  Label="@UIConstants.FormTemplate.QuestionsPerEvaluationLabel"
+                                  HelperText="@UIConstants.FormTemplate.QuestionsPerEvaluationHelper"
+                                  Variant="Variant.Outlined"
+                                  For="@(() => _model.QuestionsPerEvaluation)" />
+
+                <MudSwitch @bind-Value="_model.HasYesNo"
+                           Label="@UIConstants.FormQuestion.HasYesNoLabel"
+                           Color="Color.Primary" />
+
+                <MudSwitch @bind-Value="_model.HasComment"
+                           Label="@UIConstants.FormQuestion.HasCommentLabel"
+                           Color="Color.Primary" />
 
                 @if (IsEdit)
                 {
@@ -193,6 +201,8 @@
         return _model.Name != FormTemplate!.Name ||
                _model.FormType != FormTemplate.FormType ||
                _model.IsActive != FormTemplate.IsActive ||
-               _model.QuestionsPerEvaluation != FormTemplate.QuestionsPerEvaluation;
+               _model.QuestionsPerEvaluation != FormTemplate.QuestionsPerEvaluation ||
+               _model.HasYesNo != FormTemplate.HasYesNo ||
+               _model.HasComment != FormTemplate.HasComment;
     }
 }

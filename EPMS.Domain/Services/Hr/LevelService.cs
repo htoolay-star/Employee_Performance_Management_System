@@ -115,6 +115,7 @@ public class LevelService : ILevelService
             entity.DeletedBy = null;
             _uow.HR.Levels.Update(entity);
             await _uow.CompleteAsync();
+            await _cacheService.RemoveAsync(CacheKeys.Hr.LevelLookups());
             return SuccessResponse.Ok(LevelMsg.Updated);
         }
 

@@ -13,7 +13,7 @@
 
 <MudDialog>
     <DialogContent>
-        <MudForm @ref="_form" Model="@_model" Validation="@ValidateField">
+        <MudForm @ref="_form" Model="@_model" Validation="ValidateField">
             <MudStack Spacing="3">
 
                 @if (!IsEdit)
@@ -30,15 +30,48 @@
                     </MudText>
                 }
 
-                <MudNumericField @bind-Value="_model.MaxScore"
-                                Label="@UIConstants.QuestionRatingScale.MaxScoreLabel"
-                                For="@(() => _model.MaxScore)"
-                                Variant="Variant.Outlined" />
+                <MudText Typo="Typo.subtitle2" Class="mt-2">Rating Levels</MudText>
 
-                <MudNumericField @bind-Value="_model.MinScore"
-                                Label="@UIConstants.QuestionRatingScale.MinScoreLabel"
-                                For="@(() => _model.MinScore)"
-                                Variant="Variant.Outlined" />
+                @for (int i = 0; i < _model.Levels.Count; i++)
+                {
+                    var index = i;
+
+                    <MudPaper Elevation="1" Class="pa-3">
+                        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                            <MudNumericField @bind-Value="_model.Levels[index].Rating"
+                                             Label="Rating"
+                                             For="@(() => _model.Levels[index].Rating)"
+                                             Variant="Variant.Outlined"
+                                             Min="1"
+                                             Style="max-width: 100px;" />
+
+                            <MudNumericField @bind-Value="_model.Levels[index].MinScore"
+                                             Label="Min Score"
+                                             For="@(() => _model.Levels[index].MinScore)"
+                                             Variant="Variant.Outlined"
+                                             Style="max-width: 120px;" />
+
+                            <MudNumericField @bind-Value="_model.Levels[index].MaxScore"
+                                             Label="Max Score"
+                                             For="@(() => _model.Levels[index].MaxScore)"
+                                             Variant="Variant.Outlined"
+                                             Style="max-width: 120px;" />
+
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                           Color="Color.Error"
+                                           Size="Size.Small"
+                                           OnClick="@(() => RemoveLevel(index))"
+                                           Disabled="@(_model.Levels.Count <= 1)" />
+                        </MudStack>
+                    </MudPaper>
+                }
+
+                <MudButton Variant="Variant.Outlined"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="AddLevel"
+                           Size="Size.Small">
+                    Add Level
+                </MudButton>
 
                 @if (IsEdit)
                 {
@@ -76,6 +109,7 @@
     private bool _saving;
     private QuestionRatingScaleFormModel _model = new();
     private Dictionary<string, string> _serverErrors = new();
+    private Dictionary<string, string> _levelErrors = new();
 
     private readonly CreateQuestionRatingScaleValidator _createValidator = new();
     private readonly UpdateQuestionRatingScaleValidator _updateValidator = new();
@@ -83,17 +117,90 @@
     protected override Task OnInitializedAsync()
     {
         if (RatingScale is not null)
+        {
             _model = RatingScale.Adapt<QuestionRatingScaleFormModel>();
+            if (_model.Levels.Count == 0)
+            {
+                _model.Levels.Add(new QuestionRatingScaleLevelFormModel { Rating = 1, MinScore = 1, MaxScore = 5 });
+            }
+        }
 
         return base.OnInitializedAsync();
+    }
+
+    private void AddLevel()
+    {
+        var nextRating = _model.Levels.Any() ? _model.Levels.Max(l => l.Rating) + 1 : 1;
+        _model.Levels.Add(new QuestionRatingScaleLevelFormModel { Rating = nextRating, MinScore = nextRating, MaxScore = nextRating });
+    }
+
+    private void RemoveLevel(int index)
+    {
+        if (_model.Levels.Count > 1)
+            _model.Levels.RemoveAt(index);
+    }
+
+    private void ValidateLevelFields()
+    {
+        _levelErrors.Clear();
+
+        var ratingGroups = _model.Levels
+            .Select((l, i) => (l, i))
+            .GroupBy(x => x.l.Rating)
+            .Where(g => g.Count() > 1)
+            .ToList();
+
+        foreach (var group in ratingGroups)
+        {
+            foreach (var item in group)
+            {
+                var key = $"Levels[{item.i}].Rating";
+                _levelErrors[key] = $"Duplicate rating value: {group.Key}";
+            }
+        }
+
+        for (int i = 0; i < _model.Levels.Count; i++)
+        {
+            for (int j = i + 1; j < _model.Levels.Count; j++)
+            {
+                var a = _model.Levels[i];
+                var b = _model.Levels[j];
+
+                if (a.MinScore <= b.MaxScore && b.MinScore <= a.MaxScore)
+                {
+                    var minAKey = $"Levels[{i}].MinScore";
+                    var maxAKey = $"Levels[{i}].MaxScore";
+                    var minBKey = $"Levels[{j}].MinScore";
+                    var maxBKey = $"Levels[{j}].MaxScore";
+
+                    _levelErrors[minAKey] = $"Overlaps with Rating {b.Rating} ({b.MinScore}-{b.MaxScore})";
+                    _levelErrors[maxAKey] = $"Overlaps with Rating {b.Rating} ({b.MinScore}-{b.MaxScore})";
+                    _levelErrors[minBKey] = $"Overlaps with Rating {a.Rating} ({a.MinScore}-{a.MaxScore})";
+                    _levelErrors[maxBKey] = $"Overlaps with Rating {a.Rating} ({a.MinScore}-{a.MaxScore})";
+                }
+            }
+        }
+
+        for (int i = 0; i < _model.Levels.Count; i++)
+        {
+            var level = _model.Levels[i];
+            if (level.MinScore > level.MaxScore)
+            {
+                var maxKey = $"Levels[{i}].MaxScore";
+                _levelErrors[maxKey] = "Max Score must be >= Min Score";
+            }
+        }
+
+        StateHasChanged();
     }
 
     private async Task Submit()
     {
         _serverErrors.Clear();
+        ValidateLevelFields();
 
         await _form!.Validate();
-        if (!_form.IsValid)
+        if (!_form.IsValid || _levelErrors.Count > 0)
         {
             Snackbar.Add(UIConstants.Common.ValidationFailed, Severity.Warning);
             return;
@@ -104,7 +211,19 @@
         {
             if (IsEdit)
             {
-                var dto = _model.Adapt<UpdateQuestionRatingScaleDto>();
+                var dto = new UpdateQuestionRatingScaleDto
+                {
+                    Name = _model.Name,
+                    IsActive = _model.IsActive,
+                    Levels = _model.Levels.Select(l => new UpdateQuestionRatingScaleLevelDto
+                    {
+                        Id = l.Id,
+                        Rating = l.Rating,
+                        MinScore = l.MinScore,
+                        MaxScore = l.MaxScore
+                    }).ToList()
+                };
+
                 var response = await QuestionRatingScaleApiClient.UpdateAsync(RatingScale!.Id, dto);
 
                 if (response.Success)
@@ -117,7 +236,17 @@
             }
             else
             {
-                var dto = _model.Adapt<CreateQuestionRatingScaleDto>();
+                var dto = new CreateQuestionRatingScaleDto
+                {
+                    Name = _model.Name,
+                    Levels = _model.Levels.Select(l => new CreateQuestionRatingScaleLevelDto
+                    {
+                        Rating = l.Rating,
+                        MinScore = l.MinScore,
+                        MaxScore = l.MaxScore
+                    }).ToList()
+                };
+
                 var response = await QuestionRatingScaleApiClient.CreateAsync(dto);
 
                 if (response.Success)
@@ -165,6 +294,9 @@
 
         var errorList = fluentErrors.ToList();
 
+        if (_levelErrors.TryGetValue(propertyName, out var levelError))
+            errorList.Add(levelError);
+
         if (_serverErrors.TryGetValue(propertyName, out var serverError))
             errorList.Add(serverError);
 
@@ -175,8 +307,24 @@
     {
         if (!IsEdit) return true;
 
-        return _model.MinScore != RatingScale!.MinScore
-            || _model.MaxScore != RatingScale.MaxScore
-            || _model.IsActive != RatingScale.IsActive;
+        if (_model.Name != RatingScale!.Name) return true;
+        if (_model.IsActive != RatingScale.IsActive) return true;
+
+        var existingLevels = RatingScale.Levels ?? new List<QuestionRatingScaleLevelDto>();
+        if (_model.Levels.Count != existingLevels.Count) return true;
+
+        for (int i = 0; i < _model.Levels.Count; i++)
+        {
+            var newLevel = _model.Levels[i];
+            var existingLevel = existingLevels.ElementAtOrDefault(i);
+            if (existingLevel == null) return true;
+
+            if (newLevel.Rating != existingLevel.Rating ||
+                newLevel.MinScore != existingLevel.MinScore ||
+                newLevel.MaxScore != existingLevel.MaxScore)
+                return true;
+        }
+
+        return false;
     }
 }

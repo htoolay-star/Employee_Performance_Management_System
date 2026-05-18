@@ -1,0 +1,54 @@
+@using MudBlazor
+
+<MudDialog MaxWidth="MaxWidth.Small" FullWidth="true">
+    <DialogContent>
+        <MudStack Spacing="4" AlignItems="AlignItems.Center" Class="py-4">
+            <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
+                     Color="Color.Success" Size="Size.Large" />
+            <MudText Typo="Typo.h5" Align="Align.Center">
+                Evaluation Submitted!
+            </MudText>
+            <MudPaper Elevation="2" Class="pa-4" Style="background: #f5f5f5; border-radius: 12px;">
+                <MudStack Spacing="1" AlignItems="AlignItems.Center">
+                    <MudText Typo="Typo.subtitle2" Color="Color.Default">
+                        Total Point
+                    </MudText>
+                    <MudText Typo="Typo.h3"
+                             Color="@GetScoreColor()">
+                        @TotalPoint%
+                    </MudText>
+                </MudStack>
+            </MudPaper>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Close" Variant="Variant.Filled"
+                   Color="Color.Primary" FullWidth="true">
+            Close
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance? _mudDialog { get; set; }
+
+    [Parameter]
+    public decimal TotalPoint { get; set; }
+
+    private void Close()
+    {
+        _mudDialog?.Close(DialogResult.Ok(true));
+    }
+
+    private Color GetScoreColor()
+    {
+        return TotalPoint switch
+        {
+            >= 80m => Color.Success,
+            >= 60m => Color.Info,
+            >= 40m => Color.Warning,
+            _ => Color.Error
+        };
+    }
+}

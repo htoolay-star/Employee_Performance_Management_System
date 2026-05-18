@@ -205,7 +205,7 @@ public class EvaluationResponseService : IEvaluationResponseService
                             && r.EvaluatorRole == role
                             && !r.IsDeleted,
                           trackChanges: false,
-                          includes: new Expression<Func<EvaluationResponse, object>>[] { r => r.Question, r => r.Template });
+                          includes: new Expression<Func<EvaluationResponse, object>>[] { r => r.Question, r => r.Question.Category, r => r.Template });
 
         var scaleIds = responses
             .Select(r => r.Question?.QuestionRatingScaleId)
@@ -213,13 +213,21 @@ public class EvaluationResponseService : IEvaluationResponseService
             .Distinct()
             .ToList();
 
-        var scales = new Dictionary<long, decimal>();
+        var scalesWithLevels = new Dictionary<long, List<RatingLevelDto>>();
         if (scaleIds.Count != 0)
         {
             var loaded = await _uow.Perf.QuestionRatingScales
-                .FindAllAsync(s => scaleIds.Contains(s.Id));
+                .FindAllAsync(s => scaleIds.Contains(s.Id),
+                    trackChanges: false,
+                    includes: s => s.Levels);
+
             foreach (var s in loaded)
-                scales[s.Id] = s.MaxScore;
+            {
+                scalesWithLevels[s.Id] = s.Levels
+                    .OrderBy(l => l.Rating)
+                    .Select(l => new RatingLevelDto { Rating = l.Rating, MinScore = l.MinScore, MaxScore = l.MaxScore })
+                    .ToList();
+            }
         }
 
         var questions = responses.Select(r => new EvaluationFormQuestionItem
@@ -229,16 +237,28 @@ public class EvaluationResponseService : IEvaluationResponseService
             TemplateName = r.Template?.Name,
             QuestionId = r.QuestionId,
             QuestionText = r.Question?.QuestionText,
+            CategoryName = r.Question?.Category?.Name,
             Sequence = r.Question?.Sequence ?? 0,
-            HasYesNo = r.Question?.HasYesNo ?? false,
-            HasComment = r.Question?.HasComment ?? false,
-            MaxScore = scales.TryGetValue(r.Question!.QuestionRatingScaleId, out var max) ? (int?)max : null,
+            HasYesNo = r.Template?.HasYesNo ?? false,
+            HasComment = r.Template?.HasComment ?? false,
+            RatingLevels = scalesWithLevels.TryGetValue(r.Question!.QuestionRatingScaleId, out var levels) ? levels : null,
+            MaxScore = scalesWithLevels.TryGetValue(r.Question!.QuestionRatingScaleId, out var lvl) ? (int?)lvl.Max(l => l.Rating) : null,
             YesNoAnswer = r.YesNoAnswer,
             RatingValue = r.RatingValue,
             Comment = r.QuestionComment
         }).OrderBy(q => q.TemplateId).ThenBy(q => q.Sequence).ToList();
 
         var submitted = responses.All(r => r.SubmittedAt.HasValue);
+
+        decimal? totalPoint = null;
+        var answeredResponses = responses.Where(r => r.RatingValue.HasValue).ToList();
+        if (answeredResponses.Any())
+        {
+            var sum = answeredResponses.Sum(r => r.RatingValue!.Value);
+            var count = answeredResponses.Count;
+            var maxRating = questions.FirstOrDefault(q => q.MaxScore.HasValue)?.MaxScore ?? 5;
+            totalPoint = (decimal)sum * 100m / (count * maxRating);
+        }
 
         var dto = new EvaluationFormFillDto(
             appraisal.Id,
@@ -249,7 +269,8 @@ public class EvaluationResponseService : IEvaluationResponseService
             role,
             submitted,
             appraisal.IsLocked,
-            questions
+            questions,
+            totalPoint
         );
 
         return SuccessResponse<EvaluationFormFillDto>.Ok(dto, EvaluationResponseMsg.Retrieved);
@@ -309,7 +330,7 @@ public class EvaluationResponseService : IEvaluationResponseService
         if (missingRating.Any())
             return SuccessResponse.Fail("Please provide a rating for all questions before submitting.", ErrorType.Validation);
 
-        var missingYesNo = responses.Where(r => r.Question?.HasYesNo == true && !r.YesNoAnswer.HasValue).ToList();
+        var missingYesNo = responses.Where(r => r.Template?.HasYesNo == true && !r.YesNoAnswer.HasValue).ToList();
         if (missingYesNo.Any())
             return SuccessResponse.Fail("Please answer Yes/No for all applicable questions before submitting.", ErrorType.Validation);
 

@@ -32,6 +32,13 @@ public class QuestionRatingScalesController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HttpGet("lookup")]
+    public async Task<ActionResult<SuccessResponse<IEnumerable<LookUpDto>>>> GetLookup()
+    {
+        var result = await _questionRatingScaleService.GetLookupAsync();
+        return HandleResult(result);
+    }
+
     [HttpGet("{id}")]
     public async Task<ActionResult<SuccessResponse<QuestionRatingScaleDto>>> GetById(long id)
     {
@@ -60,23 +67,10 @@ public class QuestionRatingScalesController : ApiControllerBase
         return HandleResult(result);
     }
 
-    [HttpPut("{id}/deactivate")]
-    public async Task<ActionResult<SuccessResponse>> Deactivate(long id)
+    [HttpPost("{id:long}/restore")]
+    public async Task<ActionResult<SuccessResponse>> Restore(long id)
     {
-        var result = await _questionRatingScaleService.DeactivateAsync(id);
+        var result = await _questionRatingScaleService.RestoreAsync(id);
         return HandleResult(result);
     }
-
-    [HttpPut("{id}/reactivate")]
-    public async Task<ActionResult<SuccessResponse>> Reactivate(long id)
-    {
-        var result = await _questionRatingScaleService.ReactivateAsync(id);
-        return HandleResult(result);
-    }
-        [HttpPost("{id:long}/restore")]
-        public async Task<ActionResult<SuccessResponse>> Restore(long id)
-        {
-            var result = await _questionRatingScaleService.RestoreAsync(id);
-            return HandleResult(result);
-        }
 }

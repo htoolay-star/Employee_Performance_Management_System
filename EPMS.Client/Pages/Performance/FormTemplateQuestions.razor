@@ -1,5 +1,6 @@
 @page "/performance/form-templates/{TemplateId:long}/questions"
 @using EPMS.Client.Constants
+@using EPMS.Client.Services.Auth
 @using EPMS.Client.Services.Performance
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.PerformanceDTOs.FormTemplateDTOs
@@ -12,6 +13,7 @@
 @inject IDialogService DialogService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject LookupStateService LookupState
 
 <PageTitle>@UIConstants.FormQuestion.PageTitle</PageTitle>
 
@@ -116,6 +118,9 @@
 
     protected override async Task OnInitializedAsync()
     {
+        _ = LookupState.GetCategoriesAsync();
+        _ = LookupState.GetRatingScalesAsync();
+
         var templateResponse = await FormTemplateApiClient.GetByIdAsync(TemplateId);
         if (templateResponse.Success && templateResponse.Data != null)
             _templateName = templateResponse.Data.Name;

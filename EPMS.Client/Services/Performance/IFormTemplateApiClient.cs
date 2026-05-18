@@ -12,6 +12,9 @@ public interface IFormTemplateApiClient
     [Get("/api/performance/form-templates/active")]
     Task<SuccessResponse<IEnumerable<FormTemplateDto>>> GetActiveAsync();
 
+    [Get("/api/performance/form-templates/lookup")]
+    Task<SuccessResponse<IEnumerable<LookUpDto>>> GetLookupAsync();
+
     [Get("/api/performance/form-templates/{id}")]
     Task<SuccessResponse<FormTemplateDto>> GetByIdAsync(long id);
 

@@ -10,6 +10,10 @@ namespace EPMS.Client.Models.Performance
 
         public int? QuestionsPerEvaluation { get; set; }
 
+        public bool HasYesNo { get; set; }
+
+        public bool HasComment { get; set; }
+
         public bool IsActive { get; set; } = true;
     }
 }

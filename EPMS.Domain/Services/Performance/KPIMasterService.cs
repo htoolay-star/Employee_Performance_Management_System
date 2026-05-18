@@ -86,16 +86,22 @@ namespace EPMS.Domain.Services.Performance
                 return SuccessResponse.Fail(string.Format(KPIMasterMsg.DuplicateCode, dto.Code), ErrorType.Conflict);
             }
 
-            kpi.Update(dto.CategoryId, dto.Code, dto.Name, dto.Description, dto.ScoringDirection);
+        kpi.Update(dto.CategoryId, dto.Code, dto.Name, dto.Description, dto.ScoringDirection);
 
-            _uow.Perf.KPIMasters.Update(kpi);
-            await _uow.CompleteAsync();
-            await _cacheService.RemoveAsync(CacheKeys.Performance.KPIMasterLookups());
-
-            return SuccessResponse.Ok(KPIMasterMsg.Updated);
+        if (dto.IsActive.HasValue)
+        {
+            if (dto.IsActive.Value) kpi.Reactivate();
+            else kpi.Deactivate();
         }
 
-        public async Task<SuccessResponse> DeleteAsync(long id)
+        _uow.Perf.KPIMasters.Update(kpi);
+        await _uow.CompleteAsync();
+        await _cacheService.RemoveAsync(CacheKeys.Performance.KPIMasterLookups());
+
+        return SuccessResponse.Ok(KPIMasterMsg.Updated);
+    }
+
+    public async Task<SuccessResponse> DeleteAsync(long id)
         {
             var kpi = await _uow.Perf.KPIMasters.GetByIdAsync(id);
 
@@ -107,38 +113,6 @@ namespace EPMS.Domain.Services.Performance
             await _cacheService.RemoveAsync(CacheKeys.Performance.KPIMasterLookups());
 
             return SuccessResponse.Ok(KPIMasterMsg.Deleted);
-        }
-
-        public async Task<SuccessResponse> DeactivateAsync(long id)
-        {
-            var kpi = await _uow.Perf.KPIMasters.GetByIdAsync(id);
-
-            if (kpi == null)
-                return SuccessResponse.Fail(KPIMasterMsg.NotFound(id), ErrorType.NotFound);
-
-            kpi.Deactivate();
-
-            _uow.Perf.KPIMasters.Update(kpi);
-            await _uow.CompleteAsync();
-            await _cacheService.RemoveAsync(CacheKeys.Performance.KPIMasterLookups());
-
-            return SuccessResponse.Ok(KPIMasterMsg.Deactivated);
-        }
-
-        public async Task<SuccessResponse> ReactivateAsync(long id)
-        {
-            var kpi = await _uow.Perf.KPIMasters.GetByIdAsync(id);
-
-            if (kpi == null)
-                return SuccessResponse.Fail(KPIMasterMsg.NotFound(id), ErrorType.NotFound);
-
-            kpi.Reactivate();
-
-            _uow.Perf.KPIMasters.Update(kpi);
-            await _uow.CompleteAsync();
-            await _cacheService.RemoveAsync(CacheKeys.Performance.KPIMasterLookups());
-
-            return SuccessResponse.Ok(KPIMasterMsg.Reactivated);
         }
     }
 }

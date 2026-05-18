@@ -1518,10 +1518,6 @@ namespace EPMS.Domain.Data.Migrations
                     b.Property<decimal>("MinScore")
                         .HasColumnType("decimal(5,2)");
 
-                    b.Property<string>("PerformanceLevel")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
                     b.Property<string>("PromotionEligibility")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -2660,16 +2656,6 @@ namespace EPMS.Domain.Data.Migrations
                     b.Property<long?>("DeletedBy")
                         .HasColumnType("bigint");
 
-                    b.Property<bool>("HasComment")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<bool>("HasYesNo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -2744,6 +2730,16 @@ namespace EPMS.Domain.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("HasComment")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("HasYesNo")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
@@ -3432,12 +3428,6 @@ namespace EPMS.Domain.Data.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
-                    b.Property<decimal>("MaxScore")
-                        .HasColumnType("decimal(5,2)");
-
-                    b.Property<decimal>("MinScore")
-                        .HasColumnType("decimal(5,2)");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -3469,6 +3459,71 @@ namespace EPMS.Domain.Data.Migrations
                         .HasFilter("[IsDeleted] = 0");
 
                     b.ToTable("QuestionRatingScales", "perf");
+                });
+
+            modelBuilder.Entity("EPMS.Domain.Entities.Performance.QuestionRatingScaleLevel", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long?>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long?>("DeletedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<decimal>("MaxScore")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<decimal>("MinScore")
+                        .HasColumnType("decimal(5,2)");
+
+                    b.Property<Guid>("PublicId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("QuestionRatingScaleId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<byte[]>("Version")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PublicId")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.HasIndex("QuestionRatingScaleId", "Rating")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("QuestionRatingScaleLevels", "perf");
                 });
 
             modelBuilder.Entity("EPMS.Domain.Entities.Shared.Category", b =>
@@ -4336,6 +4391,17 @@ namespace EPMS.Domain.Data.Migrations
                     b.Navigation("Position");
                 });
 
+            modelBuilder.Entity("EPMS.Domain.Entities.Performance.QuestionRatingScaleLevel", b =>
+                {
+                    b.HasOne("EPMS.Domain.Entities.Performance.QuestionRatingScale", "QuestionRatingScale")
+                        .WithMany("Levels")
+                        .HasForeignKey("QuestionRatingScaleId")
+                        .OnDelete(DeleteBehavior.ClientCascade)
+                        .IsRequired();
+
+                    b.Navigation("QuestionRatingScale");
+                });
+
             modelBuilder.Entity("EPMS.Domain.Entities.Shared.Category", b =>
                 {
                     b.HasOne("EPMS.Domain.Entities.Shared.Category", "Parent")
@@ -4420,6 +4486,11 @@ namespace EPMS.Domain.Data.Migrations
             modelBuilder.Entity("EPMS.Domain.Entities.Performance.PIP", b =>
                 {
                     b.Navigation("Objectives");
+                });
+
+            modelBuilder.Entity("EPMS.Domain.Entities.Performance.QuestionRatingScale", b =>
+                {
+                    b.Navigation("Levels");
                 });
 
             modelBuilder.Entity("EPMS.Domain.Entities.Shared.Category", b =>

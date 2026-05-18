@@ -13,6 +13,7 @@ using EPMS.Shared.DTOs.PerformanceDTOs.FormQuestionDTOs;
 using EPMS.Shared.DTOs.PerformanceDTOs.KPIMasterDTOs;
 using EPMS.Shared.DTOs.PerformanceDTOs.OneOnOneMeetingDTOs;
 using EPMS.Shared.DTOs.PerformanceDTOs.PIPDTOs;
+using EPMS.Shared.DTOs.PerformanceDTOs.QuestionRatingScaleDTOs;
 using EPMS.Shared.DTOs.TeamDTOs;
 using Mapster;
 
@@ -103,5 +104,14 @@ public static class MapsterConfig
         TypeAdapterConfig<FormQuestion, FormQuestionDto>.NewConfig()
             .Map(dest => dest.CategoryName, src => src.Category != null ? src.Category.Name : null)
             .Map(dest => dest.RatingScaleName, src => src.RatingScale != null ? src.RatingScale.Name : null);
+
+        TypeAdapterConfig<QuestionRatingScaleLevel, QuestionRatingScaleLevelDto>.NewConfig()
+            .Map(dest => dest.Id, src => src.Id);
+
+        TypeAdapterConfig<CreateQuestionRatingScaleLevelDto, QuestionRatingScaleLevel>.NewConfig()
+            .ConstructUsing(src => new QuestionRatingScaleLevel(0, src.Rating, src.MinScore, src.MaxScore));
+
+        TypeAdapterConfig<UpdateQuestionRatingScaleLevelDto, QuestionRatingScaleLevel>.NewConfig()
+            .Map(dest => dest.Id, src => src.Id.HasValue ? src.Id.Value : default);
     }
 }

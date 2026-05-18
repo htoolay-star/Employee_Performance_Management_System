@@ -16,6 +16,7 @@
 @inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 
 <PageTitle>@UIConstants.EvaluationForm.PageTitle</PageTitle>
 
@@ -89,29 +90,48 @@
                 @foreach (var group in templateGroups)
                 {
                     groupIndex++;
+                    var questions = group.ToList();
+                    var showYesNo = questions.Any(q => q.HasYesNo);
+                    var showComment = questions.Any(q => q.HasComment);
+
                     <MudText Typo="Typo.h6" Class="mb-2 mt-4">
                         @(groupIndex). @(string.IsNullOrEmpty(group.Key.TemplateName) ? $"Template #{group.Key.TemplateId}" : group.Key.TemplateName)
                     </MudText>
 
-                    <MudTable Items="@group.ToList()" Hover="true" Elevation="0" Class="mb-4">
+                    <MudTable Items="@questions" Hover="true" Elevation="0" Class="mb-4">
                         <ColGroup>
                             <col style="width: 40px;" />
+                            <col style="width: 120px;" />
                             <col />
-                            <col style="width: 180px;" />
-                            <col />
+                            <col style="width: @(showYesNo ? "220px" : "120px")" />
+                            @if (showComment) { <col style="width: 200px;" /> }
                         </ColGroup>
                         <HeaderContent>
                             <MudTh>#</MudTh>
+                            <MudTh>Category</MudTh>
                             <MudTh>@UIConstants.EvaluationForm.ColumnQuestion</MudTh>
                             <MudTh>@UIConstants.EvaluationForm.ColumnRating</MudTh>
-                            <MudTh>@UIConstants.EvaluationForm.ColumnComment</MudTh>
+                            @if (showComment)
+                            {
+                                <MudTh>@UIConstants.EvaluationForm.ColumnComment</MudTh>
+                            }
                         </HeaderContent>
                         <RowTemplate>
                             <MudTd DataLabel="#">@context.Sequence</MudTd>
+                            <MudTd DataLabel="Category">
+                                @if (!string.IsNullOrEmpty(context.CategoryName))
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Info">@context.CategoryName</MudChip>
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.body2" Color="Color.Default">—</MudText>
+                                }
+                            </MudTd>
                             <MudTd DataLabel="Question">@context.QuestionText</MudTd>
                             <MudTd DataLabel="Rating">
                                 <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
-                                    @if (context.MaxScore.HasValue)
+                                    @if (context.RatingLevels != null && context.RatingLevels.Any())
                                     {
                                         <MudSelect T="int?"
                                                    Value="@context.RatingValue"
@@ -120,30 +140,52 @@
                                                    Margin="Margin.Dense"
                                                    Disabled="@(_model.IsSubmitted || _model.IsLocked)"
                                                    Style="min-width: 80px;">
-                                             <MudSelectItem T="int?" Value="null">--</MudSelectItem>
-                                             @{
-                                                 var ratingMax = context.HasYesNo && context.YesNoAnswer == false
-                                                     ? (int)Math.Ceiling((context.MaxScore ?? 5) * 0.6)
-                                                     : (context.MaxScore ?? 5);
-                                             }
-                                             @for (var i = 1; i <= ratingMax; i++)
-                                             {
-                                                 <MudSelectItem T="int?" Value="@i">@i</MudSelectItem>
-                                             }
+                                            <MudSelectItem T="int?" Value="null">--</MudSelectItem>
+                                            @foreach (var level in context.RatingLevels.OrderBy(l => l.Rating))
+                                            {
+                                                <MudSelectItem T="int?" Value="@level.Rating">@level.Rating</MudSelectItem>
+                                            }
+                                        </MudSelect>
+                                    }
+                                    else if (context.MaxScore.HasValue)
+                                    {
+                                        var ratingMax = context.HasYesNo && context.YesNoAnswer == false
+                                            ? (int)Math.Ceiling((context.MaxScore ?? 5) * 0.6)
+                                            : (context.MaxScore ?? 5);
+                                        <MudSelect T="int?"
+                                                   Value="@context.RatingValue"
+                                                   ValueChanged="@(v => OnRatingChanged(context, v))"
+                                                   Variant="Variant.Outlined"
+                                                   Margin="Margin.Dense"
+                                                   Disabled="@(_model.IsSubmitted || _model.IsLocked)"
+                                                   Style="min-width: 80px;">
+                                            <MudSelectItem T="int?" Value="null">--</MudSelectItem>
+                                            @for (var i = 1; i <= ratingMax; i++)
+                                            {
+                                                <MudSelectItem T="int?" Value="@i">@i</MudSelectItem>
+                                            }
                                         </MudSelect>
                                     }
                                     @if (context.HasYesNo)
                                     {
-                                        <MudSwitch T="bool" Value="@(context.YesNoAnswer ?? false)"
-                                                   ValueChanged="@(v => OnYesNoChanged(context, v))"
+                                        <MudButton OnClick="() => OnYesNoChanged(context, true)"
+                                                   Variant="@(context.YesNoAnswer == true ? Variant.Filled : Variant.Outlined)"
+                                                   Color="Color.Success"
                                                    Disabled="@(_model.IsSubmitted || _model.IsLocked)"
-                                                   Label="Yes/No" />
+                                                   Size="Size.Small"
+                                                   Class="px-3">Yes</MudButton>
+                                        <MudButton OnClick="() => OnYesNoChanged(context, false)"
+                                                   Variant="@(context.YesNoAnswer == false ? Variant.Filled : Variant.Outlined)"
+                                                   Color="Color.Error"
+                                                   Disabled="@(_model.IsSubmitted || _model.IsLocked)"
+                                                   Size="Size.Small"
+                                                   Class="px-3">No</MudButton>
                                     }
                                 </MudStack>
                             </MudTd>
-                            <MudTd DataLabel="Comment">
-                                @if (context.HasComment)
-                                {
+                            @if (showComment)
+                            {
+                                <MudTd DataLabel="Comment">
                                     <MudTextField T="string" Value="@context.Comment"
                                                   ValueChanged="@(v => { context.Comment = v; _ = OnCommentChanged(context); })"
                                                   Variant="Variant.Outlined"
@@ -151,8 +193,8 @@
                                                   Margin="Margin.Dense"
                                                   Disabled="@(_model.IsSubmitted || _model.IsLocked)"
                                                   Immediate="true" />
-                                }
-                            </MudTd>
+                                </MudTd>
+                            }
                         </RowTemplate>
                     </MudTable>
                 }
@@ -373,6 +415,7 @@
             {
                 Snackbar.Add(UIConstants.EvaluationForm.SubmitSuccess, Severity.Success);
                 _model = _model! with { IsSubmitted = true };
+                await ShowResultDialog();
             }
             else
             {
@@ -395,6 +438,19 @@
     }
 
     private void GoBack() => Navigation.NavigateTo("/performance/appraisals");
+
+    private async Task ShowResultDialog()
+    {
+        if (_model?.TotalPoint == null) return;
+
+        var parameters = new DialogParameters<SubmitResultDialog>
+        {
+            { x => x.TotalPoint, _model.TotalPoint.Value }
+        };
+
+        var options = new DialogOptions { CloseOnEscapeKey = true, BackdropClick = false };
+        await DialogService.ShowAsync<SubmitResultDialog>("", parameters, options);
+    }
 
     private static string GetRoleDisplay(string role) => role switch
     {

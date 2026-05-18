@@ -33,8 +33,6 @@ public class FormQuestionService : IFormQuestionService
             dto.TemplateId,
             dto.QuestionText,
             dto.Sequence,
-            dto.HasYesNo,
-            dto.HasComment,
             dto.CategoryId,
             dto.RatingScaleId);
 
@@ -66,13 +64,6 @@ public class FormQuestionService : IFormQuestionService
                 return SuccessResponse.Fail(FormQuestionMsg.DuplicateEntry, ErrorType.Conflict);
 
             formQuestion.ChangeSequence(dto.Sequence.Value);
-        }
-
-        if (dto.HasYesNo.HasValue || dto.HasComment.HasValue)
-        {
-            formQuestion.ToggleUIControls(
-                dto.HasYesNo ?? formQuestion.HasYesNo,
-                dto.HasComment ?? formQuestion.HasComment);
         }
 
         await _uow.CompleteAsync();

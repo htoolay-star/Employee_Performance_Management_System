@@ -24,14 +24,21 @@ namespace EPMS.Api.Controllers.Performance
             return HandleResult(result);
         }
 
-        [HttpGet("active")]
-        public async Task<ActionResult<SuccessResponse<IEnumerable<FormTemplateDto>>>> GetActive()
-        {
-            var result = await _formTemplateService.GetActiveAsync();
-            return HandleResult(result);
-        }
+    [HttpGet("active")]
+    public async Task<ActionResult<SuccessResponse<IEnumerable<FormTemplateDto>>>> GetActive()
+    {
+        var result = await _formTemplateService.GetActiveAsync();
+        return HandleResult(result);
+    }
 
-        [HttpGet("{id:long}")]
+    [HttpGet("lookup")]
+    public async Task<ActionResult<SuccessResponse<IEnumerable<LookUpDto>>>> GetLookup()
+    {
+        var result = await _formTemplateService.GetLookupAsync();
+        return HandleResult(result);
+    }
+
+    [HttpGet("{id:long}")]
         public async Task<ActionResult<SuccessResponse<FormTemplateDto>>> GetById(long id)
         {
             var result = await _formTemplateService.GetByIdAsync(id);
@@ -52,32 +59,18 @@ namespace EPMS.Api.Controllers.Performance
             return HandleResult(result);
         }
 
-        [HttpDelete("{id:long}")]
-        public async Task<ActionResult<SuccessResponse>> Delete(long id)
-        {
-            var result = await _formTemplateService.DeleteAsync(id);
-            return HandleResult(result);
-        }
-
-        [HttpPost("{id:long}/deactivate")]
-        public async Task<ActionResult<SuccessResponse>> Deactivate(long id)
-        {
-            var result = await _formTemplateService.DeactivateAsync(id);
-            return HandleResult(result);
-        }
-
-        [HttpPost("{id:long}/reactivate")]
-        public async Task<ActionResult<SuccessResponse>> Reactivate(long id)
-        {
-            var result = await _formTemplateService.ReactivateAsync(id);
-            return HandleResult(result);
-        }
-
-        [HttpGet("{id:long}/preview")]
-        public async Task<ActionResult<SuccessResponse<FormTemplatePreviewDto>>> GetPreview(long id)
-        {
-            var result = await _formTemplateService.GetPreviewAsync(id);
-            return HandleResult(result);
-        }
+    [HttpDelete("{id:long}")]
+    public async Task<ActionResult<SuccessResponse>> Delete(long id)
+    {
+        var result = await _formTemplateService.DeleteAsync(id);
+        return HandleResult(result);
     }
+
+    [HttpGet("{id:long}/preview")]
+    public async Task<ActionResult<SuccessResponse<FormTemplatePreviewDto>>> GetPreview(long id)
+    {
+        var result = await _formTemplateService.GetPreviewAsync(id);
+        return HandleResult(result);
+    }
+}
 }

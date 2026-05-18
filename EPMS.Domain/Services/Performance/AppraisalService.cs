@@ -395,7 +395,9 @@ public class AppraisalService : IAppraisalService
             var question = await _uow.Perf.FormQuestions.FindAsync(
                 q => q.Id == anyResponse.QuestionId,
                 includes: q => q.RatingScale);
-            maxScale = Math.Max(question?.RatingScale?.MaxScore ?? 5m, 1m);
+            maxScale = question?.RatingScale != null && question.RatingScale.Levels.Any()
+                ? Math.Max(question.RatingScale.Levels.Max(l => l.Rating), 1m)
+                : 5m;
         }
 
         var selfScore = responses
@@ -406,7 +408,7 @@ public class AppraisalService : IAppraisalService
 
         // 360 includes Manager + Peer + Subordinate
         var threeSixtyScore = responses
-            .Where(r => r.EvaluatorRole is EvaluatorRoles.Manager or EvaluatorRoles.Peer or EvaluatorRoles.Subordinate && r.RatingValue.HasValue)
+            .Where(r => (r.EvaluatorRole is EvaluatorRoles.Manager or EvaluatorRoles.Peer or EvaluatorRoles.Subordinate) && r.RatingValue.HasValue)
             .Select(r => (decimal)r.RatingValue!.Value)
             .DefaultIfEmpty(0)
             .Average() * 100m / maxScale;

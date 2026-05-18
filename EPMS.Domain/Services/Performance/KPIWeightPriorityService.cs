@@ -105,6 +105,12 @@ public class KPIWeightPriorityService : IKPIWeightPriorityService
             priority.UpdateDetails(priority.LevelName, dto.ColorCode);
         }
 
+        if (dto.IsActive.HasValue)
+        {
+            if (dto.IsActive.Value) priority.Reactivate();
+            else priority.Deactivate();
+        }
+
         await _uow.CompleteAsync();
         return SuccessResponse.Ok(KPIWeightPriorityMsg.Updated);
     }
@@ -120,30 +126,6 @@ public class KPIWeightPriorityService : IKPIWeightPriorityService
         await _uow.CompleteAsync();
 
         return SuccessResponse.Ok(KPIWeightPriorityMsg.Deleted);
-    }
-
-    public async Task<SuccessResponse> DeactivateAsync(long id)
-    {
-        var priority = await _uow.Perf.KPIWeightPriorities.GetByIdAsync(id);
-
-        if (priority == null)
-            return SuccessResponse.Fail(KPIWeightPriorityMsg.NotFound(id), ErrorType.NotFound);
-
-        priority.Deactivate();
-        await _uow.CompleteAsync();
-        return SuccessResponse.Ok(KPIWeightPriorityMsg.Deactivated);
-    }
-
-    public async Task<SuccessResponse> ReactivateAsync(long id)
-    {
-        var priority = await _uow.Perf.KPIWeightPriorities.GetByIdAsync(id);
-
-        if (priority == null)
-            return SuccessResponse.Fail(KPIWeightPriorityMsg.NotFound(id), ErrorType.NotFound);
-
-        priority.Reactivate();
-        await _uow.CompleteAsync();
-        return SuccessResponse.Ok(KPIWeightPriorityMsg.Reactivated);
     }
 
     private static bool IsValidHexColor(string colorCode)

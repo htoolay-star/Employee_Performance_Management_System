@@ -126,6 +126,7 @@ public class DepartmentService : IDepartmentService
             entity.DeletedBy = null;
             _uow.HR.Departments.Update(entity);
             await _uow.CompleteAsync();
+            await _cacheService.RemoveAsync(CacheKeys.Hr.DepartmentLookups());
             return SuccessResponse.Ok(DepartmentMsg.Updated);
         }
 

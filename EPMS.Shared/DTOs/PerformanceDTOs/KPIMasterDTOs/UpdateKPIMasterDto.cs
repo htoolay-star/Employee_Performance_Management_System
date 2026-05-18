@@ -10,5 +10,6 @@ namespace EPMS.Shared.DTOs.PerformanceDTOs.KPIMasterDTOs
         public string Name { get; set; } = string.Empty;
         public string? Description { get; set; }
         public string ScoringDirection { get; set; } = AppraisalConstants.ScoringDirections.HigherIsBetter;
+        public bool? IsActive { get; set; }
     }
 }

@@ -2,6 +2,7 @@ using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Hr;
 using EPMS.Domain.Entities.Performance;
 using EPMS.Domain.Entities.Shared;
+using EPMS.Domain.Interface.IService.Performance;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.RecycleBin;
 using EPMS.Shared.Enums;
@@ -17,17 +18,19 @@ namespace EPMS.Domain.Services.Shared
     public class RecycleBinService : IRecycleBinService
     {
         private readonly IUnitOfWork _uow;
+        private readonly IQuestionRatingScaleService _questionRatingScaleService;
         private readonly Dictionary<string, Func<long, Task<SuccessResponse>>> _restoreMap;
 
-        public RecycleBinService(IUnitOfWork uow)
+        public RecycleBinService(IUnitOfWork uow, IQuestionRatingScaleService questionRatingScaleService)
         {
             _uow = uow;
+            _questionRatingScaleService = questionRatingScaleService;
             _restoreMap = new Dictionary<string, Func<long, Task<SuccessResponse>>>
             {
                 ["APPRAISALCYCLE"] = id => RestoreViaService(_uow.Perf.AppraisalCycles, id),
                 ["RATINGSCALE"] = id => RestoreViaService(_uow.Perf.RatingScales, id),
                 ["KPIWEIGHTPRIORITY"] = id => RestoreViaService(_uow.Perf.KPIWeightPriorities, id),
-                ["QUESTIONRATINGSCALE"] = id => RestoreViaService(_uow.Perf.QuestionRatingScales, id),
+                ["QUESTIONRATINGSCALE"] = id => _questionRatingScaleService.RestoreAsync(id),
                 ["LEVEL"] = id => RestoreViaService(_uow.HR.Levels, id),
                 ["DEPARTMENT"] = id => RestoreViaService(_uow.HR.Departments, id),
                 ["POSITION"] = id => RestoreViaService(_uow.HR.Positions, id),

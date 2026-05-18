@@ -4,12 +4,10 @@
 @using EPMS.Client.Services.Performance
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.PerformanceDTOs.PositionFormTemplateDTOs
-@using EPMS.Shared.DTOs.PerformanceDTOs.FormTemplateDTOs
 @using MudBlazor
 @using Refit
 
 @inject IPositionFormTemplateApiClient PositionFormTemplateApiClient
-@inject IFormTemplateApiClient FormTemplateApiClient
 @inject LookupStateService LookupState
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
@@ -127,14 +125,12 @@
     private bool _loading = true;
 
     private List<LookUpDto> _positions = new();
-    private List<FormTemplateDto> _templates = new();
+    private List<LookUpDto> _templates = new();
 
     protected override async Task OnInitializedAsync()
     {
         _positions = await LookupState.GetPositionsAsync();
-        var templateResponse = await FormTemplateApiClient.GetActiveAsync();
-        if (templateResponse.Success && templateResponse.Data != null)
-            _templates = templateResponse.Data.Where(t => t.IsActive).ToList();
+        _templates = await LookupState.GetFormTemplatesAsync();
         await LoadDataAsync();
     }
 
@@ -191,7 +187,7 @@
 
     private string GetTemplateName(long templateId)
     {
-        return _templates.FirstOrDefault(t => t.Id == templateId)?.Name ?? $"Template #{templateId}";
+        return _templates.FirstOrDefault(t => t.Id == templateId)?.Code ?? $"Template #{templateId}";
     }
 
     private async Task OnPositionFilterChanged(long? v)
@@ -217,6 +213,7 @@
             if (createdPositionId.HasValue)
                 _selectedPositionId = createdPositionId.Value;
             Snackbar.Add("Template assigned successfully.", Severity.Success);
+            LookupState.ClearFormTemplateCache();
             await LoadDataAsync();
         }
     }
@@ -234,6 +231,7 @@
         if (await dialog.Result is { Canceled: false })
         {
             Snackbar.Add("Assignment updated successfully.", Severity.Success);
+            LookupState.ClearFormTemplateCache();
             await LoadDataAsync();
         }
     }
@@ -259,6 +257,7 @@
                 if (response.Success)
                 {
                     Snackbar.Add("Assignment deleted.", Severity.Success);
+                    LookupState.ClearFormTemplateCache();
                     await LoadDataAsync();
                 }
                 else

@@ -206,13 +206,20 @@
                                      Variant="Variant.Outlined"
                                      Class="flex-1"
                                      Min="0" Max="100" />
-                    <MudNumericField @bind-Value="_model.AppraisalWeight"
-                                     Label="Appraisal %"
-                                     For="@(() => _model.AppraisalWeight)"
-                                     Variant="Variant.Outlined"
-                                     Class="flex-1"
-                                     Min="0" Max="100" />
+                <MudNumericField @bind-Value="_model.AppraisalWeight"
+                                 Label="Appraisal %"
+                                 For="@(() => _model.AppraisalWeight)"
+                                 Variant="Variant.Outlined"
+                                 Class="flex-1"
+                                 Min="0" Max="100" />
                 </MudStack>
+
+                @if (IsEdit)
+                {
+                    <MudSwitch @bind-Value="_model.IsActive"
+                               Label="@UIConstants.Common.Active"
+                               Color="Color.Success" />
+                }
 
             </MudStack>
         </MudForm>
@@ -378,8 +385,9 @@
                _model.KpiWeight != Cycle.KpiWeight ||
                _model.SelfWeight != Cycle.SelfWeight ||
                _model.ThreeSixtyWeight != Cycle.ThreeSixtyWeight ||
-               _model.AppraisalWeight != Cycle.AppraisalWeight ||
-               _model.AppraisalReviewerId != Cycle.AppraisalReviewerId;
+                _model.AppraisalWeight != Cycle.AppraisalWeight ||
+                _model.AppraisalReviewerId != Cycle.AppraisalReviewerId ||
+                _model.IsActive != Cycle.IsActive;
     }
 
     private void AutoFillEvaluationDates()

@@ -68,7 +68,6 @@
                 <PropertyColumn Property="x => x.Label" Title="@UIConstants.RatingScale.ColumnLabel" />
                 <PropertyColumn Property="x => x.MinScore" Title="@UIConstants.RatingScale.ColumnMinScore" Sortable="true" />
                 <PropertyColumn Property="x => x.MaxScore" Title="@UIConstants.RatingScale.ColumnMaxScore" Sortable="true" />
-                <PropertyColumn Property="x => x.PerformanceLevel" Title="@UIConstants.RatingScale.ColumnPerformanceLevel" />
                 <PropertyColumn Property="x => x.PromotionEligibility" Title="@UIConstants.RatingScale.ColumnPromotionEligibility" />
                 <TemplateColumn Title="@UIConstants.Common.Status">
                     <CellTemplate>
@@ -164,7 +163,7 @@
 
         return x.Rating.ToString().Contains(_searchString, StringComparison.OrdinalIgnoreCase)
             || x.Label.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
-            || (x.PerformanceLevel?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false);
+            || (x.PromotionEligibility?.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ?? false);
     }
 
     private async Task HandleSortChanged((string SortBy, string SortDirection) sortData)

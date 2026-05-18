@@ -31,6 +31,8 @@ namespace EPMS.Shared.Constants
         public static class Performance
         {
             public static string KPIMasterLookups() => "performance:kpi-masters:lookups";
+            public static string QuestionRatingScaleLookups() => "performance:question-rating-scales:lookups";
+            public static string FormTemplateLookups() => "performance:form-templates:lookups";
         }
 
         public static class Shared

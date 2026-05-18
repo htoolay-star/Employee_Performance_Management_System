@@ -56,27 +56,42 @@
             </MudStack>
 
             @* Questions table *@
+            @{
+                var showYesNo = _model.Questions.Any(q => q.HasYesNo);
+                var showComment = _model.Questions.Any(q => q.HasComment);
+            }
             <MudTable Items="@_model.Questions" Hover="true" Elevation="0" Class="mb-4">
                 <ColGroup>
                     <col style="width: 40px;" />
+                    <col style="width: 120px;" />
                     <col />
-                    <col style="width: 200px;" />
-                    <col />
+                    <col style="width: @(showYesNo ? "220px" : "120px")" />
+                    @if (showComment) { <col style="width: 200px;" /> }
                 </ColGroup>
                 <HeaderContent>
                     <MudTh>#</MudTh>
+                    <MudTh>Category</MudTh>
                     <MudTh>@UIConstants.EvaluationForm.ColumnQuestion</MudTh>
                     <MudTh>@UIConstants.EvaluationForm.ColumnRating</MudTh>
-                    <MudTh>@UIConstants.EvaluationForm.ColumnComment</MudTh>
+                    @if (showComment)
+                    {
+                        <MudTh>@UIConstants.EvaluationForm.ColumnComment</MudTh>
+                    }
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd DataLabel="#">@context.Sequence</MudTd>
-                    <MudTd DataLabel="Question">
-                        <MudText Typo="Typo.body1">@context.QuestionText</MudText>
+                    <MudTd DataLabel="Category">
                         @if (!string.IsNullOrEmpty(context.CategoryName))
                         {
                             <MudChip T="string" Size="Size.Small" Color="Color.Info">@context.CategoryName</MudChip>
                         }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Default">—</MudText>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Question">
+                        <MudText Typo="Typo.body1">@context.QuestionText</MudText>
                     </MudTd>
                     <MudTd DataLabel="Rating">
                         <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
@@ -92,13 +107,22 @@
                             </MudSelect>
                             @if (context.HasYesNo)
                             {
-                                <MudSwitch T="bool" Value="false" Disabled="true" Label="Yes/No" />
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Default"
+                                           Disabled="true"
+                                           Size="Size.Small"
+                                           Class="px-3">Yes</MudButton>
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Default"
+                                           Disabled="true"
+                                           Size="Size.Small"
+                                           Class="px-3">No</MudButton>
                             }
                         </MudStack>
                     </MudTd>
-                    <MudTd DataLabel="Comment">
-                        @if (context.HasComment)
-                        {
+                    @if (showComment)
+                    {
+                        <MudTd DataLabel="Comment">
                             <MudTextField T="string"
                                           Value="@string.Empty"
                                           Variant="Variant.Outlined"
@@ -106,12 +130,8 @@
                                           Margin="Margin.Dense"
                                           Disabled="true"
                                           Immediate="true" />
-                        }
-                        else
-                        {
-                            <MudText Typo="Typo.body2" Color="Color.Default">—</MudText>
-                        }
-                    </MudTd>
+                        </MudTd>
+                    }
                 </RowTemplate>
             </MudTable>
 

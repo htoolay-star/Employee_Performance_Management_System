@@ -65,19 +65,5 @@ namespace EPMS.Api.Controllers.Performance
             var result = await _kpiMasterService.DeleteAsync(id);
             return HandleResult(result);
         }
-
-        [HttpPost("{id:long}/deactivate")]
-        public async Task<ActionResult<SuccessResponse>> Deactivate(long id)
-        {
-            var result = await _kpiMasterService.DeactivateAsync(id);
-            return HandleResult(result);
-        }
-
-        [HttpPost("{id:long}/reactivate")]
-        public async Task<ActionResult<SuccessResponse>> Reactivate(long id)
-        {
-            var result = await _kpiMasterService.ReactivateAsync(id);
-            return HandleResult(result);
-        }
     }
 }

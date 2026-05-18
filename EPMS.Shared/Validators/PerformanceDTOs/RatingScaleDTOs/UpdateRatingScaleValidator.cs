@@ -19,10 +19,6 @@ public class UpdateRatingScaleValidator : AbstractValidator<UpdateRatingScaleDto
             .When(x => x.MinScore.HasValue && x.MaxScore.HasValue)
             .WithMessage(PerformanceValidationMessages.RatingScale.MinScoreGreaterThanMax);
 
-        RuleFor(x => x.PerformanceLevel)
-            .MaximumLength(100)
-            .WithMessage(PerformanceValidationMessages.RatingScale.PerformanceLevelMaxLength);
-
         RuleFor(x => x.PromotionEligibility)
             .MaximumLength(100)
             .WithMessage(PerformanceValidationMessages.RatingScale.PromotionEligibilityMaxLength);

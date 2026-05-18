@@ -9,12 +9,10 @@
 @using EPMS.Client.Services.Performance
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.PerformanceDTOs.PositionFormTemplateDTOs
-@using EPMS.Shared.DTOs.PerformanceDTOs.FormTemplateDTOs
 @using Mapster
 @using MudBlazor
 
 @inject IPositionFormTemplateApiClient PositionFormTemplateApiClient
-@inject IFormTemplateApiClient FormTemplateApiClient
 @inject LookupStateService LookupState
 @inject ISnackbar Snackbar
 
@@ -88,15 +86,13 @@
     private Dictionary<string, string> _serverErrors = new();
 
     private List<LookUpDto> _positions = new();
-    private List<FormTemplateDto> _templates = new();
+    private List<LookUpDto> _templates = new();
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
     protected override async Task OnInitializedAsync()
     {
         _positions = await LookupState.GetPositionsAsync();
-        var templateResponse = await FormTemplateApiClient.GetActiveAsync();
-        if (templateResponse.Success && templateResponse.Data != null)
-            _templates = templateResponse.Data.Where(t => t.IsActive).ToList();
+        _templates = await LookupState.GetFormTemplatesAsync();
 
         if (IsEdit)
         {
@@ -187,7 +183,7 @@
     {
         var query = _templates.AsEnumerable();
         if (!string.IsNullOrWhiteSpace(value))
-            query = query.Where(x => x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
         return Task.FromResult(query.Select(x => (long?)x.Id).ToList().AsEnumerable());
     }
 
@@ -195,7 +191,7 @@
     {
         if (id == null) return string.Empty;
         var tpl = _templates.FirstOrDefault(t => t.Id == id);
-        return tpl?.Name ?? id.ToString()!;
+        return tpl?.Code ?? id.ToString()!;
     }
 
     // ── Validation ────────────────────────────────────────────────────────────

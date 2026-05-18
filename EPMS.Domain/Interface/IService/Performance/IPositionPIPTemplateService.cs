@@ -12,6 +12,4 @@ public interface IPositionPIPTemplateService
     Task<SuccessResponse<long>> CreateAsync(CreatePositionPIPTemplateDto dto);
     Task<SuccessResponse> UpdateAsync(long id, UpdatePositionPIPTemplateDto dto);
     Task<SuccessResponse> DeleteAsync(long id);
-    Task<SuccessResponse> DeactivateAsync(long id);
-    Task<SuccessResponse> ReactivateAsync(long id);
 }

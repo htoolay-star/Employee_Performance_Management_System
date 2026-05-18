@@ -15,7 +15,6 @@
 @using MudBlazor
 
 @inject IFormQuestionApiClient FormQuestionApiClient
-@inject IQuestionRatingScaleApiClient QuestionRatingScaleApiClient
 @inject LookupStateService LookupState
 @inject ISnackbar Snackbar
 
@@ -51,14 +50,6 @@
                                  Variant="Variant.Outlined"
                                  SearchFunc="SearchRatingScales"
                                  ToStringFunc="GetRatingScaleName" />
-
-                <MudSwitch @bind-Value="_model.HasYesNo"
-                           Label="@UIConstants.FormQuestion.HasYesNoLabel"
-                           Color="Color.Primary" />
-
-                <MudSwitch @bind-Value="_model.HasComment"
-                           Label="@UIConstants.FormQuestion.HasCommentLabel"
-                           Color="Color.Primary" />
 
             </MudStack>
         </MudForm>
@@ -96,16 +87,13 @@
     private Dictionary<string, string> _serverErrors = new();
 
     private List<LookUpDto> _categories = new();
-    private List<QuestionRatingScaleDto> _ratingScales = new();
+    private List<LookUpDto> _ratingScales = new();
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
     protected override async Task OnInitializedAsync()
     {
         _categories = await LookupState.GetCategoriesAsync();
-
-        var scalesResponse = await QuestionRatingScaleApiClient.GetAllAsync();
-        if (scalesResponse.Success && scalesResponse.Data != null)
-            _ratingScales = scalesResponse.Data.Where(s => s.IsActive).ToList();
+        _ratingScales = await LookupState.GetRatingScalesAsync();
 
         if (IsEdit)
         {
@@ -195,13 +183,13 @@
     {
         var query = string.IsNullOrWhiteSpace(value)
             ? _ratingScales
-            : _ratingScales.Where(x => x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
+            : _ratingScales.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
         return Task.FromResult(query.Select(x => x.Id).ToList().AsEnumerable());
     }
 
     private string GetRatingScaleName(long id)
     {
-        return _ratingScales.FirstOrDefault(x => x.Id == id)?.Name ?? string.Empty;
+        return _ratingScales.FirstOrDefault(x => x.Id == id)?.Code ?? string.Empty;
     }
 
     // ── Validation ────────────────────────────────────────────────────────────
@@ -235,8 +223,6 @@
         return _model.QuestionText != Question!.QuestionText ||
                _model.Sequence != Question.Sequence ||
                _model.CategoryId != Question.CategoryId ||
-               _model.RatingScaleId != Question.RatingScaleId ||
-               _model.HasYesNo != Question.HasYesNo ||
-               _model.HasComment != Question.HasComment;
+               _model.RatingScaleId != Question.RatingScaleId;
     }
 }

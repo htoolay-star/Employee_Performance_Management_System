@@ -10,7 +10,6 @@ namespace EPMS.Shared.Validators.ValidationMessages
             public const string MinScoreInvalid = "Minimum score must be greater than or equal to 0.";
             public const string MaxScoreInvalid = "Maximum score must be greater than or equal to 0.";
             public const string MinScoreGreaterThanMax = "Minimum score cannot be greater than maximum score.";
-            public const string PerformanceLevelMaxLength = "Performance level cannot exceed 100 characters.";
             public const string PromotionEligibilityMaxLength = "Promotion eligibility cannot exceed 100 characters.";
             public const string DescriptionMaxLength = "Description cannot exceed 500 characters.";
         }

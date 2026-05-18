@@ -79,13 +79,6 @@ public static class PerformanceValidationExtensions
             .When(x => propertySelector(x).HasValue);
     }
 
-    public static IRuleBuilderOptions<T, string> ApplyPerformanceLevelNameRules<T>(this IRuleBuilder<T, string> ruleBuilder)
-    {
-        return ruleBuilder
-            .NotEmpty().WithMessage(PerformanceValidationMessages.KPIWeightPriority.LevelNameRequired)
-            .MaximumLength(50).WithMessage(PerformanceValidationMessages.KPIWeightPriority.LevelNameMaxLength);
-    }
-
     public static IRuleBuilderOptions<T, string> ApplyQuestionRatingScaleNameRules<T>(this IRuleBuilder<T, string> ruleBuilder)
     {
         return ruleBuilder

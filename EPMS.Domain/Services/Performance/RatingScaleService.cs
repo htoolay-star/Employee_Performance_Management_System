@@ -92,7 +92,13 @@ public class RatingScaleService : IRatingScaleService
         }
 
         // Update additional details
-        ratingScale.UpdateDetails(dto.PerformanceLevel, dto.PromotionEligibility, dto.Description);
+        ratingScale.UpdateDetails(dto.PromotionEligibility, dto.Description);
+
+        if (dto.IsActive.HasValue)
+        {
+            if (dto.IsActive.Value) ratingScale.Reactivate();
+            else ratingScale.Deactivate();
+        }
 
         await _uow.CompleteAsync();
         return SuccessResponse.Ok(RatingScaleMsg.Updated);
@@ -111,32 +117,7 @@ public class RatingScaleService : IRatingScaleService
         return SuccessResponse.Ok(RatingScaleMsg.Deleted);
     }
 
-    public async Task<SuccessResponse> DeactivateAsync(long id)
-    {
-        var ratingScale = await _uow.Perf.RatingScales.GetByIdAsync(id);
-
-        if (ratingScale == null)
-            return SuccessResponse.Fail(RatingScaleMsg.NotFound(id), ErrorType.NotFound);
-
-        ratingScale.Deactivate();
-        await _uow.CompleteAsync();
-
-        return SuccessResponse.Ok(RatingScaleMsg.Deactivated);
-    }
-
-    public async Task<SuccessResponse> ReactivateAsync(long id)
-    {
-        var ratingScale = await _uow.Perf.RatingScales.GetByIdAsync(id);
-
-        if (ratingScale == null)
-            return SuccessResponse.Fail(RatingScaleMsg.NotFound(id), ErrorType.NotFound);
-
-        ratingScale.Reactivate();
-        await _uow.CompleteAsync();
-
-        return SuccessResponse.Ok(RatingScaleMsg.Reactivated);
-    }
-        public async Task<SuccessResponse> RestoreAsync(long id)
+    public async Task<SuccessResponse> RestoreAsync(long id)
         {
             var entity = await _uow.Perf.RatingScales.GetByIdAsync(id);
             if (entity == null)

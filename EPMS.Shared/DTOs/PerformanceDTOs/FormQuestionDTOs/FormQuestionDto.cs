@@ -5,8 +5,6 @@ public record FormQuestionDto(
     long TemplateId,
     string QuestionText,
     int Sequence,
-    bool HasYesNo,
-    bool HasComment,
     long? CategoryId,
     string? CategoryName,
     long RatingScaleId,

@@ -260,14 +260,12 @@
             public const string LabelLabel = "Label";
             public const string MinScoreLabel = "Min Score";
             public const string MaxScoreLabel = "Max Score";
-            public const string PerformanceLevelLabel = "Performance Level";
             public const string PromotionEligibilityLabel = "Promotion Eligibility";
 
             public const string ColumnRating = "Rating";
             public const string ColumnLabel = "Label";
             public const string ColumnMinScore = "Min Score";
             public const string ColumnMaxScore = "Max Score";
-            public const string ColumnPerformanceLevel = "Perf. Level";
             public const string ColumnPromotionEligibility = "Promotion";
 
             public const string NoDataFound = "Try adjusting your search or add a new rating scale.";
