@@ -30,10 +30,10 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.Property(e => e.SelfScore)
                   .HasPrecision(5, 2);
 
-            entity.Property(e => e.PeerScore)
+            entity.Property(e => e.ThreeSixtyScore)
                   .HasPrecision(5, 2);
 
-            entity.Property(e => e.ManagerScore)
+            entity.Property(e => e.AppraisalScore)
                   .HasPrecision(5, 2);
 
             entity.Property(e => e.FormulaWeights)
@@ -48,6 +48,15 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.Property(e => e.LockedAt);
             entity.Property(e => e.FinalizedDate);
             entity.Property(e => e.UnLockedAt);
+
+            entity.Property(e => e.SelfLocked).HasDefaultValue(false);
+            entity.Property(e => e.SelfLockIsDeadline).HasDefaultValue(false);
+            entity.Property(e => e.ManagerLocked).HasDefaultValue(false);
+            entity.Property(e => e.ManagerLockIsDeadline).HasDefaultValue(false);
+            entity.Property(e => e.ThreeSixtyLocked).HasDefaultValue(false);
+            entity.Property(e => e.ThreeSixtyLockIsDeadline).HasDefaultValue(false);
+            entity.Property(e => e.AppraisalLocked).HasDefaultValue(false);
+            entity.Property(e => e.AppraisalLockIsDeadline).HasDefaultValue(false);
 
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.Property(e => e.UpdatedAt).IsRequired();

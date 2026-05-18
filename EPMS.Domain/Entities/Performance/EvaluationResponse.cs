@@ -37,6 +37,7 @@ namespace EPMS.Domain.Entities.Performance
         public bool? YesNoAnswer { get; private set; }
         public int? RatingValue { get; private set; }
         public string? QuestionComment { get; private set; }
+        public DateTimeOffset? SubmittedAt { get; private set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }
@@ -61,6 +62,16 @@ namespace EPMS.Domain.Entities.Performance
 
         public void SetYesNo(bool isYes) => YesNoAnswer = isYes;
         public void AddComment(string comment) => QuestionComment = comment?.Trim();
+
+        public void Submit(TimeProvider timeProvider)
+        {
+            SubmittedAt = timeProvider.GetUtcNow();
+        }
+
+        public void ClearSubmission()
+        {
+            SubmittedAt = null;
+        }
 
         public void UpdateDetails(bool? yesNoAnswer, int? ratingValue, string? comment)
         {

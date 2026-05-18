@@ -1,0 +1,190 @@
+@page "/performance/form-templates/{TemplateId:long}/preview"
+@using EPMS.Client.Constants
+@using EPMS.Client.Services.Performance
+@using EPMS.Shared.Constants
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.PerformanceDTOs.FormTemplateDTOs
+@using MudBlazor
+@using Refit
+
+@inject IFormTemplateApiClient FormTemplateApiClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Preview — @_model?.Name ?? "Form Template"</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">
+        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" OnClick="GoBack" Class="mr-2" />
+        @UIConstants.FormQuestion.PageTitle — @_model?.Name
+    </MudText>
+
+    @if (_loading)
+    {
+        <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+            <MudStack Spacing="3" Class="w-100">
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+            </MudStack>
+        </MudPaper>
+    }
+    else if (_error)
+    {
+        <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+            <MudAlert Severity="Severity.Error">@_errorMessage</MudAlert>
+        </MudPaper>
+    }
+    else if (_model != null)
+    {
+        <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+
+            @* Header info *@
+            <MudStack Row="true" Spacing="4" Class="mb-4">
+                <MudText Typo="Typo.body2">
+                    <strong>Form Type:</strong> @GetFormTypeDisplay(_model.FormType)
+                </MudText>
+                <MudText Typo="Typo.body2">
+                    <strong>Questions:</strong> @_model.Questions.Count
+                </MudText>
+                @if (_model.QuestionsPerEvaluation.HasValue)
+                {
+                    <MudText Typo="Typo.body2">
+                        <strong>Per Evaluation:</strong> @(_model.QuestionsPerEvaluation.Value < _model.Questions.Count ? $"{_model.QuestionsPerEvaluation} (random)" : "All")
+                    </MudText>
+                }
+            </MudStack>
+
+            @* Questions table *@
+            <MudTable Items="@_model.Questions" Hover="true" Elevation="0" Class="mb-4">
+                <ColGroup>
+                    <col style="width: 40px;" />
+                    <col />
+                    <col style="width: 200px;" />
+                    <col />
+                </ColGroup>
+                <HeaderContent>
+                    <MudTh>#</MudTh>
+                    <MudTh>@UIConstants.EvaluationForm.ColumnQuestion</MudTh>
+                    <MudTh>@UIConstants.EvaluationForm.ColumnRating</MudTh>
+                    <MudTh>@UIConstants.EvaluationForm.ColumnComment</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="#">@context.Sequence</MudTd>
+                    <MudTd DataLabel="Question">
+                        <MudText Typo="Typo.body1">@context.QuestionText</MudText>
+                        @if (!string.IsNullOrEmpty(context.CategoryName))
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Info">@context.CategoryName</MudChip>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Rating">
+                        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                            <MudSelect T="int?"
+                                       Value="@((int?)null)"
+                                       Variant="Variant.Outlined"
+                                       Disabled="true"
+                                       Margin="Margin.Dense"
+                                       Style="min-width: 80px;">
+                                <MudSelectItem T="int?" Value="@((int?)null)">
+                                    @(context.RatingMaxScore.HasValue ? $"1 — {context.RatingMaxScore}" : context.RatingScaleName ?? "N/A")
+                                </MudSelectItem>
+                            </MudSelect>
+                            @if (context.HasYesNo)
+                            {
+                                <MudSwitch T="bool" Value="false" Disabled="true" Label="Yes/No" />
+                            }
+                        </MudStack>
+                    </MudTd>
+                    <MudTd DataLabel="Comment">
+                        @if (context.HasComment)
+                        {
+                            <MudTextField T="string"
+                                          Value="@string.Empty"
+                                          Variant="Variant.Outlined"
+                                          Placeholder="@UIConstants.EvaluationForm.CommentPlaceholder"
+                                          Margin="Margin.Dense"
+                                          Disabled="true"
+                                          Immediate="true" />
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Default">—</MudText>
+                        }
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+
+            @* Footer note *@
+            <MudAlert Severity="Severity.Info" Class="mt-4">
+                This is a read-only preview. The actual form may randomly select a subset of questions when assigned to an evaluator.
+            </MudAlert>
+
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+
+    [Parameter] public long TemplateId { get; set; }
+
+    private FormTemplatePreviewDto? _model;
+    private bool _loading = true;
+    private bool _error;
+    private string _errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPreviewAsync();
+    }
+
+    private async Task LoadPreviewAsync()
+    {
+        _loading = true;
+        StateHasChanged();
+        try
+        {
+            var response = await FormTemplateApiClient.GetPreviewAsync(TemplateId);
+            if (response.Success && response.Data != null)
+            {
+                _model = response.Data;
+            }
+            else
+            {
+                _error = true;
+                _errorMessage = response.Message ?? UIConstants.Common.LoadFailed;
+            }
+        }
+        catch (ApiException ex)
+        {
+            _error = true;
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            _errorMessage = error?.Message ?? UIConstants.Common.ErrorOccurred;
+        }
+        catch (Exception ex)
+        {
+            _error = true;
+            _errorMessage = string.Format(UIConstants.Common.ErrorFormat, ex.Message);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void GoBack() => Navigation.NavigateTo($"/performance/form-templates/{TemplateId}/questions");
+
+    private static string GetFormTypeDisplay(string formType)
+    {
+        return formType?.Trim().ToUpperInvariant() switch
+        {
+            AppraisalConstants.FormTypes.Self => "Self Assessment",
+            AppraisalConstants.FormTypes.Manager => "Manager",
+            AppraisalConstants.FormTypes.Peer => "Peer",
+            AppraisalConstants.FormTypes.Subordinate => "Subordinate",
+            AppraisalConstants.FormTypes.Appraisal => "Appraisal",
+            _ => formType ?? ""
+        };
+    }
+}

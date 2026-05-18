@@ -7,7 +7,7 @@ namespace EPMS.Domain.Entities.Performance
     {
         private FormQuestion() { }
 
-        public FormQuestion(long templateId, string text, int sequence, bool hasYesNo = false, bool hasComment = false, long? categoryId = null, long? ratingScaleId = null)
+        public FormQuestion(long templateId, string text, int sequence, bool hasYesNo = false, bool hasComment = false, long? categoryId = null, long ratingScaleId = default)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(text);
 
@@ -26,7 +26,7 @@ namespace EPMS.Domain.Entities.Performance
 
         public long TemplateId { get; private set; }
         public long? CategoryId { get; private set; }
-        public long? QuestionRatingScaleId { get; private set; }
+        public long QuestionRatingScaleId { get; private set; }
 
         public string QuestionText { get; private set; } = string.Empty;
         public int Sequence { get; private set; }
@@ -50,7 +50,8 @@ namespace EPMS.Domain.Entities.Performance
 
             QuestionText = text.Trim();
             CategoryId = categoryId;
-            QuestionRatingScaleId = ratingScaleId;
+            if (ratingScaleId.HasValue)
+                QuestionRatingScaleId = ratingScaleId.Value;
         }
 
         public void ChangeSequence(int newSequence)

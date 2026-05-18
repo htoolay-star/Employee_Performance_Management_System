@@ -8,5 +8,5 @@ public record CreateFormQuestionDto
     public bool HasYesNo { get; init; }
     public bool HasComment { get; init; }
     public long? CategoryId { get; init; }
-    public long? RatingScaleId { get; init; }
+    public long RatingScaleId { get; init; }
 }

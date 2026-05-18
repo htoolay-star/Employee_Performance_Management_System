@@ -72,5 +72,12 @@ namespace EPMS.Api.Controllers.Performance
             var result = await _formTemplateService.ReactivateAsync(id);
             return HandleResult(result);
         }
+
+        [HttpGet("{id:long}/preview")]
+        public async Task<ActionResult<SuccessResponse<FormTemplatePreviewDto>>> GetPreview(long id)
+        {
+            var result = await _formTemplateService.GetPreviewAsync(id);
+            return HandleResult(result);
+        }
     }
 }

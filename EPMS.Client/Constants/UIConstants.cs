@@ -136,7 +136,7 @@
             public const string WindowEnd = "Window End";
             public const string SelfReview = "Self Review";
             public const string ManagerReview = "Manager Review";
-            public const string PeerReview = "Peer Review";
+            public const string ThreeSixtyReview = "360° Review";
 
             public const string SelectAppraisalType = "-- Select Type --";
             public const string SelectCalendarType = "-- Select Calendar --";
@@ -284,6 +284,8 @@
 
             public const string NameLabel = "Template Name";
             public const string FormTypeLabel = "Form Type";
+            public const string QuestionsPerEvaluationLabel = "Questions Per Evaluation";
+            public const string QuestionsPerEvaluationHelper = "Leave empty to use all questions.";
 
             public const string ColumnName = "Template Name";
             public const string ColumnFormType = "Form Type";
@@ -391,6 +393,25 @@
             public const string DeleteConfirmFormat = "Are you sure you want to delete appraisal for '{0}'?";
             public const string DeleteSuccess = "Appraisal deleted successfully.";
             public const string NoDataFound = "No appraisals found.";
+        }
+
+        public static class EvaluationForm
+        {
+            public const string PageTitle = "Evaluation Form";
+            public const string EmployeeLabel = "Employee";
+            public const string CycleLabel = "Cycle";
+            public const string RoleLabel = "Role";
+            public const string StatusLabel = "Status";
+            public const string ColumnQuestion = "Question";
+            public const string ColumnRating = "Rating";
+            public const string ColumnComment = "Comment";
+            public const string CommentPlaceholder = "Enter comment...";
+            public const string SubmitButton = "Submit Evaluation";
+            public const string SubmitSuccess = "Evaluation submitted successfully.";
+            public const string AlreadySubmitted = "You have already submitted your evaluation.";
+            public const string NoFormsAvailable = "No evaluation forms are available for you.";
+            public const string RatingRequired = "Please provide a rating for all questions before submitting.";
+            public const string YesNoRequired = "Please answer Yes/No for all applicable questions before submitting.";
         }
 
         public static class Employee

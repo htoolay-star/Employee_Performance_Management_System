@@ -468,6 +468,7 @@ public static class PIPObjectiveMsg
         public const string RetrievedByAppraisal = "Evaluation responses for appraisal retrieved successfully.";
         public const string RetrievedByTemplate = "Evaluation responses for template retrieved successfully.";
         public const string RetrievedByQuestion = "Evaluation responses for question retrieved successfully.";
+        public const string Submitted = "Evaluation responses submitted successfully.";
         public static string NotFound(long id) => $"Evaluation response with ID '{id}' was not found.";
         public static string NotFoundByAppraisal(long appraisalId) => $"Evaluation response for appraisal with ID '{appraisalId}' was not found.";
     }

@@ -133,40 +133,41 @@ public class AppraisalService : IAppraisalService
         if (appraisal == null)
             return SuccessResponse.Fail(AppraisalMsg.NotFound(id), ErrorType.NotFound);
 
-        var dto = new AppraisalFillDto
-        {
-            Id = appraisal.Id,
-            EmployeeId = appraisal.EmployeeId,
-            EmployeeName = appraisal.Employee?.StaffName,
-            CycleId = appraisal.CycleId,
-            CycleName = appraisal.Cycle?.Name,
-            ManagerReviewerId = appraisal.ManagerReviewerId,
-            ManagerReviewerName = appraisal.ManagerReviewer?.StaffName,
-            Status = appraisal.Status,
-            IsLocked = appraisal.IsLocked,
-            Details = appraisal.Details.Select(d => new AppraisalDetailFillDto
+            var dto = new AppraisalFillDto
             {
-                KPIId = d.KPIId,
-                KPIName = d.KPIName,
-                CategoryName = d.CategoryName,
-                Weightage = d.Weightage,
-                TargetValue = d.TargetValue,
-                ScoringDirection = d.ScoringDirection,
-                ActualValue = d.ActualValue,
-                Score = d.Score,
-                WeightedScore = d.WeightedScore,
-                Remarks = d.Remarks,
-            }).ToList()
-        };
+                Id = appraisal.Id,
+                EmployeeId = appraisal.EmployeeId,
+                EmployeeName = appraisal.Employee?.StaffName,
+                CycleId = appraisal.CycleId,
+                CycleName = appraisal.Cycle?.Name,
+                ManagerReviewerId = appraisal.ManagerReviewerId,
+                ManagerReviewerName = appraisal.ManagerReviewer?.StaffName,
+                AppraisalReviewerId = appraisal.Cycle?.AppraisalReviewerId,
+                Status = appraisal.Status,
+                IsLocked = appraisal.IsLocked,
+                Details = appraisal.Details.Select(d => new AppraisalDetailFillDto
+                {
+                    KPIId = d.KPIId,
+                    KPIName = d.KPIName,
+                    CategoryName = d.CategoryName,
+                    Weightage = d.Weightage,
+                    TargetValue = d.TargetValue,
+                    ScoringDirection = d.ScoringDirection,
+                    ActualValue = d.ActualValue,
+                    Score = d.Score,
+                    WeightedScore = d.WeightedScore,
+                    Remarks = d.Remarks,
+                }).ToList()
+            };
 
         return SuccessResponse<AppraisalFillDto>.Ok(dto, AppraisalMsg.Retrieved);
     }
 
     public async Task<SuccessResponse> SubmitAsync(AppraisalSubmissionDto dto)
     {
-        var positionId = await _currentEmployee.GetPositionIdAsync();
-        if (!positionId.HasValue)
-            return SuccessResponse.Fail("User position is required.", ErrorType.Forbidden);
+        var currentEmployeeId = await _currentEmployee.GetEmployeeIdAsync();
+        if (!currentEmployeeId.HasValue)
+            return SuccessResponse.Fail("User identity not found.", ErrorType.Forbidden);
 
         var appraisal = await _uow.Perf.Appraisals.GetAppraisalWithDetailsAsync(dto.Id);
         if (appraisal == null)
@@ -174,6 +175,21 @@ public class AppraisalService : IAppraisalService
 
         if (appraisal.IsLocked)
             return SuccessResponse.Fail(AppraisalMsg.AlreadyLocked, ErrorType.Conflict);
+
+        if (appraisal.Cycle?.AppraisalReviewerId == null || currentEmployeeId != appraisal.Cycle.AppraisalReviewerId)
+            return SuccessResponse.Fail("You are not authorized to submit this appraisal.", ErrorType.Forbidden);
+
+        if (appraisal.Cycle != null)
+        {
+            var today = DateOnly.FromDateTime(_timeProvider.GetUtcNow().DateTime);
+            var start = appraisal.Cycle.ManagerReviewStartDate ?? appraisal.Cycle.WindowStartDate;
+            var deadline = appraisal.Cycle.ManagerReviewDeadline ?? appraisal.Cycle.WindowEndDate;
+
+            if (today < start)
+                return SuccessResponse.Fail($"Manager review window opens on {start:dd/MM/yyyy}.", ErrorType.Validation);
+            if (today > deadline)
+                return SuccessResponse.Fail($"Manager review window closed on {deadline:dd/MM/yyyy}.", ErrorType.Validation);
+        }
 
         foreach (var detailDto in dto.Details)
         {
@@ -233,7 +249,254 @@ public class AppraisalService : IAppraisalService
         return SuccessResponse.Ok(AppraisalMsg.Unlocked);
     }
 
-    private async Task ResolveAndAddKPIDetailsAsync(Appraisal appraisal, long cycleId)
+    public async Task<SuccessResponse> UnlockRoleAsync(long id, string role)
+    {
+        var appraisal = await _uow.Perf.Appraisals.GetAppraisalWithDetailsAsync(id);
+        if (appraisal == null)
+            return SuccessResponse.Fail(AppraisalMsg.NotFound(id), ErrorType.NotFound);
+
+        switch (role)
+        {
+            case EvaluatorRoles.Self:
+                if (appraisal.SelfLockIsDeadline)
+                    return SuccessResponse.Fail("Cannot unlock deadline-locked self evaluation.", ErrorType.Conflict);
+                appraisal.UnlockSelf();
+                break;
+            case EvaluatorRoles.Manager:
+                if (appraisal.ManagerLockIsDeadline)
+                    return SuccessResponse.Fail("Cannot unlock deadline-locked manager evaluation.", ErrorType.Conflict);
+                appraisal.UnlockManager();
+                break;
+            case EvaluatorRoles.Peer:
+            case EvaluatorRoles.Subordinate:
+                if (appraisal.ThreeSixtyLockIsDeadline)
+                    return SuccessResponse.Fail("Cannot unlock deadline-locked 360 evaluation.", ErrorType.Conflict);
+                appraisal.UnlockThreeSixty();
+                break;
+            case EvaluatorRoles.Appraisal:
+                if (appraisal.AppraisalLockIsDeadline)
+                    return SuccessResponse.Fail("Cannot unlock deadline-locked appraisal evaluation.", ErrorType.Conflict);
+                appraisal.UnlockAppraisalLock();
+                break;
+            default:
+                return SuccessResponse.Fail($"Unknown role '{role}'.", ErrorType.Validation);
+        }
+
+        var responses = await _uow.Perf.EvaluationResponses
+            .FindAllAsync(r => r.AppraisalId == id && r.EvaluatorRole == role && !r.IsDeleted,
+                          trackChanges: true);
+        foreach (var r in responses)
+            r.ClearSubmission();
+
+        _uow.Perf.Appraisals.Update(appraisal);
+        await _uow.CompleteAsync();
+
+        return SuccessResponse.Ok($"{role} evaluation unlocked successfully.");
+    }
+
+    public async Task AutoGenerateForCycleAsync(long cycleId)
+    {
+        var cycle = await _uow.Perf.AppraisalCycles.GetByIdAsync(cycleId);
+        if (cycle == null || cycle.IsLocked) return;
+
+        await GenerateAppraisalsCoreAsync(cycleId, cycle);
+    }
+
+    private async Task<(int Created, int Skipped)> GenerateAppraisalsCoreAsync(long cycleId, AppraisalCycle cycle)
+    {
+        var allEmployeeKPIs = await _uow.Perf.EmployeeKPIs
+            .FindAllAsync(k => k.CycleId == cycleId && !k.IsDeleted);
+
+        var employeeGroups = allEmployeeKPIs.GroupBy(k => k.EmployeeId);
+        var created = 0;
+        var skipped = 0;
+
+        foreach (var group in employeeGroups)
+        {
+            var employeeId = group.Key;
+
+            var exists = await _uow.Perf.Appraisals.ExistsByEmployeeAndCycleAsync(employeeId, cycleId);
+            if (exists) { skipped++; continue; }
+
+            var employment = await _uow.Info.EmployeeEmployments.GetByEmployeeIdAsync(employeeId);
+            if (employment?.EmploymentStatus != EmploymentStatuses.Permanent
+                || !employment.DateOfAppointment.HasValue
+                || employment.DateOfAppointment.Value > cycle.EvaluationStartDate
+                || (employment.DateOfTermination.HasValue && employment.DateOfTermination.Value <= cycle.EvaluationEndDate))
+            {
+                skipped++; continue;
+            }
+
+            if (employment?.DirectManagerId == null) { skipped++; continue; }
+
+            var managerReviewerId = employment.DirectManagerId.Value;
+            var appraisal = new Appraisal(employeeId, cycleId, managerReviewerId);
+
+            await ResolveAndAddKPIDetailsAsync(appraisal, cycleId);
+
+            var positionTemplates = await _uow.Perf.PositionFormTemplates
+                .GetByPositionIdWithQuestionsAsync(employment.PositionId);
+
+            foreach (var pt in positionTemplates)
+            {
+                var template = pt.FormTemplate;
+                if (template?.Questions == null || !template.IsActive) continue;
+
+                var entries = await ResolveEvaluatorEntriesAsync(employment, template.FormType, employeeId, managerReviewerId, cycle);
+
+                foreach (var (evaluatorId, role) in entries)
+                {
+                    var pool = template.Questions.ToList();
+                    var take = template.QuestionsPerEvaluation.GetValueOrDefault(pool.Count);
+                    var selected = pool.OrderBy(_ => Guid.NewGuid()).Take(take).ToList();
+
+                    foreach (var question in selected)
+                    {
+                        var response = new EvaluationResponse(
+                            appraisal.Id, template.Id, question.Id,
+                            evaluatorId, role, isAnonymous: role is EvaluatorRoles.Peer or EvaluatorRoles.Subordinate);
+                        _uow.Perf.EvaluationResponses.Add(response);
+                    }
+                }
+            }
+
+            _uow.Perf.Appraisals.Add(appraisal);
+            await _uow.CompleteAsync();
+            created++;
+        }
+
+        return (created, skipped);
+    }
+
+    public async Task<SuccessResponse> FinalizeAsync(long id)
+    {
+        var appraisal = await _uow.Perf.Appraisals.GetAppraisalWithDetailsAsync(id);
+        if (appraisal == null)
+            return SuccessResponse.Fail(AppraisalMsg.NotFound(id), ErrorType.NotFound);
+
+        if (appraisal.IsLocked)
+            return SuccessResponse.Fail(AppraisalMsg.AlreadyLocked, ErrorType.Conflict);
+
+        var kpiScore = appraisal.Details
+            .Where(d => d.KPIId.HasValue && d.Score > 0)
+            .Select(d => d.WeightedScore)
+            .DefaultIfEmpty(0)
+            .Average();
+
+        var responses = await _uow.Perf.EvaluationResponses
+            .FindAllAsync(r => r.AppraisalId == id && !r.IsDeleted,
+                includes: r => r.Question);
+
+        // All questions in the same form share the same QuestionRatingScale
+        var anyResponse = responses.FirstOrDefault(r => r.RatingValue.HasValue);
+        var maxScale = 5m;
+        if (anyResponse != null)
+        {
+            var question = await _uow.Perf.FormQuestions.FindAsync(
+                q => q.Id == anyResponse.QuestionId,
+                includes: q => q.RatingScale);
+            maxScale = Math.Max(question?.RatingScale?.MaxScore ?? 5m, 1m);
+        }
+
+        var selfScore = responses
+            .Where(r => r.EvaluatorRole == EvaluatorRoles.Self && r.RatingValue.HasValue)
+            .Select(r => (decimal)r.RatingValue!.Value)
+            .DefaultIfEmpty(0)
+            .Average() * 100m / maxScale;
+
+        // 360 includes Manager + Peer + Subordinate
+        var threeSixtyScore = responses
+            .Where(r => r.EvaluatorRole is EvaluatorRoles.Manager or EvaluatorRoles.Peer or EvaluatorRoles.Subordinate && r.RatingValue.HasValue)
+            .Select(r => (decimal)r.RatingValue!.Value)
+            .DefaultIfEmpty(0)
+            .Average() * 100m / maxScale;
+
+        var appraisalScore = responses
+            .Where(r => r.EvaluatorRole == EvaluatorRoles.Appraisal && r.RatingValue.HasValue)
+            .Select(r => (decimal)r.RatingValue!.Value)
+            .DefaultIfEmpty(0)
+            .Average() * 100m / maxScale;
+
+        if (appraisal.Cycle == null)
+            return SuccessResponse.Fail("Cycle data not loaded.", ErrorType.NotFound);
+
+        var ratingScales = await _uow.Perf.RatingScales
+            .FindAllAsync(s => s.IsActive && !s.IsDeleted);
+
+        var totalBeforeMatch = (kpiScore * appraisal.Cycle.KpiWeight / 100m)
+                             + (selfScore * appraisal.Cycle.SelfWeight / 100m)
+                             + (threeSixtyScore * appraisal.Cycle.ThreeSixtyWeight / 100m)
+                             + (appraisalScore * appraisal.Cycle.AppraisalWeight / 100m);
+
+        var matchingScale = ratingScales.FirstOrDefault(s => s.IsMatch(totalBeforeMatch));
+        if (matchingScale == null)
+            return SuccessResponse.Fail("No matching rating scale found.", ErrorType.Validation);
+
+        appraisal.FinalizeAppraisal(
+            kpiScore, selfScore, threeSixtyScore, appraisalScore,
+            appraisal.Cycle.KpiWeight, appraisal.Cycle.SelfWeight,
+            appraisal.Cycle.ThreeSixtyWeight,
+            appraisal.Cycle.AppraisalWeight,
+            matchingScale, _timeProvider);
+
+        await _uow.CompleteAsync();
+        return SuccessResponse.Ok(AppraisalMsg.Locked);
+    }
+
+    private async Task<List<(long EvaluatorId, string Role)>> ResolveEvaluatorEntriesAsync(
+        Entities.EmployeeInfo.EmployeeEmployment employment, string formType,
+        long employeeId, long managerReviewerId, AppraisalCycle? cycle)
+    {
+        var entries = new List<(long, string)>();
+
+        switch (formType)
+        {
+            case AppraisalConstants.FormTypes.Self:
+                entries.Add((employeeId, EvaluatorRoles.Self));
+                break;
+
+            case AppraisalConstants.FormTypes.Manager:
+                entries.Add((managerReviewerId, EvaluatorRoles.Manager));
+                break;
+
+            case AppraisalConstants.FormTypes.Peer:
+                var peers = await SelectRandomPeersAsync(employment.PositionId, employeeId, 3, 5);
+                entries.AddRange(peers.Select(id => (id, EvaluatorRoles.Peer)));
+                break;
+
+            case AppraisalConstants.FormTypes.Subordinate:
+                var subordinates = await SelectRandomSubordinatesAsync(employeeId, 5);
+                entries.AddRange(subordinates.Select(id => (id, EvaluatorRoles.Subordinate)));
+                break;
+
+            case AppraisalConstants.FormTypes.Appraisal:
+                if (cycle?.AppraisalReviewerId.HasValue == true)
+                    entries.Add((cycle.AppraisalReviewerId.Value, EvaluatorRoles.Appraisal));
+                break;
+        }
+
+        return entries;
+    }
+
+    private async Task<List<long>> SelectRandomPeersAsync(long positionId, long excludeEmployeeId, int min, int max)
+    {
+        var peers = await _uow.Info.EmployeeEmployments
+            .FindAllAsync(e => e.PositionId == positionId && e.EmployeeId != excludeEmployeeId && !e.IsDeleted);
+        var peerList = peers.Select(e => e.EmployeeId).Distinct().ToList();
+        var count = Math.Clamp(peerList.Count, 0, max);
+        return peerList.OrderBy(_ => Guid.NewGuid()).Take(Math.Max(count, min)).ToList();
+    }
+
+    private async Task<List<long>> SelectRandomSubordinatesAsync(long employeeId, int max)
+    {
+        var subordinates = await _uow.Info.EmployeeEmployments
+            .FindAllAsync(e => e.DirectManagerId == employeeId && !e.IsDeleted);
+        var subList = subordinates.Select(e => e.EmployeeId).Distinct().ToList();
+        var count = Math.Min(subList.Count, max);
+        return subList.OrderBy(_ => Guid.NewGuid()).Take(count).ToList();
+    }
+
+    public async Task ResolveAndAddKPIDetailsAsync(Appraisal appraisal, long cycleId)
     {
         var employment = await _uow.Info.EmployeeEmployments.GetByEmployeeIdAsync(appraisal.EmployeeId);
         if (employment == null) return;

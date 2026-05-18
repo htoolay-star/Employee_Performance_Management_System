@@ -32,10 +32,18 @@
                            Label="@UIConstants.FormTemplate.FormTypeLabel"
                            Variant="Variant.Outlined"
                            For="@(() => _model.FormType)">
-                    <MudSelectItem T="string" Value="@AppraisalConstants.FormTypes.SelfAssessment">Self-Assessment Form</MudSelectItem>
-                    <MudSelectItem T="string" Value="@AppraisalConstants.FormTypes.ThreeSixtyFeedback">360 Degree Feedback Form</MudSelectItem>
-                    <MudSelectItem T="string" Value="@AppraisalConstants.FormTypes.Appraisal">Appraisal Form</MudSelectItem>
+                    <MudSelectItem T="string" Value="@AppraisalConstants.FormTypes.Self">Self Assessment</MudSelectItem>
+                    <MudSelectItem T="string" Value="@AppraisalConstants.FormTypes.Manager">Manager Review</MudSelectItem>
+                    <MudSelectItem T="string" Value="@AppraisalConstants.FormTypes.Peer">Peer Review</MudSelectItem>
+                    <MudSelectItem T="string" Value="@AppraisalConstants.FormTypes.Subordinate">Subordinate Review</MudSelectItem>
+                    <MudSelectItem T="string" Value="@AppraisalConstants.FormTypes.Appraisal">Appraisal Review</MudSelectItem>
                 </MudSelect>
+
+                <MudNumericField @bind-Value="_model.QuestionsPerEvaluation"
+                                 Label="@UIConstants.FormTemplate.QuestionsPerEvaluationLabel"
+                                 HelperText="@UIConstants.FormTemplate.QuestionsPerEvaluationHelper"
+                                 Variant="Variant.Outlined"
+                                 For="@(() => _model.QuestionsPerEvaluation)" />
 
                 @if (IsEdit)
                 {
@@ -184,6 +192,7 @@
 
         return _model.Name != FormTemplate!.Name ||
                _model.FormType != FormTemplate.FormType ||
-               _model.IsActive != FormTemplate.IsActive;
+               _model.IsActive != FormTemplate.IsActive ||
+               _model.QuestionsPerEvaluation != FormTemplate.QuestionsPerEvaluation;
     }
 }

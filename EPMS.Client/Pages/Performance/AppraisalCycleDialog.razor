@@ -168,18 +168,18 @@
                                    Style="text-align: center;" />
                 </MudStack>
 
-                <MudText Typo="Typo.subtitle1" Class="mt-2">@UIConstants.AppraisalCycle.PeerReview (Optional)</MudText>
+                <MudText Typo="Typo.subtitle1" Class="mt-2">@UIConstants.AppraisalCycle.ThreeSixtyReview (Optional)</MudText>
 
                 <MudStack Row="true" Spacing="2">
-                    <MudDatePicker @bind-Date="_model.PeerReviewStartDateProxy"
+                    <MudDatePicker @bind-Date="_model.ThreeSixtyReviewStartDateProxy"
                                    Label="Start"
-                                   For="@(() => _model.PeerReviewStartDateProxy)"
+                                   For="@(() => _model.ThreeSixtyReviewStartDateProxy)"
                                    Variant="Variant.Outlined"
                                    Class="flex-1"
                                    Style="text-align: center;" />
-                    <MudDatePicker @bind-Date="_model.PeerReviewDeadlineProxy"
+                    <MudDatePicker @bind-Date="_model.ThreeSixtyReviewDeadlineProxy"
                                    Label="Deadline"
-                                   For="@(() => _model.PeerReviewDeadlineProxy)"
+                                   For="@(() => _model.ThreeSixtyReviewDeadlineProxy)"
                                    Variant="Variant.Outlined"
                                    Class="flex-1"
                                    Style="text-align: center;" />
@@ -200,15 +200,15 @@
                                      Variant="Variant.Outlined"
                                      Class="flex-1"
                                      Min="0" Max="100" />
-                    <MudNumericField @bind-Value="_model.PeerWeight"
-                                     Label="Peer %"
-                                     For="@(() => _model.PeerWeight)"
+                    <MudNumericField @bind-Value="_model.ThreeSixtyWeight"
+                                     Label="360 %"
+                                     For="@(() => _model.ThreeSixtyWeight)"
                                      Variant="Variant.Outlined"
                                      Class="flex-1"
                                      Min="0" Max="100" />
-                    <MudNumericField @bind-Value="_model.ManagerWeight"
-                                     Label="Manager %"
-                                     For="@(() => _model.ManagerWeight)"
+                    <MudNumericField @bind-Value="_model.AppraisalWeight"
+                                     Label="Appraisal %"
+                                     For="@(() => _model.AppraisalWeight)"
                                      Variant="Variant.Outlined"
                                      Class="flex-1"
                                      Min="0" Max="100" />
@@ -373,12 +373,13 @@
                _model.SelfReviewDeadline != Cycle.SelfReviewDeadline ||
                _model.ManagerReviewStartDate != Cycle.ManagerReviewStartDate ||
                _model.ManagerReviewDeadline != Cycle.ManagerReviewDeadline ||
-               _model.PeerReviewStartDate != Cycle.PeerReviewStartDate ||
-               _model.PeerReviewDeadline != Cycle.PeerReviewDeadline ||
+               _model.ThreeSixtyReviewStartDate != Cycle.ThreeSixtyReviewStartDate ||
+               _model.ThreeSixtyReviewDeadline != Cycle.ThreeSixtyReviewDeadline ||
                _model.KpiWeight != Cycle.KpiWeight ||
                _model.SelfWeight != Cycle.SelfWeight ||
-               _model.PeerWeight != Cycle.PeerWeight ||
-               _model.ManagerWeight != Cycle.ManagerWeight;
+               _model.ThreeSixtyWeight != Cycle.ThreeSixtyWeight ||
+               _model.AppraisalWeight != Cycle.AppraisalWeight ||
+               _model.AppraisalReviewerId != Cycle.AppraisalReviewerId;
     }
 
     private void AutoFillEvaluationDates()

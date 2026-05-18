@@ -22,6 +22,11 @@ namespace EPMS.Shared.Validators.PerformanceDTOs.FormTemplateDTOs
                 .MaximumLength(50).WithMessage(PerformanceValidationMessages.FormTemplate.FormTypeMaxLength)
                 .Must(x => AppraisalConstants.FormTypes.All.Contains(x))
                 .WithMessage(PerformanceValidationMessages.FormTemplate.FormTypeInvalid);
+
+            RuleFor(x => x.QuestionsPerEvaluation)
+                .GreaterThan(0)
+                .When(x => x.QuestionsPerEvaluation.HasValue)
+                .WithMessage(PerformanceValidationMessages.FormTemplate.QuestionsPerEvaluationPositive);
         }
     }
 }

@@ -23,7 +23,13 @@
 
     <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
 
-        <MudStack Row="true" Justify="Justify.FlexEnd" AlignItems="AlignItems.Center" Class="mb-4">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Info"
+                       StartIcon="@Icons.Material.Filled.Visibility"
+                       OnClick="OpenPreview">
+                Preview
+            </MudButton>
             <MudButton Variant="Variant.Filled"
                        Color="Color.Primary"
                        StartIcon="@Icons.Material.Filled.Add"
@@ -170,6 +176,8 @@
     }
 
     private void GoBack() => Navigation.NavigateTo("/performance/form-templates");
+
+    private void OpenPreview() => Navigation.NavigateTo($"/performance/form-templates/{TemplateId}/preview");
 
     private async Task OpenCreateDialog()
     {

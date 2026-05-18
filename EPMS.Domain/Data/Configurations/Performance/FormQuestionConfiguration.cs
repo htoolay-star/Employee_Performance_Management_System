@@ -21,6 +21,7 @@ namespace EPMS.Domain.Data.Configurations.Performance
 
             builder.Property(e => e.HasYesNo).HasDefaultValue(false);
             builder.Property(e => e.HasComment).HasDefaultValue(false);
+            builder.Property(e => e.QuestionRatingScaleId).IsRequired();
 
             builder.HasOne(e => e.Category)
                    .WithMany()

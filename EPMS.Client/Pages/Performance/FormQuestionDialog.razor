@@ -45,13 +45,12 @@
                                  ToStringFunc="GetCategoryName"
                                  Clearable="true" />
 
-                <MudAutocomplete T="long?"
+                <MudAutocomplete T="long"
                                  @bind-Value="_model.RatingScaleId"
                                  Label="@UIConstants.FormQuestion.RatingScaleLabel"
                                  Variant="Variant.Outlined"
                                  SearchFunc="SearchRatingScales"
-                                 ToStringFunc="GetRatingScaleName"
-                                 Clearable="true" />
+                                 ToStringFunc="GetRatingScaleName" />
 
                 <MudSwitch @bind-Value="_model.HasYesNo"
                            Label="@UIConstants.FormQuestion.HasYesNoLabel"
@@ -192,15 +191,15 @@
         return _categories.FirstOrDefault(x => x.Id == id)?.Code ?? string.Empty;
     }
 
-    private Task<IEnumerable<long?>> SearchRatingScales(string value, CancellationToken _)
+    private Task<IEnumerable<long>> SearchRatingScales(string value, CancellationToken _)
     {
         var query = string.IsNullOrWhiteSpace(value)
             ? _ratingScales
             : _ratingScales.Where(x => x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
-        return Task.FromResult(query.Select(x => (long?)x.Id).ToList().AsEnumerable());
+        return Task.FromResult(query.Select(x => x.Id).ToList().AsEnumerable());
     }
 
-    private string GetRatingScaleName(long? id)
+    private string GetRatingScaleName(long id)
     {
         return _ratingScales.FirstOrDefault(x => x.Id == id)?.Name ?? string.Empty;
     }

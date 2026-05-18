@@ -78,6 +78,12 @@
                 <TemplateColumn Title="@UIConstants.Common.Actions" Sortable="false">
                     <CellTemplate>
                         <MudStack Row="true" Spacing="0">
+                            <MudTooltip Text="Evaluate" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.RateReview"
+                                               Color="Color.Secondary"
+                                               Size="Size.Small"
+                                               OnClick="@(() => GoToEvaluate(context.Item.Id))" />
+                            </MudTooltip>
                             <MudTooltip Text="@UIConstants.AppraisalList.FillButton" Placement="Placement.Top">
                                 <MudIconButton Icon="@Icons.Material.Filled.EditNote"
                                                Color="Color.Primary"
@@ -184,6 +190,9 @@
 
     private void GoToFill(long id) =>
         Navigation.NavigateTo($"/performance/appraisals/{id}/fill");
+
+    private void GoToEvaluate(long id) =>
+        Navigation.NavigateTo($"/performance/appraisals/{id}/evaluate");
 
     private async Task OpenDeleteDialog(AppraisalDto item)
     {

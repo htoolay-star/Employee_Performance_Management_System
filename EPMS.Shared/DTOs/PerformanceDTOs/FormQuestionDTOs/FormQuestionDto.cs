@@ -9,5 +9,5 @@ public record FormQuestionDto(
     bool HasComment,
     long? CategoryId,
     string? CategoryName,
-    long? RatingScaleId,
+    long RatingScaleId,
     string? RatingScaleName);

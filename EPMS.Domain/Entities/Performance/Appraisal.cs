@@ -42,6 +42,15 @@ namespace EPMS.Domain.Entities.Performance
         public DateTimeOffset? LockedAt { get; private set; }
         public DateTimeOffset? FinalizedDate { get; private set; }
 
+        public bool SelfLocked { get; private set; }
+        public bool SelfLockIsDeadline { get; private set; }
+        public bool ManagerLocked { get; private set; }
+        public bool ManagerLockIsDeadline { get; private set; }
+        public bool ThreeSixtyLocked { get; private set; }
+        public bool ThreeSixtyLockIsDeadline { get; private set; }
+        public bool AppraisalLocked { get; private set; }
+        public bool AppraisalLockIsDeadline { get; private set; }
+
         public long? UnLockedById { get; private set; }
         public DateTimeOffset? UnLockedAt { get; private set; }
         public string? UnLockReason { get; private set; }
@@ -66,8 +75,8 @@ namespace EPMS.Domain.Entities.Performance
         public decimal? TotalScore { get; private set; }
         public decimal? KpiScore { get; private set; }
         public decimal? SelfScore { get; private set; }
-        public decimal? PeerScore { get; private set; }
-        public decimal? ManagerScore { get; private set; }
+        public decimal? ThreeSixtyScore { get; private set; }
+        public decimal? AppraisalScore { get; private set; }
         public string? FormulaWeights { get; private set; }
 
         public void AddDetail(AppraisalDetail detail)
@@ -90,12 +99,12 @@ namespace EPMS.Domain.Entities.Performance
         public void FinalizeAppraisal(
             decimal kpiScore,
             decimal selfScore,
-            decimal peerScore,
-            decimal managerScore,
+            decimal threeSixtyScore,
+            decimal appraisalScore,
             decimal kpiWeight,
             decimal selfWeight,
-            decimal peerWeight,
-            decimal managerWeight,
+            decimal threeSixtyWeight,
+            decimal appraisalWeight,
             RatingScale matchingScale,
             TimeProvider timeProvider)
         {
@@ -103,15 +112,15 @@ namespace EPMS.Domain.Entities.Performance
 
             KpiScore = kpiScore;
             SelfScore = selfScore;
-            PeerScore = peerScore;
-            ManagerScore = managerScore;
+            ThreeSixtyScore = threeSixtyScore;
+            AppraisalScore = appraisalScore;
 
             TotalScore = (kpiScore * kpiWeight / 100m)
                        + (selfScore * selfWeight / 100m)
-                       + (peerScore * peerWeight / 100m)
-                       + (managerScore * managerWeight / 100m);
+                       + (threeSixtyScore * threeSixtyWeight / 100m)
+                       + (appraisalScore * appraisalWeight / 100m);
 
-            FormulaWeights = $"{{\"kpi\":{kpiWeight},\"self\":{selfWeight},\"peer\":{peerWeight},\"manager\":{managerWeight}}}";
+            FormulaWeights = $"{{\"kpi\":{kpiWeight},\"self\":{selfWeight},\"threeSixty\":{threeSixtyWeight},\"appraisal\":{appraisalWeight}}}";
 
             FinalRatingId = matchingScale.Id;
             RatingLabel = matchingScale.Label;
@@ -119,6 +128,54 @@ namespace EPMS.Domain.Entities.Performance
             IsLocked = true;
             LockedAt = timeProvider.GetUtcNow();
             Status = AppraisalStatuses.Finalized;
+        }
+
+        public void LockSelf(bool isDeadline)
+        {
+            SelfLocked = true;
+            SelfLockIsDeadline = isDeadline;
+        }
+
+        public void LockManager(bool isDeadline)
+        {
+            ManagerLocked = true;
+            ManagerLockIsDeadline = isDeadline;
+        }
+
+        public void LockThreeSixty(bool isDeadline)
+        {
+            ThreeSixtyLocked = true;
+            ThreeSixtyLockIsDeadline = isDeadline;
+        }
+
+        public void UnlockSelf()
+        {
+            if (!SelfLockIsDeadline)
+                SelfLocked = false;
+        }
+
+        public void UnlockManager()
+        {
+            if (!ManagerLockIsDeadline)
+                ManagerLocked = false;
+        }
+
+        public void UnlockThreeSixty()
+        {
+            if (!ThreeSixtyLockIsDeadline)
+                ThreeSixtyLocked = false;
+        }
+
+        public void LockAppraisal(bool isDeadline)
+        {
+            AppraisalLocked = true;
+            AppraisalLockIsDeadline = isDeadline;
+        }
+
+        public void UnlockAppraisalLock()
+        {
+            if (!AppraisalLockIsDeadline)
+                AppraisalLocked = false;
         }
 
         public void UnlockAppraisal(long adminId, string reason, TimeProvider timeProvider)

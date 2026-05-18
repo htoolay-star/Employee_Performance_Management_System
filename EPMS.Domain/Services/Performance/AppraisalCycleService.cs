@@ -108,8 +108,9 @@ public class AppraisalCycleService : IAppraisalCycleService
             dto.WindowEndDate,
             dto.KpiWeight,
             dto.SelfWeight,
-            dto.PeerWeight,
-            dto.ManagerWeight
+            dto.ThreeSixtyWeight,
+            dto.AppraisalWeight,
+            dto.AppraisalReviewerId
         );
 
         try
@@ -134,8 +135,8 @@ public class AppraisalCycleService : IAppraisalCycleService
 
         try
         {
-            if (dto.PeerReviewStartDate.HasValue && dto.PeerReviewDeadline.HasValue)
-                cycle.ConfigurePeerReviewWindow(dto.PeerReviewStartDate.Value, dto.PeerReviewDeadline.Value);
+            if (dto.ThreeSixtyReviewStartDate.HasValue && dto.ThreeSixtyReviewDeadline.HasValue)
+                cycle.ConfigureThreeSixtyReviewWindow(dto.ThreeSixtyReviewStartDate.Value, dto.ThreeSixtyReviewDeadline.Value);
         }
         catch (ArgumentException ex)
         {
@@ -262,7 +263,8 @@ public class AppraisalCycleService : IAppraisalCycleService
         cycle.Update(dto.Name, dto.AppraisalType, dto.CalendarType, dto.YearLabel,
                      dto.EvaluationStartDate, dto.EvaluationEndDate,
                      dto.WindowStartDate, dto.WindowEndDate,
-                     dto.KpiWeight, dto.SelfWeight, dto.PeerWeight, dto.ManagerWeight);
+                     dto.KpiWeight, dto.SelfWeight, dto.ThreeSixtyWeight,
+                     dto.AppraisalWeight, dto.AppraisalReviewerId);
 
         try
         {
@@ -286,8 +288,8 @@ public class AppraisalCycleService : IAppraisalCycleService
 
         try
         {
-            if (dto.PeerReviewStartDate.HasValue && dto.PeerReviewDeadline.HasValue)
-                cycle.ConfigurePeerReviewWindow(dto.PeerReviewStartDate.Value, dto.PeerReviewDeadline.Value);
+            if (dto.ThreeSixtyReviewStartDate.HasValue && dto.ThreeSixtyReviewDeadline.HasValue)
+                cycle.ConfigureThreeSixtyReviewWindow(dto.ThreeSixtyReviewStartDate.Value, dto.ThreeSixtyReviewDeadline.Value);
         }
         catch (ArgumentException ex)
         {

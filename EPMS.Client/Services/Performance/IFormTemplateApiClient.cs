@@ -29,4 +29,7 @@ public interface IFormTemplateApiClient
 
     [Post("/api/performance/form-templates/{id}/reactivate")]
     Task<SuccessResponse> ReactivateAsync(long id);
+
+    [Get("/api/performance/form-templates/{id}/preview")]
+    Task<SuccessResponse<FormTemplatePreviewDto>> GetPreviewAsync(long id);
 }

@@ -12,7 +12,7 @@ namespace EPMS.Client.Models.Performance
 
         public long? CategoryId { get; set; }
 
-        public long? RatingScaleId { get; set; }
+        public long RatingScaleId { get; set; }
 
         public bool HasYesNo { get; set; }
 

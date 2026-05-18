@@ -86,5 +86,19 @@ public class AppraisalController : ApiControllerBase
         var result = await _service.UnlockAsync(id, request.AdminId, request.Reason);
         return HandleResult(result);
     }
+
+    [HttpPost("{id:long}/finalize")]
+    public async Task<ActionResult<SuccessResponse>> Finalize(long id)
+    {
+        var result = await _service.FinalizeAsync(id);
+        return HandleResult(result);
+    }
+
+    [HttpPost("{id:long}/unlock-role")]
+    public async Task<ActionResult<SuccessResponse>> UnlockRole(long id, [FromBody] UnlockRoleRequestDto dto)
+    {
+        var result = await _service.UnlockRoleAsync(id, dto.Role);
+        return HandleResult(result);
+    }
 }
 

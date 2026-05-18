@@ -72,4 +72,21 @@ public class EvaluationResponsesController : ApiControllerBase
         var result = await _service.GetByQuestionIdAsync(questionId);
         return HandleResult(result);
     }
+
+    [HttpGet("appraisal/{appraisalId:long}/my-responses")]
+    public async Task<ActionResult<SuccessResponse>> GetFormFill(
+        long appraisalId,
+        [FromQuery] long evaluatorId,
+        [FromQuery] string role)
+    {
+        var result = await _service.GetFormFillAsync(appraisalId, evaluatorId, role);
+        return HandleResult(result);
+    }
+
+    [HttpPost("submit-role")]
+    public async Task<ActionResult<SuccessResponse>> SubmitRoleResponses([FromBody] SubmitRoleRequestDto dto)
+    {
+        var result = await _service.SubmitRoleResponsesAsync(dto.AppraisalId, dto.EvaluatorId, dto.Role);
+        return HandleResult(result);
+    }
 }

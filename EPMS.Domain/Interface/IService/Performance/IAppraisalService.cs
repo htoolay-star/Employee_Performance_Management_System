@@ -15,4 +15,8 @@ public interface IAppraisalService
     Task<SuccessResponse> SubmitAsync(AppraisalSubmissionDto dto);
     Task<SuccessResponse> LockAsync(long id, long adminId, string reason);
     Task<SuccessResponse> UnlockAsync(long id, long adminId, string reason);
+
+    Task AutoGenerateForCycleAsync(long cycleId);
+    Task<SuccessResponse> FinalizeAsync(long id);
+    Task<SuccessResponse> UnlockRoleAsync(long id, string role);
 }

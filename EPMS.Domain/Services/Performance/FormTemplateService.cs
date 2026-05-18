@@ -59,7 +59,7 @@ namespace EPMS.Domain.Services.Performance
                 return SuccessResponse<long>.Fail(string.Format(FormTemplateMsg.DuplicateName, dto.Name), ErrorType.Conflict);
             }
 
-            var template = new FormTemplate(dto.Name, dto.FormType);
+            var template = new FormTemplate(dto.Name, dto.FormType, dto.QuestionsPerEvaluation);
 
             _uow.Perf.FormTemplates.Add(template);
             await _uow.CompleteAsync();
@@ -79,7 +79,16 @@ namespace EPMS.Domain.Services.Performance
                 return SuccessResponse.Fail(string.Format(FormTemplateMsg.DuplicateName, dto.Name), ErrorType.Conflict);
             }
 
-            template.Update(dto.Name, dto.FormType);
+            if (dto.QuestionsPerEvaluation.HasValue)
+            {
+                var questionCount = template.Questions?.Count ?? 0;
+                if (questionCount > 0 && dto.QuestionsPerEvaluation > questionCount)
+                    return SuccessResponse.Fail(
+                        $"Questions per evaluation ({dto.QuestionsPerEvaluation}) cannot exceed total questions ({questionCount}).",
+                        ErrorType.Validation);
+            }
+
+            template.Update(dto.Name, dto.FormType, dto.QuestionsPerEvaluation);
 
             _uow.Perf.FormTemplates.Update(template);
             await _uow.CompleteAsync();
@@ -128,6 +137,40 @@ namespace EPMS.Domain.Services.Performance
             await _uow.CompleteAsync();
 
             return SuccessResponse.Ok(FormTemplateMsg.Reactivated);
+        }
+
+        public async Task<SuccessResponse<FormTemplatePreviewDto>> GetPreviewAsync(long templateId)
+        {
+            var template = await _uow.Perf.FormTemplates.GetByIdAsync(templateId);
+            if (template == null)
+                return SuccessResponse<FormTemplatePreviewDto>.Fail(FormTemplateMsg.NotFound(templateId), ErrorType.NotFound);
+
+            var questions = await _uow.Perf.FormQuestions
+                .FindAllAsync(q => q.TemplateId == templateId && !q.IsDeleted,
+                    false, default, q => q.RatingScale, q => q.Category);
+
+            var preview = new FormTemplatePreviewDto
+            {
+                Id = template.Id,
+                Name = template.Name,
+                FormType = template.FormType,
+                QuestionsPerEvaluation = template.QuestionsPerEvaluation,
+                Questions = questions.OrderBy(q => q.Sequence).Select(q => new FormTemplatePreviewQuestionDto
+                {
+                    Id = q.Id,
+                    QuestionText = q.QuestionText,
+                    Sequence = q.Sequence,
+                    HasYesNo = q.HasYesNo,
+                    HasComment = q.HasComment,
+                    CategoryId = q.CategoryId,
+                    CategoryName = q.Category?.Name,
+                    RatingScaleId = q.QuestionRatingScaleId,
+                    RatingScaleName = q.RatingScale?.Name,
+                    RatingMaxScore = q.RatingScale != null ? (int)q.RatingScale.MaxScore : null
+                }).ToList()
+            };
+
+            return SuccessResponse<FormTemplatePreviewDto>.Ok(preview, FormTemplateMsg.Retrieved);
         }
     }
 }

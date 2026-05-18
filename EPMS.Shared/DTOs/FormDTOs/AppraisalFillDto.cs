@@ -9,6 +9,7 @@ public class AppraisalFillDto
     public string? CycleName { get; set; }
     public long ManagerReviewerId { get; set; }
     public string? ManagerReviewerName { get; set; }
+    public long? AppraisalReviewerId { get; set; }
     public string Status { get; set; } = string.Empty;
     public bool IsLocked { get; set; }
     public List<AppraisalDetailFillDto> Details { get; set; } = new();

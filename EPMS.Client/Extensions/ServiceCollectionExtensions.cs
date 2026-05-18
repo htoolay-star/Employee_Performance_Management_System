@@ -55,6 +55,7 @@ public static class ServiceCollectionExtensions
         services.AddSecureRefitClient<IPositionFormTemplateApiClient>(refitSettings, baseUri);
         services.AddSecureRefitClient<IAppraisalApiClient>(refitSettings, baseUri);
         services.AddSecureRefitClient<IRecycleBinApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IEvaluationResponseApiClient>(refitSettings, baseUri);
 
         // Info
         services.AddSecureRefitClient<IEmployeeProfileApiClient>(refitSettings, baseUri);

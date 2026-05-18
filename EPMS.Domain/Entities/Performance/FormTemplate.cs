@@ -11,7 +11,7 @@ namespace EPMS.Domain.Entities.Performance
     {
         private FormTemplate() { }
 
-        public FormTemplate(string name, string formType)
+        public FormTemplate(string name, string formType, int? questionsPerEvaluation = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(name);
             ArgumentException.ThrowIfNullOrWhiteSpace(formType);
@@ -19,11 +19,13 @@ namespace EPMS.Domain.Entities.Performance
             Name = name.Trim();
             FormType = formType.Trim().ToUpperInvariant();
             IsActive = true;
+            QuestionsPerEvaluation = questionsPerEvaluation;
         }
 
         public string Name { get; private set; } = string.Empty;
         public string FormType { get; private set; } = string.Empty;
         public bool IsActive { get; private set; }
+        public int? QuestionsPerEvaluation { get; private set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }
@@ -46,13 +48,14 @@ namespace EPMS.Domain.Entities.Performance
             Name = newName.Trim();
         }
 
-        public void Update(string name, string formType)
+        public void Update(string name, string formType, int? questionsPerEvaluation = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(name);
             ArgumentException.ThrowIfNullOrWhiteSpace(formType);
 
             Name = name.Trim();
             FormType = formType.Trim().ToUpperInvariant();
+            QuestionsPerEvaluation = questionsPerEvaluation;
         }
 
         public void Deactivate() => IsActive = false;

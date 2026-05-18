@@ -1654,6 +1654,20 @@ namespace EPMS.Domain.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
+                    b.Property<bool>("AppraisalLockIsDeadline")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("AppraisalLocked")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<decimal?>("AppraisalScore")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -1707,16 +1721,18 @@ namespace EPMS.Domain.Data.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<bool>("ManagerLockIsDeadline")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("ManagerLocked")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<long>("ManagerReviewerId")
                         .HasColumnType("bigint");
-
-                    b.Property<decimal?>("ManagerScore")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("PeerScore")
-                        .HasPrecision(5, 2)
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<Guid>("PublicId")
                         .HasColumnType("uniqueidentifier");
@@ -1728,6 +1744,16 @@ namespace EPMS.Domain.Data.Migrations
                     b.Property<DateTimeOffset?>("ReviewDate")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<bool>("SelfLockIsDeadline")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("SelfLocked")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<decimal?>("SelfScore")
                         .HasPrecision(5, 2)
                         .HasColumnType("decimal(18,2)");
@@ -1736,6 +1762,20 @@ namespace EPMS.Domain.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
+
+                    b.Property<bool>("ThreeSixtyLockIsDeadline")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("ThreeSixtyLocked")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<decimal?>("ThreeSixtyScore")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal?>("TotalScore")
                         .HasPrecision(5, 2)
@@ -1792,10 +1832,19 @@ namespace EPMS.Domain.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
+                    b.Property<long?>("AppraisalReviewerId")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("AppraisalType")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
+
+                    b.Property<decimal>("AppraisalWeight")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(25m);
 
                     b.Property<string>("CalendarType")
                         .IsRequired()
@@ -1850,28 +1899,10 @@ namespace EPMS.Domain.Data.Migrations
                     b.Property<DateOnly?>("ManagerReviewStartDate")
                         .HasColumnType("date");
 
-                    b.Property<decimal>("ManagerWeight")
-                        .ValueGeneratedOnAdd()
-                        .HasPrecision(5, 2)
-                        .HasColumnType("decimal(18,2)")
-                        .HasDefaultValue(25m);
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateOnly?>("PeerReviewDeadline")
-                        .HasColumnType("date");
-
-                    b.Property<DateOnly?>("PeerReviewStartDate")
-                        .HasColumnType("date");
-
-                    b.Property<decimal>("PeerWeight")
-                        .ValueGeneratedOnAdd()
-                        .HasPrecision(5, 2)
-                        .HasColumnType("decimal(18,2)")
-                        .HasDefaultValue(10m);
 
                     b.Property<Guid>("PublicId")
                         .HasColumnType("uniqueidentifier");
@@ -1887,6 +1918,18 @@ namespace EPMS.Domain.Data.Migrations
                         .HasPrecision(5, 2)
                         .HasColumnType("decimal(18,2)")
                         .HasDefaultValue(15m);
+
+                    b.Property<DateOnly?>("ThreeSixtyReviewDeadline")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("ThreeSixtyReviewStartDate")
+                        .HasColumnType("date");
+
+                    b.Property<decimal>("ThreeSixtyWeight")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(10m);
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
@@ -1912,6 +1955,8 @@ namespace EPMS.Domain.Data.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AppraisalReviewerId");
 
                     b.HasIndex("PublicId")
                         .IsUnique()
@@ -2552,6 +2597,9 @@ namespace EPMS.Domain.Data.Migrations
                     b.Property<int?>("RatingValue")
                         .HasColumnType("int");
 
+                    b.Property<DateTimeOffset?>("SubmittedAt")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<long>("TemplateId")
                         .HasColumnType("bigint");
 
@@ -2630,7 +2678,7 @@ namespace EPMS.Domain.Data.Migrations
                     b.Property<Guid>("PublicId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<long?>("QuestionRatingScaleId")
+                    b.Property<long>("QuestionRatingScaleId")
                         .HasColumnType("bigint");
 
                     b.Property<string>("QuestionText")
@@ -2714,6 +2762,9 @@ namespace EPMS.Domain.Data.Migrations
 
                     b.Property<Guid>("PublicId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<int?>("QuestionsPerEvaluation")
+                        .HasColumnType("int");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("datetimeoffset");
@@ -3909,6 +3960,16 @@ namespace EPMS.Domain.Data.Migrations
                     b.Navigation("UnLockedBy");
                 });
 
+            modelBuilder.Entity("EPMS.Domain.Entities.Performance.AppraisalCycle", b =>
+                {
+                    b.HasOne("EPMS.Domain.Entities.EmployeeInfo.EmployeeProfile", "AppraisalReviewer")
+                        .WithMany()
+                        .HasForeignKey("AppraisalReviewerId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("AppraisalReviewer");
+                });
+
             modelBuilder.Entity("EPMS.Domain.Entities.Performance.AppraisalDetail", b =>
                 {
                     b.HasOne("EPMS.Domain.Entities.Performance.Appraisal", "Appraisal")
@@ -4136,7 +4197,8 @@ namespace EPMS.Domain.Data.Migrations
                     b.HasOne("EPMS.Domain.Entities.Performance.QuestionRatingScale", "RatingScale")
                         .WithMany()
                         .HasForeignKey("QuestionRatingScaleId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("EPMS.Domain.Entities.Performance.FormTemplate", "Template")
                         .WithMany("Questions")

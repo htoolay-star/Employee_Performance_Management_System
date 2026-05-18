@@ -24,6 +24,7 @@ namespace EPMS.Domain.Data.Configurations.Performance
 
             builder.Property(e => e.Name).HasMaxLength(100).IsRequired();
             builder.Property(e => e.FormType).HasMaxLength(50).IsRequired();
+            builder.Property(e => e.QuestionsPerEvaluation);
             builder.Property(e => e.IsActive).HasDefaultValue(true);
 
             builder.Property(e => e.CreatedAt).IsRequired();

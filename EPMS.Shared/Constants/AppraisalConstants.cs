@@ -31,11 +31,13 @@ public static class AppraisalConstants
 
     public static class FormTypes
     {
-        public const string SelfAssessment = "Self-Assessment Form";
-        public const string ThreeSixtyFeedback = "360 Degree Feedback Form";
-        public const string Appraisal = "Appraisal Form";
+        public const string Self = "SELF";
+        public const string Manager = "MANAGER";
+        public const string Peer = "PEER";
+        public const string Subordinate = "SUBORDINATE";
+        public const string Appraisal = "APPRAISAL";
 
-        public static readonly HashSet<string> All = [SelfAssessment, ThreeSixtyFeedback, Appraisal];
+        public static readonly HashSet<string> All = [Self, Manager, Peer, Subordinate, Appraisal];
     }
 
     public static class ScoringDirections

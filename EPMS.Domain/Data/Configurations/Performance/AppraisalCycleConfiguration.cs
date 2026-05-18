@@ -36,8 +36,8 @@ namespace EPMS.Domain.Data.Configurations.Performance
 
             entity.Property(e => e.KpiWeight).HasPrecision(5, 2).HasDefaultValue(50m);
             entity.Property(e => e.SelfWeight).HasPrecision(5, 2).HasDefaultValue(15m);
-            entity.Property(e => e.PeerWeight).HasPrecision(5, 2).HasDefaultValue(10m);
-            entity.Property(e => e.ManagerWeight).HasPrecision(5, 2).HasDefaultValue(25m);
+            entity.Property(e => e.ThreeSixtyWeight).HasPrecision(5, 2).HasDefaultValue(10m);
+            entity.Property(e => e.AppraisalWeight).HasPrecision(5, 2).HasDefaultValue(25m);
 
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.Property(e => e.UpdatedAt).IsRequired();
@@ -46,12 +46,19 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.Property(e => e.IsDeleted).HasDefaultValue(false).IsRequired();
             entity.Property(e => e.DeletedAt);
 
-            entity.Property(e => e.PeerReviewStartDate);
-            entity.Property(e => e.PeerReviewDeadline);
+            entity.Property(e => e.ThreeSixtyReviewStartDate);
+            entity.Property(e => e.ThreeSixtyReviewDeadline);
             entity.Property(e => e.SelfReviewStartDate);
             entity.Property(e => e.SelfReviewDeadline);
             entity.Property(e => e.ManagerReviewStartDate);
             entity.Property(e => e.ManagerReviewDeadline);
+
+            entity.Property(e => e.AppraisalReviewerId);
+
+            entity.HasOne(e => e.AppraisalReviewer)
+                  .WithMany()
+                  .HasForeignKey(e => e.AppraisalReviewerId)
+                  .OnDelete(DeleteBehavior.Restrict);
 
             entity.Property(e => e.FinalClosureDate);
 

@@ -8,6 +8,8 @@ namespace EPMS.Client.Models.Performance
 
         public string FormType { get; set; } = string.Empty;
 
+        public int? QuestionsPerEvaluation { get; set; }
+
         public bool IsActive { get; set; } = true;
     }
 }

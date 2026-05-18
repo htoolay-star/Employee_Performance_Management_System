@@ -8,8 +8,11 @@
 @using Mapster
 @using MudBlazor
 @using Refit
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
 
 @inject IAppraisalApiClient AppraisalApiClient
+@inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 
@@ -158,9 +161,19 @@
 
         try
         {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var userIdClaim = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
             var response = await AppraisalApiClient.GetFillAsync(AppraisalId);
             if (response.Success && response.Data != null)
             {
+                if (!long.TryParse(userIdClaim, out var currentUserId)
+                    || currentUserId != response.Data.AppraisalReviewerId)
+                {
+                    _error = true;
+                    _errorMessage = "Only the appraisal reviewer can fill KPI evaluation.";
+                    return;
+                }
                 _model = response.Data.Adapt<AppraisalFillFormModel>();
             }
             else

@@ -66,22 +66,23 @@ public class AppraisalCycleFormModel
         set => ManagerReviewDeadline = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
     }
 
-    public DateOnly? PeerReviewStartDate { get; set; }
-    public DateTime? PeerReviewStartDateProxy
+    public DateOnly? ThreeSixtyReviewStartDate { get; set; }
+    public DateTime? ThreeSixtyReviewStartDateProxy
     {
-        get => PeerReviewStartDate?.ToDateTime(TimeOnly.MinValue);
-        set => PeerReviewStartDate = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
+        get => ThreeSixtyReviewStartDate?.ToDateTime(TimeOnly.MinValue);
+        set => ThreeSixtyReviewStartDate = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
     }
 
-    public DateOnly? PeerReviewDeadline { get; set; }
-    public DateTime? PeerReviewDeadlineProxy
+    public DateOnly? ThreeSixtyReviewDeadline { get; set; }
+    public DateTime? ThreeSixtyReviewDeadlineProxy
     {
-        get => PeerReviewDeadline?.ToDateTime(TimeOnly.MinValue);
-        set => PeerReviewDeadline = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
+        get => ThreeSixtyReviewDeadline?.ToDateTime(TimeOnly.MinValue);
+        set => ThreeSixtyReviewDeadline = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
     }
 
     public decimal KpiWeight { get; set; } = 50m;
     public decimal SelfWeight { get; set; } = 15m;
-    public decimal PeerWeight { get; set; } = 10m;
-    public decimal ManagerWeight { get; set; } = 25m;
+    public decimal ThreeSixtyWeight { get; set; } = 10m;
+    public decimal AppraisalWeight { get; set; } = 25m;
+    public long? AppraisalReviewerId { get; set; }
 }

@@ -14,11 +14,12 @@ public class CreateAppraisalCycleDto
     public DateOnly? SelfReviewDeadline { get; set; }
     public DateOnly? ManagerReviewStartDate { get; set; }
     public DateOnly? ManagerReviewDeadline { get; set; }
-    public DateOnly? PeerReviewStartDate { get; set; }
-    public DateOnly? PeerReviewDeadline { get; set; }
+    public DateOnly? ThreeSixtyReviewStartDate { get; set; }
+    public DateOnly? ThreeSixtyReviewDeadline { get; set; }
 
     public decimal KpiWeight { get; set; } = 50m;
     public decimal SelfWeight { get; set; } = 15m;
-    public decimal PeerWeight { get; set; } = 10m;
-    public decimal ManagerWeight { get; set; } = 25m;
+    public decimal ThreeSixtyWeight { get; set; } = 10m;
+    public decimal AppraisalWeight { get; set; } = 25m;
+    public long? AppraisalReviewerId { get; set; }
 }
