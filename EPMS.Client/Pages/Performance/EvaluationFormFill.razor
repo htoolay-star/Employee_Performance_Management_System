@@ -441,11 +441,9 @@
 
     private async Task ShowResultDialog()
     {
-        if (_model?.TotalPoint == null) return;
-
         var parameters = new DialogParameters<SubmitResultDialog>
         {
-            { x => x.TotalPoint, _model.TotalPoint.Value }
+            { x => x.RatingLabel, _model.RatingLabel ?? "N/A" }
         };
 
         var options = new DialogOptions { CloseOnEscapeKey = true, BackdropClick = false };

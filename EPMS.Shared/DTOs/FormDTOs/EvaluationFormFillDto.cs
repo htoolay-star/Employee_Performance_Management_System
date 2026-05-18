@@ -10,7 +10,8 @@ public record EvaluationFormFillDto(
     bool IsSubmitted,
     bool IsLocked,
     List<EvaluationFormQuestionItem> Questions,
-    decimal? TotalPoint = null
+    decimal? TotalPoint = null,
+    string? RatingLabel = null
 );
 
 public class EvaluationFormQuestionItem

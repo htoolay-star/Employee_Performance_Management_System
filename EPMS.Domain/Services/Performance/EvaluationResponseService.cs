@@ -251,6 +251,7 @@ public class EvaluationResponseService : IEvaluationResponseService
         var submitted = responses.All(r => r.SubmittedAt.HasValue);
 
         decimal? totalPoint = null;
+        string? ratingLabel = null;
         var answeredResponses = responses.Where(r => r.RatingValue.HasValue).ToList();
         if (answeredResponses.Any())
         {
@@ -258,6 +259,11 @@ public class EvaluationResponseService : IEvaluationResponseService
             var count = answeredResponses.Count;
             var maxRating = questions.FirstOrDefault(q => q.MaxScore.HasValue)?.MaxScore ?? 5;
             totalPoint = (decimal)sum * 100m / (count * maxRating);
+
+            var ratingScales = await _uow.Perf.RatingScales
+                .FindAllAsync(s => s.IsActive && !s.IsDeleted);
+            var matchingScale = ratingScales.FirstOrDefault(s => s.IsMatch(totalPoint.Value));
+            ratingLabel = matchingScale?.Label;
         }
 
         var dto = new EvaluationFormFillDto(
@@ -270,7 +276,8 @@ public class EvaluationResponseService : IEvaluationResponseService
             submitted,
             appraisal.IsLocked,
             questions,
-            totalPoint
+            totalPoint,
+            ratingLabel
         );
 
         return SuccessResponse<EvaluationFormFillDto>.Ok(dto, EvaluationResponseMsg.Retrieved);

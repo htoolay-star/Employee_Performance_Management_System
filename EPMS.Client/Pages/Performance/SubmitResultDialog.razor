@@ -11,11 +11,11 @@
             <MudPaper Elevation="2" Class="pa-4" Style="background: #f5f5f5; border-radius: 12px;">
                 <MudStack Spacing="1" AlignItems="AlignItems.Center">
                     <MudText Typo="Typo.subtitle2" Color="Color.Default">
-                        Total Point
+                        Your Rating
                     </MudText>
                     <MudText Typo="Typo.h3"
-                             Color="@GetScoreColor()">
-                        @TotalPoint%
+                             Color="@Color.Success">
+                        @RatingLabel
                     </MudText>
                 </MudStack>
             </MudPaper>
@@ -34,21 +34,10 @@
     private IMudDialogInstance? _mudDialog { get; set; }
 
     [Parameter]
-    public decimal TotalPoint { get; set; }
+    public string RatingLabel { get; set; } = "N/A";
 
     private void Close()
     {
         _mudDialog?.Close(DialogResult.Ok(true));
-    }
-
-    private Color GetScoreColor()
-    {
-        return TotalPoint switch
-        {
-            >= 80m => Color.Success,
-            >= 60m => Color.Info,
-            >= 40m => Color.Warning,
-            _ => Color.Error
-        };
     }
 }

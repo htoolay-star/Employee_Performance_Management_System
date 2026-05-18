@@ -354,7 +354,7 @@ public class AppraisalService : IAppraisalService
                     {
                         var response = new EvaluationResponse(
                             appraisal.Id, template.Id, question.Id,
-                            evaluatorId, role, isAnonymous: role is EvaluatorRoles.Peer or EvaluatorRoles.Subordinate);
+                            evaluatorId, role, isAnonymous: role is EvaluatorRoles.Peer or EvaluatorRoles.Subordinate or EvaluatorRoles.Manager);
                         _uow.Perf.EvaluationResponses.Add(response);
                     }
                 }
