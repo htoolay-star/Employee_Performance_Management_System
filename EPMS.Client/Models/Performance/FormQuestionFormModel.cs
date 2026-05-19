@@ -11,7 +11,5 @@ namespace EPMS.Client.Models.Performance
         public int Sequence { get; set; }
 
         public long? CategoryId { get; set; }
-
-        public long RatingScaleId { get; set; }
     }
 }

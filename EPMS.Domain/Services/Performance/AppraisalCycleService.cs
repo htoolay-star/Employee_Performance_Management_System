@@ -109,8 +109,7 @@ public class AppraisalCycleService : IAppraisalCycleService
             dto.KpiWeight,
             dto.SelfWeight,
             dto.ThreeSixtyWeight,
-            dto.AppraisalWeight,
-            dto.AppraisalReviewerId
+            dto.AppraisalWeight
         );
 
         try
@@ -125,8 +124,8 @@ public class AppraisalCycleService : IAppraisalCycleService
 
         try
         {
-            if (dto.ManagerReviewStartDate.HasValue && dto.ManagerReviewDeadline.HasValue)
-                cycle.ConfigureManagerReviewWindow(dto.ManagerReviewStartDate.Value, dto.ManagerReviewDeadline.Value);
+            if (dto.AppraisalReviewStartDate.HasValue && dto.AppraisalReviewDeadline.HasValue)
+                cycle.ConfigureAppraisalReviewWindow(dto.AppraisalReviewStartDate.Value, dto.AppraisalReviewDeadline.Value);
         }
         catch (ArgumentException ex)
         {
@@ -264,7 +263,7 @@ public class AppraisalCycleService : IAppraisalCycleService
                      dto.EvaluationStartDate, dto.EvaluationEndDate,
                      dto.WindowStartDate, dto.WindowEndDate,
                      dto.KpiWeight, dto.SelfWeight, dto.ThreeSixtyWeight,
-                     dto.AppraisalWeight, dto.AppraisalReviewerId);
+                     dto.AppraisalWeight);
 
         try
         {
@@ -278,8 +277,8 @@ public class AppraisalCycleService : IAppraisalCycleService
 
         try
         {
-            if (dto.ManagerReviewStartDate.HasValue && dto.ManagerReviewDeadline.HasValue)
-                cycle.ConfigureManagerReviewWindow(dto.ManagerReviewStartDate.Value, dto.ManagerReviewDeadline.Value);
+            if (dto.AppraisalReviewStartDate.HasValue && dto.AppraisalReviewDeadline.HasValue)
+                cycle.ConfigureAppraisalReviewWindow(dto.AppraisalReviewStartDate.Value, dto.AppraisalReviewDeadline.Value);
         }
         catch (ArgumentException ex)
         {

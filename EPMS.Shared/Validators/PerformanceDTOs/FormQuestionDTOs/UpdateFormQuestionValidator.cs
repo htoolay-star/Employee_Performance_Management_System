@@ -19,8 +19,5 @@ public class UpdateFormQuestionValidator : AbstractValidator<UpdateFormQuestionD
 
         RuleFor(x => x.CategoryId)
             .ApplyOptionalFormQuestionCategoryRules();
-
-        RuleFor(x => x.RatingScaleId)
-            .ApplyOptionalFormQuestionRatingScaleRules();
     }
 }

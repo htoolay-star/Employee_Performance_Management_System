@@ -32,9 +32,8 @@
                 }
                 else
                 {
-                    <MudText Typo="Typo.body2" Color="Color.Primary">
-                        <strong>@UIConstants.RatingScale.RatingLabel:</strong> @_model.Rating &mdash; @_model.Label
-                    </MudText>
+                    <MudNumericField Value="@_model.Rating" Label="@UIConstants.RatingScale.RatingLabel" Variant="Variant.Outlined" ReadOnly="true" />
+                    <MudTextField Value="@_model.Label" Label="@UIConstants.RatingScale.LabelLabel" Variant="Variant.Outlined" ReadOnly="true" />
                 }
 
                 <MudNumericField @bind-Value="_model.MaxScore"

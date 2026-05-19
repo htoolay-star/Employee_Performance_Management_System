@@ -13,8 +13,8 @@ public class AppraisalCycleDto
     public DateOnly WindowEndDate { get; set; }
     public DateOnly? SelfReviewStartDate { get; set; }
     public DateOnly? SelfReviewDeadline { get; set; }
-    public DateOnly? ManagerReviewStartDate { get; set; }
-    public DateOnly? ManagerReviewDeadline { get; set; }
+    public DateOnly? AppraisalReviewStartDate { get; set; }
+    public DateOnly? AppraisalReviewDeadline { get; set; }
     public DateOnly? ThreeSixtyReviewStartDate { get; set; }
     public DateOnly? ThreeSixtyReviewDeadline { get; set; }
     public DateTimeOffset? FinalClosureDate { get; set; }
@@ -26,5 +26,4 @@ public class AppraisalCycleDto
     public decimal SelfWeight { get; set; }
     public decimal ThreeSixtyWeight { get; set; }
     public decimal AppraisalWeight { get; set; }
-    public long? AppraisalReviewerId { get; set; }
 }

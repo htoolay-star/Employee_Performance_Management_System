@@ -3,6 +3,9 @@ namespace EPMS.Shared.DTOs.FormDTOs;
 public record EvaluationFormFillDto(
     long AppraisalId,
     string? EmployeeName,
+    string? EmployeeNo,
+    string? Position,
+    string? Department,
     long CycleId,
     string? CycleName,
     string? Status,

@@ -166,23 +166,23 @@ public class CreateAppraisalCycleValidator : AbstractValidator<CreateAppraisalCy
                 PerformanceValidationMessages.AppraisalCycle.SelfReviewOutsideWindow,
                 x.WindowStartDate, x.WindowEndDate));
 
-        RuleFor(x => x.ManagerReviewStartDate)
-            .LessThanOrEqualTo(x => x.ManagerReviewDeadline)
-            .When(x => x.ManagerReviewStartDate.HasValue && x.ManagerReviewDeadline.HasValue)
-            .WithMessage(PerformanceValidationMessages.AppraisalCycle.ManagerReviewStartBeforeDeadline);
+        RuleFor(x => x.AppraisalReviewStartDate)
+            .LessThanOrEqualTo(x => x.AppraisalReviewDeadline)
+            .When(x => x.AppraisalReviewStartDate.HasValue && x.AppraisalReviewDeadline.HasValue)
+            .WithMessage(PerformanceValidationMessages.AppraisalCycle.AppraisalReviewStartBeforeDeadline);
 
-        RuleFor(x => x.ManagerReviewStartDate)
+        RuleFor(x => x.AppraisalReviewStartDate)
             .GreaterThanOrEqualTo(x => x.WindowStartDate)
-            .When(x => x.ManagerReviewStartDate.HasValue)
+            .When(x => x.AppraisalReviewStartDate.HasValue)
             .WithMessage(x => string.Format(
-                PerformanceValidationMessages.AppraisalCycle.ManagerReviewOutsideWindow,
+                PerformanceValidationMessages.AppraisalCycle.AppraisalReviewOutsideWindow,
                 x.WindowStartDate, x.WindowEndDate));
 
-        RuleFor(x => x.ManagerReviewDeadline)
+        RuleFor(x => x.AppraisalReviewDeadline)
             .LessThanOrEqualTo(x => x.WindowEndDate)
-            .When(x => x.ManagerReviewDeadline.HasValue)
+            .When(x => x.AppraisalReviewDeadline.HasValue)
             .WithMessage(x => string.Format(
-                PerformanceValidationMessages.AppraisalCycle.ManagerReviewOutsideWindow,
+                PerformanceValidationMessages.AppraisalCycle.AppraisalReviewOutsideWindow,
                 x.WindowStartDate, x.WindowEndDate));
 
         RuleFor(x => x.ThreeSixtyReviewStartDate)

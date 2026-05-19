@@ -32,7 +32,7 @@
                     <MudSelectItem T="long?" Value="null">None (Root)</MudSelectItem>
                     @foreach (var p in _parents.Where(x => (!IsEdit || x.Id != Category?.Id) && x.IsActive))
                     {
-                        <MudSelectItem T="long?" Value="@p.Id">@p.Code</MudSelectItem>
+                        <MudSelectItem T="long?" Value="@p.Id">@p.Name</MudSelectItem>
                     }
                 </MudSelect>
 

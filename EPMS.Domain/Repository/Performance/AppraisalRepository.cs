@@ -16,6 +16,11 @@ namespace EPMS.Domain.Repository.Performance
         {
             return await _dbSet
                 .Include(a => a.Employee)
+                    .ThenInclude(e => e.Employment)
+                        .ThenInclude(emp => emp.Position)
+                .Include(a => a.Employee)
+                    .ThenInclude(e => e.Employment)
+                        .ThenInclude(emp => emp.Department)
                 .Include(a => a.ManagerReviewer)
                 .Include(a => a.Cycle)
                 .Include(a => a.Details)

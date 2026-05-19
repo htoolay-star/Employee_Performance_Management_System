@@ -135,8 +135,8 @@
             public const string WindowStart = "Window Start";
             public const string WindowEnd = "Window End";
             public const string SelfReview = "Self Review";
-            public const string ManagerReview = "Manager Review";
             public const string ThreeSixtyReview = "360° Review";
+            public const string AppraisalReview = "Appraisal Review";
 
             public const string SelectAppraisalType = "-- Select Type --";
             public const string SelectCalendarType = "-- Select Calendar --";
@@ -192,8 +192,9 @@
             public const string ColumnPriority = "Priority";
             public const string ColumnWeightage = "Weight";
             public const string ColumnTarget = "Target";
+            public const string ColumnUnit = "Unit";
 
-            public const string NoDataFound = "Select an entity type and entity to see KPI assignments.";
+            public const string NoDataFound = "Select a type and assigned to see KPI assignments.";
         }
 
         public static class RecycleBin
@@ -221,6 +222,7 @@
             public const string ColumnPriority = "Priority";
             public const string ColumnWeightage = "Weight";
             public const string ColumnTarget = "Target";
+            public const string ColumnUnit = "Unit";
 
             public const string NoDataFound = "Select an employee and cycle to see KPI assignments.";
         }
@@ -240,8 +242,8 @@
             public const string ColorLabel = "Color";
 
             public const string ColumnLevel = "Priority Level";
-            public const string ColumnMinWeight = "Min Weight";
-            public const string ColumnMaxWeight = "Max Weight";
+            public const string ColumnMinWeight = "Min Weight (%)";
+            public const string ColumnMaxWeight = "Max Weight (%)";
             public const string ColumnColor = "Color";
 
             public const string NoDataFound = "Try adjusting your search or add a new priority.";
@@ -287,7 +289,9 @@
 
             public const string ColumnName = "Template Name";
             public const string ColumnFormType = "Form Type";
+            public const string ColumnRatingScale = "Rating Scale";
             public const string ColumnQuestions = "Questions";
+            public const string ColumnQuestionsPerEvaluation = "Per Eval";
 
             public const string NoDataFound = "Try adjusting your search or add a new form template.";
         }

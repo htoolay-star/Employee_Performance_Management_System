@@ -1,11 +1,6 @@
 using EPMS.Domain.Entities.Performance;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EPMS.Domain.Data.Configurations.Performance
 {
@@ -24,6 +19,7 @@ namespace EPMS.Domain.Data.Configurations.Performance
 
             builder.Property(e => e.Name).HasMaxLength(100).IsRequired();
             builder.Property(e => e.FormType).HasMaxLength(50).IsRequired();
+            builder.Property(e => e.QuestionRatingScaleId).IsRequired();
             builder.Property(e => e.QuestionsPerEvaluation);
             builder.Property(e => e.IsActive).HasDefaultValue(true);
             builder.Property(e => e.HasYesNo).HasDefaultValue(false);
@@ -35,6 +31,11 @@ namespace EPMS.Domain.Data.Configurations.Performance
 
             builder.Property(e => e.IsDeleted).HasDefaultValue(false).IsRequired();
             builder.Property(e => e.DeletedAt);
+
+            builder.HasOne(e => e.RatingScale)
+                   .WithMany()
+                   .HasForeignKey(e => e.QuestionRatingScaleId)
+                   .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasMany(e => e.Questions)
                    .WithOne(q => q.Template)

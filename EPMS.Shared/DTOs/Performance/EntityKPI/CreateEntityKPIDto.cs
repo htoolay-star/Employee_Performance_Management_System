@@ -7,7 +7,7 @@ namespace EPMS.Shared.DTOs.Performance.EntityKPI
         public long KPIId { get; set; }
         public long PriorityId { get; set; }
         public decimal Weightage { get; set; }
-        public string? TargetValue { get; set; }
+        public decimal? TargetValue { get; set; }
         public string? TargetUnit { get; set; }
     }
 }

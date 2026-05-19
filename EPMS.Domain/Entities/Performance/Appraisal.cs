@@ -44,8 +44,6 @@ namespace EPMS.Domain.Entities.Performance
 
         public bool SelfLocked { get; private set; }
         public bool SelfLockIsDeadline { get; private set; }
-        public bool ManagerLocked { get; private set; }
-        public bool ManagerLockIsDeadline { get; private set; }
         public bool ThreeSixtyLocked { get; private set; }
         public bool ThreeSixtyLockIsDeadline { get; private set; }
         public bool AppraisalLocked { get; private set; }
@@ -136,12 +134,6 @@ namespace EPMS.Domain.Entities.Performance
             SelfLockIsDeadline = isDeadline;
         }
 
-        public void LockManager(bool isDeadline)
-        {
-            ManagerLocked = true;
-            ManagerLockIsDeadline = isDeadline;
-        }
-
         public void LockThreeSixty(bool isDeadline)
         {
             ThreeSixtyLocked = true;
@@ -152,12 +144,6 @@ namespace EPMS.Domain.Entities.Performance
         {
             if (!SelfLockIsDeadline)
                 SelfLocked = false;
-        }
-
-        public void UnlockManager()
-        {
-            if (!ManagerLockIsDeadline)
-                ManagerLocked = false;
         }
 
         public void UnlockThreeSixty()

@@ -24,8 +24,8 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.Property(e => e.KPIId);
             entity.Property(e => e.EmployeeKPIId);
             entity.Property(e => e.CategoryName).HasMaxLength(100);
-            entity.Property(e => e.TargetValue).HasMaxLength(100);
-            entity.Property(e => e.ActualValue).HasMaxLength(100);
+            entity.Property(e => e.TargetValue).HasColumnType("decimal(18,4)");
+            entity.Property(e => e.ActualValue).HasColumnType("decimal(18,4)");
             entity.Property(e => e.Remarks).HasMaxLength(500);
 
             entity.Property(e => e.ScoringDirection).HasMaxLength(20).IsRequired().HasDefaultValue("HigherIsBetter");

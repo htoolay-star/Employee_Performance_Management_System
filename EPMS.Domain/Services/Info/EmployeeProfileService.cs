@@ -74,8 +74,12 @@ public class EmployeeProfileService : IEmployeeProfileService
         // Check for duplicate UserId if provided
         if (dto.UserId.HasValue)
         {
-            var existingUser = await _uow.Info.EmployeeProfiles.GetByUserIdAsync(dto.UserId.Value);
-            if (existingUser != null)
+            var user = await _uow.Auth.Users.GetByIdAsync(dto.UserId.Value);
+            if (user == null)
+                return SuccessResponse<long>.Fail(EmployeeProfileMsg.UserNotFound, ErrorType.NotFound);
+
+            var existingProfile = await _uow.Info.EmployeeProfiles.GetByUserIdAsync(dto.UserId.Value);
+            if (existingProfile != null)
                 return SuccessResponse<long>.Fail(string.Format(EmployeeProfileMsg.DuplicateUserId, dto.UserId.Value), ErrorType.Conflict);
         }
 
@@ -113,6 +117,7 @@ public class EmployeeProfileService : IEmployeeProfileService
             }
             var newUser = new User(dto.EmailAddress, preHashedPassword, UserRole.User);
             _uow.Auth.Users.Add(newUser);
+            await _uow.CompleteAsync();
 
             profile.LinkUser(newUser.Id);
             await _uow.CompleteAsync();

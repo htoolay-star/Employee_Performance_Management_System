@@ -40,7 +40,7 @@ namespace EPMS.Domain.Services.Performance
 
         public async Task<SuccessResponse<IEnumerable<EntityKPIDto>>> GetAllAsync()
         {
-            var items = await _uow.Perf.EntityKPIs.GetAllAsync();
+            var items = await _uow.Perf.EntityKPIs.GetAllWithIncludesAsync();
             var dtos = await ResolveEntityNamesAsync(items);
             return SuccessResponse<IEnumerable<EntityKPIDto>>.Ok(dtos, EntityKPIMsg.RetrievedAll);
         }

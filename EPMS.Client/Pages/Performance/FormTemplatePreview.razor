@@ -40,25 +40,33 @@
         <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
 
             @* Header info *@
-            <MudStack Row="true" Spacing="4" Class="mb-4">
-                <MudText Typo="Typo.body2">
-                    <strong>Form Type:</strong> @GetFormTypeDisplay(_model.FormType)
-                </MudText>
-                <MudText Typo="Typo.body2">
-                    <strong>Questions:</strong> @_model.Questions.Count
-                </MudText>
-                @if (_model.QuestionsPerEvaluation.HasValue)
-                {
-                    <MudText Typo="Typo.body2">
-                        <strong>Per Evaluation:</strong> @(_model.QuestionsPerEvaluation.Value < _model.Questions.Count ? $"{_model.QuestionsPerEvaluation} (random)" : "All")
-                    </MudText>
-                }
-            </MudStack>
+            <MudSimpleTable Class="mb-4">
+                <tbody>
+                    <tr>
+                        <td><strong>Employee Name:</strong></td>
+                        <td>—</td>
+                        <td><strong>Employee Id:</strong></td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Current Position:</strong></td>
+                        <td>—</td>
+                        <td><strong>Department:</strong></td>
+                        <td>—</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Form Type:</strong></td>
+                        <td>@GetFormTypeDisplay(_model.FormType)</td>
+                        <td><strong>Questions:</strong></td>
+                        <td>@_model.Questions.Count</td>
+                    </tr>
+                </tbody>
+            </MudSimpleTable>
 
             @* Questions table *@
             @{
-                var showYesNo = _model.Questions.Any(q => q.HasYesNo);
-                var showComment = _model.Questions.Any(q => q.HasComment);
+                var showYesNo = _model.HasYesNo;
+                var showComment = _model.HasComment;
             }
             <MudTable Items="@_model.Questions" Hover="true" Elevation="0" Class="mb-4">
                 <ColGroup>
@@ -102,10 +110,10 @@
                                        Margin="Margin.Dense"
                                        Style="min-width: 80px;">
                                 <MudSelectItem T="int?" Value="@((int?)null)">
-                                    @(context.RatingMaxScore.HasValue ? $"1 — {context.RatingMaxScore}" : context.RatingScaleName ?? "N/A")
+                                    @(_model.RatingMaxScore.HasValue ? $"1 — {_model.RatingMaxScore}" : _model.RatingScaleName ?? "N/A")
                                 </MudSelectItem>
                             </MudSelect>
-                            @if (context.HasYesNo)
+                            @if (_model.HasYesNo)
                             {
                                 <MudButton Variant="Variant.Outlined"
                                            Color="Color.Default"

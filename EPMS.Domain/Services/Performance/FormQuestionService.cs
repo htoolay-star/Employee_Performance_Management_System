@@ -6,13 +6,14 @@ using EPMS.Shared.Enums;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 using Mapster;
+
 namespace EPMS.Domain.Services.Performance;
 
 public class FormQuestionService : IFormQuestionService
 {
     private readonly IUnitOfWork _uow;
     private readonly TimeProvider _timeProvider;
-    
+
     public FormQuestionService(IUnitOfWork uow, TimeProvider timeProvider)
     {
         _uow = uow;
@@ -33,8 +34,7 @@ public class FormQuestionService : IFormQuestionService
             dto.TemplateId,
             dto.QuestionText,
             dto.Sequence,
-            dto.CategoryId,
-            dto.RatingScaleId);
+            dto.CategoryId);
 
         _uow.Perf.FormQuestions.Add(formQuestion);
         await _uow.CompleteAsync();
@@ -50,11 +50,11 @@ public class FormQuestionService : IFormQuestionService
 
         if (dto.QuestionText != null)
         {
-            formQuestion.UpdateDetails(dto.QuestionText, dto.CategoryId, dto.RatingScaleId);
+            formQuestion.UpdateDetails(dto.QuestionText, dto.CategoryId);
         }
-        else if (dto.CategoryId.HasValue || dto.RatingScaleId.HasValue)
+        else if (dto.CategoryId.HasValue)
         {
-            formQuestion.UpdateDetails(formQuestion.QuestionText, dto.CategoryId, dto.RatingScaleId);
+            formQuestion.UpdateDetails(formQuestion.QuestionText, dto.CategoryId);
         }
 
         if (dto.Sequence.HasValue && dto.Sequence.Value != formQuestion.Sequence)

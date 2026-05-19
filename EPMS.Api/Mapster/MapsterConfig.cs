@@ -8,8 +8,10 @@ using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using EPMS.Shared.DTOs.FormDTOs;
 using EPMS.Shared.DTOs.Performance.EntityKPI;
 using EPMS.Shared.DTOs.Performance.EmployeeKPI;
+using EPMS.Shared.DTOs.PerformanceDTOs.AppraisalCycleDTOs;
 using EPMS.Shared.DTOs.PerformanceDTOs.ContinuousFeedbackDTOs;
 using EPMS.Shared.DTOs.PerformanceDTOs.FormQuestionDTOs;
+using EPMS.Shared.DTOs.PerformanceDTOs.FormTemplateDTOs;
 using EPMS.Shared.DTOs.PerformanceDTOs.KPIMasterDTOs;
 using EPMS.Shared.DTOs.PerformanceDTOs.OneOnOneMeetingDTOs;
 using EPMS.Shared.DTOs.PerformanceDTOs.PIPDTOs;
@@ -71,6 +73,18 @@ public static class MapsterConfig
             .Map(dest => dest.AppraisalEmployeeName, src => src.Appraisal != null && src.Appraisal.Employee != null ? src.Appraisal.Employee.StaffName : null)
             .Map(dest => dest.ProcessedByName, src => src.ProcessedBy != null ? src.ProcessedBy.StaffName : null);
 
+        TypeAdapterConfig<AppraisalCycle, AppraisalCycleDto>.NewConfig()
+            .Map(dest => dest.AppraisalReviewStartDate, src => src.ManagerReviewStartDate)
+            .Map(dest => dest.AppraisalReviewDeadline, src => src.ManagerReviewDeadline);
+
+        TypeAdapterConfig<CreateAppraisalCycleDto, AppraisalCycle>.NewConfig()
+            .Map(dest => dest.ManagerReviewStartDate, src => src.AppraisalReviewStartDate)
+            .Map(dest => dest.ManagerReviewDeadline, src => src.AppraisalReviewDeadline);
+
+        TypeAdapterConfig<UpdateAppraisalCycleDto, AppraisalCycle>.NewConfig()
+            .Map(dest => dest.ManagerReviewStartDate, src => src.AppraisalReviewStartDate)
+            .Map(dest => dest.ManagerReviewDeadline, src => src.AppraisalReviewDeadline);
+
         TypeAdapterConfig<EvaluationResponse, EvaluationResponseDto>.NewConfig()
             .Map(dest => dest.AppraisalEmployeeName, src => src.Appraisal != null && src.Appraisal.Employee != null ? src.Appraisal.Employee.StaffName : null)
             .Map(dest => dest.TemplateName, src => src.Template != null ? src.Template.Name : null)
@@ -100,10 +114,14 @@ public static class MapsterConfig
             .Map(dest => dest.PositionName, src => src.Position.Name)
             .Map(dest => dest.DirectManagerName, src => src.DirectManager != null ? src.DirectManager.StaffName : null);
 
+        // Performance - FormTemplate
+        TypeAdapterConfig<FormTemplate, FormTemplateDto>.NewConfig()
+            .Map(dest => dest.RatingScaleId, src => src.QuestionRatingScaleId)
+            .Map(dest => dest.RatingScaleName, src => src.RatingScale != null ? src.RatingScale.Name : string.Empty);
+
         // Performance - FormQuestion
         TypeAdapterConfig<FormQuestion, FormQuestionDto>.NewConfig()
-            .Map(dest => dest.CategoryName, src => src.Category != null ? src.Category.Name : null)
-            .Map(dest => dest.RatingScaleName, src => src.RatingScale != null ? src.RatingScale.Name : null);
+            .Map(dest => dest.CategoryName, src => src.Category != null ? src.Category.Name : null);
 
         TypeAdapterConfig<QuestionRatingScaleLevel, QuestionRatingScaleLevelDto>.NewConfig()
             .Map(dest => dest.Id, src => src.Id);

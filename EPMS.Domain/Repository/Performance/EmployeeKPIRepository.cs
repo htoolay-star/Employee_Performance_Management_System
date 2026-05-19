@@ -10,6 +10,12 @@ namespace EPMS.Domain.Repository.Performance
     {
         public EmployeeKPIRepository(AppDbContext context) : base(context) { }
 
+        public async Task<IEnumerable<EmployeeKPI>> GetAllWithIncludesAsync()
+            => await _dbSet
+                .Include(e => e.KPI)
+                .Include(e => e.Priority)
+                .ToListAsync();
+
         public async Task<IEnumerable<EmployeeKPI>> GetByEmployeeAndCycleAsync(long employeeId, long cycleId)
             => await _dbSet
                 .Include(e => e.KPI)

@@ -61,7 +61,7 @@
                 @if (level != null)
                 {
                     <MudStack Row="true" AlignItems="AlignItems.Center">
-                        <MudText>@level.Code</MudText>
+                        <MudText>@level.Name</MudText>
                         @if (!level.IsActive)
                         {
                                 <MudTooltip Text="This level is inactive" Placement="Placement.Right">
@@ -377,7 +377,7 @@
 
         if (!string.IsNullOrWhiteSpace(value))
         {
-            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(x => x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
         }
 
         return Task.FromResult(query.Select(x => (long?)x.Id).AsEnumerable());
@@ -388,6 +388,6 @@
         if (id == null) return string.Empty;
         var level = _levels.FirstOrDefault(x => x.Id == id);
         if (level == null) return string.Empty;
-        return level.IsActive ? level.Code : $"{level.Code} (Inactive)";
+        return level.IsActive ? level.Name : $"{level.Name} (Inactive)";
     }
 }

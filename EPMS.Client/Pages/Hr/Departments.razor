@@ -368,7 +368,12 @@
 
     private void ApplyFiltersAndSort()
     {
-        if (!_allDepartments.Any()) return;
+        if (!_allDepartments.Any())
+        {
+            _departments = new();
+            _rowNumbers = new();
+            return;
+        }
 
         var filteredList = _allDepartments.Where(x => x.IsActive == _statusFilter).ToList();
 

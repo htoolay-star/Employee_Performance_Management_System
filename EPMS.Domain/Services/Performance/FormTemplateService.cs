@@ -9,13 +9,14 @@ using EPMS.Shared.Enums;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 using Mapster;
+
 namespace EPMS.Domain.Services.Performance
 {
     public class FormTemplateService : IFormTemplateService
     {
         private readonly IUnitOfWork _uow;
         private readonly ICacheService _cacheService;
-        
+
         public FormTemplateService(IUnitOfWork uow, ICacheService cacheService)
         {
             _uow = uow;
@@ -30,6 +31,9 @@ namespace EPMS.Domain.Services.Performance
                 Id = t.Id,
                 Name = t.Name,
                 FormType = t.FormType,
+                RatingScaleId = t.QuestionRatingScaleId,
+                RatingScaleName = t.RatingScale?.Name ?? string.Empty,
+                QuestionsPerEvaluation = t.QuestionsPerEvaluation,
                 IsActive = t.IsActive,
                 CreatedAt = t.CreatedAt,
                 QuestionCount = t.Questions?.Count ?? 0,
@@ -56,7 +60,7 @@ namespace EPMS.Domain.Services.Performance
                         t => t.IsActive && !t.IsDeleted,
                         trackChanges: false);
 
-                    return templates.Select(t => new LookUpDto { Id = t.Id, Code = t.Name, IsActive = t.IsActive }).ToList();
+                    return templates.Select(t => new LookUpDto { Id = t.Id, Name = t.Name, IsActive = t.IsActive }).ToList();
                 },
                 TimeSpan.FromHours(12)
             );
@@ -83,7 +87,12 @@ namespace EPMS.Domain.Services.Performance
                 return SuccessResponse<long>.Fail(string.Format(FormTemplateMsg.DuplicateName, dto.Name), ErrorType.Conflict);
             }
 
-            var template = new FormTemplate(dto.Name, dto.FormType, dto.QuestionsPerEvaluation, dto.HasYesNo, dto.HasComment);
+            if (!await _uow.Perf.QuestionRatingScales.AnyAsync(s => s.Id == dto.RatingScaleId))
+            {
+                return SuccessResponse<long>.Fail("Rating scale not found.", ErrorType.NotFound);
+            }
+
+            var template = new FormTemplate(dto.Name, dto.FormType, dto.RatingScaleId, dto.QuestionsPerEvaluation, dto.HasYesNo, dto.HasComment);
 
             _uow.Perf.FormTemplates.Add(template);
             await _uow.CompleteAsync();
@@ -105,6 +114,11 @@ namespace EPMS.Domain.Services.Performance
                 return SuccessResponse.Fail(string.Format(FormTemplateMsg.DuplicateName, dto.Name), ErrorType.Conflict);
             }
 
+            if (dto.RatingScaleId.HasValue && !await _uow.Perf.QuestionRatingScales.AnyAsync(s => s.Id == dto.RatingScaleId.Value))
+            {
+                return SuccessResponse.Fail("Rating scale not found.", ErrorType.NotFound);
+            }
+
             if (dto.QuestionsPerEvaluation.HasValue)
             {
                 var questionCount = template.Questions?.Count ?? 0;
@@ -114,7 +128,7 @@ namespace EPMS.Domain.Services.Performance
                         ErrorType.Validation);
             }
 
-            template.Update(dto.Name, dto.FormType, dto.QuestionsPerEvaluation, dto.HasYesNo, dto.HasComment);
+            template.Update(dto.Name, dto.FormType, dto.RatingScaleId, dto.QuestionsPerEvaluation, dto.HasYesNo, dto.HasComment);
 
             if (dto.IsActive.HasValue)
             {
@@ -152,7 +166,14 @@ namespace EPMS.Domain.Services.Performance
 
             var questions = await _uow.Perf.FormQuestions
                 .FindAllAsync(q => q.TemplateId == templateId && !q.IsDeleted,
-                    false, default, q => q.RatingScale, q => q.Category);
+                    false, default, q => q.Category);
+
+            var scaleWithLevels = await _uow.Perf.QuestionRatingScales
+                .FindAllAsync(s => s.Id == template.QuestionRatingScaleId,
+                    trackChanges: false,
+                    includes: s => s.Levels);
+
+            var scale = scaleWithLevels.FirstOrDefault();
 
             var preview = new FormTemplatePreviewDto
             {
@@ -160,18 +181,18 @@ namespace EPMS.Domain.Services.Performance
                 Name = template.Name,
                 FormType = template.FormType,
                 QuestionsPerEvaluation = template.QuestionsPerEvaluation,
+                RatingScaleId = template.QuestionRatingScaleId,
+                RatingScaleName = scale?.Name,
+                RatingMaxScore = scale?.Levels.Any() == true ? (int)scale.Levels.Max(l => l.MaxScore) : null,
+                HasYesNo = template.HasYesNo,
+                HasComment = template.HasComment,
                 Questions = questions.OrderBy(q => q.Sequence).Select(q => new FormTemplatePreviewQuestionDto
                 {
                     Id = q.Id,
                     QuestionText = q.QuestionText,
                     Sequence = q.Sequence,
-                    HasYesNo = template.HasYesNo,
-                    HasComment = template.HasComment,
                     CategoryId = q.CategoryId,
-                    CategoryName = q.Category?.Name,
-                    RatingScaleId = q.QuestionRatingScaleId,
-                    RatingScaleName = q.RatingScale?.Name,
-                    RatingMaxScore = q.RatingScale != null && q.RatingScale.Levels.Any() ? (int)q.RatingScale.Levels.Max(l => l.MaxScore) : null
+                    CategoryName = q.Category?.Name
                 }).ToList()
             };
 

@@ -9,7 +9,7 @@ public class EmployeeKPI : AuditableEntity, ISoftDeletable
 
     public EmployeeKPI(KPIWeightPriority priority, long employeeId, long kpiId, long cycleId,
                        long priorityId, decimal weightage,
-                       string? targetValue = null, string? targetUnit = null)
+                       decimal? targetValue = null, string? targetUnit = null)
     {
         if (!priority.IsValidWeight(weightage))
             throw new ArgumentException($"Weightage {weightage} falls outside the allowed bounds for {priority.LevelName}.");
@@ -19,7 +19,7 @@ public class EmployeeKPI : AuditableEntity, ISoftDeletable
         CycleId = cycleId;
         PriorityId = priorityId;
         Weightage = weightage;
-        TargetValue = targetValue?.Trim();
+        TargetValue = targetValue;
         TargetUnit = targetUnit?.Trim();
     }
 
@@ -29,7 +29,7 @@ public class EmployeeKPI : AuditableEntity, ISoftDeletable
     public long PriorityId { get; private set; }
 
     public decimal Weightage { get; private set; }
-    public string? TargetValue { get; private set; }
+    public decimal? TargetValue { get; private set; }
     public string? TargetUnit { get; private set; }
 
     public bool IsDeleted { get; set; }
@@ -42,13 +42,13 @@ public class EmployeeKPI : AuditableEntity, ISoftDeletable
     public virtual AppraisalCycle Cycle { get; private set; } = null!;
     public virtual KPIWeightPriority Priority { get; private set; } = null!;
 
-    public void Update(KPIWeightPriority priority, decimal weightage, string? targetValue, string? targetUnit)
+    public void Update(KPIWeightPriority priority, decimal weightage, decimal? targetValue, string? targetUnit)
     {
         if (!priority.IsValidWeight(weightage))
             throw new ArgumentException($"Weightage {weightage} falls outside the allowed bounds for {priority.LevelName}.");
 
         Weightage = weightage;
-        TargetValue = targetValue?.Trim();
+        TargetValue = targetValue;
         TargetUnit = targetUnit?.Trim();
     }
 }

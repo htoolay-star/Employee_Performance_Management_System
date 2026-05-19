@@ -8,6 +8,8 @@ namespace EPMS.Client.Models.Performance
 
         public string FormType { get; set; } = string.Empty;
 
+        public long RatingScaleId { get; set; }
+
         public int? QuestionsPerEvaluation { get; set; }
 
         public bool HasYesNo { get; set; }

@@ -83,6 +83,15 @@ public class EvaluationResponsesController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HttpGet("appraisal/{appraisalId:long}/self-assessment")]
+    public async Task<ActionResult<SuccessResponse>> GetSelfAssessment(
+        long appraisalId,
+        [FromQuery] long managerId)
+    {
+        var result = await _service.GetSelfAssessmentAsync(appraisalId, managerId);
+        return HandleResult(result);
+    }
+
     [HttpPost("submit-role")]
     public async Task<ActionResult<SuccessResponse>> SubmitRoleResponses([FromBody] SubmitRoleRequestDto dto)
     {

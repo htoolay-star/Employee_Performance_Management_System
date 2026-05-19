@@ -15,6 +15,7 @@ namespace EPMS.Domain.Repository.Performance
             return await _dbSet
                 .Where(x => !x.IsDeleted)
                 .Include(x => x.Questions)
+                .Include(x => x.RatingScale)
                 .OrderBy(x => x.Name)
                 .AsNoTracking()
                 .ToListAsync();
@@ -25,6 +26,7 @@ namespace EPMS.Domain.Repository.Performance
             return await _dbSet
                 .Where(x => x.IsActive && !x.IsDeleted)
                 .Include(x => x.Questions)
+                .Include(x => x.RatingScale)
                 .OrderBy(x => x.Name)
                 .ToListAsync();
         }

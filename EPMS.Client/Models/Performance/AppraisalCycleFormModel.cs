@@ -52,18 +52,18 @@ public class AppraisalCycleFormModel
         set => SelfReviewDeadline = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
     }
 
-    public DateOnly? ManagerReviewStartDate { get; set; }
-    public DateTime? ManagerReviewStartDateProxy
+    public DateOnly? AppraisalReviewStartDate { get; set; }
+    public DateTime? AppraisalReviewStartDateProxy
     {
-        get => ManagerReviewStartDate?.ToDateTime(TimeOnly.MinValue);
-        set => ManagerReviewStartDate = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
+        get => AppraisalReviewStartDate?.ToDateTime(TimeOnly.MinValue);
+        set => AppraisalReviewStartDate = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
     }
 
-    public DateOnly? ManagerReviewDeadline { get; set; }
-    public DateTime? ManagerReviewDeadlineProxy
+    public DateOnly? AppraisalReviewDeadline { get; set; }
+    public DateTime? AppraisalReviewDeadlineProxy
     {
-        get => ManagerReviewDeadline?.ToDateTime(TimeOnly.MinValue);
-        set => ManagerReviewDeadline = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
+        get => AppraisalReviewDeadline?.ToDateTime(TimeOnly.MinValue);
+        set => AppraisalReviewDeadline = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
     }
 
     public DateOnly? ThreeSixtyReviewStartDate { get; set; }
@@ -84,5 +84,4 @@ public class AppraisalCycleFormModel
     public decimal SelfWeight { get; set; } = 15m;
     public decimal ThreeSixtyWeight { get; set; } = 10m;
     public decimal AppraisalWeight { get; set; } = 25m;
-    public long? AppraisalReviewerId { get; set; }
 }

@@ -19,16 +19,9 @@ namespace EPMS.Domain.Data.Configurations.Performance
             builder.Property(e => e.QuestionText).IsRequired();
             builder.Property(e => e.Sequence).IsRequired();
 
-            builder.Property(e => e.QuestionRatingScaleId).IsRequired();
-
             builder.HasOne(e => e.Category)
                    .WithMany()
                    .HasForeignKey(e => e.CategoryId)
-                   .OnDelete(DeleteBehavior.Restrict);
-
-            builder.HasOne(e => e.RatingScale)
-                   .WithMany()
-                   .HasForeignKey(e => e.QuestionRatingScaleId)
                    .OnDelete(DeleteBehavior.Restrict);
 
             builder.Property(e => e.CreatedAt).IsRequired();
@@ -37,8 +30,6 @@ namespace EPMS.Domain.Data.Configurations.Performance
 
             builder.Property(e => e.IsDeleted).HasDefaultValue(false).IsRequired();
             builder.Property(e => e.DeletedAt);
-
-
         }
     }
 }

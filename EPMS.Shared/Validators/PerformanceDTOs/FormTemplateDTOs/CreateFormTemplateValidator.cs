@@ -19,6 +19,10 @@ namespace EPMS.Shared.Validators.PerformanceDTOs.FormTemplateDTOs
                 .Must(x => AppraisalConstants.FormTypes.All.Contains(x))
                 .WithMessage(PerformanceValidationMessages.FormTemplate.FormTypeInvalid);
 
+            RuleFor(x => x.RatingScaleId)
+                .GreaterThan(0)
+                .WithMessage(PerformanceValidationMessages.FormTemplate.RatingScaleIdRequired);
+
             RuleFor(x => x.QuestionsPerEvaluation)
                 .GreaterThan(0)
                 .When(x => x.QuestionsPerEvaluation.HasValue)

@@ -9,4 +9,6 @@ public interface IRatingScaleRepository : IGenericRepository<RatingScale>
     Task<RatingScale?> GetByRatingAsync(int rating);
     Task<bool> RatingExistsAsync(int rating);
     Task<bool> RatingExistsAsync(int rating, long excludeId);
+    Task<bool> LabelExistsAsync(string label, long? excludeId = null);
+    Task<bool> HasOverlapAsync(decimal minScore, decimal maxScore, long? excludeId = null);
 }

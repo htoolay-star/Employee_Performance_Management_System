@@ -87,6 +87,7 @@ public static class ServiceResponseMessages
         public const string DuplicateStaffNo = "Staff number '{0}' already exists.";
         public const string DuplicateEmail = "Employee with email '{0}' already exists.";
         public const string DuplicateUserId = "Employee with user ID '{0}' already exists.";
+        public const string UserNotFound = "Referenced user account was not found.";
         public static string NotFound(long id) => $"Employee profile with ID '{id}' was not found.";
         public static string NotFound(Guid id) => $"Employee profile with ID '{id}' was not found.";
     }
@@ -175,6 +176,8 @@ public static class ServiceResponseMessages
         public const string RetrievedActive = "Active rating scales retrieved successfully.";
         public const string MinGreaterThanMax = "Minimum score cannot be greater than maximum score.";
         public const string DuplicateRating = "Rating scale with rating '{0}' already exists.";
+        public const string DuplicateLabel = "Rating scale with label '{0}' already exists.";
+        public const string ScoreRangeOverlap = "Score range overlaps with an existing rating scale.";
         public static string NotFound(long id) => $"Rating scale with ID '{id}' was not found.";
         public static string NotFoundByRating(int rating) => $"Rating scale with rating '{rating}' was not found.";
     }

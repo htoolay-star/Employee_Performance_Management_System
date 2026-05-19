@@ -59,7 +59,7 @@
                             @if (dept != null)
                             {
                                 <MudStack Row="true" AlignItems="AlignItems.Center">
-                                    <MudText>@dept.Code</MudText>
+                                    <MudText>@dept.Name</MudText>
                                     @if (!dept.IsActive)
                                     {
                                             <MudTooltip Text="This department is inactive" Placement="Placement.Right">
@@ -87,7 +87,7 @@
                         @if (pos != null)
                         {
                             <MudStack Row="true" AlignItems="AlignItems.Center">
-                                <MudText>@pos.Code</MudText>
+                                <MudText>@pos.Name</MudText>
                                 @if (!pos.IsActive)
                                 {
                                     <MudTooltip Text="This position is inactive" Placement="Placement.Right">
@@ -304,7 +304,7 @@
     {
         var query = _positions.AsQueryable();
         if (!string.IsNullOrWhiteSpace(value))
-            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(x => x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
         return Task.FromResult(query.Select(x => (long?)x.Id).AsEnumerable());
     }
 
@@ -312,7 +312,7 @@
     {
         if (id == null) return string.Empty;
         var pos = _positions.FirstOrDefault(x => x.Id == id);
-        return pos?.Code ?? string.Empty;
+        return pos?.Name ?? string.Empty;
     }
 
     private Task<IEnumerable<long?>> SearchEmployees(string value, CancellationToken token)
@@ -338,7 +338,7 @@
             return AvailableDepartments.Select(x => (long?)x.Id).ToList();
 
         return AvailableDepartments
-            .Where(x => x.Code != null && x.Code.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Where(x => x.Name != null && x.Name.Contains(value, StringComparison.OrdinalIgnoreCase))
             .Select(x => (long?)x.Id)
             .ToList();
     }
@@ -349,6 +349,6 @@
         var dept = AvailableDepartments.FirstOrDefault(x => x.Id == id);
         if (dept == null) return string.Empty;
         
-        return dept.IsActive ? dept.Code : $"{dept.Code} (Inactive)";
+        return dept.IsActive ? dept.Name : $"{dept.Name} (Inactive)";
     }
 }

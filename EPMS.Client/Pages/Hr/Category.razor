@@ -279,7 +279,12 @@
 
     private void ApplyFiltersAndSort()
     {
-        if (!_allCategories.Any()) return;
+        if (!_allCategories.Any())
+        {
+            _categories = new();
+            _rowNumbers = new();
+            return;
+        }
 
         var filteredList = _allCategories.Where(x => x.IsActive == _statusFilter).ToList();
 

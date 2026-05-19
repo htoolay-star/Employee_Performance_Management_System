@@ -1,9 +1,4 @@
 using EPMS.Domain.Contracts;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
@@ -11,13 +6,15 @@ namespace EPMS.Domain.Entities.Performance
     {
         private FormTemplate() { }
 
-        public FormTemplate(string name, string formType, int? questionsPerEvaluation = null, bool hasYesNo = false, bool hasComment = false)
+        public FormTemplate(string name, string formType, long questionRatingScaleId, int? questionsPerEvaluation = null, bool hasYesNo = false, bool hasComment = false)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(name);
             ArgumentException.ThrowIfNullOrWhiteSpace(formType);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(questionRatingScaleId);
 
             Name = name.Trim();
             FormType = formType.Trim().ToUpperInvariant();
+            QuestionRatingScaleId = questionRatingScaleId;
             IsActive = true;
             QuestionsPerEvaluation = questionsPerEvaluation;
             HasYesNo = hasYesNo;
@@ -26,6 +23,7 @@ namespace EPMS.Domain.Entities.Performance
 
         public string Name { get; private set; } = string.Empty;
         public string FormType { get; private set; } = string.Empty;
+        public long QuestionRatingScaleId { get; private set; }
         public bool IsActive { get; private set; }
         public int? QuestionsPerEvaluation { get; private set; }
         public bool HasYesNo { get; private set; }
@@ -36,6 +34,8 @@ namespace EPMS.Domain.Entities.Performance
         public long? DeletedBy { get; set; }
 
         public byte[] Version { get; private set; } = Array.Empty<byte>();
+
+        public virtual QuestionRatingScale RatingScale { get; private set; } = null!;
 
         private readonly List<FormQuestion> _questions = new();
         public virtual IReadOnlyCollection<FormQuestion> Questions => _questions.AsReadOnly();
@@ -52,7 +52,7 @@ namespace EPMS.Domain.Entities.Performance
             Name = newName.Trim();
         }
 
-        public void Update(string name, string formType, int? questionsPerEvaluation = null, bool? hasYesNo = null, bool? hasComment = null)
+        public void Update(string name, string formType, long? questionRatingScaleId = null, int? questionsPerEvaluation = null, bool? hasYesNo = null, bool? hasComment = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(name);
             ArgumentException.ThrowIfNullOrWhiteSpace(formType);
@@ -60,6 +60,8 @@ namespace EPMS.Domain.Entities.Performance
             Name = name.Trim();
             FormType = formType.Trim().ToUpperInvariant();
             QuestionsPerEvaluation = questionsPerEvaluation;
+            if (questionRatingScaleId.HasValue)
+                QuestionRatingScaleId = questionRatingScaleId.Value;
             if (hasYesNo.HasValue) HasYesNo = hasYesNo.Value;
             if (hasComment.HasValue) HasComment = hasComment.Value;
         }
@@ -68,6 +70,12 @@ namespace EPMS.Domain.Entities.Performance
         {
             HasYesNo = hasYesNo;
             HasComment = hasComment;
+        }
+
+        public void ChangeRatingScale(long ratingScaleId)
+        {
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(ratingScaleId);
+            QuestionRatingScaleId = ratingScaleId;
         }
 
         public void Deactivate() => IsActive = false;

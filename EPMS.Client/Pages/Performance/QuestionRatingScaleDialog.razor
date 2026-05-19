@@ -25,9 +25,7 @@
                 }
                 else
                 {
-                    <MudText Typo="Typo.body2" Color="Color.Primary">
-                        <strong>@UIConstants.QuestionRatingScale.NameLabel:</strong> @_model.Name
-                    </MudText>
+                    <MudTextField Value="@_model.Name" Label="@UIConstants.QuestionRatingScale.NameLabel" Variant="Variant.Outlined" ReadOnly="true" />
                 }
 
                 <MudText Typo="Typo.subtitle2" Class="mt-2">Rating Levels</MudText>

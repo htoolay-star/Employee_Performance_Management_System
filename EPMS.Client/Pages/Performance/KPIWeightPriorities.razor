@@ -65,16 +65,21 @@
                     </CellTemplate>
                 </TemplateColumn>
                 <PropertyColumn Property="x => x.LevelName" Title="@UIConstants.KPIWeightPriority.ColumnLevel" />
-                <PropertyColumn Property="x => x.MinWeight" Title="@UIConstants.KPIWeightPriority.ColumnMinWeight" Sortable="true" />
-                <PropertyColumn Property="x => x.MaxWeight" Title="@UIConstants.KPIWeightPriority.ColumnMaxWeight" Sortable="true" />
+                <TemplateColumn Title="@UIConstants.KPIWeightPriority.ColumnMinWeight" Sortable="true">
+                    <CellTemplate>
+                        <MudText>@context.Item.MinWeight%</MudText>
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="@UIConstants.KPIWeightPriority.ColumnMaxWeight" Sortable="true">
+                    <CellTemplate>
+                        <MudText>@context.Item.MaxWeight%</MudText>
+                    </CellTemplate>
+                </TemplateColumn>
                 <TemplateColumn Title="@UIConstants.KPIWeightPriority.ColumnColor">
                     <CellTemplate>
                         @if (!string.IsNullOrEmpty(context.Item.ColorCode))
                         {
-                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                                <span style="width: 14px; height: 14px; border-radius: 50%; display: inline-block; background: @context.Item.ColorCode; border: 1px solid #ccc;"></span>
-                                <MudText Typo="Typo.body2">@context.Item.ColorCode</MudText>
-                            </MudStack>
+                            <span style="width: 14px; height: 14px; border-radius: 50%; display: inline-block; background: @context.Item.ColorCode; border: 1px solid #ccc;"></span>
                         }
                         else
                         {
@@ -292,7 +297,12 @@
 
     private void ApplyFiltersAndSort()
     {
-        if (!_allItems.Any()) return;
+        if (!_allItems.Any())
+        {
+            _items = new();
+            _rowNumbers = new();
+            return;
+        }
 
         var filteredList = _allItems.Where(x => x.IsActive == _statusFilter).ToList();
 

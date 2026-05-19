@@ -55,28 +55,48 @@
             <MudForm @ref="_form">
 
                 @* Header *@
-                <MudStack Row="true" Spacing="4" Class="mb-4" Wrap="Wrap.Wrap">
-                    <MudText Typo="Typo.body1">
-                        <strong>@UIConstants.EvaluationForm.EmployeeLabel:</strong> @_model.EmployeeName
-                    </MudText>
-                    <MudText Typo="Typo.body1">
-                        <strong>@UIConstants.EvaluationForm.CycleLabel:</strong> @_model.CycleName
-                    </MudText>
-                    <MudText Typo="Typo.body1">
-                        <strong>@UIConstants.EvaluationForm.RoleLabel:</strong>
-                        <MudChip T="string" Size="Size.Small" Color="Color.Primary">@GetRoleDisplay(_model.Role)</MudChip>
-                    </MudText>
-                    <MudText Typo="Typo.body1">
-                        <strong>@UIConstants.EvaluationForm.StatusLabel:</strong>
-                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(_model.Status)">@_model.Status</MudChip>
-                    </MudText>
-                </MudStack>
+                <MudSimpleTable Class="mb-4">
+                    <tbody>
+                        <tr>
+                            <td><strong>@UIConstants.EvaluationForm.EmployeeLabel:</strong></td>
+                            <td>@_model.EmployeeName</td>
+                            <td><strong>Employee Id:</strong></td>
+                            <td>@_model.EmployeeNo</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Current Position:</strong></td>
+                            <td>@_model.Position</td>
+                            <td><strong>Department:</strong></td>
+                            <td>@_model.Department</td>
+                        </tr>
+                        <tr>
+                            <td><strong>@UIConstants.EvaluationForm.CycleLabel:</strong></td>
+                            <td>@_model.CycleName</td>
+                            <td><strong>@UIConstants.EvaluationForm.RoleLabel:</strong></td>
+                            <td><MudChip T="string" Size="Size.Small" Color="Color.Primary">@GetRoleDisplay(_model.Role)</MudChip></td>
+                        </tr>
+                        <tr>
+                            <td><strong>@UIConstants.EvaluationForm.StatusLabel:</strong></td>
+                            <td><MudChip T="string" Size="Size.Small" Color="@GetStatusColor(_model.Status)">@_model.Status</MudChip></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </MudSimpleTable>
 
                 @* Submitted Banner *@
                 @if (_model.IsSubmitted)
                 {
                     <MudAlert Severity="Severity.Success" Class="mb-4" Dense="true">
                         @UIConstants.EvaluationForm.AlreadySubmitted
+                    </MudAlert>
+                }
+
+                @* Read-Only Banner *@
+                @if (ViewOnly)
+                {
+                    <MudAlert Severity="Severity.Info" Class="mb-4" Dense="true">
+                        You are viewing the employee's self-assessment in read-only mode.
                     </MudAlert>
                 }
 
@@ -138,7 +158,7 @@
                                                    ValueChanged="@(v => OnRatingChanged(context, v))"
                                                    Variant="Variant.Outlined"
                                                    Margin="Margin.Dense"
-                                                   Disabled="@(_model.IsSubmitted || _model.IsLocked)"
+                                                    Disabled="@(_model.IsSubmitted || _model.IsLocked || ViewOnly)"
                                                    Style="min-width: 80px;">
                                             <MudSelectItem T="int?" Value="null">--</MudSelectItem>
                                             @foreach (var level in context.RatingLevels.OrderBy(l => l.Rating))
@@ -157,7 +177,7 @@
                                                    ValueChanged="@(v => OnRatingChanged(context, v))"
                                                    Variant="Variant.Outlined"
                                                    Margin="Margin.Dense"
-                                                   Disabled="@(_model.IsSubmitted || _model.IsLocked)"
+                                                    Disabled="@(_model.IsSubmitted || _model.IsLocked || ViewOnly)"
                                                    Style="min-width: 80px;">
                                             <MudSelectItem T="int?" Value="null">--</MudSelectItem>
                                             @for (var i = 1; i <= ratingMax; i++)
@@ -171,13 +191,13 @@
                                         <MudButton OnClick="() => OnYesNoChanged(context, true)"
                                                    Variant="@(context.YesNoAnswer == true ? Variant.Filled : Variant.Outlined)"
                                                    Color="Color.Success"
-                                                   Disabled="@(_model.IsSubmitted || _model.IsLocked)"
+                                                    Disabled="@(_model.IsSubmitted || _model.IsLocked || ViewOnly)"
                                                    Size="Size.Small"
                                                    Class="px-3">Yes</MudButton>
                                         <MudButton OnClick="() => OnYesNoChanged(context, false)"
                                                    Variant="@(context.YesNoAnswer == false ? Variant.Filled : Variant.Outlined)"
                                                    Color="Color.Error"
-                                                   Disabled="@(_model.IsSubmitted || _model.IsLocked)"
+                                                    Disabled="@(_model.IsSubmitted || _model.IsLocked || ViewOnly)"
                                                    Size="Size.Small"
                                                    Class="px-3">No</MudButton>
                                     }
@@ -200,18 +220,21 @@
                 }
 
                 @* Submit Button *@
-                <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
-                    <MudButton Variant="Variant.Filled"
-                               Color="Color.Primary"
-                               OnClick="Submit"
-                               Disabled="@(_submitting || _model.IsSubmitted || _model.IsLocked || _model.Questions.Count == 0)">
-                        @if (_submitting)
-                        {
-                            <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
-                        }
-                        @UIConstants.EvaluationForm.SubmitButton
-                    </MudButton>
-                </MudStack>
+                @if (!ViewOnly)
+                {
+                    <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   OnClick="Submit"
+                                   Disabled="@(_submitting || _model.IsSubmitted || _model.IsLocked || _model.Questions.Count == 0)">
+                            @if (_submitting)
+                            {
+                                <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
+                            }
+                            @UIConstants.EvaluationForm.SubmitButton
+                        </MudButton>
+                    </MudStack>
+                }
             </MudForm>
         </MudPaper>
     }
@@ -220,6 +243,8 @@
 @code {
 
     [Parameter] public long AppraisalId { get; set; }
+    [SupplyParameterFromQuery(Name = "role")] public string? ExplicitRole { get; set; }
+    [SupplyParameterFromQuery(Name = "viewonly")] public bool ViewOnly { get; set; }
 
     private MudForm? _form;
     private EvaluationFormFillDto? _model;
@@ -263,7 +288,14 @@
 
             var appraisal = appraisalResponse.Data;
 
-            _currentRole = await ResolveRoleAsync(appraisal);
+            if (!string.IsNullOrEmpty(ExplicitRole))
+            {
+                _currentRole = ExplicitRole;
+            }
+            else
+            {
+                _currentRole = await ResolveRoleAsync(appraisal);
+            }
             if (string.IsNullOrEmpty(_currentRole))
             {
                 _loading = false;
@@ -271,7 +303,15 @@
                 return;
             }
 
-            var formResponse = await EvalResponseApiClient.GetFormFillAsync(AppraisalId, _currentUserId, _currentRole);
+            SuccessResponse<EvaluationFormFillDto>? formResponse;
+            if (ViewOnly && _currentRole == EvaluatorRoles.Self)
+            {
+                formResponse = await EvalResponseApiClient.GetSelfAssessmentAsync(AppraisalId, _currentUserId);
+            }
+            else
+            {
+                formResponse = await EvalResponseApiClient.GetFormFillAsync(AppraisalId, _currentUserId, _currentRole);
+            }
             if (formResponse.Success && formResponse.Data != null)
             {
                 _model = formResponse.Data;
@@ -315,7 +355,7 @@
                 return EvaluatorRoles.Manager;
         }
 
-        if (appraisal.AppraisalReviewerId.HasValue && _currentUserId == appraisal.AppraisalReviewerId.Value)
+        if (_currentUserId == appraisal.ManagerReviewerId)
         {
             var apprResponse = await EvalResponseApiClient.GetFormFillAsync(AppraisalId, _currentUserId, EvaluatorRoles.Appraisal);
             if (apprResponse.Success && apprResponse.Data != null && apprResponse.Data.Questions.Count > 0)

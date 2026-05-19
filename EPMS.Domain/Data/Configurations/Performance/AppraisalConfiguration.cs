@@ -51,8 +51,6 @@ namespace EPMS.Domain.Data.Configurations.Performance
 
             entity.Property(e => e.SelfLocked).HasDefaultValue(false);
             entity.Property(e => e.SelfLockIsDeadline).HasDefaultValue(false);
-            entity.Property(e => e.ManagerLocked).HasDefaultValue(false);
-            entity.Property(e => e.ManagerLockIsDeadline).HasDefaultValue(false);
             entity.Property(e => e.ThreeSixtyLocked).HasDefaultValue(false);
             entity.Property(e => e.ThreeSixtyLockIsDeadline).HasDefaultValue(false);
             entity.Property(e => e.AppraisalLocked).HasDefaultValue(false);

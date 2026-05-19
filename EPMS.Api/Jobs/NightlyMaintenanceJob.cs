@@ -106,32 +106,20 @@ public class NightlyMaintenanceJob
                         r.Submit(TimeProvider.System);
                 }
 
-                var mgrDeadline = cycle.ManagerReviewDeadline ?? cycle.WindowEndDate;
-                if (!appraisal.ManagerLocked && mgrDeadline <= now)
-                {
-                    appraisal.LockManager(isDeadline: true);
-                    var mgrResponses = await uow.Perf.EvaluationResponses
-                        .FindAllAsync(r => r.AppraisalId == appraisal.Id && r.EvaluatorRole == EvaluatorRoles.Manager
-                                        && !r.IsDeleted && !r.SubmittedAt.HasValue,
-                                      trackChanges: true);
-                    foreach (var r in mgrResponses)
-                        r.Submit(TimeProvider.System);
-                }
-
                 var threeSixtyDeadline = cycle.ThreeSixtyReviewDeadline ?? cycle.WindowEndDate;
                 if (!appraisal.ThreeSixtyLocked && threeSixtyDeadline <= now)
                 {
                     appraisal.LockThreeSixty(isDeadline: true);
                     var threeSixtyResponses = await uow.Perf.EvaluationResponses
                         .FindAllAsync(r => r.AppraisalId == appraisal.Id
-                                        && (r.EvaluatorRole == EvaluatorRoles.Peer || r.EvaluatorRole == EvaluatorRoles.Subordinate)
+                                        && (r.EvaluatorRole == EvaluatorRoles.Manager || r.EvaluatorRole == EvaluatorRoles.Peer || r.EvaluatorRole == EvaluatorRoles.Subordinate)
                                         && !r.IsDeleted && !r.SubmittedAt.HasValue,
                                       trackChanges: true);
                     foreach (var r in threeSixtyResponses)
                         r.Submit(TimeProvider.System);
                 }
 
-                var appraisalDeadline = cycle.WindowEndDate;
+                var appraisalDeadline = cycle.ManagerReviewDeadline ?? cycle.WindowEndDate;
                 if (!appraisal.AppraisalLocked && appraisalDeadline <= now)
                 {
                     appraisal.LockAppraisal(isDeadline: true);

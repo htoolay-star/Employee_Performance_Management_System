@@ -5,6 +5,7 @@ namespace EPMS.Shared.DTOs.PerformanceDTOs.FormTemplateDTOs
         public long Id { get; set; }
         public string? Name { get; set; }
         public string? FormType { get; set; }
+        public long? RatingScaleId { get; init; }
         public int? QuestionsPerEvaluation { get; set; }
         public bool? HasYesNo { get; init; }
         public bool? HasComment { get; init; }

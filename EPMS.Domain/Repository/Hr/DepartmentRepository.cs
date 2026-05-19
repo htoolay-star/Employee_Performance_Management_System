@@ -53,7 +53,7 @@ public class DepartmentRepository : GenericRepository<Department>, IDepartmentRe
             .Select(p => new LookUpDto
             {
                 Id = p.Id,
-                Code = p.Code,
+                Name = p.Name,
                 IsActive = p.IsActive,
             })
             .ToListAsync();

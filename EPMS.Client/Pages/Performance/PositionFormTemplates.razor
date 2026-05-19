@@ -174,7 +174,7 @@
     {
         var query = _positions.AsEnumerable();
         if (!string.IsNullOrWhiteSpace(value))
-            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(x => x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
         return Task.FromResult(query.Select(x => (long?)x.Id).ToList().AsEnumerable());
     }
 
@@ -182,12 +182,12 @@
     {
         if (id == null) return string.Empty;
         var pos = _positions.FirstOrDefault(x => x.Id == id);
-        return pos?.Code ?? id.ToString()!;
+        return pos?.Name ?? id.ToString()!;
     }
 
     private string GetTemplateName(long templateId)
     {
-        return _templates.FirstOrDefault(t => t.Id == templateId)?.Code ?? $"Template #{templateId}";
+        return _templates.FirstOrDefault(t => t.Id == templateId)?.Name ?? $"Template #{templateId}";
     }
 
     private async Task OnPositionFilterChanged(long? v)

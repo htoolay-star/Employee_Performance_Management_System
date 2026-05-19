@@ -99,10 +99,10 @@
                             </MudTooltip>
                         </MudTd>
                         <MudTd DataLabel="Actual">
-                            <MudTextField @bind-Value="context.ActualValue"
-                                          Variant="Variant.Outlined"
-                                          Placeholder="Enter value"
-                                          Margin="Margin.Dense" />
+                            <MudNumericField @bind-Value="context.ActualValue"
+                                             Variant="Variant.Outlined"
+                                             Placeholder="Enter value"
+                                             Margin="Margin.Dense" />
                         </MudTd>
                         <MudTd DataLabel="Score">
                             <MudText Typo="Typo.body2" Align="Align.Right">@context.Score.ToString("F2")</MudText>
@@ -168,10 +168,10 @@
             if (response.Success && response.Data != null)
             {
                 if (!long.TryParse(userIdClaim, out var currentUserId)
-                    || currentUserId != response.Data.AppraisalReviewerId)
+                    || currentUserId != response.Data.ManagerReviewerId)
                 {
                     _error = true;
-                    _errorMessage = "Only the appraisal reviewer can fill KPI evaluation.";
+                    _errorMessage = "Only the manager reviewer can fill KPI evaluation.";
                     return;
                 }
                 _model = response.Data.Adapt<AppraisalFillFormModel>();

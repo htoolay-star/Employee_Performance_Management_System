@@ -40,6 +40,11 @@
             </MudButton>
         </MudStack>
 
+        @* Rating scale info *@
+        <MudText Typo="Typo.body2" Class="mb-2">
+            <strong>Rating Scale:</strong> @_ratingScaleName
+        </MudText>
+
         <MudDataGrid Items="@_questions"
                      Loading="@_loading"
                      Hover="true"
@@ -54,7 +59,6 @@
                 <PropertyColumn Property="x => x.Sequence" Title="@UIConstants.FormQuestion.ColumnSequence" Sortable="true" />
                 <PropertyColumn Property="x => x.QuestionText" Title="@UIConstants.FormQuestion.ColumnQuestion" />
                 <PropertyColumn Property="x => x.CategoryName" Title="@UIConstants.FormQuestion.ColumnCategory" />
-                <PropertyColumn Property="x => x.RatingScaleName" Title="@UIConstants.FormQuestion.ColumnRatingScale" />
                 <TemplateColumn Title="@UIConstants.Common.Actions" Sortable="false">
                     <CellTemplate>
                         <MudStack Row="true" Spacing="0">
@@ -112,6 +116,7 @@
     };
 
     private string _templateName = string.Empty;
+    private string _ratingScaleName = string.Empty;
     private List<FormQuestionDto> _questions = new();
     private Dictionary<long, int> _rowNumbers = new();
     private bool _loading = true;
@@ -119,13 +124,19 @@
     protected override async Task OnInitializedAsync()
     {
         _ = LookupState.GetCategoriesAsync();
-        _ = LookupState.GetRatingScalesAsync();
 
         var templateResponse = await FormTemplateApiClient.GetByIdAsync(TemplateId);
         if (templateResponse.Success && templateResponse.Data != null)
+        {
             _templateName = templateResponse.Data.Name;
+            var scales = await LookupState.GetRatingScalesAsync();
+            _ratingScaleName = scales.FirstOrDefault(s => s.Id == templateResponse.Data.RatingScaleId)?.Name ?? $"Scale #{templateResponse.Data.RatingScaleId}";
+        }
         else
+        {
             _templateName = $"Template #{TemplateId}";
+            _ratingScaleName = "N/A";
+        }
 
         await LoadQuestionsAsync();
     }

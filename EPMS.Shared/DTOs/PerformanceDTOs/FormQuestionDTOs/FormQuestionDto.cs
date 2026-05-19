@@ -6,6 +6,4 @@ public record FormQuestionDto(
     string QuestionText,
     int Sequence,
     long? CategoryId,
-    string? CategoryName,
-    long RatingScaleId,
-    string? RatingScaleName);
+    string? CategoryName);

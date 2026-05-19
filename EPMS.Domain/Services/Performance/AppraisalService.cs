@@ -142,7 +142,6 @@ public class AppraisalService : IAppraisalService
                 CycleName = appraisal.Cycle?.Name,
                 ManagerReviewerId = appraisal.ManagerReviewerId,
                 ManagerReviewerName = appraisal.ManagerReviewer?.StaffName,
-                AppraisalReviewerId = appraisal.Cycle?.AppraisalReviewerId,
                 Status = appraisal.Status,
                 IsLocked = appraisal.IsLocked,
                 Details = appraisal.Details.Select(d => new AppraisalDetailFillDto
@@ -176,7 +175,7 @@ public class AppraisalService : IAppraisalService
         if (appraisal.IsLocked)
             return SuccessResponse.Fail(AppraisalMsg.AlreadyLocked, ErrorType.Conflict);
 
-        if (appraisal.Cycle?.AppraisalReviewerId == null || currentEmployeeId != appraisal.Cycle.AppraisalReviewerId)
+        if (currentEmployeeId != appraisal.ManagerReviewerId)
             return SuccessResponse.Fail("You are not authorized to submit this appraisal.", ErrorType.Forbidden);
 
         if (appraisal.Cycle != null)
@@ -186,9 +185,9 @@ public class AppraisalService : IAppraisalService
             var deadline = appraisal.Cycle.ManagerReviewDeadline ?? appraisal.Cycle.WindowEndDate;
 
             if (today < start)
-                return SuccessResponse.Fail($"Manager review window opens on {start:dd/MM/yyyy}.", ErrorType.Validation);
+                return SuccessResponse.Fail($"Appraisal review window opens on {start:dd/MM/yyyy}.", ErrorType.Validation);
             if (today > deadline)
-                return SuccessResponse.Fail($"Manager review window closed on {deadline:dd/MM/yyyy}.", ErrorType.Validation);
+                return SuccessResponse.Fail($"Appraisal review window closed on {deadline:dd/MM/yyyy}.", ErrorType.Validation);
         }
 
         foreach (var detailDto in dto.Details)
@@ -263,10 +262,6 @@ public class AppraisalService : IAppraisalService
                 appraisal.UnlockSelf();
                 break;
             case EvaluatorRoles.Manager:
-                if (appraisal.ManagerLockIsDeadline)
-                    return SuccessResponse.Fail("Cannot unlock deadline-locked manager evaluation.", ErrorType.Conflict);
-                appraisal.UnlockManager();
-                break;
             case EvaluatorRoles.Peer:
             case EvaluatorRoles.Subordinate:
                 if (appraisal.ThreeSixtyLockIsDeadline)
@@ -387,17 +382,21 @@ public class AppraisalService : IAppraisalService
             .FindAllAsync(r => r.AppraisalId == id && !r.IsDeleted,
                 includes: r => r.Question);
 
-        // All questions in the same form share the same QuestionRatingScale
-        var anyResponse = responses.FirstOrDefault(r => r.RatingValue.HasValue);
+        // All questions share the same rating scale from the form template
+        var anyResponse = responses.FirstOrDefault(r => r.TemplateId != 0);
         var maxScale = 5m;
         if (anyResponse != null)
         {
-            var question = await _uow.Perf.FormQuestions.FindAsync(
-                q => q.Id == anyResponse.QuestionId,
-                includes: q => q.RatingScale);
-            maxScale = question?.RatingScale != null && question.RatingScale.Levels.Any()
-                ? Math.Max(question.RatingScale.Levels.Max(l => l.Rating), 1m)
-                : 5m;
+            var template = await _uow.Perf.FormTemplates.GetByIdAsync(anyResponse.TemplateId);
+            if (template != null)
+            {
+                var scaleWithLevels = await _uow.Perf.QuestionRatingScales.FindAsync(
+                    s => s.Id == template.QuestionRatingScaleId,
+                    includes: s => s.Levels);
+                maxScale = scaleWithLevels?.Levels.Any() == true
+                    ? Math.Max(scaleWithLevels.Levels.Max(l => l.Rating), 1m)
+                    : 5m;
+            }
         }
 
         var selfScore = responses
@@ -472,8 +471,7 @@ public class AppraisalService : IAppraisalService
                 break;
 
             case AppraisalConstants.FormTypes.Appraisal:
-                if (cycle?.AppraisalReviewerId.HasValue == true)
-                    entries.Add((cycle.AppraisalReviewerId.Value, EvaluatorRoles.Appraisal));
+                entries.Add((managerReviewerId, EvaluatorRoles.Appraisal));
                 break;
         }
 

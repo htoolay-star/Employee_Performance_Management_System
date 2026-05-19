@@ -297,7 +297,12 @@
 
     private void ApplyFiltersAndSort()
     {
-        if (!_allKpis.Any()) return;
+        if (!_allKpis.Any())
+        {
+            _kpis = new();
+            _rowNumbers = new();
+            return;
+        }
 
         var filteredList = _allKpis.Where(x => x.IsActive == _statusFilter).ToList();
 

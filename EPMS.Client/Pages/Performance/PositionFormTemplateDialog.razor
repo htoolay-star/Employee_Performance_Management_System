@@ -168,7 +168,7 @@
     {
         var query = _positions.AsEnumerable();
         if (!string.IsNullOrWhiteSpace(value))
-            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(x => x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
         return Task.FromResult(query.Select(x => (long?)x.Id).ToList().AsEnumerable());
     }
 
@@ -176,14 +176,14 @@
     {
         if (id == null) return string.Empty;
         var pos = _positions.FirstOrDefault(x => x.Id == id);
-        return pos?.Code ?? id.ToString()!;
+        return pos?.Name ?? id.ToString()!;
     }
 
     private Task<IEnumerable<long?>> SearchTemplates(string value, CancellationToken _)
     {
         var query = _templates.AsEnumerable();
         if (!string.IsNullOrWhiteSpace(value))
-            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(x => x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
         return Task.FromResult(query.Select(x => (long?)x.Id).ToList().AsEnumerable());
     }
 
@@ -191,7 +191,7 @@
     {
         if (id == null) return string.Empty;
         var tpl = _templates.FirstOrDefault(t => t.Id == id);
-        return tpl?.Code ?? id.ToString()!;
+        return tpl?.Name ?? id.ToString()!;
     }
 
     // ── Validation ────────────────────────────────────────────────────────────

@@ -72,7 +72,13 @@
                 </TemplateColumn>
                 <PropertyColumn Property="x => x.Name" Title="@UIConstants.FormTemplate.ColumnName" />
                 <PropertyColumn Property="x => x.FormType" Title="@UIConstants.FormTemplate.ColumnFormType" />
+                <PropertyColumn Property="x => x.RatingScaleName" Title="@UIConstants.FormTemplate.ColumnRatingScale" />
                 <PropertyColumn Property="x => x.QuestionCount" Title="@UIConstants.FormTemplate.ColumnQuestions" Sortable="true" />
+                <TemplateColumn Title="@UIConstants.FormTemplate.ColumnQuestionsPerEvaluation">
+                    <CellTemplate>
+                        @(context.Item.QuestionsPerEvaluation?.ToString() ?? "All")
+                    </CellTemplate>
+                </TemplateColumn>
                 <TemplateColumn Title="@UIConstants.Common.Status">
                     <CellTemplate>
                         <MudChip Color="@(context.Item.IsActive ? Color.Success : Color.Default)"
@@ -279,7 +285,12 @@
 
     private void ApplyFilters()
     {
-        if (!_allTemplates.Any()) return;
+        if (!_allTemplates.Any())
+        {
+            _templates = new();
+            _rowNumbers = new();
+            return;
+        }
 
         _templates = _allTemplates
             .Where(x => x.IsActive == _statusFilter)

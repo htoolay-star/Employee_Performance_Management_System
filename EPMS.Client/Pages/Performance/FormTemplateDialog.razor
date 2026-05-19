@@ -6,6 +6,7 @@
 @using EPMS.Client.Constants
 @using EPMS.Client.Extensions
 @using EPMS.Client.Models.Performance
+@using EPMS.Client.Services.Auth
 @using EPMS.Client.Services.Performance
 @using EPMS.Shared.Constants
 @using EPMS.Shared.DTOs.Common
@@ -15,6 +16,7 @@
 @using MudBlazor
 
 @inject IFormTemplateApiClient FormTemplateApiClient
+@inject LookupStateService LookupState
 @inject ISnackbar Snackbar
 
 <MudDialog>
@@ -38,6 +40,13 @@
                     <MudSelectItem T="string" Value="@AppraisalConstants.FormTypes.Subordinate">Subordinate Review</MudSelectItem>
                     <MudSelectItem T="string" Value="@AppraisalConstants.FormTypes.Appraisal">Appraisal Review</MudSelectItem>
                 </MudSelect>
+
+                <MudAutocomplete T="long"
+                                 @bind-Value="_model.RatingScaleId"
+                                 Label="Rating Scale"
+                                 Variant="Variant.Outlined"
+                                 SearchFunc="SearchRatingScales"
+                                 ToStringFunc="GetRatingScaleName" />
 
                 <MudNumericField @bind-Value="_model.QuestionsPerEvaluation"
                                   Label="@UIConstants.FormTemplate.QuestionsPerEvaluationLabel"
@@ -93,6 +102,9 @@
     private bool _saving;
     private FormTemplateFormModel _model = new();
     private Dictionary<string, string> _serverErrors = new();
+    private bool _loaded;
+
+    private List<LookUpDto> _ratingScales = new();
 
     // Validators instantiated once; no need to recreate per render.
     private readonly CreateFormTemplateValidator _createValidator = new();
@@ -101,9 +113,12 @@
     // ── Lifecycle ─────────────────────────────────────────────────────────────
     protected override async Task OnInitializedAsync()
     {
+        _ratingScales = await LookupState.GetRatingScalesAsync();
+
         if (FormTemplate is not null)
             _model = FormTemplate.Adapt<FormTemplateFormModel>();
 
+        _loaded = true;
         await base.OnInitializedAsync();
     }
 
@@ -169,6 +184,21 @@
 
     private void Cancel() => _mudDialog?.Cancel();
 
+    // ── Autocomplete Helpers ──────────────────────────────────────────────────
+
+    private Task<IEnumerable<long>> SearchRatingScales(string value, CancellationToken _)
+    {
+        var query = string.IsNullOrWhiteSpace(value)
+            ? _ratingScales
+            : _ratingScales.Where(x => x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(query.Select(x => x.Id).ToList().AsEnumerable());
+    }
+
+    private string GetRatingScaleName(long id)
+    {
+        return _ratingScales.FirstOrDefault(x => x.Id == id)?.Name ?? string.Empty;
+    }
+
     // ── Validation ────────────────────────────────────────────────────────────
 
     private async Task<IEnumerable<string>> ValidateField(object model, string propertyName)
@@ -200,6 +230,7 @@
 
         return _model.Name != FormTemplate!.Name ||
                _model.FormType != FormTemplate.FormType ||
+               _model.RatingScaleId != FormTemplate.RatingScaleId ||
                _model.IsActive != FormTemplate.IsActive ||
                _model.QuestionsPerEvaluation != FormTemplate.QuestionsPerEvaluation ||
                _model.HasYesNo != FormTemplate.HasYesNo ||

@@ -151,18 +151,18 @@
                                    Style="text-align: center;" />
                 </MudStack>
 
-                <MudText Typo="Typo.subtitle1" Class="mt-2">@UIConstants.AppraisalCycle.ManagerReview (Optional)</MudText>
+                <MudText Typo="Typo.subtitle1" Class="mt-2">@UIConstants.AppraisalCycle.AppraisalReview (Optional)</MudText>
 
                 <MudStack Row="true" Spacing="2">
-                    <MudDatePicker @bind-Date="_model.ManagerReviewStartDateProxy"
+                    <MudDatePicker @bind-Date="_model.AppraisalReviewStartDateProxy"
                                    Label="Start"
-                                   For="@(() => _model.ManagerReviewStartDateProxy)"
+                                   For="@(() => _model.AppraisalReviewStartDateProxy)"
                                    Variant="Variant.Outlined"
                                    Class="flex-1"
                                    Style="text-align: center;" />
-                    <MudDatePicker @bind-Date="_model.ManagerReviewDeadlineProxy"
+                    <MudDatePicker @bind-Date="_model.AppraisalReviewDeadlineProxy"
                                    Label="Deadline"
-                                   For="@(() => _model.ManagerReviewDeadlineProxy)"
+                                   For="@(() => _model.AppraisalReviewDeadlineProxy)"
                                    Variant="Variant.Outlined"
                                    Class="flex-1"
                                    Style="text-align: center;" />
@@ -376,17 +376,16 @@
                _model.EvaluationEndDate != Cycle.EvaluationEndDate ||
                _model.WindowStartDate != Cycle.WindowStartDate ||
                _model.WindowEndDate != Cycle.WindowEndDate ||
-               _model.SelfReviewStartDate != Cycle.SelfReviewStartDate ||
-               _model.SelfReviewDeadline != Cycle.SelfReviewDeadline ||
-               _model.ManagerReviewStartDate != Cycle.ManagerReviewStartDate ||
-               _model.ManagerReviewDeadline != Cycle.ManagerReviewDeadline ||
-               _model.ThreeSixtyReviewStartDate != Cycle.ThreeSixtyReviewStartDate ||
+                _model.SelfReviewStartDate != Cycle.SelfReviewStartDate ||
+                _model.SelfReviewDeadline != Cycle.SelfReviewDeadline ||
+                _model.AppraisalReviewStartDate != Cycle.AppraisalReviewStartDate ||
+                _model.AppraisalReviewDeadline != Cycle.AppraisalReviewDeadline ||
+                _model.ThreeSixtyReviewStartDate != Cycle.ThreeSixtyReviewStartDate ||
                _model.ThreeSixtyReviewDeadline != Cycle.ThreeSixtyReviewDeadline ||
                _model.KpiWeight != Cycle.KpiWeight ||
                _model.SelfWeight != Cycle.SelfWeight ||
                _model.ThreeSixtyWeight != Cycle.ThreeSixtyWeight ||
                 _model.AppraisalWeight != Cycle.AppraisalWeight ||
-                _model.AppraisalReviewerId != Cycle.AppraisalReviewerId ||
                 _model.IsActive != Cycle.IsActive;
     }
 

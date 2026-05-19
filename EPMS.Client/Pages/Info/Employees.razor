@@ -58,7 +58,7 @@
                         @if (dept != null)
                         {
                             <MudStack Row="true" AlignItems="AlignItems.Center">
-                                <MudText>@dept.Code</MudText>
+                                <MudText>@dept.Name</MudText>
                                 @if (!dept.IsActive)
                                 {
                                         <MudTooltip Text="This department is inactive" Placement="Placement.Right">
@@ -86,7 +86,7 @@
                         @if (team != null)
                         {
                             <MudStack Row="true" AlignItems="AlignItems.Center">
-                                <MudText>@team.Code</MudText>
+                                <MudText>@team.Name</MudText>
                                 @if (!team.IsActive)
                                 {
                                         <MudTooltip Text="This team is inactive" Placement="Placement.Right">
@@ -114,7 +114,7 @@
                         @if (pos != null)
                         {
                             <MudStack Row="true" AlignItems="AlignItems.Center">
-                                <MudText>@pos.Code</MudText>
+                                <MudText>@pos.Name</MudText>
                                 @if (!pos.IsActive)
                                 {
                                         <MudTooltip Text="This position is inactive" Placement="Placement.Right">
@@ -369,7 +369,7 @@
     {
         var query = _departments.AsQueryable();
         if (!string.IsNullOrWhiteSpace(value))
-            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(x => x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
         return Task.FromResult(query.Select(x => (long?)x.Id).AsEnumerable());
     }
 
@@ -378,14 +378,14 @@
         if (id == null) return string.Empty;
         var dept = _departments.FirstOrDefault(x => x.Id == id);
         if (dept == null) return string.Empty;
-        return dept.IsActive ? dept.Code : $"{dept.Code} (Inactive)";
+        return dept.IsActive ? dept.Name : $"{dept.Name} (Inactive)";
     }
 
     private Task<IEnumerable<long?>> SearchFilterTeams(string value, CancellationToken token)
     {
         var query = _teams.AsQueryable();
         if (!string.IsNullOrWhiteSpace(value))
-            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(x => x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
         return Task.FromResult(query.Select(x => (long?)x.Id).AsEnumerable());
     }
 
@@ -394,14 +394,14 @@
         if (id == null) return string.Empty;
         var team = _teams.FirstOrDefault(x => x.Id == id);
         if (team == null) return string.Empty;
-        return team.IsActive ? team.Code : $"{team.Code} (Inactive)";
+        return team.IsActive ? team.Name : $"{team.Name} (Inactive)";
     }
 
     private Task<IEnumerable<long?>> SearchFilterPositions(string value, CancellationToken token)
     {
         var query = _positions.AsQueryable();
         if (!string.IsNullOrWhiteSpace(value))
-            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(x => x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
         return Task.FromResult(query.Select(x => (long?)x.Id).AsEnumerable());
     }
 
@@ -410,7 +410,7 @@
         if (id == null) return string.Empty;
         var pos = _positions.FirstOrDefault(x => x.Id == id);
         if (pos == null) return string.Empty;
-        return pos.IsActive ? pos.Code : $"{pos.Code} (Inactive)";
+        return pos.IsActive ? pos.Name : $"{pos.Name} (Inactive)";
     }
 
     private async Task RefreshDataAsync()

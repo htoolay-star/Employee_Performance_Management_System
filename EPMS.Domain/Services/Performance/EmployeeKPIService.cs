@@ -32,7 +32,7 @@ namespace EPMS.Domain.Services.Performance
 
         public async Task<SuccessResponse<IEnumerable<EmployeeKPIDto>>> GetAllAsync()
         {
-            var items = await _uow.Perf.EmployeeKPIs.GetAllAsync();
+            var items = await _uow.Perf.EmployeeKPIs.GetAllWithIncludesAsync();
             var dtos = await ResolveNamesAsync(items);
             return SuccessResponse<IEnumerable<EmployeeKPIDto>>.Ok(dtos, EmployeeKPIMsg.RetrievedAll);
         }

@@ -39,9 +39,8 @@ public class EvaluationResponseService : IEvaluationResponseService
         var (start, deadline) = dto.EvaluatorRole switch
         {
             EvaluatorRoles.Self => (cycle.SelfReviewStartDate, cycle.SelfReviewDeadline),
-            EvaluatorRoles.Manager => (cycle.ManagerReviewStartDate, cycle.ManagerReviewDeadline),
-            EvaluatorRoles.Peer or EvaluatorRoles.Subordinate => (cycle.ThreeSixtyReviewStartDate, cycle.ThreeSixtyReviewDeadline),
-            EvaluatorRoles.Appraisal => (cycle.WindowStartDate as DateOnly?, cycle.WindowEndDate as DateOnly?),
+            EvaluatorRoles.Manager or EvaluatorRoles.Peer or EvaluatorRoles.Subordinate => (cycle.ThreeSixtyReviewStartDate, cycle.ThreeSixtyReviewDeadline),
+            EvaluatorRoles.Appraisal => (cycle.ManagerReviewStartDate as DateOnly?, cycle.ManagerReviewDeadline as DateOnly?),
             _ => (cycle.WindowStartDate, cycle.WindowEndDate)
         };
         start ??= cycle.WindowStartDate;
@@ -54,9 +53,7 @@ public class EvaluationResponseService : IEvaluationResponseService
 
         if (dto.EvaluatorRole == EvaluatorRoles.Self && appraisal.SelfLocked)
             return SuccessResponse.Fail("Self evaluation is locked.", ErrorType.Conflict);
-        if (dto.EvaluatorRole == EvaluatorRoles.Manager && appraisal.ManagerLocked)
-            return SuccessResponse.Fail("Manager evaluation is locked.", ErrorType.Conflict);
-        if ((dto.EvaluatorRole == EvaluatorRoles.Peer || dto.EvaluatorRole == EvaluatorRoles.Subordinate) && appraisal.ThreeSixtyLocked)
+        if ((dto.EvaluatorRole == EvaluatorRoles.Manager || dto.EvaluatorRole == EvaluatorRoles.Peer || dto.EvaluatorRole == EvaluatorRoles.Subordinate) && appraisal.ThreeSixtyLocked)
             return SuccessResponse.Fail("360 evaluation is locked.", ErrorType.Conflict);
         if (dto.EvaluatorRole == EvaluatorRoles.Appraisal && appraisal.AppraisalLocked)
             return SuccessResponse.Fail("Appraisal evaluation is locked.", ErrorType.Conflict);
@@ -114,9 +111,8 @@ public class EvaluationResponseService : IEvaluationResponseService
                 var (start, deadline) = response.EvaluatorRole switch
                 {
                     EvaluatorRoles.Self => (cycle.SelfReviewStartDate, cycle.SelfReviewDeadline),
-                    EvaluatorRoles.Manager => (cycle.ManagerReviewStartDate, cycle.ManagerReviewDeadline),
-                    EvaluatorRoles.Peer or EvaluatorRoles.Subordinate => (cycle.ThreeSixtyReviewStartDate, cycle.ThreeSixtyReviewDeadline),
-                    EvaluatorRoles.Appraisal => (cycle.WindowStartDate as DateOnly?, cycle.WindowEndDate as DateOnly?),
+                    EvaluatorRoles.Manager or EvaluatorRoles.Peer or EvaluatorRoles.Subordinate => (cycle.ThreeSixtyReviewStartDate, cycle.ThreeSixtyReviewDeadline),
+                    EvaluatorRoles.Appraisal => (cycle.ManagerReviewStartDate as DateOnly?, cycle.ManagerReviewDeadline as DateOnly?),
                     _ => (cycle.WindowStartDate, cycle.WindowEndDate)
                 };
                 start ??= cycle.WindowStartDate;
@@ -207,12 +203,24 @@ public class EvaluationResponseService : IEvaluationResponseService
                           trackChanges: false,
                           includes: new Expression<Func<EvaluationResponse, object>>[] { r => r.Question, r => r.Question.Category, r => r.Template });
 
-        var scaleIds = responses
-            .Select(r => r.Question?.QuestionRatingScaleId)
-            .Where(id => id.HasValue)
+        var templateIds = responses
+            .Select(r => r.TemplateId)
             .Distinct()
             .ToList();
 
+        var templateScales = new Dictionary<long, long>(); // templateId -> questionRatingScaleId
+        if (templateIds.Count != 0)
+        {
+            var templates = await _uow.Perf.FormTemplates
+                .FindAllAsync(t => templateIds.Contains(t.Id), trackChanges: false);
+
+            foreach (var t in templates)
+            {
+                templateScales[t.Id] = t.QuestionRatingScaleId;
+            }
+        }
+
+        var scaleIds = templateScales.Values.Distinct().ToList();
         var scalesWithLevels = new Dictionary<long, List<RatingLevelDto>>();
         if (scaleIds.Count != 0)
         {
@@ -230,22 +238,26 @@ public class EvaluationResponseService : IEvaluationResponseService
             }
         }
 
-        var questions = responses.Select(r => new EvaluationFormQuestionItem
+        var questions = responses.Select(r =>
         {
-            ResponseId = r.Id,
-            TemplateId = r.TemplateId,
-            TemplateName = r.Template?.Name,
-            QuestionId = r.QuestionId,
-            QuestionText = r.Question?.QuestionText,
-            CategoryName = r.Question?.Category?.Name,
-            Sequence = r.Question?.Sequence ?? 0,
-            HasYesNo = r.Template?.HasYesNo ?? false,
-            HasComment = r.Template?.HasComment ?? false,
-            RatingLevels = scalesWithLevels.TryGetValue(r.Question!.QuestionRatingScaleId, out var levels) ? levels : null,
-            MaxScore = scalesWithLevels.TryGetValue(r.Question!.QuestionRatingScaleId, out var lvl) ? (int?)lvl.Max(l => l.Rating) : null,
-            YesNoAnswer = r.YesNoAnswer,
-            RatingValue = r.RatingValue,
-            Comment = r.QuestionComment
+            var scaleId = r.TemplateId != 0 && templateScales.TryGetValue(r.TemplateId, out var sid) ? sid : 0;
+            return new EvaluationFormQuestionItem
+            {
+                ResponseId = r.Id,
+                TemplateId = r.TemplateId,
+                TemplateName = r.Template?.Name,
+                QuestionId = r.QuestionId,
+                QuestionText = r.Question?.QuestionText,
+                CategoryName = r.Question?.Category?.Name,
+                Sequence = r.Question?.Sequence ?? 0,
+                HasYesNo = r.Template?.HasYesNo ?? false,
+                HasComment = r.Template?.HasComment ?? false,
+                RatingLevels = scalesWithLevels.TryGetValue(scaleId, out var levels) ? levels : null,
+                MaxScore = scalesWithLevels.TryGetValue(scaleId, out var lvl) ? (int?)lvl.Max(l => l.Rating) : null,
+                YesNoAnswer = r.YesNoAnswer,
+                RatingValue = r.RatingValue,
+                Comment = r.QuestionComment
+            };
         }).OrderBy(q => q.TemplateId).ThenBy(q => q.Sequence).ToList();
 
         var submitted = responses.All(r => r.SubmittedAt.HasValue);
@@ -269,6 +281,9 @@ public class EvaluationResponseService : IEvaluationResponseService
         var dto = new EvaluationFormFillDto(
             appraisal.Id,
             appraisal.Employee?.StaffName,
+            appraisal.Employee?.StaffNo,
+            appraisal.Employee?.Employment?.Position?.Name,
+            appraisal.Employee?.Employment?.Department?.Name,
             appraisal.CycleId,
             appraisal.Cycle?.Name,
             appraisal.Status,
@@ -283,6 +298,18 @@ public class EvaluationResponseService : IEvaluationResponseService
         return SuccessResponse<EvaluationFormFillDto>.Ok(dto, EvaluationResponseMsg.Retrieved);
     }
 
+    public async Task<SuccessResponse> GetSelfAssessmentAsync(long appraisalId, long managerId)
+    {
+        var appraisal = await _uow.Perf.Appraisals.GetAppraisalWithDetailsAsync(appraisalId);
+        if (appraisal == null)
+            return SuccessResponse.Fail(AppraisalMsg.NotFound(appraisalId), ErrorType.NotFound);
+
+        if (managerId != appraisal.ManagerReviewerId)
+            return SuccessResponse.Fail("Only the manager reviewer can view the self-assessment.", ErrorType.Forbidden);
+
+        return await GetFormFillAsync(appraisalId, appraisal.EmployeeId, EvaluatorRoles.Self);
+    }
+
     public async Task<SuccessResponse> SubmitRoleResponsesAsync(long appraisalId, long evaluatorId, string role)
     {
         var appraisal = await _uow.Perf.Appraisals.GetAppraisalWithDetailsAsync(appraisalId);
@@ -294,9 +321,7 @@ public class EvaluationResponseService : IEvaluationResponseService
 
         if (role == EvaluatorRoles.Self && appraisal.SelfLocked)
             return SuccessResponse.Fail("Self evaluation is locked.", ErrorType.Conflict);
-        if (role == EvaluatorRoles.Manager && appraisal.ManagerLocked)
-            return SuccessResponse.Fail("Manager evaluation is locked.", ErrorType.Conflict);
-        if ((role == EvaluatorRoles.Peer || role == EvaluatorRoles.Subordinate) && appraisal.ThreeSixtyLocked)
+        if ((role == EvaluatorRoles.Manager || role == EvaluatorRoles.Peer || role == EvaluatorRoles.Subordinate) && appraisal.ThreeSixtyLocked)
             return SuccessResponse.Fail("360 evaluation is locked.", ErrorType.Conflict);
         if (role == EvaluatorRoles.Appraisal && appraisal.AppraisalLocked)
             return SuccessResponse.Fail("Appraisal evaluation is locked.", ErrorType.Conflict);
@@ -307,9 +332,8 @@ public class EvaluationResponseService : IEvaluationResponseService
             var (start, deadline) = role switch
             {
                 EvaluatorRoles.Self => (appraisal.Cycle.SelfReviewStartDate, appraisal.Cycle.SelfReviewDeadline),
-                EvaluatorRoles.Manager => (appraisal.Cycle.ManagerReviewStartDate, appraisal.Cycle.ManagerReviewDeadline),
-                EvaluatorRoles.Peer or EvaluatorRoles.Subordinate => (appraisal.Cycle.ThreeSixtyReviewStartDate, appraisal.Cycle.ThreeSixtyReviewDeadline),
-                EvaluatorRoles.Appraisal => (appraisal.Cycle.WindowStartDate as DateOnly?, appraisal.Cycle.WindowEndDate as DateOnly?),
+                EvaluatorRoles.Manager or EvaluatorRoles.Peer or EvaluatorRoles.Subordinate => (appraisal.Cycle.ThreeSixtyReviewStartDate, appraisal.Cycle.ThreeSixtyReviewDeadline),
+                EvaluatorRoles.Appraisal => (appraisal.Cycle.ManagerReviewStartDate as DateOnly?, appraisal.Cycle.ManagerReviewDeadline as DateOnly?),
                 _ => (appraisal.Cycle.WindowStartDate, appraisal.Cycle.WindowEndDate)
             };
             start ??= appraisal.Cycle.WindowStartDate;
@@ -347,9 +371,7 @@ public class EvaluationResponseService : IEvaluationResponseService
 
         if (role == EvaluatorRoles.Self)
             appraisal.LockSelf(isDeadline: false);
-        else if (role == EvaluatorRoles.Manager)
-            appraisal.LockManager(isDeadline: false);
-        else if (role == EvaluatorRoles.Peer || role == EvaluatorRoles.Subordinate)
+        else if (role == EvaluatorRoles.Manager || role == EvaluatorRoles.Peer || role == EvaluatorRoles.Subordinate)
             appraisal.LockThreeSixty(isDeadline: false);
         else if (role == EvaluatorRoles.Appraisal)
             appraisal.LockAppraisal(isDeadline: false);

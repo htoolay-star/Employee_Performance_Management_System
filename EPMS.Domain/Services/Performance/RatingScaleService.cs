@@ -60,11 +60,20 @@ public class RatingScaleService : IRatingScaleService
         if (await _uow.Perf.RatingScales.RatingExistsAsync(dto.Rating))
             return SuccessResponse<long>.Fail(string.Format(RatingScaleMsg.DuplicateRating, dto.Rating), ErrorType.Conflict);
 
+        // Validate label uniqueness
+        if (await _uow.Perf.RatingScales.LabelExistsAsync(dto.Label))
+            return SuccessResponse<long>.Fail(string.Format(RatingScaleMsg.DuplicateLabel, dto.Label), ErrorType.Conflict);
+
         // Validate score bounds
         if (dto.MinScore > dto.MaxScore)
             return SuccessResponse<long>.Fail(RatingScaleMsg.MinGreaterThanMax, ErrorType.Validation);
 
+        // Validate no overlap with existing ranges
+        if (await _uow.Perf.RatingScales.HasOverlapAsync(dto.MinScore, dto.MaxScore))
+            return SuccessResponse<long>.Fail(RatingScaleMsg.ScoreRangeOverlap, ErrorType.Validation);
+
         var ratingScale = new RatingScale(dto.Rating, dto.Label, dto.MinScore, dto.MaxScore);
+        ratingScale.UpdateDetails(dto.PromotionEligibility, dto.Description);
 
         _uow.Perf.RatingScales.Add(ratingScale);
         await _uow.CompleteAsync();
@@ -88,6 +97,11 @@ public class RatingScaleService : IRatingScaleService
         {
             var minScore = dto.MinScore ?? ratingScale.MinScore;
             var maxScore = dto.MaxScore ?? ratingScale.MaxScore;
+
+            // Validate no overlap with existing ranges (excluding self)
+            if (await _uow.Perf.RatingScales.HasOverlapAsync(minScore, maxScore, id))
+                return SuccessResponse.Fail(RatingScaleMsg.ScoreRangeOverlap, ErrorType.Validation);
+
             ratingScale.UpdateBounds(minScore, maxScore);
         }
 

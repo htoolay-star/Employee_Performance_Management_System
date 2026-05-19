@@ -53,13 +53,6 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.Property(e => e.ManagerReviewStartDate);
             entity.Property(e => e.ManagerReviewDeadline);
 
-            entity.Property(e => e.AppraisalReviewerId);
-
-            entity.HasOne(e => e.AppraisalReviewer)
-                  .WithMany()
-                  .HasForeignKey(e => e.AppraisalReviewerId)
-                  .OnDelete(DeleteBehavior.Restrict);
-
             entity.Property(e => e.FinalClosureDate);
 
             entity.HasMany(e => e.EmployeeKPIs)

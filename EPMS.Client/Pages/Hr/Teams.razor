@@ -60,7 +60,7 @@
                     @if (dept != null)
                     {
                         <MudStack Row="true" AlignItems="AlignItems.Center">
-                            <MudText>@dept.Code</MudText>
+                            <MudText>@dept.Name</MudText>
                             @if (!dept.IsActive)
                             {
                                     <MudTooltip Text="This department is inactive" Placement="Placement.Right">
@@ -372,7 +372,7 @@
         
         if (!string.IsNullOrWhiteSpace(value))
         {
-            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(x => x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
         }
         
         return Task.FromResult(query.Select(x => (long?)x.Id).AsEnumerable());
@@ -383,6 +383,6 @@
         if (id == null) return string.Empty;
         var dept = _departments.FirstOrDefault(x => x.Id == id);
         if (dept == null) return string.Empty;
-        return dept.IsActive ? dept.Code : $"{dept.Code} (Inactive)";
+        return dept.IsActive ? dept.Name : $"{dept.Name} (Inactive)";
     }
 }

@@ -17,7 +17,7 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.Property(e => e.CycleId).IsRequired();
             entity.Property(e => e.SnapshotDate).IsRequired();
 
-            entity.Property(e => e.TargetValue).HasMaxLength(100);
+            entity.Property(e => e.TargetValue).HasColumnType("decimal(18,4)");
             entity.Property(e => e.TargetUnit).HasMaxLength(100);
             entity.Property(e => e.Weightage).HasColumnType("decimal(5,2)").IsRequired();
 

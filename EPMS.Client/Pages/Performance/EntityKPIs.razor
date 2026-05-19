@@ -25,7 +25,7 @@
                 <MudSelect T="string"
                            Value="@_entityTypeFilter"
                            ValueChanged="OnEntityTypeFilterChanged"
-                           Label="Entity Type"
+                            Label="Type"
                            Variant="Variant.Outlined"
                            Style="max-width: 200px;"
                            Clearable="true">
@@ -37,7 +37,7 @@
                 <MudAutocomplete T="long?"
                                  Value="@_selectedEntityId"
                                  ValueChanged="OnEntityFilterChanged"
-                                 Label="Entity"
+                                 Label="Assigned To"
                                  Variant="Variant.Outlined"
                                  Style="max-width: 250px;"
                                  Clearable="true"
@@ -72,6 +72,7 @@
                 <PropertyColumn Property="x => x.PriorityName" Title="@UIConstants.EntityKPI.ColumnPriority" />
                 <PropertyColumn Property="x => x.Weightage" Title="@UIConstants.EntityKPI.ColumnWeightage" Sortable="true" />
                 <PropertyColumn Property="x => x.TargetValue" Title="@UIConstants.EntityKPI.ColumnTarget" />
+                <PropertyColumn Property="x => x.TargetUnit" Title="@UIConstants.EntityKPI.ColumnUnit" />
                 <TemplateColumn Title="@UIConstants.Common.Actions" Sortable="false">
                     <CellTemplate>
                         <MudStack Row="true" Spacing="0">
@@ -202,7 +203,7 @@
 
         var query = source.AsEnumerable();
         if (!string.IsNullOrWhiteSpace(value))
-            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(x => x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
         return Task.FromResult(query.Select(x => (long?)x.Id).ToList().AsEnumerable());
     }
 
@@ -217,7 +218,7 @@
             _ => Enumerable.Empty<LookUpDto>()
         };
         var item = source.FirstOrDefault(x => x.Id == id);
-        return item != null ? $"{item.Code}" : id.ToString()!;
+        return item != null ? $"{item.Name}" : id.ToString()!;
     }
 
     private async Task OnEntityTypeFilterChanged(string v)

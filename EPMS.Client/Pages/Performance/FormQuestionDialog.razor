@@ -10,7 +10,6 @@
 @using EPMS.Client.Services.Performance
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.PerformanceDTOs.FormQuestionDTOs
-@using EPMS.Shared.DTOs.PerformanceDTOs.QuestionRatingScaleDTOs
 @using Mapster
 @using MudBlazor
 
@@ -43,13 +42,6 @@
                                  SearchFunc="SearchCategories"
                                  ToStringFunc="GetCategoryName"
                                  Clearable="true" />
-
-                <MudAutocomplete T="long"
-                                 @bind-Value="_model.RatingScaleId"
-                                 Label="@UIConstants.FormQuestion.RatingScaleLabel"
-                                 Variant="Variant.Outlined"
-                                 SearchFunc="SearchRatingScales"
-                                 ToStringFunc="GetRatingScaleName" />
 
             </MudStack>
         </MudForm>
@@ -87,13 +79,11 @@
     private Dictionary<string, string> _serverErrors = new();
 
     private List<LookUpDto> _categories = new();
-    private List<LookUpDto> _ratingScales = new();
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
     protected override async Task OnInitializedAsync()
     {
         _categories = await LookupState.GetCategoriesAsync();
-        _ratingScales = await LookupState.GetRatingScalesAsync();
 
         if (IsEdit)
         {
@@ -170,26 +160,13 @@
     {
         var query = string.IsNullOrWhiteSpace(value)
             ? _categories
-            : _categories.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+            : _categories.Where(x => x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
         return Task.FromResult(query.Select(x => (long?)x.Id).ToList().AsEnumerable());
     }
 
     private string GetCategoryName(long? id)
     {
-        return _categories.FirstOrDefault(x => x.Id == id)?.Code ?? string.Empty;
-    }
-
-    private Task<IEnumerable<long>> SearchRatingScales(string value, CancellationToken _)
-    {
-        var query = string.IsNullOrWhiteSpace(value)
-            ? _ratingScales
-            : _ratingScales.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
-        return Task.FromResult(query.Select(x => x.Id).ToList().AsEnumerable());
-    }
-
-    private string GetRatingScaleName(long id)
-    {
-        return _ratingScales.FirstOrDefault(x => x.Id == id)?.Code ?? string.Empty;
+        return _categories.FirstOrDefault(x => x.Id == id)?.Name ?? string.Empty;
     }
 
     // ── Validation ────────────────────────────────────────────────────────────
@@ -222,7 +199,6 @@
 
         return _model.QuestionText != Question!.QuestionText ||
                _model.Sequence != Question.Sequence ||
-               _model.CategoryId != Question.CategoryId ||
-               _model.RatingScaleId != Question.RatingScaleId;
+               _model.CategoryId != Question.CategoryId;
     }
 }

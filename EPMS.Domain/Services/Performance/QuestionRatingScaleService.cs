@@ -68,7 +68,7 @@ public class QuestionRatingScaleService : IQuestionRatingScaleService
                     s => s.IsActive && !s.IsDeleted,
                     trackChanges: false);
 
-                return scales.Select(s => new LookUpDto { Id = s.Id, Code = s.Name, IsActive = s.IsActive }).ToList();
+                return scales.Select(s => new LookUpDto { Id = s.Id, Name = s.Name, IsActive = s.IsActive }).ToList();
             },
             TimeSpan.FromHours(12)
         );

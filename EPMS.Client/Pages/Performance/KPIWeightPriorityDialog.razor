@@ -18,16 +18,18 @@
 
                 @if (!IsEdit)
                 {
-                    <MudTextField @bind-Value="_model.LevelName"
-                                  Label="@UIConstants.KPIWeightPriority.LevelNameLabel"
-                                  For="@(() => _model.LevelName)"
-                                  Variant="Variant.Outlined" />
+                    <MudAutocomplete @bind-Value="_model.LevelName"
+                                     Label="@UIConstants.KPIWeightPriority.LevelNameLabel"
+                                     For="@(() => _model.LevelName)"
+                                     Variant="Variant.Outlined"
+                                     SearchFunc="@SearchLevelNames"
+                                     Clearable="true"
+                                     CoerceValue="false"
+                                     MinCharacters="0" />
                 }
                 else
                 {
-                    <MudText Typo="Typo.body2" Color="Color.Primary">
-                        <strong>@UIConstants.KPIWeightPriority.LevelNameLabel:</strong> @_model.LevelName
-                    </MudText>
+                    <MudTextField Value="@_model.LevelName" Label="@UIConstants.KPIWeightPriority.LevelNameLabel" Variant="Variant.Outlined" ReadOnly="true" />
                 }
 
                 <MudNumericField @bind-Value="_model.MaxWeight"
@@ -94,6 +96,19 @@
 
     private readonly CreateKPIWeightPriorityValidator _createValidator = new();
     private readonly UpdateKPIWeightPriorityValidator _updateValidator = new();
+
+    private static readonly List<string> _presetLevelNames = new()
+    {
+        "Critical", "High", "Medium", "Lower"
+    };
+
+    private Task<IEnumerable<string>> SearchLevelNames(string value, CancellationToken _)
+    {
+        var results = string.IsNullOrWhiteSpace(value)
+            ? _presetLevelNames
+            : _presetLevelNames.Where(n => n.Contains(value, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(results);
+    }
 
     private static readonly List<(string Name, string Code)> PresetColors = new()
     {

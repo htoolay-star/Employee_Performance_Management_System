@@ -14,7 +14,7 @@ namespace EPMS.Domain.Entities.Performance
                               DateOnly windowStart, DateOnly windowEnd,
                               decimal kpiWeight = 50m, decimal selfWeight = 15m,
                               decimal peerWeight = 10m,
-                              decimal appraisalWeight = 25m, long? appraisalReviewerId = null)
+                              decimal appraisalWeight = 25m)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(name);
             ArgumentException.ThrowIfNullOrWhiteSpace(appraisalType);
@@ -44,7 +44,6 @@ namespace EPMS.Domain.Entities.Performance
             WindowStartDate = windowStart;
             WindowEndDate = windowEnd;
 
-            AppraisalReviewerId = appraisalReviewerId;
             SetWeights(kpiWeight, selfWeight, peerWeight, appraisalWeight);
 
             IsActive = true;
@@ -82,9 +81,6 @@ namespace EPMS.Domain.Entities.Performance
         public decimal ThreeSixtyWeight { get; private set; }
         public decimal AppraisalWeight { get; private set; }
 
-        public long? AppraisalReviewerId { get; private set; }
-        public virtual EmployeeProfile? AppraisalReviewer { get; private set; }
-
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }
         public long? DeletedBy { get; set; }
@@ -106,13 +102,13 @@ namespace EPMS.Domain.Entities.Performance
             SelfReviewDeadline = deadline;
         }
 
-        public void ConfigureManagerReviewWindow(DateOnly start, DateOnly deadline)
+        public void ConfigureAppraisalReviewWindow(DateOnly start, DateOnly deadline)
         {
             if (start > deadline)
                 throw new ArgumentException("Start date cannot be after the deadline.");
 
             if (start < WindowStartDate || deadline > WindowEndDate)
-                throw new ArgumentException("The manager review window strictly must fall within the overall Appraisal Window dates.");
+                throw new ArgumentException("The appraisal review window strictly must fall within the overall Appraisal Window dates.");
 
             ManagerReviewStartDate = start;
             ManagerReviewDeadline = deadline;
@@ -135,7 +131,7 @@ namespace EPMS.Domain.Entities.Performance
                            DateOnly windowStart, DateOnly windowEnd,
                            decimal? kpiWeight = null, decimal? selfWeight = null,
                            decimal? peerWeight = null,
-                           decimal? appraisalWeight = null, long? appraisalReviewerId = null)
+                           decimal? appraisalWeight = null)
         {
             if (IsLocked) throw new InvalidOperationException("Cannot update a locked cycle.");
             ArgumentException.ThrowIfNullOrWhiteSpace(name);
@@ -158,9 +154,6 @@ namespace EPMS.Domain.Entities.Performance
             EvaluationEndDate = evalEnd;
             WindowStartDate = windowStart;
             WindowEndDate = windowEnd;
-
-            if (appraisalReviewerId.HasValue)
-                AppraisalReviewerId = appraisalReviewerId;
 
             if (kpiWeight.HasValue || selfWeight.HasValue || peerWeight.HasValue || appraisalWeight.HasValue)
                 SetWeights(

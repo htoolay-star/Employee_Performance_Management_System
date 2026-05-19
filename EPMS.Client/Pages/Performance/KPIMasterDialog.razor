@@ -194,13 +194,13 @@
     {
         var query = string.IsNullOrWhiteSpace(value)
             ? _categories
-            : _categories.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+            : _categories.Where(x => x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
         return Task.FromResult(query.Select(x => (long?)x.Id).ToList().AsEnumerable());
     }
 
     private string GetCategoryName(long? id)
     {
-        return _categories.FirstOrDefault(x => x.Id == id)?.Code ?? string.Empty;
+        return _categories.FirstOrDefault(x => x.Id == id)?.Name ?? string.Empty;
     }
 
     // ── Validation ────────────────────────────────────────────────────────────

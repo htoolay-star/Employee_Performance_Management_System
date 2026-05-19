@@ -12,7 +12,7 @@ namespace EPMS.Domain.Entities.Performance
     {
         private AppraisalDetail() { }
 
-        public AppraisalDetail(long appraisalId, long? kpiId, string kpiName, string? categoryName, decimal weightage, string? targetValue, string? scoringDirection = null, long? employeeKPIId = null)
+        public AppraisalDetail(long appraisalId, long? kpiId, string kpiName, string? categoryName, decimal weightage, decimal? targetValue, string? scoringDirection = null, long? employeeKPIId = null)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(kpiName);
             ArgumentOutOfRangeException.ThrowIfNegative(weightage);
@@ -27,7 +27,7 @@ namespace EPMS.Domain.Entities.Performance
             KPIName = kpiName.Trim();
             CategoryName = categoryName?.Trim();
             Weightage = weightage;
-            TargetValue = targetValue?.Trim();
+            TargetValue = targetValue;
             ScoringDirection = scoringDirection ?? AppraisalConstants.ScoringDirections.HigherIsBetter;
 
             Score = 0;
@@ -41,9 +41,9 @@ namespace EPMS.Domain.Entities.Performance
         public string KPIName { get; private set; } = string.Empty;
         public string? CategoryName { get; private set; }
         public decimal Weightage { get; private set; }
-        public string? TargetValue { get; private set; }
+        public decimal? TargetValue { get; private set; }
 
-        public string? ActualValue { get; private set; }
+        public decimal? ActualValue { get; private set; }
         public decimal Score { get; private set; }
         public decimal WeightedScore { get; private set; }
         public string? Remarks { get; private set; }
@@ -58,17 +58,16 @@ namespace EPMS.Domain.Entities.Performance
 
         public virtual Appraisal Appraisal { get; private set; } = null!;
 
-        public void Evaluate(string? actualValue, string? remarks)
+        public void Evaluate(decimal? actualValue, string? remarks)
         {
-            ActualValue = actualValue?.Trim();
+            ActualValue = actualValue;
             Remarks = remarks?.Trim();
 
-            if (decimal.TryParse(ActualValue, out var actualNum)
-                && decimal.TryParse(TargetValue, out var targetNum) && targetNum > 0)
+            if (ActualValue.HasValue && TargetValue.HasValue && TargetValue.Value > 0)
             {
                 Score = ScoringDirection == AppraisalConstants.ScoringDirections.LowerIsBetter
-                    ? Math.Min(targetNum / actualNum, 1m) * 100
-                    : Math.Min(actualNum / targetNum, 1m) * 100;
+                    ? Math.Min(TargetValue.Value / ActualValue.Value, 1m) * 100
+                    : Math.Min(ActualValue.Value / TargetValue.Value, 1m) * 100;
             }
 
             WeightedScore = Math.Round((Score * Weightage) / 100m, 2);

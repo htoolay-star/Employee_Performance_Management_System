@@ -282,7 +282,12 @@
 
     private void ApplyFiltersAndSort()
     {
-        if (!_allRatingScales.Any()) return;
+        if (!_allRatingScales.Any())
+        {
+            _ratingScales = new();
+            _rowNumbers = new();
+            return;
+        }
 
         var filteredList = _allRatingScales.Where(x => x.IsActive == _statusFilter).ToList();
 

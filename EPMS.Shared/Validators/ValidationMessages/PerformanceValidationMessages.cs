@@ -80,7 +80,7 @@ namespace EPMS.Shared.Validators.ValidationMessages
             public const string WindowEndAfterStart = "Window end date must be after start date.";
             public const string WindowStartAfterEvaluationEnd = "Window start date must be on or after evaluation end date.";
             public const string SelfReviewStartBeforeDeadline = "Self-review start date must be before deadline.";
-            public const string ManagerReviewStartBeforeDeadline = "Manager review start date must be before deadline.";
+            public const string AppraisalReviewStartBeforeDeadline = "Appraisal review start date must be before deadline.";
             public const string ThreeSixtyReviewStartBeforeDeadline = "360° review start date must be before deadline.";
             public const string AppraisalTypeInvalid = "Appraisal type must be one of: Annual, Semi-Annual, Quarterly, Monthly.";
             public const string CalendarTypeInvalid = "Calendar type must be one of: Standard Calendar, Fiscal Year Calendar.";
@@ -88,7 +88,7 @@ namespace EPMS.Shared.Validators.ValidationMessages
             public const string EvaluationPeriodBelowMinimum = "Evaluation period ({0} days) is below the minimum of {1} days required for {2} appraisal.";
             public const string EvaluationDateOutsideYearRange = "Evaluation date must be within {0:dd/MM/yyyy} to {1:dd/MM/yyyy} for year '{2}'.";
             public const string SelfReviewOutsideWindow = "Self-review dates must fall within the appraisal window ({0:dd/MM/yyyy} to {1:dd/MM/yyyy}).";
-            public const string ManagerReviewOutsideWindow = "Manager review dates must fall within the appraisal window ({0:dd/MM/yyyy} to {1:dd/MM/yyyy}).";
+            public const string AppraisalReviewOutsideWindow = "Appraisal review dates must fall within the appraisal window ({0:dd/MM/yyyy} to {1:dd/MM/yyyy}).";
             public const string ThreeSixtyReviewOutsideWindow = "360° review dates must fall within the appraisal window ({0:dd/MM/yyyy} to {1:dd/MM/yyyy}).";
             public const string WeightsMustSumTo100 = "KPI ({0}) + Self ({1}) + 360° ({2}) + Appraisal ({3}) must equal 100.";
             public const string WeightCannotBeNegative = "Individual weights cannot be negative.";
@@ -127,6 +127,7 @@ namespace EPMS.Shared.Validators.ValidationMessages
             public const string FormTypeRequired = "Form type is required.";
             public const string FormTypeMaxLength = "Form type cannot exceed 50 characters.";
             public const string FormTypeInvalid = "Invalid form type. Allowed: SELF, MANAGER, PEER, SUBORDINATE, or APPRAISAL.";
+            public const string RatingScaleIdRequired = "Rating scale is required.";
             public const string QuestionsPerEvaluationPositive = "Questions per evaluation must be greater than 0.";
         }
 
@@ -166,7 +167,7 @@ namespace EPMS.Shared.Validators.ValidationMessages
             public const string KPIIdRequired = "KPI is required.";
             public const string PriorityIdRequired = "Priority is required.";
             public const string WeightageInvalid = "Weightage must be between 0 and 100.";
-            public const string TargetValueMaxLength = "Target value cannot exceed 100 characters.";
+            public const string TargetValueInvalid = "Target value must be a valid number between 0 and 9,999,999,999.";
             public const string TargetUnitMaxLength = "Target unit cannot exceed 50 characters.";
         }
 
