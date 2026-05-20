@@ -3,6 +3,7 @@ using EPMS.Api.Mapster;
 using EPMS.Domain.Contracts;
 using EPMS.Api.Jobs;
 using Hangfire;
+using Microsoft.AspNetCore.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +36,19 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("LoginPolicy", config =>
+    {
+        config.PermitLimit = 10;
+        config.Window = TimeSpan.FromMinutes(15);
+        config.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
+        config.QueueLimit = 0;
+    });
+
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
+
 var app = builder.Build();
 
 app.UseExceptionHandler();
@@ -46,6 +60,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("BlazorPolicy");
+
+app.UseRateLimiter();
 
 app.UseHttpsRedirection();
 

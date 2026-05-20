@@ -416,6 +416,15 @@
             public const string YesNoRequired = "Please answer Yes/No for all applicable questions before submitting.";
         }
 
+        public static class DefaultPassword
+        {
+            public const string PageTitle = "Default Password Settings";
+            public const string NewPasswordLabel = "New Default Password";
+            public const string ConfirmPasswordLabel = "Confirm Password";
+            public const string SaveButton = "Update Password";
+            public const string SuccessMessage = "Default password updated successfully.";
+        }
+
         public static class Employee
         {
             public const string PageTitle = "Employee Directory";

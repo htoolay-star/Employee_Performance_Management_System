@@ -1,0 +1,121 @@
+@page "/verify-otp"
+@using EPMS.Client.Services.Auth
+@using EPMS.Shared.DTOs.Auth
+@using MudBlazor
+@attribute [AllowAnonymous]
+@inject IAuthApiClient AuthApiClient
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="d-flex align-center justify-center" Style="height:100vh;">
+    <MudPaper Elevation="25" Class="pa-8 pt-6" Style="width: 100%; max-width: 500px;">
+        @if (_verified)
+        {
+            <MudText Typo="Typo.h5" Align="Align.Center" Class="mb-4">Request Submitted</MudText>
+            <MudText Typo="Typo.body2" Align="Align.Center" Class="mb-6">
+                Your identity has been verified. Your password reset request has been submitted for admin approval.
+                You will be notified once an administrator approves your request.
+            </MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
+                       Href="login" Class="mt-4">
+                Back to Login
+            </MudButton>
+        }
+        else
+        {
+            <MudText Typo="Typo.h5" Align="Align.Center" Class="mb-2">Verify OTP</MudText>
+            <MudText Typo="Typo.body2" Align="Align.Center" Class="mb-8">
+                Enter the 6-digit code sent to <strong>@Email</strong>
+            </MudText>
+
+            <MudForm @ref="_form" @bind-IsValid="_isValid" @bind-Errors="_errors">
+                <MudTextField T="string" Label="OTP Code"
+                              @bind-Value="_otp"
+                              Required="true" RequiredError="OTP is required"
+                              Variant="Variant.Outlined"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Pin"
+                              Class="mb-4"
+                              MaxLength="6"
+                              HelperText="Enter the 6-digit code" />
+
+                @if (!string.IsNullOrEmpty(_errorMessage))
+                {
+                    <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true" Class="mt-2 mb-4">
+                        @_errorMessage
+                    </MudAlert>
+                }
+
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
+                           Disabled="!_isValid || _isLoading" OnClick="Submit" Class="mt-4">
+                    @if (_isLoading)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+                        <span>Verifying...</span>
+                    }
+                    else
+                    {
+                        <span>Verify</span>
+                    }
+                </MudButton>
+            </MudForm>
+
+            <MudButton Variant="Variant.Text" Color="Color.Primary" FullWidth="true"
+                       Href="forgot-password" Class="mt-4">
+                Resend OTP
+            </MudButton>
+        }
+    </MudPaper>
+</MudContainer>
+
+@code {
+    [SupplyParameterFromQuery]
+    public string? Email { get; set; }
+
+    private MudForm _form = new();
+    private string _otp = string.Empty;
+    private bool _isValid;
+    private string[] _errors = { };
+    private string _errorMessage = string.Empty;
+    private bool _isLoading;
+    private bool _verified;
+
+    private async Task Submit()
+    {
+        _isLoading = true;
+        await _form.Validate();
+        if (!_isValid) { _isLoading = false; return; }
+
+        if (string.IsNullOrWhiteSpace(Email))
+        {
+            _errorMessage = "Email is missing. Please go back and try again.";
+            _isLoading = false;
+            return;
+        }
+
+        _errorMessage = string.Empty;
+
+        try
+        {
+            var result = await AuthApiClient.VerifyOtp(new VerifyOtpRequest { Email = Email, Otp = _otp });
+            if (result.Success)
+            {
+                _verified = true;
+                Snackbar.Add(result.Message, Severity.Success);
+            }
+            else
+            {
+                _errorMessage = result.Message;
+                Snackbar.Add(result.Message, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+            Snackbar.Add(string.Format(EPMS.Client.Constants.UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}

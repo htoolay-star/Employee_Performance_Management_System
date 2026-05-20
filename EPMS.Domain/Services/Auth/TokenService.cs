@@ -28,6 +28,7 @@ namespace EPMS.Domain.Services.Auth
             var claims = new List<Claim>
             {
                 new(ClaimTypes.NameIdentifier, userInfo.Id.ToString()),
+                new(ClaimTypes.Name, userInfo.Name),
                 new(ClaimTypes.Email, userInfo.Email),
                 new(JwtRegisteredClaimNames.Jti, userInfo.JwtId),
                 new Claim(AppClaims.IsFirstLogin, userInfo.IsFirstLogin.ToString())

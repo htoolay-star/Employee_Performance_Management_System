@@ -15,7 +15,17 @@ public static class ServiceResponseMessages
         public const string RefreshTokenExpired = "Refresh token expired. Please login again.";
         public const string LoginSuccess = "Login successful";
         public const string TokenRefreshed = "Token refreshed successfully";
+        public const string AccountLocked = "Account is locked due to too many failed login attempts. Please try again later.";
+        public static string AccountLockedUntil(DateTimeOffset until) => $"Account is locked until {until:HH:mm:ss}. Please try again later.";
         public static string UserRegistered => "User registered successfully";
+        public const string OtpSent = "OTP has been sent to your email.";
+        public const string InvalidOtp = "Invalid or expired OTP.";
+        public const string OtpVerified = "OTP verified successfully. Your request has been submitted for admin approval.";
+        public const string ResetRequestNotFound = "Password reset request not found.";
+        public const string ResetRequestApproved = "Password reset request approved. User can now login with the new password.";
+        public const string ResetRequestRejected = "Password reset request rejected.";
+        public const string NoPendingRequests = "No pending password reset requests.";
+        public const string ResetRequestsRetrieved = "Password reset requests retrieved successfully.";
     }
 
     public static class DepartmentMsg

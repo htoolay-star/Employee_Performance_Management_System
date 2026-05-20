@@ -8,5 +8,7 @@ public class CreateUserRequestValidator : AbstractValidator<CreateUserRequest>
     public CreateUserRequestValidator()
     {
         RuleFor(x => x.Email).ApplyEmailRules();
+        RuleFor(x => x.PositionId)
+            .GreaterThan(0).WithMessage("Position is required.");
     }
 }

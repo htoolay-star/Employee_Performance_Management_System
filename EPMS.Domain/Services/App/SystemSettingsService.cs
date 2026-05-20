@@ -2,6 +2,7 @@
 using EPMS.Domain.Entities.App;
 using EPMS.Domain.Interface.IService.App;
 using EPMS.Shared.Constants;
+using Microsoft.EntityFrameworkCore;
 
 namespace EPMS.Domain.Services.App
 {
@@ -72,6 +73,30 @@ namespace EPMS.Domain.Services.App
             else
             {
                 setting.UpdateValue(encryptedValue);
+            }
+
+            await _uow.CompleteAsync();
+        }
+
+        public async Task<long?> GetAdminPositionIdAsync()
+        {
+            var val = await GetSettingValueAsync(SettingKeys.AdminPositionId);
+            if (string.IsNullOrEmpty(val)) return null;
+            return long.TryParse(val, out var id) ? id : null;
+        }
+
+        public async Task SetAdminPositionIdAsync(long positionId)
+        {
+            var setting = await _uow.App.SystemSettings.GetByKeyAsync(SettingKeys.AdminPositionId, trackChanges: true);
+
+            if (setting == null)
+            {
+                setting = new SystemSetting(SettingKeys.AdminPositionId, positionId.ToString(), "The position that grants Admin role.");
+                _uow.App.SystemSettings.Add(setting);
+            }
+            else
+            {
+                setting.UpdateValue(positionId.ToString());
             }
 
             await _uow.CompleteAsync();

@@ -30,6 +30,8 @@ namespace EPMS.Domain.Data
         public DbSet<User> Users => Set<User>();
         public DbSet<Role> Roles => Set<Role>();
         public DbSet<UserRefreshToken> UserRefreshTokens => Set<UserRefreshToken>();
+        public DbSet<PasswordResetOtp> PasswordResetOtps => Set<PasswordResetOtp>();
+        public DbSet<PasswordResetRequest> PasswordResetRequests => Set<PasswordResetRequest>();
 
         // --- HR Schema ---
         public DbSet<Level> Levels => Set<Level>();

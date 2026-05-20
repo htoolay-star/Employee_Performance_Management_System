@@ -1,0 +1,153 @@
+@page "/admin/create-user"
+@using EPMS.Client.Constants
+@using EPMS.Client.Services.Auth
+@using EPMS.Client.Services.Hr
+@using EPMS.Shared.DTOs.Auth
+@using EPMS.Shared.DTOs.Common
+@using MudBlazor
+@using Refit
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "SystemAdmin")]
+@inject IAuthApiClient AuthApiClient
+@inject IPositionApiClient PositionApiClient
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>Create User</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+    <MudPaper Elevation="0" Outlined="true" Class="pa-8 rounded-lg">
+        <MudText Typo="Typo.h5" Class="mb-2">Create User</MudText>
+        <MudText Typo="Typo.body2" Class="mb-6">
+            Create a new user account. The user will receive the default password
+            and will be required to change it on first login.
+        </MudText>
+
+        <MudForm @ref="_form" @bind-IsValid="_isValid" @bind-Errors="_errors">
+            <MudTextField T="string"
+                          Label="Email"
+                          @bind-Value="_email"
+                          For="@(() => _email)"
+                          Required="true"
+                          RequiredError="Email is required"
+                          Variant="Variant.Outlined"
+                          Class="mb-4" />
+
+            <MudSelect T="long?"
+                       Label="Position"
+                       @bind-Value="_selectedPositionId"
+                       Variant="Variant.Outlined"
+                       Class="mb-4"
+                       Required="false"
+                       HelperText="Assign a position (optional)">
+                <MudSelectItem T="long?" Value="null">-- None --</MudSelectItem>
+                @foreach (var pos in _positions)
+                {
+                    <MudSelectItem T="long?" Value="pos.Id">@pos.Name</MudSelectItem>
+                }
+            </MudSelect>
+
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true" Class="mt-2 mb-4">
+                    @_errorMessage
+                </MudAlert>
+            }
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       FullWidth="true"
+                       Disabled="!_isValid || _isSaving"
+                       OnClick="Submit"
+                       Class="mt-4">
+                @if (_isSaving)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+                    <span>Creating...</span>
+                }
+                else
+                {
+                    <span>Create User</span>
+                }
+            </MudButton>
+        </MudForm>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private MudForm _form = new();
+    private bool _isValid;
+    private string[] _errors = { };
+    private string _errorMessage = string.Empty;
+    private bool _isSaving;
+
+    private string _email = string.Empty;
+    private long? _selectedPositionId;
+    private List<LookUpDto> _positions = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPositionsAsync();
+    }
+
+    private async Task LoadPositionsAsync()
+    {
+        try
+        {
+            var response = await PositionApiClient.GetLookupAsync();
+            if (response.Success && response.Data != null)
+            {
+                _positions = response.Data.ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+    }
+
+    private async Task Submit()
+    {
+        await _form.Validate();
+        if (!_isValid) return;
+
+        _isSaving = true;
+        _errorMessage = string.Empty;
+
+        try
+        {
+            var request = new CreateUserRequest
+            {
+                Email = _email,
+                PositionId = _selectedPositionId ?? 0
+            };
+
+            var result = await AuthApiClient.Register(request);
+            if (result.Success)
+            {
+                Snackbar.Add($"User {_email} created successfully!", Severity.Success);
+                _email = string.Empty;
+                _selectedPositionId = null;
+            }
+            else
+            {
+                _errorMessage = result.Message;
+                Snackbar.Add(result.Message, Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            _errorMessage = error?.Message ?? "Failed to create user.";
+            Snackbar.Add(_errorMessage, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}

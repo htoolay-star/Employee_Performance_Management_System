@@ -8,6 +8,8 @@ using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 namespace EPMS.Api.Controllers.Auth
@@ -26,6 +28,7 @@ namespace EPMS.Api.Controllers.Auth
         }
 
         [AllowAnonymous]
+        [EnableRateLimiting("LoginPolicy")]
         [HttpPost("login")]
         public async Task<ActionResult<SuccessResponse<AuthResponse>>> Login([FromBody] LoginRequest request)
         {
@@ -51,13 +54,13 @@ namespace EPMS.Api.Controllers.Auth
 
         [Authorize]
         [HttpPost("change-password")]
-        public async Task<ActionResult<SuccessResponse>> ChangePassword([FromBody] ChangePasswordRequest request)
+        public async Task<ActionResult<SuccessResponse<AuthResponse>>> ChangePassword([FromBody] ChangePasswordRequest request)
         {
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             if (!long.TryParse(userIdClaim, out var userId))
             {
-                return HandleResult(SuccessResponse.Fail("Invalid user token.", ErrorType.Unauthorized));
+                return HandleResult(SuccessResponse<AuthResponse>.Fail("Invalid user token.", ErrorType.Unauthorized));
             }
 
             var response = await _authService.ChangePasswordAsync(userId, request);
@@ -73,16 +76,86 @@ namespace EPMS.Api.Controllers.Auth
                 return HandleResult(SuccessResponse.Fail("Refresh token is required.", ErrorType.Validation));
             }
 
-            var response = await _authService.LogoutAsync(request.RefreshToken);
+            var jti = User.FindFirstValue(JwtRegisteredClaimNames.Jti) ?? string.Empty;
+            var response = await _authService.LogoutAsync(request.RefreshToken, jti);
             return HandleResult(response);
         }
 
-        [Authorize(Roles = RoleConstants.Admin)]
+        [Authorize(Roles = RoleConstants.SystemAdmin)]
+        [HttpGet("admin-position")]
+        public async Task<ActionResult<SuccessResponse<long?>>> GetAdminPosition()
+        {
+            var positionId = await _settingsService.GetAdminPositionIdAsync();
+            return Ok(SuccessResponse<long?>.Ok(positionId,
+                positionId.HasValue ? "Admin position retrieved." : "No admin position configured."));
+        }
+
+        [Authorize(Roles = RoleConstants.SystemAdmin)]
+        [HttpPut("admin-position")]
+        public async Task<ActionResult<SuccessResponse>> SetAdminPosition([FromBody] AdminPositionRequest request)
+        {
+            await _settingsService.SetAdminPositionIdAsync(request.PositionId);
+            return HandleResult(SuccessResponse.Ok("Admin position updated successfully."));
+        }
+
+        [Authorize(Roles = $"{RoleConstants.Admin},{RoleConstants.SystemAdmin}")]
         [HttpPut("default-password")]
         public async Task<ActionResult<SuccessResponse>> UpdateDefaultPassword([FromBody] UpdateDefaultPasswordRequest request)
         {
             await _settingsService.UpdateDefaultPasswordAsync(request.NewDefaultPassword);
             return HandleResult(SuccessResponse.Ok("Default password updated successfully."));
+        }
+
+        [AllowAnonymous]
+        [HttpPost("forgot-password")]
+        public async Task<ActionResult<SuccessResponse>> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
+            var response = await _authService.RequestOtpAsync(request);
+            return HandleResult(response);
+        }
+
+        [AllowAnonymous]
+        [HttpPost("verify-otp")]
+        public async Task<ActionResult<SuccessResponse>> VerifyOtp([FromBody] VerifyOtpRequest request)
+        {
+            var response = await _authService.VerifyOtpAsync(request);
+            return HandleResult(response);
+        }
+
+        [Authorize(Roles = $"{RoleConstants.Admin},{RoleConstants.SystemAdmin}")]
+        [HttpGet("password-reset-requests")]
+        public async Task<ActionResult<SuccessResponse<IEnumerable<PasswordResetRequestDto>>>> GetPendingResetRequests()
+        {
+            var response = await _authService.GetPendingResetRequestsAsync();
+            return HandleResult(response);
+        }
+
+        [Authorize(Roles = $"{RoleConstants.Admin},{RoleConstants.SystemAdmin}")]
+        [HttpPost("password-reset-requests/{id:long}/approve")]
+        public async Task<ActionResult<SuccessResponse>> ApproveResetRequest(long id, [FromBody] AdminResetPasswordRequest request)
+        {
+            var adminIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!long.TryParse(adminIdClaim, out var adminId))
+            {
+                return HandleResult(SuccessResponse.Fail("Invalid admin token.", ErrorType.Unauthorized));
+            }
+
+            var response = await _authService.ApproveResetRequestAsync(id, adminId, request);
+            return HandleResult(response);
+        }
+
+        [Authorize(Roles = $"{RoleConstants.Admin},{RoleConstants.SystemAdmin}")]
+        [HttpPost("password-reset-requests/{id:long}/reject")]
+        public async Task<ActionResult<SuccessResponse>> RejectResetRequest(long id)
+        {
+            var adminIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!long.TryParse(adminIdClaim, out var adminId))
+            {
+                return HandleResult(SuccessResponse.Fail("Invalid admin token.", ErrorType.Unauthorized));
+            }
+
+            var response = await _authService.RejectResetRequestAsync(id, adminId);
+            return HandleResult(response);
         }
     }
 }

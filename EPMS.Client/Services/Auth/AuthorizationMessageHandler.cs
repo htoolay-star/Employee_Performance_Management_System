@@ -45,10 +45,15 @@ namespace EPMS.Client.Services.Auth
 
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
-                // Don't try to refresh if this was itself a refresh-token call
-                if (request.RequestUri?.AbsolutePath.EndsWith("/api/auth/refresh-token") == true)
+                // Don't try to refresh for anonymous endpoints
+                var path = request.RequestUri?.AbsolutePath ?? "";
+                if (path.EndsWith("/api/auth/login") ||
+                    path.EndsWith("/api/auth/forgot-password") ||
+                    path.EndsWith("/api/auth/verify-otp") ||
+                    path.EndsWith("/api/auth/refresh-token"))
                 {
-                    await ForceLogoutAsync();
+                    if (path.EndsWith("/api/auth/refresh-token"))
+                        await ForceLogoutAsync();
                     return response;
                 }
 

@@ -10,7 +10,7 @@ namespace EPMS.Api.Controllers.Auth
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = RoleConstants.Admin)]
+    [Authorize(Roles = $"{RoleConstants.Admin},{RoleConstants.SystemAdmin}")]
     public class PermissionsController : ApiControllerBase
     {
         private readonly IPermissionService _permissionService;

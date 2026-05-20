@@ -13,12 +13,14 @@ namespace EPMS.Domain.Repository.Auth
 {
     public class AuthModule(IServiceProvider serviceProvider) : IAuthModule
     {
-        private IUserRepository? _users;
-        private IUserRefreshTokenRepository? _usersRefreshToken;
-        private IRoleRepository? _roles;
-        private IPermissionRepository? _permissions;
-        private IPositionPermissionRepository? _positionPermissions;
-        private IPositionRoleRepository? _positionRoles;
+    private IUserRepository? _users;
+    private IUserRefreshTokenRepository? _usersRefreshToken;
+    private IRoleRepository? _roles;
+    private IPermissionRepository? _permissions;
+    private IPositionPermissionRepository? _positionPermissions;
+    private IPositionRoleRepository? _positionRoles;
+    private IPasswordResetOtpRepository? _passwordResetOtps;
+    private IPasswordResetRequestRepository? _passwordResetRequests;
 
         public IUserRepository Users =>
         _users ??= serviceProvider.GetRequiredService<IUserRepository>();
@@ -37,5 +39,11 @@ namespace EPMS.Domain.Repository.Auth
 
         public IPositionRoleRepository PositionRoles =>
         _positionRoles ??= serviceProvider.GetRequiredService<IPositionRoleRepository>();
+
+        public IPasswordResetOtpRepository PasswordResetOtps =>
+        _passwordResetOtps ??= serviceProvider.GetRequiredService<IPasswordResetOtpRepository>();
+
+        public IPasswordResetRequestRepository PasswordResetRequests =>
+        _passwordResetRequests ??= serviceProvider.GetRequiredService<IPasswordResetRequestRepository>();
     }
 }

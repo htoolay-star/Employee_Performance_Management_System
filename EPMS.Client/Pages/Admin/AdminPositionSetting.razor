@@ -1,0 +1,163 @@
+@page "/admin/admin-position"
+@using EPMS.Client.Constants
+@using EPMS.Client.Services.Auth
+@using EPMS.Client.Services.Hr
+@using EPMS.Shared.DTOs.Auth
+@using EPMS.Shared.DTOs.Common
+@using MudBlazor
+@using Refit
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "SystemAdmin")]
+@inject IAuthApiClient AuthApiClient
+@inject IPositionApiClient PositionApiClient
+@inject ISnackbar Snackbar
+
+<PageTitle>Admin Position Setting</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+    <MudPaper Elevation="0" Outlined="true" Class="pa-8 rounded-lg">
+        <MudText Typo="Typo.h5" Class="mb-2">Admin Position</MudText>
+        <MudText Typo="Typo.body2" Class="mb-6">
+            Select the position that grants <strong>Admin</strong> role power.
+            Users assigned to this position will automatically have Admin access.
+            Only <strong>one</strong> position can be designated as the admin position.
+        </MudText>
+
+        <MudForm @ref="_form" @bind-IsValid="_isValid" @bind-Errors="_errors">
+            <MudSelect T="long?"
+                       Label="Select Admin Position"
+                       @bind-Value="_selectedPositionId"
+                       Variant="Variant.Outlined"
+                       Class="mb-4"
+                       Required="false"
+                       HelperText="Leave empty to clear admin position">
+                <MudSelectItem T="long?" Value="null">-- None --</MudSelectItem>
+                @foreach (var pos in _positions)
+                {
+                    <MudSelectItem T="long?" Value="pos.Id">@pos.Name</MudSelectItem>
+                }
+            </MudSelect>
+
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true" Class="mt-2 mb-4">
+                    @_errorMessage
+                </MudAlert>
+            }
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       FullWidth="true"
+                       Disabled="!_isValid || _isSaving"
+                       OnClick="Save"
+                       Class="mt-4">
+                @if (_isSaving)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+                    <span>Saving...</span>
+                }
+                else
+                {
+                    <span>Save</span>
+                }
+            </MudButton>
+        </MudForm>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private MudForm _form = new();
+    private bool _isValid;
+    private string[] _errors = { };
+    private string _errorMessage = string.Empty;
+    private bool _isSaving;
+    private bool _loading = true;
+
+    private List<LookUpDto> _positions = new();
+    private long? _selectedPositionId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPositionsAsync();
+        await LoadCurrentSettingAsync();
+        _loading = false;
+    }
+
+    private async Task LoadPositionsAsync()
+    {
+        try
+        {
+            var response = await PositionApiClient.GetLookupAsync();
+            if (response.Success && response.Data != null)
+            {
+                _positions = response.Data.ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+    }
+
+    private async Task LoadCurrentSettingAsync()
+    {
+        try
+        {
+            var response = await AuthApiClient.GetAdminPosition();
+            if (response.Success)
+            {
+                _selectedPositionId = response.Data;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+    }
+
+    private async Task Save()
+    {
+        _isSaving = true;
+        _errorMessage = string.Empty;
+
+        try
+        {
+            if (_selectedPositionId.HasValue)
+            {
+                var result = await AuthApiClient.SetAdminPosition(new AdminPositionRequest
+                {
+                    PositionId = _selectedPositionId.Value
+                });
+
+                if (result.Success)
+                {
+                    Snackbar.Add(result.Message, Severity.Success);
+                }
+                else
+                {
+                    _errorMessage = result.Message;
+                    Snackbar.Add(result.Message, Severity.Error);
+                }
+            }
+            else
+            {
+                Snackbar.Add("Admin position cleared.", Severity.Warning);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            _errorMessage = error?.Message ?? "Failed to save.";
+            Snackbar.Add(_errorMessage, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = ex.Message;
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+}

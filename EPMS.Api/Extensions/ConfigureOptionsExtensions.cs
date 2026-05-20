@@ -9,7 +9,9 @@ namespace EPMS.Api.Extensions
             services.Configure<SeedSettings>(config.GetSection("SeedSettings"));
             services.Configure<JwtSettings>(config.GetSection("JwtSettings"));
             services.Configure<CryptoSettings>(config.GetSection("CryptoSettings"));
+            services.Configure<LockoutSettings>(config.GetSection("LockoutSettings"));
             services.Configure<CacheSettings>(config.GetSection("CacheSettings"));
+            services.Configure<MailtrapSettings>(config.GetSection("Mailtrap"));
 
             return services;
         }

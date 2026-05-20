@@ -49,6 +49,8 @@ namespace EPMS.Domain.Data.Configurations.Auth
 
             entity.Property(e => e.Version).IsRowVersion();
 
+            entity.Property(e => e.PositionId);
+
             entity.HasOne(e => e.Role)
                    .WithMany()
                    .HasForeignKey(e => e.RoleId)
