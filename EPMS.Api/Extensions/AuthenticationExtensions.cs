@@ -1,7 +1,9 @@
-﻿using EPMS.Domain.Interface.IService.App;
+﻿using EPMS.Api.Authorization;
+using EPMS.Domain.Interface.IService.App;
 using EPMS.Shared.Constants;
 using EPMS.Shared.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -58,6 +60,9 @@ namespace EPMS.Api.Extensions
                 });
 
             services.AddAuthorization();
+            services.AddSingleton<IAuthorizationPolicyProvider, PermissionAuthorizationPolicyProvider>();
+            services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+            services.AddHttpContextAccessor();
             return services;
         }
     }

@@ -1,0 +1,107 @@
+@page "/admin/position-permissions"
+@using EPMS.Client.Constants
+@using EPMS.Client.Services.Auth
+@using EPMS.Client.Services.Hr
+@using EPMS.Shared.DTOs.Common
+@using MudBlazor
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "SystemAdmin")]
+@inject IPermissionApiClient PermissionApiClient
+@inject IPositionApiClient PositionApiClient
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>Position Permissions</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+    <MudPaper Elevation="0" Outlined="true" Class="pa-8 rounded-lg">
+        <MudText Typo="Typo.h5" Class="mb-2">Position Permissions</MudText>
+        <MudText Typo="Typo.body2" Class="mb-6">
+            Select a position to manage its permissions.
+        </MudText>
+
+        <div class="d-flex align-center mb-4">
+            <MudSelect T="long?"
+                       Label="Position"
+                       Value="_selectedPositionId"
+                       ValueChanged="OnPositionChanged"
+                       Variant="Variant.Outlined"
+                       Class="flex-grow-1 me-4"
+                       Required="false"
+                       AnchorOrigin="Origin.BottomCenter">
+                <MudSelectItem T="long?" Value="null">-- Select a position --</MudSelectItem>
+                @foreach (var pos in _positions)
+                {
+                    <MudSelectItem T="long?" Value="pos.Id">@pos.Name</MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Disabled="!_selectedPositionId.HasValue"
+                       OnClick="OpenManageDialog"
+                       Class="mt-2">
+                Manage Permissions
+            </MudButton>
+        </div>
+
+        @if (!string.IsNullOrEmpty(_selectedPositionName))
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mt-4">
+                Selected position: <strong>@_selectedPositionName</strong>
+            </MudAlert>
+        }
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private long? _selectedPositionId;
+    private string? _selectedPositionName;
+    private List<LookUpDto> _positions = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPositionsAsync();
+    }
+
+    private async Task LoadPositionsAsync()
+    {
+        try
+        {
+            var response = await PositionApiClient.GetLookupAsync();
+            if (response.Success && response.Data != null)
+            {
+                _positions = response.Data.ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+    }
+
+    private void OnPositionChanged(long? positionId)
+    {
+        _selectedPositionId = positionId;
+        _selectedPositionName = _positions.FirstOrDefault(p => p.Id == positionId)?.Name;
+        StateHasChanged();
+    }
+
+    private async Task OpenManageDialog()
+    {
+        if (!_selectedPositionId.HasValue) return;
+
+        var parameters = new DialogParameters<PositionPermissionDialog>
+        {
+            { x => x.PositionId, _selectedPositionId.Value },
+            { x => x.PositionName, _selectedPositionName }
+        };
+
+        var dialog = await DialogService.ShowAsync<PositionPermissionDialog>(
+            "Manage Permissions", parameters);
+
+        if (await dialog.Result is { Canceled: false })
+        {
+            Snackbar.Add("Permissions saved successfully!", Severity.Success);
+        }
+    }
+}

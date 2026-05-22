@@ -38,6 +38,9 @@ public interface IAuthApiClient
     [Get("/api/auth/password-reset-requests")]
     Task<SuccessResponse<List<PasswordResetRequestDto>>> GetPendingResetRequests();
 
+    [Get("/api/auth/my-permissions")]
+    Task<SuccessResponse<List<string>>> GetMyPermissionsAsync();
+
     [Post("/api/auth/password-reset-requests/{id}/approve")]
     Task<SuccessResponse> ApproveResetRequest(long id, [Body] AdminResetPasswordRequest request);
 

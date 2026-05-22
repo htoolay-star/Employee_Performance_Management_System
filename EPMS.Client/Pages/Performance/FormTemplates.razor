@@ -1,4 +1,5 @@
 @page "/performance/form-templates"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @* ═══════════════════════════════════════════════════════════════════════════
    PATTERN: GetAll + Client-side QuickFilter + Client-side Sorting
    Use this pattern when the dataset is small (< ~500 rows).
@@ -8,6 +9,7 @@
    - After every CUD operation, re-calls LoadAllAsync() to refresh the list.
    ═══════════════════════════════════════════════════════════════════════════ *@
 @using EPMS.Client.Constants
+@using EPMS.Client.Services.Auth
 @using EPMS.Client.Services.Performance
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.PerformanceDTOs.FormTemplateDTOs
@@ -19,11 +21,20 @@
 @inject IFormTemplateApiClient FormTemplateApiClient
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject CurrentUserPermissionService PermService
 
 <PageTitle>@UIConstants.FormTemplate.PageTitle</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
-    <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.FormTemplate.PageTitle</MudText>
+@if (_error)
+{
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+        <MudAlert Severity="Severity.Error">@_errorMessage</MudAlert>
+    </MudContainer>
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+        <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.FormTemplate.PageTitle</MudText>
 
     <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
 
@@ -49,12 +60,15 @@
                 <MudSelectItem T="bool" Value="@(false)">@UIConstants.Common.Inactive</MudSelectItem>
             </MudSelect>
 
-            <MudButton Variant="Variant.Filled"
-                       Color="Color.Primary"
-                       StartIcon="@Icons.Material.Filled.Add"
-                       OnClick="OpenCreateDialog">
-                @UIConstants.FormTemplate.AddButton
-            </MudButton>
+            @if (_canCreate)
+            {
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenCreateDialog">
+                    @UIConstants.FormTemplate.AddButton
+                </MudButton>
+            }
         </MudStack>
 
         @* ── Data Grid ────────────────────────────────────────────────── *@
@@ -96,18 +110,24 @@
                                                Size="Size.Small"
                                                OnClick="@(() => NavigateToQuestions(context.Item.Id))" />
                             </MudTooltip>
-                            <MudTooltip Text="Edit Form Template" Placement="Placement.Top">
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                               Color="Color.Primary"
-                                               Size="Size.Small"
-                                               OnClick="@(() => OpenEditDialog(context.Item))" />
-                            </MudTooltip>
-                            <MudTooltip Text="Delete Form Template" Placement="Placement.Top">
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                               Color="Color.Error"
-                                               Size="Size.Small"
-                                               OnClick="@(() => OpenDeleteDialog(context.Item))" />
-                            </MudTooltip>
+                            @if (_canEdit)
+                            {
+                                <MudTooltip Text="Edit Form Template" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                   Color="Color.Primary"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => OpenEditDialog(context.Item))" />
+                                </MudTooltip>
+                            }
+                            @if (_canDelete)
+                            {
+                                <MudTooltip Text="Delete Form Template" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   Color="Color.Error"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => OpenDeleteDialog(context.Item))" />
+                                </MudTooltip>
+                            }
                         </MudStack>
                     </CellTemplate>
                 </TemplateColumn>
@@ -133,6 +153,7 @@
 
     </MudPaper>
 </MudContainer>
+}
 
 @code {
 
@@ -156,9 +177,28 @@
     private Dictionary<long, int> _rowNumbers = new();
     private bool _statusFilter = true;
 
+    private bool _error;
+    private string _errorMessage = string.Empty;
+    private bool _canView;
+    private bool _canCreate;
+    private bool _canEdit;
+    private bool _canDelete;
+
     // ── Lifecycle ────────────────────────────────────────────────────
     protected override async Task OnInitializedAsync()
     {
+        _canView = await PermService.HasPermissionAsync("FORMTEMPLATE.VIEW");
+        if (!_canView)
+        {
+            _error = true;
+            _errorMessage = "You do not have permission to view Form Templates.";
+            return;
+        }
+
+        _canCreate = await PermService.HasPermissionAsync("FORMTEMPLATE.CREATE");
+        _canEdit = await PermService.HasPermissionAsync("FORMTEMPLATE.EDIT");
+        _canDelete = await PermService.HasPermissionAsync("FORMTEMPLATE.DELETE");
+
         await LoadAllAsync();
     }
 

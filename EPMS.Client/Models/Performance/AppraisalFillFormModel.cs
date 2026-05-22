@@ -5,6 +5,11 @@ public class AppraisalFillFormModel
     public long Id { get; set; }
     public long EmployeeId { get; set; }
     public string? EmployeeName { get; set; }
+    public string StaffNo { get; set; } = string.Empty;
+    public string? PositionName { get; set; }
+    public string? DepartmentName { get; set; }
+    public string? TeamName { get; set; }
+    public string? ManagerName { get; set; }
     public long CycleId { get; set; }
     public string? CycleName { get; set; }
     public string Status { get; set; } = string.Empty;

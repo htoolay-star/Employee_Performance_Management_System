@@ -2,6 +2,7 @@ using EPMS.Api.Controllers.Common;
 using EPMS.Domain.Interface.IService.Performance;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.FormDTOs;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EPMS.Api.Controllers.Performance;
@@ -11,10 +12,12 @@ namespace EPMS.Api.Controllers.Performance;
 public class AppraisalController : ApiControllerBase
 {
     private readonly IAppraisalService _service;
+    private readonly IValidator<AppraisalSubmissionDto> _submitValidator;
 
-    public AppraisalController(IAppraisalService service)
+    public AppraisalController(IAppraisalService service, IValidator<AppraisalSubmissionDto> submitValidator)
     {
         _service = service;
+        _submitValidator = submitValidator;
     }
 
     [HttpGet]
@@ -45,6 +48,34 @@ public class AppraisalController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HttpGet("my-evaluations")]
+    public async Task<ActionResult<SuccessResponse>> GetMyEvaluations()
+    {
+        var result = await _service.GetMyEvaluationsAsync();
+        return HandleResult(result);
+    }
+
+    [HttpGet("entity/{entityType}/cycle/{cycleId:long}")]
+    public async Task<ActionResult<SuccessResponse>> GetByEntityTypeAndCycle(string entityType, long cycleId)
+    {
+        var result = await _service.GetByEntityTypeAndCycleAsync(entityType, cycleId);
+        return HandleResult(result);
+    }
+
+    [HttpPut("{id:long}/details")]
+    public async Task<ActionResult<SuccessResponse>> UpdateDetailActualValues(long id, [FromBody] List<AppraisalDetailDto> details)
+    {
+        var result = await _service.UpdateDetailActualValuesAsync(id, details);
+        return HandleResult(result);
+    }
+
+    [HttpPost("generate/{cycleId:long}")]
+    public async Task<ActionResult<SuccessResponse>> GenerateForCycle(long cycleId)
+    {
+        await _service.AutoGenerateForCycleAsync(cycleId);
+        return Ok(SuccessResponse.Ok("Appraisals generated successfully."));
+    }
+
     [HttpPost]
     public async Task<ActionResult<SuccessResponse>> Create([FromBody] CreateAppraisalDto dto)
     {
@@ -69,6 +100,7 @@ public class AppraisalController : ApiControllerBase
     [HttpPost("submit")]
     public async Task<ActionResult<SuccessResponse>> Submit([FromBody] AppraisalSubmissionDto dto)
     {
+        await _submitValidator.ValidateAndThrowAsync(dto);
         var result = await _service.SubmitAsync(dto);
         return HandleResult(result);
     }

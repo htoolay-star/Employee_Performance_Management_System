@@ -11,9 +11,9 @@ namespace EPMS.Client.Themes
             {
                 PaletteLight = new PaletteLight()
                 {
-                    Primary = "#0066CC",
-                    PrimaryDarken = "#004499",
-                    PrimaryLighten = "#E6F0FF",
+                    Primary = "#21409A",
+                    PrimaryDarken = "#1A3078",
+                    PrimaryLighten = "#E8EBF4",
                     Secondary = "#9AA0A6",
                     AppbarBackground = Colors.Shades.White,
                     AppbarText = Colors.Shades.Black,
@@ -29,7 +29,7 @@ namespace EPMS.Client.Themes
                     DarkLighten = Colors.Gray.Lighten4,
                     DarkDarken = Colors.Gray.Darken4,
                     Dark = Colors.Gray.Darken3,
-                    Info = Colors.Blue.Default,
+                    Info = "#21409A",
                     Success = Colors.Green.Default,
                     Warning = Colors.Orange.Default,
                     Error = Colors.Red.Default,
@@ -53,11 +53,11 @@ namespace EPMS.Client.Themes
 
                 PaletteDark = new PaletteDark()
                 {
-                    Primary = "#66B2FF",
-                    PrimaryDarken = "#3399FF",
-                    PrimaryLighten = "#1A3366",
+                    Primary = "#8AB4F8",
+                    PrimaryDarken = "#6A9CF8",
+                    PrimaryLighten = "#1A2B52",
                     Secondary = "#9AA0A6",
-                    AppbarBackground = "#1E1E2E",
+                    AppbarBackground = "#1A1A2E",
                     AppbarText = Colors.Shades.White,
                     Background = "#1E1E2E",
                     TextPrimary = Colors.Shades.White,
@@ -71,7 +71,7 @@ namespace EPMS.Client.Themes
                     DarkLighten = Colors.Gray.Darken2,
                     DarkDarken = Colors.Gray.Darken4,
                     Dark = Colors.Gray.Darken3,
-                    Info = Colors.Blue.Lighten1,
+                    Info = "#8AB4F8",
                     Success = Colors.Green.Lighten1,
                     Warning = Colors.Orange.Lighten1,
                     Error = Colors.Red.Lighten1,
@@ -90,7 +90,7 @@ namespace EPMS.Client.Themes
                 {
                     Default = new DefaultTypography()
                     {
-                        FontFamily = new[] { "Inter", "Roboto", "Pyidaungsu", "sans-serif" },
+                        FontFamily = new[] { "Inter", "sans-serif" },
                         FontSize = "14px",
                         FontWeight = "400",
                     },

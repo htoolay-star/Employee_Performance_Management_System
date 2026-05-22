@@ -32,6 +32,7 @@ namespace EPMS.Domain.Data.Seeding
             await SeedSystemSettingsAsync();
             await SeedRolesAsync();
             await SeedSystemAdminAsync();
+            await SeedPermissionsAsync();
         }
 
         private async Task SeedSystemSettingsAsync()
@@ -105,6 +106,63 @@ namespace EPMS.Domain.Data.Seeding
                 await _uow.RollbackAsync();
                 throw;
             }
+        }
+
+        private async Task SeedPermissionsAsync()
+        {
+            var existingPermissions = await _uow.Auth.Permissions.GetAllAsync();
+            if (existingPermissions.Any()) return;
+
+            var permissions = new List<Permission>
+            {
+                // Positions
+                new("POSITIONS.VIEW", "View Positions"),
+                new("POSITIONS.CREATE", "Create Positions"),
+                new("POSITIONS.EDIT", "Edit Positions"),
+                new("POSITIONS.DELETE", "Delete Positions"),
+                // Departments
+                new("DEPARTMENTS.VIEW", "View Departments"),
+                new("DEPARTMENTS.CREATE", "Create Departments"),
+                new("DEPARTMENTS.EDIT", "Edit Departments"),
+                new("DEPARTMENTS.DELETE", "Delete Departments"),
+                // Teams
+                new("TEAMS.VIEW", "View Teams"),
+                new("TEAMS.CREATE", "Create Teams"),
+                new("TEAMS.EDIT", "Edit Teams"),
+                new("TEAMS.DELETE", "Delete Teams"),
+                // Levels
+                new("LEVELS.VIEW", "View Levels"),
+                new("LEVELS.CREATE", "Create Levels"),
+                new("LEVELS.EDIT", "Edit Levels"),
+                new("LEVELS.DELETE", "Delete Levels"),
+                // Entity KPIs
+                new("ENTITYKPI.VIEW", "View Entity KPIs"),
+                new("ENTITYKPI.CREATE", "Create Entity KPIs"),
+                new("ENTITYKPI.EDIT", "Edit Entity KPIs"),
+                new("ENTITYKPI.DELETE", "Delete Entity KPIs"),
+                // Employee KPIs
+                new("EMPLOYEEKPI.VIEW", "View Employee KPIs"),
+                new("EMPLOYEEKPI.CREATE", "Create Employee KPIs"),
+                new("EMPLOYEEKPI.EDIT", "Edit Employee KPIs"),
+                new("EMPLOYEEKPI.DELETE", "Delete Employee KPIs"),
+                // Position Form Templates
+                new("POSITIONFORMTPL.VIEW", "View Position Form Templates"),
+                new("POSITIONFORMTPL.CREATE", "Create Position Form Templates"),
+                new("POSITIONFORMTPL.EDIT", "Edit Position Form Templates"),
+                new("POSITIONFORMTPL.DELETE", "Delete Position Form Templates"),
+                // Form Templates
+                new("FORMTEMPLATE.VIEW", "View Form Templates"),
+                new("FORMTEMPLATE.CREATE", "Create Form Templates"),
+                new("FORMTEMPLATE.EDIT", "Edit Form Templates"),
+                new("FORMTEMPLATE.DELETE", "Delete Form Templates"),
+            };
+
+            foreach (var p in permissions)
+            {
+                _uow.Auth.Permissions.Add(p);
+            }
+
+            await _uow.CompleteAsync();
         }
     }
 }

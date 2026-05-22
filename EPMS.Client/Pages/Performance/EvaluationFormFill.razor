@@ -23,7 +23,7 @@
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
 
     <MudText Typo="Typo.h4" Class="mb-4">
-        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" OnClick="GoBack" Class="mr-2" />
+        <BackButton Href="/performance/appraisals" />
         @UIConstants.EvaluationForm.PageTitle
     </MudText>
 
@@ -476,8 +476,6 @@
             _submitting = false;
         }
     }
-
-    private void GoBack() => Navigation.NavigateTo("/performance/appraisals");
 
     private async Task ShowResultDialog()
     {

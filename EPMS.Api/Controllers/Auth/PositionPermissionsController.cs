@@ -1,13 +1,16 @@
 using EPMS.Api.Controllers.Common;
 using EPMS.Domain.Interface.IService.Auth;
+using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.AuthDTOs.PositionPermissionDTOs;
 using EPMS.Shared.DTOs.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EPMS.Api.Controllers.Auth;
 
 [ApiController]
 [Route("api/position-permissions")]
+[Authorize(Roles = RoleConstants.SystemAdmin)]
 public class PositionPermissionsController : ApiControllerBase
 {
     private readonly IPositionPermissionService _service;
@@ -49,6 +52,14 @@ public class PositionPermissionsController : ApiControllerBase
     public async Task<ActionResult<SuccessResponse>> GetPermissionsForPosition(long positionId)
     {
         var result = await _service.GetPermissionsForPositionAsync(positionId);
+        return HandleResult(result);
+    }
+
+    [HttpPut("position/{positionId:long}")]
+    public async Task<ActionResult<SuccessResponse>> UpdatePositionPermissions(
+        long positionId, [FromBody] List<long> permissionIds)
+    {
+        var result = await _service.UpdatePositionPermissionsAsync(positionId, permissionIds);
         return HandleResult(result);
     }
 }

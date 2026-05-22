@@ -1,4 +1,5 @@
 @page "/hr/departments"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @* ═══════════════════════════════════════════════════════════════════════════
    PATTERN: GetAll + Client-side QuickFilter + Client-side Sorting + Full Page Drawer
    Use this pattern when the dataset is small.
@@ -25,13 +26,20 @@
 @inject IDialogService DialogService
 @inject LookupStateService LookupState
 @inject ISnackbar Snackbar
+@inject CurrentUserPermissionService PermService
 
 <PageTitle>@UIConstants.Department.PageTitle - EPMS</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
     <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.Department.PageTitle</MudText>
 
-    <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+    @if (_error)
+    {
+        <MudAlert Severity="Severity.Warning" Class="mt-4">@_errorMessage</MudAlert>
+    }
+    else
+    {
+        <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
 
         @* ── Toolbar ──────────────────────────────────────────────────── *@
         <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
@@ -60,12 +68,15 @@
                               SortColumns="@_sortableColumns"
                               OnSortChanged="HandleSortChanged" />
 
-            <MudButton Variant="Variant.Filled"
-                       Color="Color.Primary"
-                       StartIcon="@Icons.Material.Filled.Add"
-                       OnClick="OpenCreateDialog">
-                @UIConstants.Department.AddButton
-            </MudButton>
+            @if (_canCreate)
+            {
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenCreateDialog">
+                    @UIConstants.Department.AddButton
+                </MudButton>
+            }
         </MudStack>
 
         @* ── Data Grid ────────────────────────────────────────────────── *@
@@ -100,24 +111,30 @@
                 <TemplateColumn Title="@UIConstants.Common.Actions" Sortable="false">
                     <CellTemplate>
                         <MudStack Row="true" Spacing="0">
-                            <MudTooltip Text="Edit Department" Placement="Placement.Top">
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                               Color="Color.Primary"
-                                               Size="Size.Small"
-                                               OnClick="@(() => OpenEditDialog(context.Item))" />
-                            </MudTooltip>
+                            @if (_canEdit)
+                            {
+                                <MudTooltip Text="Edit Department" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                   Color="Color.Primary"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => OpenEditDialog(context.Item))" />
+                                </MudTooltip>
+                            }
                             <MudTooltip Text="View Teams" Placement="Placement.Top">
                                 <MudIconButton Icon="@Icons.Material.Filled.Visibility"
                                                Color="Color.Info"
                                                Size="Size.Small"
                                                OnClick="@(() => OpenTeamsDrawer(context.Item))" />
                             </MudTooltip>
-                            <MudTooltip Text="Delete Department" Placement="Placement.Top">
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                               Color="Color.Error"
-                                               Size="Size.Small"
-                                               OnClick="@(() => OpenDeleteDialog(context.Item))" />
-                            </MudTooltip>
+                            @if (_canDelete)
+                            {
+                                <MudTooltip Text="Delete Department" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   Color="Color.Error"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => OpenDeleteDialog(context.Item))" />
+                                </MudTooltip>
+                            }
                         </MudStack>
                     </CellTemplate>
                 </TemplateColumn>
@@ -142,6 +159,7 @@
         </MudDataGrid>
 
     </MudPaper>
+    }
 </MudContainer>
 
 @* ── Teams Drawer (Full Page) ──────────────────────────────────────────────────── *@
@@ -151,8 +169,7 @@
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-6">
             <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" 
-                                   OnClick="CloseDrawer" />
+                    <BackButton OnClick="CloseDrawer" />
                     <MudText Typo="Typo.h5">Teams - @_selectedDepartment?.Name</MudText>
                     <MudTextField @bind-Value="_drawerSearchString"
                                   Placeholder="Search by name..."
@@ -176,12 +193,15 @@
                     </MudSelect>
                 </MudStack>
                 <MudStack Row="true" Spacing="2">
-                    <MudButton Variant="Variant.Filled"
-                               Color="Color.Primary"
-                               StartIcon="@Icons.Material.Filled.Add"
-                               OnClick="AddTeam">
-                        @UIConstants.Team.AddButton
-                    </MudButton>
+                    @if (_teamCanCreate)
+                    {
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Add"
+                                   OnClick="AddTeam">
+                            @UIConstants.Team.AddButton
+                        </MudButton>
+                    }
                     <MudIconButton Icon="@Icons.Material.Filled.Close" OnClick="CloseDrawer" />
                 </MudStack>
             </MudStack>
@@ -220,18 +240,24 @@
                                     </td>
                                     <td>
                                         <MudStack Row="true" Spacing="1">
-                                            <MudTooltip Text="Edit Team" Placement="Placement.Top">
-                                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                                               Color="Color.Primary"
-                                                               Size="Size.Small"
-                                                               OnClick="@(() => EditTeam(team))" />
-                                            </MudTooltip>
-                                            <MudTooltip Text="Delete Team" Placement="Placement.Top">
-                                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                                               Color="Color.Error"
-                                                               Size="Size.Small"
-                                                               OnClick="@(() => DeleteTeam(team))" />
-                                            </MudTooltip>
+                                            @if (_teamCanEdit)
+                                            {
+                                                <MudTooltip Text="Edit Team" Placement="Placement.Top">
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                                   Color="Color.Primary"
+                                                                   Size="Size.Small"
+                                                                   OnClick="@(() => EditTeam(team))" />
+                                                </MudTooltip>
+                                            }
+                                            @if (_teamCanDelete)
+                                            {
+                                                <MudTooltip Text="Delete Team" Placement="Placement.Top">
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                                   Color="Color.Error"
+                                                                   Size="Size.Small"
+                                                                   OnClick="@(() => DeleteTeam(team))" />
+                                                </MudTooltip>
+                                            }
                                         </MudStack>
                                     </td>
                                 </tr>
@@ -285,7 +311,17 @@
     private long? _lastLoadedDepartmentId;
     private bool _drawerDataStale = true;
 
+    // ── Permission fields ─────────────────────────────────────────────────────
+    private bool _canView;
+    private bool _canCreate;
+    private bool _canEdit;
+    private bool _canDelete;
+    private bool _error;
+    private string _errorMessage = string.Empty;
 
+    private bool _teamCanCreate;
+    private bool _teamCanEdit;
+    private bool _teamCanDelete;
 
     private List<TeamDto> FilteredTeams =>
         _teamsInDepartment
@@ -309,6 +345,22 @@
 
     protected override async Task OnInitializedAsync()
     {
+        _canView = await PermService.HasPermissionAsync("DEPARTMENTS.VIEW");
+        _canCreate = await PermService.HasPermissionAsync("DEPARTMENTS.CREATE");
+        _canEdit = await PermService.HasPermissionAsync("DEPARTMENTS.EDIT");
+        _canDelete = await PermService.HasPermissionAsync("DEPARTMENTS.DELETE");
+
+        _teamCanCreate = await PermService.HasPermissionAsync("TEAMS.CREATE");
+        _teamCanEdit = await PermService.HasPermissionAsync("TEAMS.EDIT");
+        _teamCanDelete = await PermService.HasPermissionAsync("TEAMS.DELETE");
+
+        if (!_canView)
+        {
+            _error = true;
+            _errorMessage = "You do not have permission to view departments.";
+            return;
+        }
+
         await LoadDepartmentsAsync();
     }
 

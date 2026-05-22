@@ -34,6 +34,7 @@ public static class ServiceCollectionExtensions
 
         // Auth
         services.AddSecureRefitClient<IAuthApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IPermissionApiClient>(refitSettings, baseUri);
 
         // Hr
         services.AddSecureRefitClient<IPositionApiClient>(refitSettings, baseUri);

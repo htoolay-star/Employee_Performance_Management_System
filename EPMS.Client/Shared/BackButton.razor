@@ -1,0 +1,21 @@
+@using MudBlazor
+@inject NavigationManager Navigation
+
+<MudIconButton Icon="@Icons.Material.Filled.ArrowBack" OnClick="HandleClick" />
+
+@code {
+    [Parameter] public string? Href { get; set; }
+    [Parameter] public EventCallback OnClick { get; set; }
+
+    private async Task HandleClick()
+    {
+        if (OnClick.HasDelegate)
+        {
+            await OnClick.InvokeAsync();
+        }
+        else if (!string.IsNullOrEmpty(Href))
+        {
+            Navigation.NavigateTo(Href);
+        }
+    }
+}

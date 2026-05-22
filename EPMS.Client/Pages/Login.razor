@@ -1,4 +1,5 @@
 @page "/login"
+@layout BlankLayout
 @using EPMS.Client.Services.Auth
 @using EPMS.Shared.DTOs.Auth
 @using MudBlazor
@@ -44,10 +45,18 @@
                         }
                     </MudButton>
                 </MudItem>
-                @if (!string.IsNullOrEmpty(_errorMessage))
+                 @if (!string.IsNullOrEmpty(_errorMessage))
                 {
                     <MudItem xs="12" Class="mt-4">
                         <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true" Class="mt-2">@_errorMessage</MudAlert>
+                    </MudItem>
+                }
+                @if (_showPasswordChangedMessage)
+                {
+                    <MudItem xs="12" Class="mt-4">
+                        <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Dense="true" Class="mt-2">
+                            Password changed successfully. Please login with your new password.
+                        </MudAlert>
                     </MudItem>
                 }
             </MudGrid>
@@ -63,6 +72,15 @@
     private string _errorMessage = string.Empty;
     private bool showPassword = false;
     private bool _isLoading = false;
+    private bool _showPasswordChangedMessage = false;
+
+    protected override void OnInitialized()
+    {
+        if (Navigation.Uri.Contains("from=password-changed"))
+        {
+            _showPasswordChangedMessage = true;
+        }
+    }
 
     private void TogglePasswordVisibility()
     {
@@ -89,15 +107,17 @@
                     await TokenStorage.SetTokensAsync(accessToken, result.Data.Tokens.RefreshToken);
                     ((JwtAuthenticationStateProvider)AuthenticationStateProvider).MarkUserAsAuthenticated(accessToken);
 
+                    _isLoading = false;
+
                     if (result.Data.User.IsFirstLogin)
                     {
-                        Navigation.NavigateTo("/change-password");
+                        Navigation.NavigateTo("/change-password", forceLoad: false);
                     }
                     else
                     {
-                        Navigation.NavigateTo("/dashboard");
-                        Snackbar.Add("Login successful!", Severity.Success);
+                        Navigation.NavigateTo("/dashboard", forceLoad: false);
                     }
+                    return;
                 }
                 else
                 {

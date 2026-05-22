@@ -8,18 +8,19 @@
 <MudLayout>
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="ToggleDrawer" />
-        <MudText Typo="Typo.h5" Class="ml-3">EPMS</MudText>
         <MudSpacer />
         <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.DarkMode : Icons.Material.Filled.LightMode)"
                        Color="Color.Inherit"
                        OnClick="ToggleTheme" />
         <LoginDisplay />
     </MudAppBar>
-    <MudDrawer @bind-Open="_drawerOpen" Elevation="2">
-        <MudDrawerHeader>
-            <MudText Typo="Typo.h6">EPMS Navigation</MudText>
+    <MudDrawer @bind-Open="_drawerOpen" Variant="DrawerVariant.Mini" Elevation="2">
+        <MudDrawerHeader Class="@(_drawerOpen ? "" : "drawer-header-collapsed")">
+            <img src="@(_isDarkMode ? "ACE-dark.svg" : "ACE.svg")" alt="ACE" class="@(_drawerOpen ? "drawer-logo" : "drawer-logo-collapsed")" />
         </MudDrawerHeader>
-        <NavMenu />
+        <div class="@(_drawerOpen ? "" : "drawer-collapsed")">
+            <NavMenu />
+        </div>
     </MudDrawer>
     <MudMainContent>
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
@@ -32,6 +33,7 @@
 @code {
     bool _drawerOpen = true;
     bool _isDarkMode = false;
+    bool _pendingThemeSync = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -44,6 +46,9 @@
         {
             _isDarkMode = false;
         }
+
+        StateHasChanged();
+        _pendingThemeSync = true;
     }
 
     void ToggleDrawer()
@@ -54,6 +59,18 @@
     async Task ToggleTheme()
     {
         _isDarkMode = !_isDarkMode;
+        
         await JS.InvokeVoidAsync("localStorage.setItem", "epms-dark-mode", _isDarkMode.ToString().ToLower());
+        
+        _pendingThemeSync = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_pendingThemeSync)
+        {
+            _pendingThemeSync = false;
+            await JS.InvokeVoidAsync("epmsSyncTheme", _isDarkMode);
+        }
     }
 }

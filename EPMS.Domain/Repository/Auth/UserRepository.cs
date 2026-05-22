@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EPMS.Domain.Repository.Auth
@@ -17,6 +18,17 @@ namespace EPMS.Domain.Repository.Auth
 
         public async Task<bool> ExistsAsync(string email) =>
             await _dbSet.AnyAsync(u => u.Email == email);
+
+        public override async Task<User?> GetByIdAsync(object id, CancellationToken cancellationToken = default)
+        {
+            if (id is not long userId)
+                return null;
+
+            return await _dbSet
+                .Include(u => u.Role)
+                .Include(u => u.Profile)
+                .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+        }
 
         public async Task<User?> GetByEmailAsync(string email, bool trackChanges = false)
         {

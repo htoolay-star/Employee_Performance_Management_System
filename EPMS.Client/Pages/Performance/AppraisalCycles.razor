@@ -8,6 +8,7 @@
 @using static EPMS.Shared.Constants.ServiceResponseMessages
 
 @inject IAppraisalCycleApiClient AppraisalCycleApiClient
+@inject IAppraisalApiClient AppraisalApi
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
@@ -84,6 +85,12 @@
 
                             @if (isActive && !isLocked)
                             {
+                                <MudTooltip Text="Generate Appraisals" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.RocketLaunch"
+                                                   Color="Color.Success"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => GenerateAppraisals(context.Item))" />
+                                </MudTooltip>
                                 <MudTooltip Text="Lock Cycle" Placement="Placement.Top">
                                     <MudIconButton Icon="@Icons.Material.Filled.Lock"
                                                    Color="Color.Warning"
@@ -299,6 +306,27 @@
         => ShowConfirmAndExecute(cycle, "Lock this cycle? This will finalize and deactivate it.", "Lock",
                                  Color.Warning, UIConstants.AppraisalCycle.Lock,
                                  id => AppraisalCycleApiClient.LockAsync(id), AppraisalCycleMsg.Locked);
+
+    private async Task GenerateAppraisals(AppraisalCycleDto cycle)
+    {
+        try
+        {
+            var response = await AppraisalApi.GenerateForCycleAsync(cycle.Id);
+            if (response.Success)
+                Snackbar.Add($"Appraisals generated for cycle '{cycle.Name}'.", Severity.Success);
+            else
+                Snackbar.Add(response.Message ?? "Failed to generate appraisals.", Severity.Error);
+        }
+        catch (Refit.ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Error generating appraisals.", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
 
     private async Task OpenDeactivateDialog(AppraisalCycleDto cycle)
     {

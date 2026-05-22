@@ -376,10 +376,11 @@
             public const string ColumnDirection = "";
             public const string ColumnActual = "Actual";
             public const string ColumnScore = "Score";
-            public const string ColumnWeighted = "Weighted";
+            public const string ColumnWeighted = "Weighted Score";
             public const string ColumnRemarks = "Remarks";
             public const string SubmitButton = "Submit Evaluation";
             public const string SubmitSuccess = "Evaluation submitted successfully.";
+            public const string NegativeValueError = "Value cannot be negative";
         }
 
         public static class AppraisalList

@@ -2,8 +2,11 @@ namespace EPMS.Shared.DTOs.FormDTOs;
 
 public record AppraisalDto(
     long Id,
-    long EmployeeId,
+    long? EmployeeId,
     string? EmployeeName,
+    string? EntityType,
+    long? EntityId,
+    string? EntityName,
     long CycleId,
     string? CycleName,
     long ManagerReviewerId,

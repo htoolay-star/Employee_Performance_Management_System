@@ -15,7 +15,7 @@
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
     <MudText Typo="Typo.h4" Class="mb-4">
-        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" OnClick="GoBack" Class="mr-2" />
+        <BackButton Href="@($"/performance/form-templates/{TemplateId}/questions")" />
         @UIConstants.FormQuestion.PageTitle — @_model?.Name
     </MudText>
 
@@ -200,8 +200,6 @@
             StateHasChanged();
         }
     }
-
-    private void GoBack() => Navigation.NavigateTo($"/performance/form-templates/{TemplateId}/questions");
 
     private static string GetFormTypeDisplay(string formType)
     {

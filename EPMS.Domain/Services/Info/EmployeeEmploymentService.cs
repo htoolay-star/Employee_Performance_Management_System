@@ -78,6 +78,10 @@ public class EmployeeEmploymentService : IEmployeeEmploymentService
             dto.ParentDepartmentId, 
             dto.PositionId, 
             dto.EmploymentStatus);
+        employment.UpdateDetails(
+            dto.DepartmentId, dto.ParentDepartmentId, dto.PositionId,
+            dto.TeamId, dto.DirectManagerId, dto.EmploymentStatus,
+            dto.StaffType, dto.ProbationMonth, dto.Shift, dto.FingerPrintId, dto.MobileAttendance);
 
         _uow.Info.EmployeeEmployments.Add(employment);
         await _uow.CompleteAsync();

@@ -12,15 +12,33 @@ namespace EPMS.Domain.Repository.Performance
         {
         }
 
+        public override async Task<IEnumerable<Appraisal>> GetAllAsync(CancellationToken cancellationToken = default)
+        {
+            return await _dbSet
+                .AsNoTracking()
+                .Include(a => a.Employee)
+                .Include(a => a.Cycle)
+                .Include(a => a.ManagerReviewer)
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task<Appraisal?> GetAppraisalWithDetailsAsync(long id)
         {
             return await _dbSet
+                .AsNoTracking()
+                .AsSplitQuery()
                 .Include(a => a.Employee)
                     .ThenInclude(e => e.Employment)
                         .ThenInclude(emp => emp.Position)
                 .Include(a => a.Employee)
                     .ThenInclude(e => e.Employment)
                         .ThenInclude(emp => emp.Department)
+                .Include(a => a.Employee)
+                    .ThenInclude(e => e.Employment)
+                        .ThenInclude(emp => emp.Team)
+                .Include(a => a.Employee)
+                    .ThenInclude(e => e.Employment)
+                        .ThenInclude(emp => emp.DirectManager)
                 .Include(a => a.ManagerReviewer)
                 .Include(a => a.Cycle)
                 .Include(a => a.Details)
@@ -40,6 +58,42 @@ namespace EPMS.Domain.Repository.Performance
             return await _dbSet.AnyAsync(a =>
                 a.EmployeeId == employeeId &&
                 a.CycleId == cycleId);
+        }
+
+        public async Task<bool> ExistsByEntityAndCycleAsync(string entityType, long entityId, long cycleId)
+        {
+            return await _dbSet.AnyAsync(a =>
+                a.EntityType == entityType &&
+                a.EntityId == entityId &&
+                a.CycleId == cycleId);
+        }
+
+        public async Task<IEnumerable<Appraisal>> GetByEntityAndCycleAsync(string entityType, long entityId, long cycleId)
+        {
+            return await _dbSet
+                .Where(a => a.EntityType == entityType && a.EntityId == entityId && a.CycleId == cycleId)
+                .Include(a => a.Details)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Appraisal>> GetByManagerReviewerIdAsync(long managerReviewerId)
+        {
+            return await _dbSet
+                .Where(a => a.ManagerReviewerId == managerReviewerId && !a.IsDeleted)
+                .AsNoTracking()
+                .Include(a => a.Employee)
+                .Include(a => a.Cycle)
+                .Include(a => a.ManagerReviewer)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Appraisal>> GetAppraisalsByCycleAsync(long cycleId)
+        {
+            return await _dbSet
+                .Where(a => a.CycleId == cycleId)
+                .Include(a => a.Employee)
+                .Include(a => a.Details)
+                .ToListAsync();
         }
     }
 }

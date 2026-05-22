@@ -307,7 +307,7 @@ public class EvaluationResponseService : IEvaluationResponseService
         if (managerId != appraisal.ManagerReviewerId)
             return SuccessResponse.Fail("Only the manager reviewer can view the self-assessment.", ErrorType.Forbidden);
 
-        return await GetFormFillAsync(appraisalId, appraisal.EmployeeId, EvaluatorRoles.Self);
+        return await GetFormFillAsync(appraisalId, appraisal.EmployeeId ?? 0, EvaluatorRoles.Self);
     }
 
     public async Task<SuccessResponse> SubmitRoleResponsesAsync(long appraisalId, long evaluatorId, string role)

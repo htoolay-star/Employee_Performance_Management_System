@@ -17,6 +17,8 @@ namespace EPMS.Domain.Repository.Info
                 .Include(e => e.Department)
                 .Include(e => e.Position)
                 .Include(e => e.Team)
+                .Include(e => e.ParentDepartment)
+                .Include(e => e.DirectManager)
                 .FirstOrDefaultAsync(e => e.EmployeeId == employeeId);
         }
     }

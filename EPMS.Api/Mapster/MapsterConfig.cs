@@ -108,10 +108,10 @@ public static class MapsterConfig
 
         // EmployeeInfo - Employment with navigation flattening
         TypeAdapterConfig<EmployeeEmployment, EmployeeEmploymentDto>.NewConfig()
-            .Map(dest => dest.DepartmentName, src => src.Department.Name)
-            .Map(dest => dest.ParentDepartmentName, src => src.ParentDepartment.Name)
+            .Map(dest => dest.DepartmentName, src => src.Department != null ? src.Department.Name : null)
+            .Map(dest => dest.ParentDepartmentName, src => src.ParentDepartment != null ? src.ParentDepartment.Name : null)
             .Map(dest => dest.TeamName, src => src.Team != null ? src.Team.Name : null)
-            .Map(dest => dest.PositionName, src => src.Position.Name)
+            .Map(dest => dest.PositionName, src => src.Position != null ? src.Position.Name : null)
             .Map(dest => dest.DirectManagerName, src => src.DirectManager != null ? src.DirectManager.StaffName : null);
 
         // Performance - FormTemplate

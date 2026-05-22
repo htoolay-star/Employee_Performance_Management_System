@@ -1,5 +1,6 @@
 using EPMS.Domain.Contracts;
 using EPMS.Shared.Constants;
+using EPMS.Shared.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -63,14 +64,8 @@ namespace EPMS.Domain.Entities.Performance
             ActualValue = actualValue;
             Remarks = remarks?.Trim();
 
-            if (ActualValue.HasValue && TargetValue.HasValue && TargetValue.Value > 0)
-            {
-                Score = ScoringDirection == AppraisalConstants.ScoringDirections.LowerIsBetter
-                    ? Math.Min(TargetValue.Value / ActualValue.Value, 1m) * 100
-                    : Math.Min(ActualValue.Value / TargetValue.Value, 1m) * 100;
-            }
-
-            WeightedScore = Math.Round((Score * Weightage) / 100m, 2);
+            Score = KPIScoringCalculator.CalculateScore(ActualValue, TargetValue, ScoringDirection);
+            WeightedScore = KPIScoringCalculator.CalculateWeightedScore(Score, Weightage);
         }
     }
 }

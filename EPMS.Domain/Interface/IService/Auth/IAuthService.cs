@@ -16,5 +16,8 @@ namespace EPMS.Domain.Interface.IService.Auth
         Task<SuccessResponse<IEnumerable<PasswordResetRequestDto>>> GetPendingResetRequestsAsync();
         Task<SuccessResponse> ApproveResetRequestAsync(long requestId, long adminUserId, AdminResetPasswordRequest request);
         Task<SuccessResponse> RejectResetRequestAsync(long requestId, long adminUserId, string? reason = null);
+
+        Task<List<string>> GetUserPermissionsAsync(long userId);
+        Task<List<string>> GetAllPermissionCodesAsync();
     }
 }

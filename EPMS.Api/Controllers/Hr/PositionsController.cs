@@ -1,10 +1,10 @@
+using EPMS.Api.Authorization;
 using EPMS.Api.Controllers.Common;
 using EPMS.Domain.Interface.IService.Hr;
 using EPMS.Shared.DTOs.AuthDTOs.PermissionDTOS;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.PositionDTOs;
 using EPMS.Shared.Features.Positions;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EPMS.Api.Controllers.Hr;
@@ -20,6 +20,7 @@ public class PositionsController : ApiControllerBase
         _service = service;
     }
 
+    [HasPermission("POSITIONS.VIEW")]
     [HttpGet("lookup")]
     public async Task<ActionResult<SuccessResponse<IEnumerable<LookUpDto>>>> GetLookup()
     {
@@ -27,6 +28,7 @@ public class PositionsController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HasPermission("POSITIONS.VIEW")]
     [HttpGet]
     public async Task<ActionResult<SuccessResponse<IEnumerable<PositionDto>>>> GetAll()
     {
@@ -34,6 +36,7 @@ public class PositionsController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HasPermission("POSITIONS.VIEW")]
     [HttpGet("paged")]
     public async Task<ActionResult<SuccessResponse<PaginatedResponse<PositionGridItemDto>>>> GetPaged([FromQuery] PositionQueryParameters parameters)
     {
@@ -41,6 +44,7 @@ public class PositionsController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HasPermission("POSITIONS.VIEW")]
     [HttpGet("{id:long}")]
     public async Task<ActionResult<SuccessResponse<PositionDto>>> GetById(long id)
     {
@@ -48,6 +52,7 @@ public class PositionsController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HasPermission("POSITIONS.CREATE")]
     [HttpPost]
     public async Task<ActionResult<SuccessResponse<long>>> Create(CreatePositionDto dto)
     {
@@ -55,6 +60,7 @@ public class PositionsController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HasPermission("POSITIONS.EDIT")]
     [HttpPut("{id:long}")]
     public async Task<ActionResult<SuccessResponse>> Update(long id, UpdatePositionDto dto)
     {
@@ -62,6 +68,7 @@ public class PositionsController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HasPermission("POSITIONS.DELETE")]
     [HttpDelete("{id:long}")]
     public async Task<ActionResult<SuccessResponse>> Delete(long id)
     {
@@ -77,6 +84,7 @@ public class PositionsController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HasPermission("POSITIONS.EDIT")]
     [HttpPost("{positionId:long}/permissions/{permissionId:long}")]
     public async Task<ActionResult<SuccessResponse>> AssignPermission(long positionId, long permissionId)
     {
@@ -84,12 +92,14 @@ public class PositionsController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HasPermission("POSITIONS.EDIT")]
     [HttpDelete("{positionId:long}/permissions/{permissionId:long}")]
     public async Task<ActionResult<SuccessResponse>> RemovePermission(long positionId, long permissionId)
     {
         var result = await _service.RemovePermissionFromPositionAsync(positionId, permissionId);
         return HandleResult(result);
     }
+        [HasPermission("POSITIONS.DELETE")]
         [HttpPost("{id:long}/restore")]
         public async Task<ActionResult<SuccessResponse>> Restore(long id)
         {

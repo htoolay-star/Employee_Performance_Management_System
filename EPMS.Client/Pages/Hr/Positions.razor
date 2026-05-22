@@ -1,4 +1,5 @@
 @page "/hr/positions"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @* ═══════════════════════════════════════════════════════════════════════════
    PATTERN: ServerData + Prefetch
    Use this pattern when the dataset is large (hundreds to millions of rows).
@@ -24,13 +25,20 @@
 @inject IPositionApiClient PositionApiClient
 @inject ISnackbar Snackbar
 @inject LookupStateService LookupState
+@inject CurrentUserPermissionService PermService
 
 <PageTitle>@UIConstants.Position.PageTitle - EPMS</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
     <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.Position.PageTitle</MudText>
 
-    <MudPaper Elevation="2" Class="pa-4">
+    @if (_error)
+    {
+        <MudAlert Severity="Severity.Warning" Class="mt-4">@_errorMessage</MudAlert>
+    }
+    else
+    {
+        <MudPaper Elevation="2" Class="pa-4">
 
         @* ── Toolbar ──────────────────────────────────────────────────── *@
         <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
@@ -88,12 +96,15 @@
                               SortColumns="@_sortableColumns"
                               OnSortChanged="OnSortChanged" />
 
-            <MudButton Variant="Variant.Filled"
-                       Color="Color.Primary"
-                       StartIcon="@Icons.Material.Filled.Add"
-                       OnClick="OpenCreateDialog">
-                @UIConstants.Position.AddButton
-            </MudButton>
+            @if (_canCreate)
+            {
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenCreateDialog">
+                    @UIConstants.Position.AddButton
+                </MudButton>
+            }
         </MudStack>
 
         @* {{!-- ── Data Grid (server-side paging/sorting) ───────────────────── --}} *@
@@ -138,14 +149,20 @@
                 <TemplateColumn Title="@UIConstants.Common.Actions" Sortable="false">
                     <CellTemplate>
                         <MudStack Row="true" Spacing="1">
-                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                           Color="Color.Primary"
-                                           Size="Size.Small"
-                                           OnClick="@(() => OpenEditDialog(context.Item))" />
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                           Color="Color.Error"
-                                           Size="Size.Small"
-                                           OnClick="@(() => OpenDeleteDialog(context.Item))" />
+                            @if (_canEdit)
+                            {
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Color="Color.Primary"
+                                               Size="Size.Small"
+                                               OnClick="@(() => OpenEditDialog(context.Item))" />
+                            }
+                            @if (_canDelete)
+                            {
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Color="Color.Error"
+                                               Size="Size.Small"
+                                               OnClick="@(() => OpenDeleteDialog(context.Item))" />
+                            }
                         </MudStack>
                     </CellTemplate>
                 </TemplateColumn>
@@ -170,6 +187,7 @@
         </MudDataGrid>
 
     </MudPaper>
+    }
 </MudContainer>
 
 @code {
@@ -206,6 +224,14 @@
     // ── Prefetched dropdown data ───────────────────────────────────────────────
     private List<LookUpDto> _levels = new();
 
+    // ── Permission fields ─────────────────────────────────────────────────────
+    private bool _canView;
+    private bool _canCreate;
+    private bool _canEdit;
+    private bool _canDelete;
+    private bool _error;
+    private string _errorMessage = string.Empty;
+
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
     private async Task OnStatusFilterChanged(bool value)
@@ -222,6 +248,18 @@
 
     protected override async Task OnInitializedAsync()
     {
+        _canView = await PermService.HasPermissionAsync("POSITIONS.VIEW");
+        _canCreate = await PermService.HasPermissionAsync("POSITIONS.CREATE");
+        _canEdit = await PermService.HasPermissionAsync("POSITIONS.EDIT");
+        _canDelete = await PermService.HasPermissionAsync("POSITIONS.DELETE");
+
+        if (!_canView)
+        {
+            _error = true;
+            _errorMessage = "You do not have permission to view positions.";
+            return;
+        }
+
         _levels = await LookupState.GetLevelsAsync();
         await base.OnInitializedAsync();
     }

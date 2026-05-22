@@ -1,10 +1,10 @@
+using EPMS.Api.Authorization;
 using EPMS.Api.Controllers.Common;
 using EPMS.Domain.Interface.IService.Hr;
 using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.DepartmentDTOs;
 using EPMS.Shared.DTOs.TeamDTOs;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EPMS.Api.Controllers.Hr;
@@ -20,6 +20,7 @@ public class DepartmentsController : ApiControllerBase
         _service = service;
     }
 
+    [HasPermission("DEPARTMENTS.VIEW")]
     [HttpGet("lookup")]
     public async Task<ActionResult<SuccessResponse<IEnumerable<LookUpDto>>>> GetLookup()
     {
@@ -27,6 +28,7 @@ public class DepartmentsController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HasPermission("DEPARTMENTS.VIEW")]
     [HttpGet("with-teams")]
     public async Task<ActionResult<SuccessResponse<IEnumerable<DepartmentDto>>>> GetWithTeams([FromQuery] long? teamId = null)
     {
@@ -34,6 +36,7 @@ public class DepartmentsController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HasPermission("DEPARTMENTS.VIEW")]
     [HttpGet]
     public async Task<ActionResult<SuccessResponse<IEnumerable<DepartmentDto>>>> GetAll()
     {
@@ -41,6 +44,7 @@ public class DepartmentsController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HasPermission("DEPARTMENTS.VIEW")]
     [HttpGet("{id:long}")]
     public async Task<ActionResult<SuccessResponse<DepartmentDto>>> GetById(long id)
     {
@@ -48,6 +52,7 @@ public class DepartmentsController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HasPermission("DEPARTMENTS.CREATE")]
     [HttpPost]
     public async Task<ActionResult<SuccessResponse<long>>> Create(CreateDepartmentDto dto)
     {
@@ -55,6 +60,7 @@ public class DepartmentsController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HasPermission("DEPARTMENTS.EDIT")]
     [HttpPut("{id:long}")]
     public async Task<ActionResult<SuccessResponse>> Update(long id, UpdateDepartmentDto dto)
     {
@@ -62,12 +68,14 @@ public class DepartmentsController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HasPermission("DEPARTMENTS.DELETE")]
     [HttpDelete("{id:long}")]
     public async Task<ActionResult<SuccessResponse>> Delete(long id)
     {
         var result = await _service.DeleteAsync(id);
         return HandleResult(result);
     }
+        [HasPermission("DEPARTMENTS.DELETE")]
         [HttpPost("{id:long}/restore")]
         public async Task<ActionResult<SuccessResponse>> Restore(long id)
         {

@@ -1772,8 +1772,15 @@ namespace EPMS.Domain.Data.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<long>("EmployeeId")
+                    b.Property<long?>("EmployeeId")
                         .HasColumnType("bigint");
+
+                    b.Property<long?>("EntityId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("EntityType")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<long?>("FinalRatingId")
                         .HasColumnType("bigint");
@@ -1894,7 +1901,11 @@ namespace EPMS.Domain.Data.Migrations
 
                     b.HasIndex("EmployeeId", "CycleId")
                         .IsUnique()
-                        .HasFilter("[IsDeleted] = 0");
+                        .HasFilter("[IsDeleted] = 0 AND [EmployeeId] IS NOT NULL");
+
+                    b.HasIndex("EntityType", "EntityId", "CycleId")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0 AND [EntityType] IS NOT NULL");
 
                     b.ToTable("Appraisals", "perf");
                 });
@@ -4064,8 +4075,7 @@ namespace EPMS.Domain.Data.Migrations
                     b.HasOne("EPMS.Domain.Entities.EmployeeInfo.EmployeeProfile", "Employee")
                         .WithMany()
                         .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("EPMS.Domain.Entities.Hr.RatingScale", "FinalRating")
                         .WithMany()

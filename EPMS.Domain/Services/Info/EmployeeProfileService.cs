@@ -147,10 +147,9 @@ public class EmployeeProfileService : IEmployeeProfileService
                 var employment = new EmployeeEmployment(
                     employeeId, emp.DepartmentId, emp.ParentDepartmentId,
                     emp.PositionId, emp.EmploymentStatus);
-                if (!string.IsNullOrEmpty(emp.StaffType))
-                    employment.UpdateDetails(emp.DepartmentId, emp.ParentDepartmentId, emp.PositionId,
-                        emp.TeamId, emp.DirectManagerId, emp.EmploymentStatus,
-                        emp.StaffType, emp.ProbationMonth, emp.Shift, emp.FingerPrintId, emp.MobileAttendance);
+                employment.UpdateDetails(emp.DepartmentId, emp.ParentDepartmentId, emp.PositionId,
+                    emp.TeamId, emp.DirectManagerId, emp.EmploymentStatus,
+                    emp.StaffType, emp.ProbationMonth, emp.Shift, emp.FingerPrintId, emp.MobileAttendance);
                 if (!string.IsNullOrEmpty(emp.ProductProject))
                     employment.AssignProject(emp.ProductProject);
                 _uow.Info.EmployeeEmployments.Add(employment);

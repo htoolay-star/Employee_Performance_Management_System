@@ -6,9 +6,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>EPMS.Client</title>
     <base href="/" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style" />
+    <script>
+        (function() {
+            var isDark = localStorage.getItem('epms-dark-mode') === 'true';
+            var html = document.documentElement;
+            if (isDark) {
+                html.classList.add('theme-dark');
+            } else {
+                html.classList.add('theme-light');
+            }
+            
+            var bgColor = isDark ? '#1E1E2E' : '#FAFAFA';
+            var textColor = isDark ? '#e0e0e0' : '#666666';
+            
+            var dotColor1 = isDark ? 'rgba(138, 180, 248, 0.05)' : 'rgba(33, 64, 154, 0.10)';
+            var dotColor2 = isDark ? 'rgba(37, 37, 64, 0.7)' : 'rgba(33, 64, 154, 0.20)';
+            
+            var paperDotColor1 = isDark ? 'rgba(138, 180, 248, 0.01)' : 'rgba(33, 64, 154, 0.02)';
+            var paperDotColor2 = isDark ? 'rgba(37, 37, 64, 0.14)' : 'rgba(33, 64, 154, 0.04)';
+            
+            var style = document.createElement('style');
+            style.textContent = 
+                ':root {' +
+                    '--loading-bg: ' + bgColor + ';' +
+                    '--loading-text: ' + textColor + ';' +
+                    '--dot-color-1: ' + dotColor1 + ';' +
+                    '--dot-color-2: ' + dotColor2 + ';' +
+                    '--paper-dot-color-1: ' + paperDotColor1 + ';' +
+                    '--paper-dot-color-2: ' + paperDotColor2 + ';' +
+                '}' +
+                '.loading-container {' +
+                    'background-color: ' + bgColor + ';' +
+                '}';
+            document.head.appendChild(style);
+        })();
+    </script>
+    <script>
+        window.epmsSyncTheme = function (isDark) {
+            var bgColor = isDark ? '#1E1E2E' : '#FAFAFA';
+            var dotColor1 = isDark ? 'rgba(138, 180, 248, 0.05)' : 'rgba(33, 64, 154, 0.10)';
+            var dotColor2 = isDark ? 'rgba(37, 37, 64, 0.7)' : 'rgba(33, 64, 154, 0.20)';
+            var paperDotColor1 = isDark ? 'rgba(138, 180, 248, 0.01)' : 'rgba(33, 64, 154, 0.02)';
+            var paperDotColor2 = isDark ? 'rgba(37, 37, 64, 0.14)' : 'rgba(33, 64, 154, 0.04)';
+            var themeClass = isDark ? 'theme-dark' : 'theme-light';
+            var html = document.documentElement;
+            html.classList.remove('theme-light', 'theme-dark');
+            html.classList.add(themeClass);
+            html.style.setProperty('--app-bg', bgColor);
+            html.style.setProperty('--dot-color-1', dotColor1);
+            html.style.setProperty('--dot-color-2', dotColor2);
+            html.style.setProperty('--paper-dot-color-1', paperDotColor1);
+            html.style.setProperty('--paper-dot-color-2', paperDotColor2);
+        };
+    </script>
     <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="css/app.css" />
-    <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="icon" type="image/svg+xml" href="ACE.svg" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <link href="EPMS.Client.styles.css" rel="stylesheet" />
     <link href="css/app.css" rel="stylesheet" />
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
@@ -16,11 +72,12 @@
 
 <body>
     <div id="app">
-        <svg class="loading-progress">
-            <circle r="40%" cx="50%" cy="50%" />
-            <circle r="40%" cx="50%" cy="50%" />
-        </svg>
-        <div class="loading-progress-text"></div>
+        <div class="loading-container">
+            <img src="ACE.svg" alt="Logo" class="loading-logo" />
+            <div class="loading-text">
+                <span class="l1">L</span><span class="l2">o</span><span class="l3">a</span><span class="l4">d</span><span class="l5">i</span><span class="l6">n</span><span class="l7">g</span><span class="l8">.</span><span class="l9">.</span><span class="l10">.</span>
+            </div>
+        </div>
     </div>
 
     <div id="blazor-error-ui">

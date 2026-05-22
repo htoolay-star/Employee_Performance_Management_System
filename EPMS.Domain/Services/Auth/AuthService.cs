@@ -30,6 +30,7 @@ namespace EPMS.Domain.Services.Auth
         // Cache TTL constants
         private static readonly TimeSpan UserCacheTtl = TimeSpan.FromMinutes(5);
         private static readonly TimeSpan RolesCacheTtl = TimeSpan.FromHours(1);
+        private static readonly TimeSpan PermissionsCacheTtl = TimeSpan.FromHours(1);
 
         public AuthService(
             IUnitOfWork unitOfWork,
@@ -323,6 +324,20 @@ namespace EPMS.Domain.Services.Auth
             if (!_passwordHasher.Verify(request.CurrentPassword, user.PasswordHash))
                 return SuccessResponse<AuthResponse>.Fail(AuthMsg.CurrentPasswordIncorrect, ErrorType.Unauthorized);
 
+            if (request.NewPassword.Length < 8)
+                return SuccessResponse<AuthResponse>.Fail("Password must be at least 8 characters long.", ErrorType.Validation);
+            if (!request.NewPassword.Any(char.IsUpper))
+                return SuccessResponse<AuthResponse>.Fail("Password must contain at least one uppercase letter.", ErrorType.Validation);
+            if (!request.NewPassword.Any(char.IsLower))
+                return SuccessResponse<AuthResponse>.Fail("Password must contain at least one lowercase letter.", ErrorType.Validation);
+            if (!request.NewPassword.Any(char.IsDigit))
+                return SuccessResponse<AuthResponse>.Fail("Password must contain at least one number.", ErrorType.Validation);
+            if (request.NewPassword.Any(char.IsWhiteSpace))
+                return SuccessResponse<AuthResponse>.Fail("Password cannot contain spaces.", ErrorType.Validation);
+
+            if (request.NewPassword != request.ConfirmPassword)
+                return SuccessResponse<AuthResponse>.Fail("Passwords do not match.", ErrorType.Validation);
+
             var hashedNewPassword = _passwordHasher.Hash(request.NewPassword);
 
             user.ChangePassword(hashedNewPassword);
@@ -361,7 +376,7 @@ namespace EPMS.Domain.Services.Auth
                     UserGuid = user.PublicId,
                     Email = user.Email,
                     StaffName = user.Profile?.StaffName ?? string.Empty,
-                    RoleName = user.Role.Name,
+                    RoleName = user.Role?.Name ?? string.Empty,
                     IsActive = user.IsActive,
                     IsFirstLogin = false,
                     LastLoginDate = user.LastLoginDate
@@ -599,6 +614,48 @@ namespace EPMS.Domain.Services.Auth
             await _cacheService.SetAsync(cacheKey, roles, RolesCacheTtl);
 
             return roles;
+        }
+
+        public async Task<List<string>> GetUserPermissionsAsync(long userId)
+        {
+            var cacheKey = CacheKeys.Auth.UserPermissions(userId);
+
+            var cached = await _cacheService.GetAsync<List<string>>(cacheKey);
+            if (cached != null)
+                return cached;
+
+            var user = await _unitOfWork.Auth.Users.GetByIdAsync(userId);
+            if (user == null)
+                return new List<string>();
+
+            var permissionCodes = new List<string>();
+
+            if (user.PositionId.HasValue)
+            {
+                var permissions = await _unitOfWork.Auth.PositionPermissions
+                    .GetPermissionsForPositionAsync(user.PositionId.Value);
+
+                permissionCodes.AddRange(
+                    permissions.Where(p => p.IsActive).Select(p => p.Code));
+            }
+
+            await _cacheService.SetAsync(cacheKey, permissionCodes, PermissionsCacheTtl);
+
+            return permissionCodes;
+        }
+
+        public async Task<List<string>> GetAllPermissionCodesAsync()
+        {
+            var cacheKey = CacheKeys.Auth.AllPermissions();
+            var cached = await _cacheService.GetAsync<List<string>>(cacheKey);
+            if (cached != null)
+                return cached;
+
+            var permissions = await _unitOfWork.Auth.Permissions.GetAllAsync();
+            var codes = permissions.Where(p => p.IsActive).Select(p => p.Code).ToList();
+
+            await _cacheService.SetAsync(cacheKey, codes, PermissionsCacheTtl);
+            return codes;
         }
 
         /// <summary>

@@ -68,6 +68,28 @@ namespace EPMS.Api.Controllers.Auth
         }
 
         [Authorize]
+        [HttpGet("my-permissions")]
+        public async Task<ActionResult<SuccessResponse<List<string>>>> GetMyPermissions()
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!long.TryParse(userIdClaim, out var userId))
+                return HandleResult(SuccessResponse<List<string>>.Fail("Invalid user token.", ErrorType.Unauthorized));
+
+            var roles = User.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList();
+            List<string> permissions;
+            if (roles.Contains(RoleConstants.SystemAdmin) || roles.Contains(RoleConstants.Admin))
+            {
+                permissions = await _authService.GetAllPermissionCodesAsync();
+            }
+            else
+            {
+                permissions = await _authService.GetUserPermissionsAsync(userId);
+            }
+
+            return HandleResult(SuccessResponse<List<string>>.Ok(permissions, "Permissions retrieved."));
+        }
+
+        [Authorize]
         [HttpPost("logout")]
         public async Task<ActionResult<SuccessResponse>> Logout([FromBody] LogoutRequest request)
         {

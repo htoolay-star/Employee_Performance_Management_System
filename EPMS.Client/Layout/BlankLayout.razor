@@ -1,0 +1,39 @@
+@inherits LayoutComponentBase
+@using MudBlazor
+@using EPMS.Client.Themes
+@inject IJSRuntime JS
+
+<MudThemeProvider Theme="EPMSTheme.GetTheme()" IsDarkMode="@_isDarkMode" />
+<MudPopoverProvider />
+
+@Body
+
+@code {
+    bool _isDarkMode = false;
+    bool _pendingThemeSync = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var stored = await JS.InvokeAsync<string>("localStorage.getItem", "epms-dark-mode");
+            _isDarkMode = stored == "true";
+        }
+        catch
+        {
+            _isDarkMode = false;
+        }
+
+        StateHasChanged();
+        _pendingThemeSync = true;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_pendingThemeSync)
+        {
+            _pendingThemeSync = false;
+            await JS.InvokeVoidAsync("epmsSyncTheme", _isDarkMode);
+        }
+    }
+}

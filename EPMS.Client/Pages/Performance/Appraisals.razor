@@ -6,14 +6,8 @@
 @using EPMS.Shared.DTOs.FormDTOs
 @using MudBlazor
 @using Refit
-@using Microsoft.AspNetCore.Components.Authorization
-@using System.Security.Claims
-
 @inject IAppraisalApiClient AppraisalApiClient
-@inject NavigationManager Navigation
-@inject IDialogService DialogService
 @inject ISnackbar Snackbar
-@inject AuthenticationStateProvider AuthStateProvider
 
 <PageTitle>@UIConstants.AppraisalList.PageTitle</PageTitle>
 
@@ -78,65 +72,7 @@
                                  Size="Size.Small" />
                     </CellTemplate>
                 </TemplateColumn>
-                <TemplateColumn Title="@UIConstants.Common.Actions" Sortable="false">
-                    <CellTemplate>
-                        @if (context.Item.ManagerReviewerId == _currentUserId)
-                        {
-                            <MudStack Row="true" Spacing="0">
-                                <MudTooltip Text="KPI Evaluation" Placement="Placement.Top">
-                                    <MudIconButton Icon="@Icons.Material.Filled.EditNote"
-                                                   Color="Color.Primary"
-                                                   Size="Size.Small"
-                                                   Disabled="@(context.Item.IsLocked)"
-                                                   OnClick="@(() => GoToFill(context.Item.Id))" />
-                                </MudTooltip>
-                                <MudTooltip Text="360° Feedback" Placement="Placement.Top">
-                                    <MudIconButton Icon="@Icons.Material.Filled.People"
-                                                   Color="Color.Info"
-                                                   Size="Size.Small"
-                                                   Disabled="@(context.Item.IsLocked)"
-                                                   OnClick="@(() => GoToEvaluate(context.Item.Id, EvaluatorRoles.Manager))" />
-                                </MudTooltip>
-                                <MudTooltip Text="Appraisal Review" Placement="Placement.Top">
-                                    <MudIconButton Icon="@Icons.Material.Filled.RateReview"
-                                                   Color="Color.Secondary"
-                                                   Size="Size.Small"
-                                                   Disabled="@(context.Item.IsLocked)"
-                                                   OnClick="@(() => GoToEvaluate(context.Item.Id, EvaluatorRoles.Appraisal))" />
-                                </MudTooltip>
-                                <MudTooltip Text="View Self-Assessment" Placement="Placement.Top">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Visibility"
-                                                   Color="Color.Default"
-                                                   Size="Size.Small"
-                                                   OnClick="@(() => GoToEvaluate(context.Item.Id, EvaluatorRoles.Self, true))" />
-                                </MudTooltip>
-                                <MudTooltip Text="@UIConstants.Common.Delete" Placement="Placement.Top">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                                   Color="Color.Error"
-                                                   Size="Size.Small"
-                                                   OnClick="@(() => OpenDeleteDialog(context.Item))" />
-                                </MudTooltip>
-                            </MudStack>
-                        }
-                        else
-                        {
-                            <MudStack Row="true" Spacing="0">
-                                <MudTooltip Text="Evaluate" Placement="Placement.Top">
-                                    <MudIconButton Icon="@Icons.Material.Filled.RateReview"
-                                                   Color="Color.Secondary"
-                                                   Size="Size.Small"
-                                                   OnClick="@(() => GoToEvaluate(context.Item.Id, null))" />
-                                </MudTooltip>
-                                <MudTooltip Text="@UIConstants.Common.Delete" Placement="Placement.Top">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                                   Color="Color.Error"
-                                                   Size="Size.Small"
-                                                   OnClick="@(() => OpenDeleteDialog(context.Item))" />
-                                </MudTooltip>
-                            </MudStack>
-                        }
-                    </CellTemplate>
-                </TemplateColumn>
+
             </Columns>
             <NoRecordsContent>
                 <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
@@ -162,38 +98,20 @@
 
 @code {
 
-    private static readonly DialogOptions _confirmDialogOptions = new()
-    {
-        CloseOnEscapeKey = true
-    };
-
     private string? _searchString;
     private string? _selectedStatusFilter;
     private List<AppraisalDto> _items = new();
     private Dictionary<long, int> _rowNumbers = new();
     private bool _loading = true;
-    private long _currentUserId;
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadCurrentUserIdAsync();
         await LoadDataAsync();
     }
 
-    private async Task LoadCurrentUserIdAsync()
-    {
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        var userIdClaim = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (!string.IsNullOrEmpty(userIdClaim) && long.TryParse(userIdClaim, out var userId))
-        {
-            _currentUserId = userId;
-        }
-    }
-
-    private async Task OnStatusFilterChanged(string? v)
+    private void OnStatusFilterChanged(string? v)
     {
         _selectedStatusFilter = v;
-        await LoadDataAsync();
     }
 
     private async Task LoadDataAsync()
@@ -229,62 +147,18 @@
         if (!string.IsNullOrWhiteSpace(_searchString))
         {
             var search = _searchString.Trim();
-            if (!string.IsNullOrWhiteSpace(x.EmployeeName) &&
-                x.EmployeeName.Contains(search, StringComparison.OrdinalIgnoreCase))
-                return true;
-            return false;
+            if (string.IsNullOrWhiteSpace(x.EmployeeName) ||
+                !x.EmployeeName.Contains(search, StringComparison.OrdinalIgnoreCase))
+                return false;
         }
+
+        if (!string.IsNullOrWhiteSpace(_selectedStatusFilter))
+        {
+            if (!string.Equals(x.Status, _selectedStatusFilter, StringComparison.OrdinalIgnoreCase))
+                return false;
+        }
+
         return true;
-    }
-
-    private void GoToFill(long id) =>
-        Navigation.NavigateTo($"/performance/appraisals/{id}/fill");
-
-    private void GoToEvaluate(long id, string? role, bool viewOnly = false)
-    {
-        var url = $"/performance/appraisals/{id}/evaluate";
-        var query = new List<string>();
-        if (!string.IsNullOrEmpty(role))
-            query.Add($"role={role}");
-        if (viewOnly)
-            query.Add("viewonly=true");
-        if (query.Count > 0)
-            url += "?" + string.Join("&", query);
-        Navigation.NavigateTo(url);
-    }
-
-    private async Task OpenDeleteDialog(AppraisalDto item)
-    {
-        var parameters = new DialogParameters<ConfirmDialog>
-        {
-            { x => x.ContentText, string.Format(UIConstants.AppraisalList.DeleteConfirmFormat, item.EmployeeName ?? item.Id.ToString()) },
-            { x => x.ButtonText, UIConstants.Common.Delete },
-            { x => x.Color, Color.Error }
-        };
-
-        var dialog = await DialogService.ShowAsync<ConfirmDialog>(
-            UIConstants.Common.Delete, parameters, _confirmDialogOptions);
-
-        if (await dialog.Result is { Canceled: false })
-        {
-            try
-            {
-                var response = await AppraisalApiClient.DeleteAsync(item.Id);
-                if (response.Success)
-                {
-                    Snackbar.Add(UIConstants.AppraisalList.DeleteSuccess, Severity.Success);
-                    await LoadDataAsync();
-                }
-                else
-                {
-                    Snackbar.Add(response.Message ?? UIConstants.Common.DeleteFailed, Severity.Error);
-                }
-            }
-            catch (Exception ex)
-            {
-                Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
-            }
-        }
     }
 
     private static Color GetStatusColor(string status) => status switch
