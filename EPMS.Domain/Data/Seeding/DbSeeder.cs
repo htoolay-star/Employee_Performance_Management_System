@@ -33,6 +33,7 @@ namespace EPMS.Domain.Data.Seeding
             await SeedRolesAsync();
             await SeedSystemAdminAsync();
             await SeedPermissionsAsync();
+            await SeedAdminPositionPermissionsAsync();
         }
 
         private async Task SeedSystemSettingsAsync()
@@ -111,9 +112,9 @@ namespace EPMS.Domain.Data.Seeding
         private async Task SeedPermissionsAsync()
         {
             var existingPermissions = await _uow.Auth.Permissions.GetAllAsync();
-            if (existingPermissions.Any()) return;
+            var existingCodes = existingPermissions.Select(p => p.Code).ToHashSet();
 
-            var permissions = new List<Permission>
+            var allPermissions = new List<Permission>
             {
                 // Positions
                 new("POSITIONS.VIEW", "View Positions"),
@@ -155,11 +156,68 @@ namespace EPMS.Domain.Data.Seeding
                 new("FORMTEMPLATE.CREATE", "Create Form Templates"),
                 new("FORMTEMPLATE.EDIT", "Edit Form Templates"),
                 new("FORMTEMPLATE.DELETE", "Delete Form Templates"),
+                // Employees
+                new("EMPLOYEES.VIEW", "View Employees"),
+                new("EMPLOYEES.CREATE", "Create Employees"),
+                new("EMPLOYEES.EDIT", "Edit Employees"),
+                new("EMPLOYEES.DELETE", "Delete Employees"),
+                // Appraisal Cycles
+                new("APPRCYCLE.VIEW", "View Appraisal Cycles"),
+                new("APPRCYCLE.CREATE", "Create Appraisal Cycles"),
+                new("APPRCYCLE.EDIT", "Edit Appraisal Cycles"),
+                new("APPRCYCLE.DELETE", "Delete Appraisal Cycles"),
+                // Rating Scales
+                new("RATINGSCALE.VIEW", "View Rating Scales"),
+                new("RATINGSCALE.CREATE", "Create Rating Scales"),
+                new("RATINGSCALE.EDIT", "Edit Rating Scales"),
+                new("RATINGSCALE.DELETE", "Delete Rating Scales"),
+                // KPI Masters
+                new("KPIMASTER.VIEW", "View KPI Masters"),
+                new("KPIMASTER.CREATE", "Create KPI Masters"),
+                new("KPIMASTER.EDIT", "Edit KPI Masters"),
+                new("KPIMASTER.DELETE", "Delete KPI Masters"),
+                // KPI Weights
+                new("KPIWEIGHT.VIEW", "View KPI Weights"),
+                new("KPIWEIGHT.CREATE", "Create KPI Weights"),
+                new("KPIWEIGHT.EDIT", "Edit KPI Weights"),
+                new("KPIWEIGHT.DELETE", "Delete KPI Weights"),
+                // Question Rating Scales
+                new("QUESTRATING.VIEW", "View Question Rating Scales"),
+                new("QUESTRATING.CREATE", "Create Question Rating Scales"),
+                new("QUESTRATING.EDIT", "Edit Question Rating Scales"),
+                new("QUESTRATING.DELETE", "Delete Question Rating Scales"),
+                // Appraisals
+                new("APPRAISAL.VIEW", "View Appraisals"),
             };
 
-            foreach (var p in permissions)
+            var missing = allPermissions.Where(p => !existingCodes.Contains(p.Code)).ToList();
+            if (missing.Count == 0) return;
+
+            foreach (var p in missing)
             {
                 _uow.Auth.Permissions.Add(p);
+            }
+
+            await _uow.CompleteAsync();
+        }
+
+        private async Task SeedAdminPositionPermissionsAsync()
+        {
+            var setting = await _uow.App.SystemSettings.GetByKeyAsync("AdminPositionId");
+            if (setting == null || !long.TryParse(setting.Value, out var adminPositionId))
+                return;
+
+            var adminPosition = await _uow.HR.Positions.FindAsync(
+                p => p.Id == adminPositionId && !p.IsDeleted,
+                true, default,
+                p => p.PositionPermissions);
+            if (adminPosition == null)
+                return;
+
+            var allPermissions = await _uow.Auth.Permissions.GetAllAsync();
+            foreach (var perm in allPermissions)
+            {
+                adminPosition.AssignPermission(perm.Id);
             }
 
             await _uow.CompleteAsync();

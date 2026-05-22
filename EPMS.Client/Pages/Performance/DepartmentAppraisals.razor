@@ -66,6 +66,7 @@
                       Class="mb-4">
                 <ColGroup>
                     <col />
+                    <col style="width: 160px;" />
                     <col style="width: 180px;" />
                     <col style="width: 120px;" />
                     <col style="width: 120px;" />
@@ -73,21 +74,24 @@
                 </ColGroup>
                 <HeaderContent>
                     <MudTh>Department</MudTh>
+                    <MudTh>Dept Head</MudTh>
                     <MudTh>Cycle</MudTh>
                     <MudTh>Status</MudTh>
-                    <MudTh>Total Score</MudTh>
+                    <MudTh>KPI Score</MudTh>
                     <MudTh>Actions</MudTh>
                 </HeaderContent>
                 <RowTemplate>
-                    <MudTd DataLabel="Department">@context.EntityName</MudTd>
-                    <MudTd DataLabel="Cycle">@context.CycleName</MudTd>
-                    <MudTd DataLabel="Status">
-                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)">@context.Status</MudChip>
-                    </MudTd>
-                    <MudTd DataLabel="Score">
-                        <MudText Typo="Typo.body2" Align="Align.Right">@(context.TotalScore?.ToString("F2") ?? "-")</MudText>
-                    </MudTd>
-                    <MudTd DataLabel="Actions">
+                    <MudTr>
+                        <MudTd DataLabel="Department">@context.EntityName</MudTd>
+                        <MudTd DataLabel="Dept Head">@context.EntityHeadName</MudTd>
+                        <MudTd DataLabel="Cycle">@context.CycleName</MudTd>
+                        <MudTd DataLabel="Status">
+                            <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)">@context.Status</MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Score">
+                            <MudText Typo="Typo.body2" Align="Align.Right">@(context.KpiScore?.ToString("F2") ?? "-")</MudText>
+                        </MudTd>
+                        <MudTd DataLabel="Actions">
                         <MudButton Variant="Variant.Text"
                                    Color="Color.Primary"
                                    Size="Size.Small"
@@ -96,6 +100,7 @@
                             @(_selectedAppraisalId == context.Id ? "Close KPIs" : "Manage KPIs")
                         </MudButton>
                     </MudTd>
+                    </MudTr>
                 </RowTemplate>
                 <NoRecordsContent>
                     <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">

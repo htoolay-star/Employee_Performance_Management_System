@@ -103,7 +103,7 @@ namespace EPMS.Api.Controllers.Auth
             return HandleResult(response);
         }
 
-        [Authorize(Roles = RoleConstants.SystemAdmin)]
+        [Authorize(Roles = RoleConstants.SA_Admin)]
         [HttpGet("admin-position")]
         public async Task<ActionResult<SuccessResponse<long?>>> GetAdminPosition()
         {
@@ -126,6 +126,14 @@ namespace EPMS.Api.Controllers.Auth
         {
             await _settingsService.UpdateDefaultPasswordAsync(request.NewDefaultPassword);
             return HandleResult(SuccessResponse.Ok("Default password updated successfully."));
+        }
+
+        [Authorize(Roles = $"{RoleConstants.Admin},{RoleConstants.SystemAdmin}")]
+        [HttpGet("default-password")]
+        public async Task<ActionResult<SuccessResponse<string>>> GetDefaultPassword()
+        {
+            var password = await _settingsService.GetDefaultPasswordAsync();
+            return Ok(SuccessResponse<string>.Ok(password, "Default password retrieved."));
         }
 
         [AllowAnonymous]

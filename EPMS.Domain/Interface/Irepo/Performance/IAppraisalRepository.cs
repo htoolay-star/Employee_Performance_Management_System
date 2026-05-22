@@ -12,5 +12,6 @@ namespace EPMS.Domain.Interface.Irepo.Performance
         Task<IEnumerable<Appraisal>> GetByEntityAndCycleAsync(string entityType, long entityId, long cycleId);
         Task<IEnumerable<Appraisal>> GetAppraisalsByCycleAsync(long cycleId);
         Task<IEnumerable<Appraisal>> GetByManagerReviewerIdAsync(long managerReviewerId);
+        Task<IEnumerable<Appraisal>> GetByNoDirectManagerAsync();
     }
 }

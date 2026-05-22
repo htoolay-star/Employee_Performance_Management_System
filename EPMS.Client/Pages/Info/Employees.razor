@@ -20,12 +20,20 @@
 @inject NavigationManager Navigation
 @inject LookupStateService LookupState
 @inject IJSRuntime JS
+@inject CurrentUserPermissionService PermService
 
 <PageTitle>@UIConstants.Employee.PageTitle - EPMS</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
     <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.Employee.PageTitle</MudText>
 
+    @if (!_canView)
+    {
+        <MudAlert Severity="Severity.Warning" Class="mb-4">You do not have permission to view employees.</MudAlert>
+    }
+
+    @if (_canView)
+    {
     <MudPaper Elevation="2" Class="pa-4">
 
         @* ── Toolbar ──────────────────────────────────────────────────── *@
@@ -132,6 +140,8 @@
                                   SortDirection="@_sortDirection"
                                   SortColumns="@_sortableColumns"
                                   OnSortChanged="OnSortChanged" />
+                @if (_canCreate)
+                {
                 <MudButton Variant="Variant.Outlined" Color="Color.Info"
                            StartIcon="@Icons.Material.Filled.Download"
                            OnClick="DownloadTemplateAsync">
@@ -145,16 +155,20 @@
                         </MudButton>
                     </ActivatorContent>
                 </MudFileUpload>
+                }
                 <MudButton Variant="Variant.Outlined" Color="Color.Success"
                            StartIcon="@Icons.Material.Filled.FileDownload"
                            OnClick="ExportAsync">
                     Export
                 </MudButton>
+                @if (_canCreate)
+                {
                 <MudButton Variant="Variant.Filled" Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.Add"
                            OnClick="OpenCreateWizardAsync">
                     Add Employee
                 </MudButton>
+                }
             </MudStack>
 
         </MudStack>
@@ -232,6 +246,7 @@
         </MudDataGrid>
 
     </MudPaper>
+    }
 </MudContainer>
 
 @code {
@@ -240,6 +255,8 @@
     private bool _importing = false;
     private byte[]? _importFileBytes;
     private string? _importFileName;
+    private bool _canView;
+    private bool _canCreate;
     
     // Filters
     private string _searchString = string.Empty;
@@ -266,12 +283,18 @@
             var deptTask = LookupState.GetDepartmentsAsync();
             var teamTask = LookupState.GetTeamsAsync();
             var posTask = LookupState.GetPositionsAsync();
+            var permTask = PermService.GetPermissionsAsync();
 
-            await Task.WhenAll(deptTask, teamTask, posTask);
+            await Task.WhenAll(deptTask, teamTask, posTask, permTask);
 
             _departments = await deptTask;
             _teams = await teamTask;
             _positions = await posTask;
+
+            var perms = await permTask;
+            var permSet = new HashSet<string>(perms);
+            _canView = permSet.Contains("EMPLOYEES.VIEW");
+            _canCreate = permSet.Contains("EMPLOYEES.CREATE");
         }
         catch (Exception)
         {

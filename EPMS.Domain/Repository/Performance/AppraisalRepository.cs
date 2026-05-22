@@ -95,5 +95,19 @@ namespace EPMS.Domain.Repository.Performance
                 .Include(a => a.Details)
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<Appraisal>> GetByNoDirectManagerAsync()
+        {
+            return await _dbSet
+                .Where(a => a.Employee != null
+                    && a.Employee.Employment != null
+                    && a.Employee.Employment.DirectManagerId == null
+                    && !a.IsDeleted)
+                .AsNoTracking()
+                .Include(a => a.Employee)
+                .Include(a => a.Cycle)
+                .Include(a => a.ManagerReviewer)
+                .ToListAsync();
+        }
     }
 }

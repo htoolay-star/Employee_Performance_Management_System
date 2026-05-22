@@ -60,9 +60,9 @@
                         <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Item.Status)">@context.Item.Status</MudChip>
                     </CellTemplate>
                 </TemplateColumn>
-                <TemplateColumn Title="@UIConstants.AppraisalList.ColumnScore" Sortable="true">
+                <TemplateColumn Title="Rating" Sortable="true">
                     <CellTemplate>
-                        <MudText Typo="Typo.body2" Align="Align.Right">@(context.Item.TotalScore?.ToString("F2") ?? "-")</MudText>
+                        <MudText Typo="Typo.body2">@(context.Item.RatingLabel ?? "-")</MudText>
                     </CellTemplate>
                 </TemplateColumn>
                 <TemplateColumn Title="@UIConstants.AppraisalList.ColumnLocked" Sortable="false" Style="width: 80px; text-align: center;">

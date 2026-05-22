@@ -23,25 +23,22 @@
 
             @foreach (var group in _groups)
             {
-                <div class="d-flex align-center mb-3" style="gap: 16px;">
-                    <MudText Typo="Typo.subtitle2"
-                             Class="mud-text-secondary"
-                             Style="min-width: 180px; text-transform: uppercase; flex-shrink: 0;">
-                        @group.Key
-                    </MudText>
-                    <div class="d-flex flex-wrap align-center" style="gap: 4px 20px;">
-                        @foreach (var permission in group.Value)
-                        {
-                            <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; margin: 2px 0; min-width: 150px;">
-                                <input type="checkbox"
-                                       checked="@_permissionChecked[permission.Id]"
-                                       @onchange="(ChangeEventArgs e) => _permissionChecked[permission.Id] = (bool)(e.Value ?? false)"
-                                       style="width: 18px; height: 18px; cursor: pointer;" />
-                                <span>@permission.Name</span>
-                            </label>
-                        }
-                    </div>
-                </div>
+                <MudText Typo="Typo.subtitle2" Class="mud-text-secondary mt-6 mb-3" Style="text-transform: uppercase;">
+                    @group.Key
+                </MudText>
+                <MudStack Row="true" Spacing="8" Class="mb-4" Wrap="Wrap.Wrap">
+                    @foreach (var permission in group.Value)
+                    {
+                        <div style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; min-width: 180px; user-select: none;"
+                             @onclick="@(() => OnPermissionChanged(permission.Id, !_permissionChecked[permission.Id]))">
+                            <MudIcon Icon="@(_permissionChecked[permission.Id] ? Icons.Material.Filled.CheckBox : Icons.Material.Filled.CheckBoxOutlineBlank)"
+                                     Color="@(_permissionChecked[permission.Id] ? Color.Primary : Color.Default)"
+                                     Size="Size.Small"
+                                     Style="pointer-events: none;" />
+                            <span>@permission.Name</span>
+                        </div>
+                    }
+                </MudStack>
             }
         }
     </DialogContent>
@@ -64,6 +61,7 @@
 
     [Parameter] public long PositionId { get; set; }
     [Parameter] public string? PositionName { get; set; }
+    [Parameter] public bool IsAdminPosition { get; set; }
 
     private bool _loading;
     private bool _saving;
@@ -73,7 +71,7 @@
 
     private DialogOptions _dialogOptions = new()
     {
-        MaxWidth = MaxWidth.Medium,
+        MaxWidth = MaxWidth.ExtraExtraLarge,
         FullWidth = true
     };
 
@@ -107,7 +105,7 @@
                 assignedIds = assignedResult.Data.Where(p => p.IsActive).Select(p => p.Id).ToHashSet();
             }
 
-            _permissionChecked = _allPermissions.ToDictionary(p => p.Id, p => assignedIds.Contains(p.Id));
+            _permissionChecked = _allPermissions.ToDictionary(p => p.Id, p => IsAdminPosition || assignedIds.Contains(p.Id));
         }
         catch (Exception ex)
         {
@@ -124,6 +122,46 @@
         _groups = _allPermissions
             .GroupBy(p => p.Code.Split('.').FirstOrDefault() ?? "Other")
             .ToDictionary(g => g.Key, g => g.ToList());
+    }
+
+    private void OnPermissionChanged(long id, bool value)
+    {
+        var permission = _allPermissions.FirstOrDefault(p => p.Id == id);
+        if (permission == null) return;
+
+        var groupCode = permission.Code.Split('.').FirstOrDefault();
+        if (groupCode == null) return;
+
+        if (value)
+        {
+            _permissionChecked[id] = true;
+
+            if (!permission.Code.EndsWith(".VIEW"))
+            {
+                var viewPerm = _allPermissions.FirstOrDefault(p =>
+                    p.Code == $"{groupCode}.VIEW" && p.IsActive);
+                if (viewPerm != null)
+                    _permissionChecked[viewPerm.Id] = true;
+            }
+        }
+        else
+        {
+            if (permission.Code.EndsWith(".VIEW"))
+            {
+                var hasNonViewChecked = _allPermissions.Any(p =>
+                    p.Code.StartsWith($"{groupCode}.") &&
+                    !p.Code.EndsWith(".VIEW") &&
+                    p.IsActive &&
+                    _permissionChecked.GetValueOrDefault(p.Id));
+                if (hasNonViewChecked)
+                {
+                    Snackbar.Add("Uncheck all actions (Create/Edit/Delete) first before unchecking View.", Severity.Warning);
+                    return;
+                }
+            }
+
+            _permissionChecked[id] = false;
+        }
     }
 
     private async Task Save()

@@ -20,7 +20,7 @@
             }
             
             var bgColor = isDark ? '#1E1E2E' : '#FAFAFA';
-            var textColor = isDark ? '#e0e0e0' : '#666666';
+            var textColor = isDark ? '#ffffff' : '#666666';
             
             var dotColor1 = isDark ? 'rgba(138, 180, 248, 0.05)' : 'rgba(33, 64, 154, 0.10)';
             var dotColor2 = isDark ? 'rgba(37, 37, 64, 0.7)' : 'rgba(33, 64, 154, 0.20)';
@@ -42,6 +42,11 @@
                     'background-color: ' + bgColor + ';' +
                 '}';
             document.head.appendChild(style);
+
+            var logo = document.querySelector('.loading-logo');
+            if (logo) {
+                logo.src = isDark ? 'ACE-dark.svg' : 'ACE.svg';
+            }
         })();
     </script>
     <script>

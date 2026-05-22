@@ -14,6 +14,7 @@ public class AppraisalFillFormModel
     public string? CycleName { get; set; }
     public string Status { get; set; } = string.Empty;
     public bool IsLocked { get; set; }
+    public bool IsReadOnly { get; set; }
     public List<AppraisalDetailFillItem> Details { get; set; } = new();
 }
 

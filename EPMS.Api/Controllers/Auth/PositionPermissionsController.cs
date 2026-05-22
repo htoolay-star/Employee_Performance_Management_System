@@ -10,7 +10,7 @@ namespace EPMS.Api.Controllers.Auth;
 
 [ApiController]
 [Route("api/position-permissions")]
-[Authorize(Roles = RoleConstants.SystemAdmin)]
+[Authorize(Roles = RoleConstants.SA_Admin)]
 public class PositionPermissionsController : ApiControllerBase
 {
     private readonly IPositionPermissionService _service;

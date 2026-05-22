@@ -36,7 +36,7 @@
                 </TemplateColumn>
                 <TemplateColumn Title="Score" Sortable="true">
                     <CellTemplate>
-                        <MudText Typo="Typo.body2" Align="Align.Right">@(context.Item.TotalScore?.ToString("F2") ?? "-")</MudText>
+                        <MudText Typo="Typo.body2" Align="Align.Right">@(context.Item.KpiScore?.ToString("F2") ?? "-")</MudText>
                     </CellTemplate>
                 </TemplateColumn>
                 <TemplateColumn Title="Locked" Sortable="false" Style="width: 80px; text-align: center;">

@@ -23,6 +23,9 @@ public interface IAuthApiClient
     [Put("/api/auth/default-password")]
     Task<SuccessResponse> UpdateDefaultPassword([Body] UpdateDefaultPasswordRequest request);
 
+    [Get("/api/auth/default-password")]
+    Task<SuccessResponse<string>> GetDefaultPasswordAsync();
+
     [Get("/api/auth/admin-position")]
     Task<SuccessResponse<long?>> GetAdminPosition();
 

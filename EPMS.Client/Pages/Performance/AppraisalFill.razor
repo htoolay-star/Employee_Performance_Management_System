@@ -148,6 +148,7 @@
                                              Margin="Margin.Dense"
                                              Immediate="false"
                                              Min="0"
+                                             Disabled="@_model.IsReadOnly"
                                              Validation="@(new Func<decimal?, string?>(v => v < 0 ? UIConstants.AppraisalFill.NegativeValueError : null))" />
                         </MudTd>
                         <MudTd DataLabel="Score">
@@ -162,7 +163,8 @@
                                           Variant="Variant.Outlined"
                                           Placeholder="Notes"
                                           Margin="Margin.Dense"
-                                          Lines="3" />
+                                          Lines="3"
+                                          Disabled="@_model.IsReadOnly" />
                         </MudTd>
                     </RowTemplate>
                 </MudTable>
@@ -181,18 +183,27 @@
                 </MudPaper>
 
                 @* Submit Button *@
-                <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
-                    <MudButton Variant="Variant.Filled"
-                               Color="Color.Primary"
-                               OnClick="Submit"
-                               Disabled="@(_loading || _submitting || _model.IsLocked || _model.Details.Count == 0)">
-                        @if (_submitting)
-                        {
-                            <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
-                        }
-                        @UIConstants.AppraisalFill.SubmitButton
-                    </MudButton>
-                </MudStack>
+                @if (!_model.IsReadOnly)
+                {
+                    <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   OnClick="Submit"
+                                   Disabled="@(_loading || _submitting || _model.IsLocked || _model.Details.Count == 0)">
+                            @if (_submitting)
+                            {
+                                <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
+                            }
+                            @UIConstants.AppraisalFill.SubmitButton
+                        </MudButton>
+                    </MudStack>
+                }
+                else
+                {
+                    <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
+                        <MudChip T="string" Color="Color.Info">Read-Only View</MudChip>
+                    </MudStack>
+                }
             </MudForm>
         </MudPaper>
     }
@@ -352,6 +363,7 @@
     {
         "Draft" => Color.Warning,
         "InProgress" => Color.Info,
+        "REVIEWED" => Color.Primary,
         "Finalized" => Color.Success,
         _ => Color.Default
     };

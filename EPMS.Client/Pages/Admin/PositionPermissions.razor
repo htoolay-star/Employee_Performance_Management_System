@@ -4,9 +4,10 @@
 @using EPMS.Client.Services.Hr
 @using EPMS.Shared.DTOs.Common
 @using MudBlazor
-@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "SystemAdmin")]
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,SystemAdmin")]
 @inject IPermissionApiClient PermissionApiClient
 @inject IPositionApiClient PositionApiClient
+@inject IAuthApiClient AuthApiClient
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
@@ -24,6 +25,7 @@
                        Label="Position"
                        Value="_selectedPositionId"
                        ValueChanged="OnPositionChanged"
+                       ToStringFunc="@(id => id.HasValue ? _positions.FirstOrDefault(p => p.Id == id.Value)?.Name ?? "--" : "-- Select a position --")"
                        Variant="Variant.Outlined"
                        Class="flex-grow-1 me-4"
                        Required="false"
@@ -57,10 +59,26 @@
     private long? _selectedPositionId;
     private string? _selectedPositionName;
     private List<LookUpDto> _positions = new();
+    private long? _adminPositionId;
 
     protected override async Task OnInitializedAsync()
     {
         await LoadPositionsAsync();
+        await LoadAdminPositionAsync();
+    }
+
+    private async Task LoadAdminPositionAsync()
+    {
+        try
+        {
+            var result = await AuthApiClient.GetAdminPosition();
+            if (result.Success)
+                _adminPositionId = result.Data;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
     }
 
     private async Task LoadPositionsAsync()
@@ -93,7 +111,8 @@
         var parameters = new DialogParameters<PositionPermissionDialog>
         {
             { x => x.PositionId, _selectedPositionId.Value },
-            { x => x.PositionName, _selectedPositionName }
+            { x => x.PositionName, _selectedPositionName },
+            { x => x.IsAdminPosition, _selectedPositionId.Value == _adminPositionId }
         };
 
         var dialog = await DialogService.ShowAsync<PositionPermissionDialog>(

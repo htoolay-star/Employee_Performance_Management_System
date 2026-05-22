@@ -1,5 +1,6 @@
 ﻿using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Auth;
+using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Domain.Interface.IService.App;
 using EPMS.Domain.Interface.IService.Auth;
 using EPMS.Shared.Constants;
@@ -230,6 +231,10 @@ namespace EPMS.Domain.Services.Auth
             newUser.AssignPosition(request.PositionId);
 
             _unitOfWork.Auth.Users.Add(newUser);
+            await _unitOfWork.CompleteAsync();
+
+            var profile = new EmployeeProfile(newUser.Id, request.StaffNo, request.StaffName, request.Email);
+            _unitOfWork.Info.EmployeeProfiles.Add(profile);
             await _unitOfWork.CompleteAsync();
 
             var adminPositionId = await _settingsService.GetAdminPositionIdAsync();
@@ -584,23 +589,6 @@ namespace EPMS.Domain.Services.Auth
                 if (adminPositionId.HasValue && user.PositionId.Value == adminPositionId.Value)
                 {
                     roles.Add(RoleConstants.Admin);
-                }
-            }
-
-            // 3. Get position-based roles via employment (primary path for non-direct-assigned positions)
-            if (user.Profile != null)
-            {
-                var employment = await _unitOfWork.Info.EmployeeEmployments.GetByEmployeeIdAsync(user.Profile.Id);
-                if (employment != null)
-                {
-                    var positionRoles = await _unitOfWork.Auth.PositionRoles.GetByPositionIdAsync(employment.PositionId);
-                    foreach (var pr in positionRoles.Where(pr => pr.IsActive))
-                    {
-                        if (!string.IsNullOrEmpty(pr.Role?.Name) && !roles.Contains(pr.Role.Name))
-                        {
-                            roles.Add(pr.Role.Name);
-                        }
-                    }
                 }
             }
 

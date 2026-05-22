@@ -26,6 +26,7 @@
             <MudSelect T="long?"
                        Label="Select Admin Position"
                        @bind-Value="_selectedPositionId"
+                       ToStringFunc="@(id => id.HasValue ? _positions.FirstOrDefault(p => p.Id == id.Value)?.Name ?? "--" : "-- None --")"
                        Variant="Variant.Outlined"
                        Class="mb-4"
                        Required="false"

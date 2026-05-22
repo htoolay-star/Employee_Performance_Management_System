@@ -16,5 +16,6 @@ public class AppraisalFillDto
     public string? ManagerReviewerName { get; set; }
     public string Status { get; set; } = string.Empty;
     public bool IsLocked { get; set; }
+    public bool IsReadOnly { get; set; }
     public List<AppraisalDetailFillDto> Details { get; set; } = new();
 }

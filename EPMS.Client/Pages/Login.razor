@@ -107,6 +107,8 @@
                     await TokenStorage.SetTokensAsync(accessToken, result.Data.Tokens.RefreshToken);
                     ((JwtAuthenticationStateProvider)AuthenticationStateProvider).MarkUserAsAuthenticated(accessToken);
 
+                    Snackbar.Add(result.Message ?? "Login successful", Severity.Success);
+
                     _isLoading = false;
 
                     if (result.Data.User.IsFirstLogin)
