@@ -15,6 +15,9 @@ public interface IAppraisalService
     Task<SuccessResponse> GetByEntityTypeAndCycleAsync(string entityType, long cycleId);
     Task<SuccessResponse> UpdateDetailActualValuesAsync(long appraisalId, List<AppraisalDetailDto> details);
     Task<SuccessResponse> GetAppraisalFillAsync(long id);
+    Task<SuccessResponse> GetAppraisalViewAsync(long id);
+    Task<SuccessResponse> GetMyKpiAsync();
+    Task<SuccessResponse> GetPendingAsync();
     Task<SuccessResponse> SubmitAsync(AppraisalSubmissionDto dto);
     Task<SuccessResponse> LockAsync(long id, long adminId, string reason);
     Task<SuccessResponse> UnlockAsync(long id, long adminId, string reason);

@@ -38,7 +38,8 @@ public class EmployeeProfileService : IEmployeeProfileService
     public async Task<SuccessResponse<IEnumerable<EmployeeProfileDto>>> GetAllAsync()
     {
         var profiles = await _uow.Info.EmployeeProfiles.GetAllAsync();
-        var dtos = profiles.Adapt<IEnumerable<EmployeeProfileDto>>();
+        var saIds = await GetSystemAdminEmployeeIdsAsync();
+        var dtos = profiles.Where(p => !saIds.Contains(p.Id)).Adapt<IEnumerable<EmployeeProfileDto>>();
         return SuccessResponse<IEnumerable<EmployeeProfileDto>>.Ok(dtos, EmployeeProfileMsg.RetrievedAll);
     }
 
@@ -295,7 +296,12 @@ public class EmployeeProfileService : IEmployeeProfileService
     {
         var dtos = await _cacheService.GetOrCreateAsync(
             CacheKeys.Hr.EmployeeLookups(),
-            async () => await _uow.Info.EmployeeProfiles.GetLookupDtoAsync(),
+            async () =>
+            {
+                var all = await _uow.Info.EmployeeProfiles.GetLookupDtoAsync();
+                var saIds = await GetSystemAdminEmployeeIdsAsync();
+                return all?.Where(d => !saIds.Contains(d.Id)).ToList() ?? [];
+            },
             TimeSpan.FromHours(1)
         );
         return SuccessResponse<IEnumerable<EmployeeLookupDto>>.Ok(dtos ?? [], EmployeeProfileMsg.RetrievedAll);
@@ -304,7 +310,8 @@ public class EmployeeProfileService : IEmployeeProfileService
     public async Task<SuccessResponse<PaginatedResponse<EmployeeProfileGridItemDto>>> GetPagedAsync(EPMS.Shared.Features.EmployeeProfiles.EmployeeProfileQueryParameters parameters)
     {
         var entitySortColumn = GetMappedSortColumn(parameters.OrderBy);
-        var (dtos, totalCount) = await _uow.Info.EmployeeProfiles.GetPagedDtoAsync(parameters, entitySortColumn);
+        var saIds = await GetSystemAdminEmployeeIdsAsync();
+        var (dtos, totalCount) = await _uow.Info.EmployeeProfiles.GetPagedDtoAsync(parameters, entitySortColumn, excludeEmployeeIds: saIds);
 
         var response = new PaginatedResponse<EmployeeProfileGridItemDto>
         {
@@ -315,6 +322,17 @@ public class EmployeeProfileService : IEmployeeProfileService
         };
 
         return SuccessResponse<PaginatedResponse<EmployeeProfileGridItemDto>>.Ok(response, EmployeeProfileMsg.RetrievedAll);
+    }
+
+    private async Task<HashSet<long>> GetSystemAdminEmployeeIdsAsync()
+    {
+        var saUsers = await _uow.Auth.Users
+            .FindAllAsync(u => u.RoleId == (long)UserRole.SystemAdmin && !u.IsDeleted,
+                          includes: u => u.Profile);
+        return saUsers
+            .Where(u => u.Profile != null)
+            .Select(u => u.Profile!.Id)
+            .ToHashSet();
     }
 
     private static string GetMappedSortColumn(string? orderBy)

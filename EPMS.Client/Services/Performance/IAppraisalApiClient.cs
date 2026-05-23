@@ -15,6 +15,15 @@ public interface IAppraisalApiClient
     [Get("/api/performance/appraisals/{id}/fill")]
     Task<SuccessResponse<AppraisalFillDto>> GetFillAsync(long id);
 
+    [Get("/api/performance/appraisals/{id}/view")]
+    Task<SuccessResponse<AppraisalFillDto>> GetViewAsync(long id);
+
+    [Get("/api/performance/appraisals/my-kpi")]
+    Task<SuccessResponse<IEnumerable<AppraisalFillDto>>> GetMyKpiAsync();
+
+    [Get("/api/performance/appraisals/pending")]
+    Task<SuccessResponse<IEnumerable<AppraisalDto>>> GetPendingAsync();
+
     [Get("/api/performance/appraisals/employee/{employeeId}")]
     Task<SuccessResponse<IEnumerable<AppraisalDto>>> GetByEmployeeIdAsync(long employeeId);
 
@@ -44,4 +53,7 @@ public interface IAppraisalApiClient
 
     [Post("/api/performance/appraisals/generate/{cycleId}")]
     Task<SuccessResponse> GenerateForCycleAsync(long cycleId);
+
+    [Post("/api/performance/appraisals/{id}/finalize")]
+    Task<SuccessResponse> FinalizeAsync(long id);
 }

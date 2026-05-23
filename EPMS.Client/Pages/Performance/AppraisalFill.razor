@@ -140,22 +140,15 @@
                             </MudTooltip>
                         </MudTd>
                         <MudTd DataLabel="Actual">
-                            @if (_model.IsReadOnly)
-                            {
-                                <MudText Typo="Typo.body2">@(context.ActualValue?.ToString("F2") ?? "—")</MudText>
-                            }
-                            else
-                            {
-                                <MudNumericField T="decimal?"
-                                                 Value="context.ActualValue"
-                                                 ValueChanged="value => OnActualValueChanged(context, value)"
-                                                 Variant="Variant.Outlined"
-                                                 Placeholder="Enter value"
-                                                 Margin="Margin.Dense"
-                                                 Immediate="false"
-                                                 Min="0"
-                                                 Validation="@(new Func<decimal?, string?>(v => v < 0 ? UIConstants.AppraisalFill.NegativeValueError : null))" />
-                            }
+                            <MudNumericField T="decimal?"
+                                             Value="context.ActualValue"
+                                             ValueChanged="value => OnActualValueChanged(context, value)"
+                                             Variant="Variant.Outlined"
+                                             Placeholder="Enter value"
+                                             Margin="Margin.Dense"
+                                             Immediate="false"
+                                             Min="0"
+                                             Validation="@(new Func<decimal?, string?>(v => v < 0 ? UIConstants.AppraisalFill.NegativeValueError : null))" />
                         </MudTd>
                         <MudTd DataLabel="Score">
                             <MudText Typo="Typo.body2" Align="Align.Right">@context.Score.ToString("F2")</MudText>
@@ -169,8 +162,7 @@
                                           Variant="Variant.Outlined"
                                           Placeholder="Notes"
                                           Margin="Margin.Dense"
-                                          Lines="3"
-                                          Disabled="@_model.IsReadOnly" />
+                                          Lines="3" />
                         </MudTd>
                     </RowTemplate>
                 </MudTable>
@@ -189,27 +181,19 @@
                 </MudPaper>
 
                 @* Submit Button *@
-                @if (!_model.IsReadOnly)
-                {
-                    <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
-                        <MudButton Variant="Variant.Filled"
-                                   Color="Color.Primary"
-                                   OnClick="Submit"
-                                   Disabled="@(_loading || _submitting || _model.IsLocked || _model.Details.Count == 0)">
-                            @if (_submitting)
-                            {
-                                <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
-                            }
-                            @UIConstants.AppraisalFill.SubmitButton
-                        </MudButton>
-                    </MudStack>
-                }
-                else
-                {
-                    <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
-                        <MudChip T="string" Color="Color.Info">Read-Only View</MudChip>
-                    </MudStack>
-                }
+                <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               OnClick="Submit"
+                               Visible="@(_model.Status is AppraisalStatuses.Draft or AppraisalStatuses.InProgress)"
+                               Disabled="@(_loading || _submitting || _model.IsLocked || _model.Details.Count == 0)">
+                        @if (_submitting)
+                        {
+                            <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
+                        }
+                        @UIConstants.AppraisalFill.SubmitButton
+                    </MudButton>
+                </MudStack>
             </MudForm>
         </MudPaper>
     }
@@ -327,7 +311,7 @@
             if (response.Success)
             {
                 Snackbar.Add(UIConstants.AppraisalFill.SubmitSuccess, Severity.Success);
-                await LoadAsync();
+                Navigation.NavigateTo("/performance/my-evaluations");
             }
             else
             {

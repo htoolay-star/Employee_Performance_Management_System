@@ -128,9 +128,18 @@
     </MudNavGroup>
     </MudTooltip>
     }
+    <MudTooltip Text="My KPI" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+        <MudNavLink Href="performance/my-kpi" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Person">My KPI</MudNavLink>
+    </MudTooltip>
     <MudTooltip Text="My Evaluations" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
         <MudNavLink Href="performance/my-evaluations" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.EditNote">My Evaluations</MudNavLink>
     </MudTooltip>
+    @if (_isAdmin)
+    {
+        <MudTooltip Text="Pending" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+            <MudNavLink Href="performance/pending" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PendingActions">Pending</MudNavLink>
+        </MudTooltip>
+    }
     <MudTooltip Text="Department Appraisals" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
         <MudNavLink Href="performance/department-appraisals" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Assessment">Department Appraisals</MudNavLink>
     </MudTooltip>

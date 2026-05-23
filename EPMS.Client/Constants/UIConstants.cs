@@ -383,6 +383,27 @@
             public const string NegativeValueError = "Value cannot be negative";
         }
 
+        public static class MyKpi
+        {
+            public const string PageTitle = "My KPI";
+            public const string NoData = "No KPI records found.";
+            public const string FinalizedButton = "Finalize";
+            public const string FinalizeSuccess = "Appraisal finalized successfully.";
+        }
+
+        public static class Pending
+        {
+            public const string PageTitle = "Pending Approvals";
+            public const string NoData = "No pending approvals.";
+        }
+
+        public static class AppraisalView
+        {
+            public const string PageTitle = "Appraisal View";
+            public const string FinalizeButton = "Finalize";
+            public const string FinalizeSuccess = "Appraisal finalized successfully.";
+        }
+
         public static class AppraisalList
         {
             public const string PageTitle = "KPI Evaluations";

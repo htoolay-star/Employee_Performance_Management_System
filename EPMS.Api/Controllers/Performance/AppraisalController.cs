@@ -1,8 +1,11 @@
+using EPMS.Api.Authorization;
 using EPMS.Api.Controllers.Common;
 using EPMS.Domain.Interface.IService.Performance;
+using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.FormDTOs;
 using FluentValidation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EPMS.Api.Controllers.Performance;
@@ -38,6 +41,30 @@ public class AppraisalController : ApiControllerBase
     public async Task<ActionResult<SuccessResponse>> GetFill(long id)
     {
         var result = await _service.GetAppraisalFillAsync(id);
+        return HandleResult(result);
+    }
+
+    [Authorize]
+    [HttpGet("{id:long}/view")]
+    public async Task<ActionResult<SuccessResponse>> GetView(long id)
+    {
+        var result = await _service.GetAppraisalViewAsync(id);
+        return HandleResult(result);
+    }
+
+    [Authorize]
+    [HttpGet("my-kpi")]
+    public async Task<ActionResult<SuccessResponse>> GetMyKpi()
+    {
+        var result = await _service.GetMyKpiAsync();
+        return HandleResult(result);
+    }
+
+    [Authorize(Roles = "Admin,SystemAdmin")]
+    [HttpGet("pending")]
+    public async Task<ActionResult<SuccessResponse>> GetPending()
+    {
+        var result = await _service.GetPendingAsync();
         return HandleResult(result);
     }
 

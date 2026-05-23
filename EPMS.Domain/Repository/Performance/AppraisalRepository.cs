@@ -25,7 +25,7 @@ namespace EPMS.Domain.Repository.Performance
         public async Task<Appraisal?> GetAppraisalWithDetailsAsync(long id)
         {
             return await _dbSet
-                .AsNoTracking()
+                .AsNoTrackingWithIdentityResolution()
                 .AsSplitQuery()
                 .Include(a => a.Employee)
                     .ThenInclude(e => e.Employment)
