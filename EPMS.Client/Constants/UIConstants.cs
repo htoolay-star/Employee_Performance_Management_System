@@ -46,6 +46,7 @@
 
             public const string SelectLevelPlaceholder = "-- Select a Level --";
             public const string NoDataFound = "Try adjusting your search or add a new position.";
+            public const string ViewKpiDialogTitle = "KPI Assignments";
         }
 
         public static class Level
@@ -80,6 +81,7 @@
             public const string ColumnDepartment = "Department";
             public const string SelectDepartmentPlaceholder = "-- Select a Department --";
             public const string LeadColumn = "PM";
+            public const string ViewKpiDialogTitle = "KPI Assignments";
             public const string NoDataFound = "Try adjusting your search or add a new team.";
         }
 
@@ -113,6 +115,7 @@
             public const string ColumnCode = "Department Code";
             public const string ColumnName = "Department Name";
             public const string HeadColumn = "Head";
+            public const string ViewKpiDialogTitle = "KPI Assignments";
             public const string NoDataFound = "Try adjusting your search or add a new department.";
         }
 

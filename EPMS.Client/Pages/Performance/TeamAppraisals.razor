@@ -155,12 +155,12 @@
                                 <MudTd DataLabel="KPI">@context.KPIName</MudTd>
                                 <MudTd DataLabel="Target">@(context.TargetValue?.ToString("F2") ?? "-")</MudTd>
                                 <MudTd DataLabel="Actual">
-                                    <MudNumericField T="decimal?"
-                                                     @bind-Value="context.ActualValue"
-                                                     Variant="Variant.Outlined"
-                                                     Placeholder="Enter value"
-                                                     Margin="Margin.Dense"
-                                                     Disabled="@_fillData.IsLocked" />
+                                    <MudTextField @bind-Value="context.ActualValue"
+                                                  Variant="Variant.Outlined"
+                                                  Placeholder="Enter value"
+                                                  Margin="Margin.Dense"
+                                                  Disabled="@_fillData.IsLocked"
+                                                  InputType="InputType.Number" />
                                 </MudTd>
                                 <MudTd DataLabel="Remarks">
                                     <MudTextField T="string"

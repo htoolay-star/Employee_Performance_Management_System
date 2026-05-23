@@ -11,6 +11,8 @@
 @using EPMS.Client.Constants
 @using EPMS.Client.Services.Auth
 @using EPMS.Client.Services.Hr
+@using EPMS.Client.Services.Performance
+@using EPMS.Shared.Constants
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.DepartmentDTOs
 @using EPMS.Shared.DTOs.TeamDTOs
@@ -23,6 +25,7 @@
 
 @inject IDepartmentApiClient DepartmentApiClient
 @inject ITeamApiClient TeamApiClient
+@inject IEntityKPIApiClient EntityKPIApiClient
 @inject IDialogService DialogService
 @inject LookupStateService LookupState
 @inject ISnackbar Snackbar
@@ -118,6 +121,15 @@
                                                    Color="Color.Primary"
                                                    Size="Size.Small"
                                                    OnClick="@(() => OpenEditDialog(context.Item))" />
+                                </MudTooltip>
+                            }
+                            @if (_canViewEntityKpi)
+                            {
+                                <MudTooltip Text="View KPI" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.FactCheck"
+                                                   Color="Color.Info"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => OpenViewKpiDialog(context.Item))" />
                                 </MudTooltip>
                             }
                             <MudTooltip Text="View Teams" Placement="Placement.Top">
@@ -279,7 +291,12 @@
         MaxWidth = MaxWidth.Small,
         FullWidth = true
     };
-
+    private static readonly DialogOptions _kpiDialogOptions = new()
+    {
+        CloseOnEscapeKey = true,
+        MaxWidth = MaxWidth.Large,
+        FullWidth = true
+    };
     private static readonly DialogOptions _confirmDialogOptions = new()
     {
         CloseOnEscapeKey = true
@@ -316,6 +333,7 @@
     private bool _canCreate;
     private bool _canEdit;
     private bool _canDelete;
+    private bool _canViewEntityKpi;
     private bool _error;
     private string _errorMessage = string.Empty;
 
@@ -353,6 +371,8 @@
         _teamCanCreate = await PermService.HasPermissionAsync("TEAMS.CREATE");
         _teamCanEdit = await PermService.HasPermissionAsync("TEAMS.EDIT");
         _teamCanDelete = await PermService.HasPermissionAsync("TEAMS.DELETE");
+
+        _canViewEntityKpi = await PermService.HasPermissionAsync("ENTITYKPI.VIEW");
 
         if (!_canView)
         {
@@ -474,6 +494,19 @@
             Snackbar.Add(DeptMsg.Updated, Severity.Success);
             await LoadDepartmentsAsync();
         }
+    }
+
+    private async Task OpenViewKpiDialog(DepartmentDto dept)
+    {
+        var parameters = new DialogParameters<EntityKpiViewDialog>
+        {
+            { x => x.EntityId, dept.Id },
+            { x => x.EntityName, dept.Name },
+            { x => x.EntityType, AppraisalConstants.EntityTypes.Department }
+        };
+
+        await DialogService.ShowAsync<EntityKpiViewDialog>(
+            $"{UIConstants.Department.ViewKpiDialogTitle} — {dept.Name}", parameters, _kpiDialogOptions);
     }
 
     private async Task OpenDeleteDialog(DepartmentDto dept)

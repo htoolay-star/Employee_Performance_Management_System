@@ -32,15 +32,17 @@
                     <MudTextField Value="@_model.LevelName" Label="@UIConstants.KPIWeightPriority.LevelNameLabel" Variant="Variant.Outlined" ReadOnly="true" />
                 }
 
-                <MudNumericField @bind-Value="_model.MaxWeight"
-                                Label="@UIConstants.KPIWeightPriority.MaxWeightLabel"
-                                For="@(() => _model.MaxWeight)"
-                                Variant="Variant.Outlined" />
+                <MudTextField @bind-Value="_model.MaxWeight"
+                             Label="@UIConstants.KPIWeightPriority.MaxWeightLabel"
+                             For="@(() => _model.MaxWeight)"
+                             Variant="Variant.Outlined"
+                             InputType="InputType.Number" />
 
-                <MudNumericField @bind-Value="_model.MinWeight"
-                                Label="@UIConstants.KPIWeightPriority.MinWeightLabel"
-                                For="@(() => _model.MinWeight)"
-                                Variant="Variant.Outlined" />
+                <MudTextField @bind-Value="_model.MinWeight"
+                             Label="@UIConstants.KPIWeightPriority.MinWeightLabel"
+                             For="@(() => _model.MinWeight)"
+                             Variant="Variant.Outlined"
+                             InputType="InputType.Number" />
 
                 <MudSelect @bind-Value="_model.ColorCode"
                            Label="@UIConstants.KPIWeightPriority.ColorLabel"

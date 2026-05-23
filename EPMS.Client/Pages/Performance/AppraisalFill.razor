@@ -136,15 +136,15 @@
                                         </MudTooltip>
                                     </td>
                                     <td>
-                                        <MudNumericField T="decimal?"
-                                                         Value="detail.ActualValue"
-                                                         ValueChanged="value => OnActualValueChanged(detail, value)"
-                                                         Variant="Variant.Outlined"
-                                                         Placeholder="Enter value"
-                                                         Margin="Margin.Dense"
-                                                         Immediate="false"
-                                                         Min="0"
-                                                         Validation="ValidateNegativeValue" />
+                                        <MudTextField T="decimal?"
+                                                      Value="detail.ActualValue"
+                                                      ValueChanged="value => OnActualValueChanged(detail, value)"
+                                                      Variant="Variant.Outlined"
+                                                      Placeholder="Enter value"
+                                                      Margin="Margin.Dense"
+                                                      Immediate="false"
+                                                      Validation="ValidateNegativeValue"
+                                                      InputType="InputType.Number" />
                                     </td>
                                     <td>
                                         <MudText Typo="Typo.body2" Align="Align.Right">@detail.Score.ToString("F2")</MudText>

@@ -39,13 +39,14 @@ else
                     }
                     else
                     {
-                        <MudNumericField @bind-Value="_model.Salary"
-                                         Label="Salary"
-                                         Variant="Variant.Outlined"
-                                         Adornment="Adornment.Start"
-                                         AdornmentText="$"
-                                         For="@(() => _model.Salary)"
-                                         Style="text-align: right;" />
+                        <MudTextField @bind-Value="_model.Salary"
+                                     Label="Salary"
+                                     Variant="Variant.Outlined"
+                                     Adornment="Adornment.Start"
+                                     AdornmentText="$"
+                                     For="@(() => _model.Salary)"
+                                     Style="text-align: right;"
+                                     InputType="InputType.Number" />
                     }
                 </MudItem>
                 <MudItem xs="12" sm="6">
@@ -180,11 +181,12 @@ else
                     }
                     else
                     {
-                        <MudNumericField @bind-Value="_model.ComplianceEarnedPoints"
-                                         Label="Compliance Earned Points"
-                                         Variant="Variant.Outlined"
-                                         For="@(() => _model.ComplianceEarnedPoints)"
-                                         Style="text-align: right;" />
+                        <MudTextField @bind-Value="_model.ComplianceEarnedPoints"
+                                     Label="Compliance Earned Points"
+                                     Variant="Variant.Outlined"
+                                     For="@(() => _model.ComplianceEarnedPoints)"
+                                     Style="text-align: right;"
+                                     InputType="InputType.Number" />
                     }
                 </MudItem>
                 <MudItem xs="12" sm="6">
@@ -195,11 +197,12 @@ else
                     }
                     else
                     {
-                        <MudNumericField @bind-Value="_model.ComplianceBalancePoints"
-                                         Label="Compliance Balance Points"
-                                         Variant="Variant.Outlined"
-                                         For="@(() => _model.ComplianceBalancePoints)"
-                                         Style="text-align: right;" />
+                        <MudTextField @bind-Value="_model.ComplianceBalancePoints"
+                                     Label="Compliance Balance Points"
+                                     Variant="Variant.Outlined"
+                                     For="@(() => _model.ComplianceBalancePoints)"
+                                     Style="text-align: right;"
+                                     InputType="InputType.Number" />
                     }
                 </MudItem>
 

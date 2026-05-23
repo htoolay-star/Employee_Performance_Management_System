@@ -71,6 +71,15 @@ namespace EPMS.Domain.Services.Performance
                 return SuccessResponse<long>.Fail(EmployeeKPIMsg.PriorityNotFound, ErrorType.NotFound);
 
             var currentTotal = await _uow.Perf.EmployeeKPIs.GetTotalWeightageAsync(dto.EmployeeId, dto.CycleId);
+
+            var employment = await _uow.Info.EmployeeEmployments.GetByEmployeeIdAsync(dto.EmployeeId);
+            if (employment != null)
+            {
+                var entityTotal = await _uow.Perf.EntityKPIs.GetTotalWeightageAsync(
+                    AppraisalConstants.EntityTypes.Position, employment.PositionId);
+                currentTotal += entityTotal;
+            }
+
             if (currentTotal + dto.Weightage > 100)
                 return SuccessResponse<long>.Fail(EmployeeKPIMsg.WeightExceeded(currentTotal, dto.Weightage), ErrorType.Validation);
 
@@ -95,6 +104,15 @@ namespace EPMS.Domain.Services.Performance
                 return SuccessResponse.Fail(EmployeeKPIMsg.PriorityNotFound, ErrorType.NotFound);
 
             var currentTotal = await _uow.Perf.EmployeeKPIs.GetTotalWeightageAsync(employeeKPI.EmployeeId, employeeKPI.CycleId, id);
+
+            var employment = await _uow.Info.EmployeeEmployments.GetByEmployeeIdAsync(employeeKPI.EmployeeId);
+            if (employment != null)
+            {
+                var entityTotal = await _uow.Perf.EntityKPIs.GetTotalWeightageAsync(
+                    AppraisalConstants.EntityTypes.Position, employment.PositionId);
+                currentTotal += entityTotal;
+            }
+
             if (currentTotal + dto.Weightage > 100)
                 return SuccessResponse.Fail(EmployeeKPIMsg.WeightExceeded(currentTotal, dto.Weightage), ErrorType.Validation);
 

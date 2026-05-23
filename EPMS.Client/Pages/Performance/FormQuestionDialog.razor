@@ -28,12 +28,12 @@
                               Variant="Variant.Outlined"
                               Lines="3" />
 
-                <MudNumericField @bind-Value="_model.Sequence"
-                                 Label="@UIConstants.FormQuestion.SequenceLabel"
-                                 Variant="Variant.Outlined"
-                                 Disabled="true"
-                                 Min="1"
-                                 HelperText="Auto-assigned. Adjust from the list page if needed." />
+                <MudTextField @bind-Value="_model.Sequence"
+                              Label="@UIConstants.FormQuestion.SequenceLabel"
+                              Variant="Variant.Outlined"
+                              Disabled="true"
+                              HelperText="Auto-assigned. Adjust from the list page if needed."
+                              InputType="InputType.Number" />
 
                 <MudAutocomplete T="long?"
                                  @bind-Value="_model.CategoryId"

@@ -6,14 +6,12 @@
 @using EPMS.Shared.Constants
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.Performance.EntityKPI
-@using EPMS.Shared.DTOs.PerformanceDTOs.KPIMasterDTOs
 @using EPMS.Shared.DTOs.PerformanceDTOs.KPIWeightPriorityDTOs
 @using EPMS.Shared.Validators.PerformanceDTOs.EntityKPIDTOs
 @using Mapster
 @using MudBlazor
 
 @inject IEntityKPIApiClient EntityKPIApiClient
-@inject IKPIMasterApiClient KPIMasterApiClient
 @inject IKPIWeightPriorityApiClient KPIWeightPriorityApiClient
 @inject LookupStateService LookupState
 @inject ISnackbar Snackbar
@@ -60,21 +58,23 @@
                                      Clearable="true"
                                      ResetValueOnEmptyText="true" />
 
-                    <MudNumericField @bind-Value="_model.Weightage"
-                                     @bind-Value:after="() => AutoSetPriority()"
-                                     Label="Weightage (%)"
-                                     For="@(() => _model.Weightage)"
-                                     Variant="Variant.Outlined" />
+                    <MudTextField @bind-Value="_model.Weightage"
+                                  @bind-Value:after="() => AutoSetPriority()"
+                                  Label="Weightage (%)"
+                                  For="@(() => _model.Weightage)"
+                                  Variant="Variant.Outlined"
+                                  InputType="InputType.Number" />
 
                     <MudTextField Value="@GetPriorityDisplay()"
                                   Label="Priority"
                                   Variant="Variant.Outlined"
                                   ReadOnly="true" />
 
-                    <MudNumericField @bind-Value="_model.TargetValue"
-                                     Label="Target Value"
-                                     For="@(() => _model.TargetValue)"
-                                     Variant="Variant.Outlined" />
+                    <MudTextField @bind-Value="_model.TargetValue"
+                                  Label="Target Value"
+                                  For="@(() => _model.TargetValue)"
+                                  Variant="Variant.Outlined"
+                                  InputType="InputType.Number" />
 
                     <MudTextField @bind-Value="_model.TargetUnit"
                                   Label="Unit"
@@ -87,21 +87,23 @@
                     <MudTextField Value="@KpiAssignment.EntityName" Label="Assigned To" Variant="Variant.Outlined" ReadOnly="true" />
                     <MudTextField Value="@KpiAssignment.KPIName" Label="KPI" Variant="Variant.Outlined" ReadOnly="true" />
 
-                    <MudNumericField @bind-Value="_model.Weightage"
-                                     @bind-Value:after="() => AutoSetPriority()"
-                                     Label="Weightage (%)"
-                                     For="@(() => _model.Weightage)"
-                                     Variant="Variant.Outlined" />
+                    <MudTextField @bind-Value="_model.Weightage"
+                                  @bind-Value:after="() => AutoSetPriority()"
+                                  Label="Weightage (%)"
+                                  For="@(() => _model.Weightage)"
+                                  Variant="Variant.Outlined"
+                                  InputType="InputType.Number" />
 
                     <MudTextField Value="@GetPriorityDisplay()"
                                   Label="Priority"
                                   Variant="Variant.Outlined"
                                   ReadOnly="true" />
 
-                    <MudNumericField @bind-Value="_model.TargetValue"
-                                     Label="Target Value"
-                                     For="@(() => _model.TargetValue)"
-                                     Variant="Variant.Outlined" />
+                    <MudTextField @bind-Value="_model.TargetValue"
+                                  Label="Target Value"
+                                  For="@(() => _model.TargetValue)"
+                                  Variant="Variant.Outlined"
+                                  InputType="InputType.Number" />
 
                     <MudTextField @bind-Value="_model.TargetUnit"
                                   Label="Unit"
@@ -145,7 +147,7 @@
 
     private long? _selectedEntityId;
 
-    private List<KPIMasterDto> _kpis = new();
+    private List<LookUpDto> _kpis = new();
     private List<KPIWeightPriorityDto> _priorities = new();
     private List<LookUpDto> _departments = new();
     private List<LookUpDto> _positions = new();
@@ -156,19 +158,45 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var kpiTask = KPIMasterApiClient.GetActiveAsync();
+        var kpiTask = LookupState.GetKPIMastersAsync();
         var priorityTask = KPIWeightPriorityApiClient.GetActiveAsync();
-        var deptTask = LookupState.GetDepartmentsAsync();
-        var posTask = LookupState.GetPositionsAsync();
-        var teamTask = LookupState.GetTeamsAsync();
 
-        await Task.WhenAll(kpiTask, priorityTask, deptTask, posTask, teamTask);
+        if (IsEdit)
+        {
+            await Task.WhenAll(kpiTask, priorityTask);
+        }
+        else if (!string.IsNullOrEmpty(PrefilledEntityType))
+        {
+            await Task.WhenAll(kpiTask, priorityTask);
 
-        _kpis = (await kpiTask).Data?.ToList() ?? new();
+            switch (PrefilledEntityType.ToUpperInvariant())
+            {
+                case AppraisalConstants.EntityTypes.Position:
+                    _positions = await LookupState.GetPositionsAsync();
+                    break;
+                case AppraisalConstants.EntityTypes.Department:
+                    _departments = await LookupState.GetDepartmentsAsync();
+                    break;
+                case AppraisalConstants.EntityTypes.Team:
+                    _teams = await LookupState.GetTeamsAsync();
+                    break;
+            }
+        }
+        else
+        {
+            var deptTask = LookupState.GetDepartmentsAsync();
+            var posTask = LookupState.GetPositionsAsync();
+            var teamTask = LookupState.GetTeamsAsync();
+
+            await Task.WhenAll(kpiTask, priorityTask, deptTask, posTask, teamTask);
+
+            _departments = await deptTask;
+            _positions = await posTask;
+            _teams = await teamTask;
+        }
+
+        _kpis = await kpiTask;
         _priorities = (await priorityTask).Data?.ToList() ?? new();
-        _departments = await deptTask;
-        _positions = await posTask;
-        _teams = await teamTask;
 
         if (IsEdit)
         {
@@ -331,8 +359,7 @@
     {
         var query = _kpis.AsEnumerable();
         if (!string.IsNullOrWhiteSpace(value))
-            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase)
-                                  || x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(x => x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
         return Task.FromResult(query.Select(x => (long?)x.Id).ToList().AsEnumerable());
     }
 
@@ -340,7 +367,7 @@
     {
         if (id == null) return string.Empty;
         var kpi = _kpis.FirstOrDefault(x => x.Id == id);
-        return kpi != null ? kpi.Name : id.ToString()!;
+        return kpi?.Name ?? id.ToString()!;
     }
 
 }

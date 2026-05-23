@@ -188,30 +188,30 @@
                 <MudText Typo="Typo.subtitle1" Class="mt-2">Scoring Weights (must total 100)</MudText>
 
                 <MudStack Row="true" Spacing="2">
-                    <MudNumericField @bind-Value="_model.KpiWeight"
-                                     Label="KPI %"
-                                     For="@(() => _model.KpiWeight)"
-                                     Variant="Variant.Outlined"
-                                     Class="flex-1"
-                                     Min="0" Max="100" />
-                    <MudNumericField @bind-Value="_model.SelfWeight"
-                                     Label="Self %"
-                                     For="@(() => _model.SelfWeight)"
-                                     Variant="Variant.Outlined"
-                                     Class="flex-1"
-                                     Min="0" Max="100" />
-                    <MudNumericField @bind-Value="_model.ThreeSixtyWeight"
-                                     Label="360 %"
-                                     For="@(() => _model.ThreeSixtyWeight)"
-                                     Variant="Variant.Outlined"
-                                     Class="flex-1"
-                                     Min="0" Max="100" />
-                <MudNumericField @bind-Value="_model.AppraisalWeight"
-                                 Label="Appraisal %"
-                                 For="@(() => _model.AppraisalWeight)"
-                                 Variant="Variant.Outlined"
-                                 Class="flex-1"
-                                 Min="0" Max="100" />
+                    <MudTextField @bind-Value="_model.KpiWeight"
+                                  Label="KPI %"
+                                  For="@(() => _model.KpiWeight)"
+                                  Variant="Variant.Outlined"
+                                  Class="flex-1"
+                                  InputType="InputType.Number" />
+                    <MudTextField @bind-Value="_model.SelfWeight"
+                                  Label="Self %"
+                                  For="@(() => _model.SelfWeight)"
+                                  Variant="Variant.Outlined"
+                                  Class="flex-1"
+                                  InputType="InputType.Number" />
+                    <MudTextField @bind-Value="_model.ThreeSixtyWeight"
+                                  Label="360 %"
+                                  For="@(() => _model.ThreeSixtyWeight)"
+                                  Variant="Variant.Outlined"
+                                  Class="flex-1"
+                                  InputType="InputType.Number" />
+                <MudTextField @bind-Value="_model.AppraisalWeight"
+                              Label="Appraisal %"
+                              For="@(() => _model.AppraisalWeight)"
+                              Variant="Variant.Outlined"
+                              Class="flex-1"
+                              InputType="InputType.Number" />
                 </MudStack>
 
                 @if (IsEdit)

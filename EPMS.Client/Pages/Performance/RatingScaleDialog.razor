@@ -25,26 +25,29 @@
                                  SearchFunc="SearchLabels"
                                  Clearable="true" />
 
-                    <MudNumericField @bind-Value="_model.Rating"
-                                    Label="@UIConstants.RatingScale.RatingLabel"
-                                    For="@(() => _model.Rating)"
-                                    Variant="Variant.Outlined" />
+                    <MudTextField @bind-Value="_model.Rating"
+                                 Label="@UIConstants.RatingScale.RatingLabel"
+                                 For="@(() => _model.Rating)"
+                                 Variant="Variant.Outlined"
+                                 InputType="InputType.Number" />
                 }
                 else
                 {
-                    <MudNumericField Value="@_model.Rating" Label="@UIConstants.RatingScale.RatingLabel" Variant="Variant.Outlined" ReadOnly="true" />
+                    <MudTextField Value="@_model.Rating" Label="@UIConstants.RatingScale.RatingLabel" Variant="Variant.Outlined" ReadOnly="true" InputType="InputType.Number" />
                     <MudTextField Value="@_model.Label" Label="@UIConstants.RatingScale.LabelLabel" Variant="Variant.Outlined" ReadOnly="true" />
                 }
 
-                <MudNumericField @bind-Value="_model.MaxScore"
-                                Label="@UIConstants.RatingScale.MaxScoreLabel"
-                                For="@(() => _model.MaxScore)"
-                                Variant="Variant.Outlined" />
+                <MudTextField @bind-Value="_model.MaxScore"
+                             Label="@UIConstants.RatingScale.MaxScoreLabel"
+                             For="@(() => _model.MaxScore)"
+                             Variant="Variant.Outlined"
+                             InputType="InputType.Number" />
 
-                <MudNumericField @bind-Value="_model.MinScore"
-                                Label="@UIConstants.RatingScale.MinScoreLabel"
-                                For="@(() => _model.MinScore)"
-                                Variant="Variant.Outlined" />
+                <MudTextField @bind-Value="_model.MinScore"
+                             Label="@UIConstants.RatingScale.MinScoreLabel"
+                             For="@(() => _model.MinScore)"
+                             Variant="Variant.Outlined"
+                             InputType="InputType.Number" />
 
                 <MudAutocomplete @bind-Value="_model.PromotionEligibility"
                                  Label="@UIConstants.RatingScale.PromotionEligibilityLabel"

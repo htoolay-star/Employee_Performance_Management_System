@@ -61,21 +61,23 @@
                                      Clearable="true"
                                      ResetValueOnEmptyText="true" />
 
-                    <MudNumericField @bind-Value="_model.Weightage"
-                                     @bind-Value:after="() => AutoSetPriority()"
-                                     Label="Weightage (%)"
-                                     For="@(() => _model.Weightage)"
-                                     Variant="Variant.Outlined" />
+                    <MudTextField @bind-Value="_model.Weightage"
+                                  @bind-Value:after="() => AutoSetPriority()"
+                                  Label="Weightage (%)"
+                                  For="@(() => _model.Weightage)"
+                                  Variant="Variant.Outlined"
+                                  InputType="InputType.Number" />
 
                     <MudTextField Value="@GetPriorityDisplay()"
                                   Label="Priority"
                                   Variant="Variant.Outlined"
                                   ReadOnly="true" />
 
-                    <MudNumericField @bind-Value="_model.TargetValue"
-                                     Label="Target Value"
-                                     For="@(() => _model.TargetValue)"
-                                     Variant="Variant.Outlined" />
+                    <MudTextField @bind-Value="_model.TargetValue"
+                                  Label="Target Value"
+                                  For="@(() => _model.TargetValue)"
+                                  Variant="Variant.Outlined"
+                                  InputType="InputType.Number" />
 
                     <MudTextField @bind-Value="_model.TargetUnit"
                                   Label="Unit"
@@ -87,21 +89,23 @@
                     <MudTextField Value="@Kpi!.EmployeeName" Label="Employee" Variant="Variant.Outlined" ReadOnly="true" />
                     <MudTextField Value="@Kpi.KPIName" Label="KPI" Variant="Variant.Outlined" ReadOnly="true" />
 
-                    <MudNumericField @bind-Value="_model.Weightage"
-                                     @bind-Value:after="() => AutoSetPriority()"
-                                     Label="Weightage (%)"
-                                     For="@(() => _model.Weightage)"
-                                     Variant="Variant.Outlined" />
+                    <MudTextField @bind-Value="_model.Weightage"
+                                  @bind-Value:after="() => AutoSetPriority()"
+                                  Label="Weightage (%)"
+                                  For="@(() => _model.Weightage)"
+                                  Variant="Variant.Outlined"
+                                  InputType="InputType.Number" />
 
                     <MudTextField Value="@GetPriorityDisplay()"
                                   Label="Priority"
                                   Variant="Variant.Outlined"
                                   ReadOnly="true" />
 
-                    <MudNumericField @bind-Value="_model.TargetValue"
-                                     Label="Target Value"
-                                     For="@(() => _model.TargetValue)"
-                                     Variant="Variant.Outlined" />
+                    <MudTextField @bind-Value="_model.TargetValue"
+                                  Label="Target Value"
+                                  For="@(() => _model.TargetValue)"
+                                  Variant="Variant.Outlined"
+                                  InputType="InputType.Number" />
 
                     <MudTextField @bind-Value="_model.TargetUnit"
                                   Label="Unit"

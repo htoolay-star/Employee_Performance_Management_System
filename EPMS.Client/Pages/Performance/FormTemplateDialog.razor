@@ -48,11 +48,12 @@
                                  SearchFunc="SearchRatingScales"
                                  ToStringFunc="GetRatingScaleName" />
 
-                <MudNumericField @bind-Value="_model.QuestionsPerEvaluation"
-                                  Label="@UIConstants.FormTemplate.QuestionsPerEvaluationLabel"
-                                  HelperText="@UIConstants.FormTemplate.QuestionsPerEvaluationHelper"
-                                  Variant="Variant.Outlined"
-                                  For="@(() => _model.QuestionsPerEvaluation)" />
+                <MudTextField @bind-Value="_model.QuestionsPerEvaluation"
+                               Label="@UIConstants.FormTemplate.QuestionsPerEvaluationLabel"
+                               HelperText="@UIConstants.FormTemplate.QuestionsPerEvaluationHelper"
+                               Variant="Variant.Outlined"
+                               For="@(() => _model.QuestionsPerEvaluation)"
+                               InputType="InputType.Number" />
 
                 <MudSwitch @bind-Value="_model.HasYesNo"
                            Label="@UIConstants.FormQuestion.HasYesNoLabel"
