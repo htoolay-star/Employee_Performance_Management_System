@@ -140,16 +140,22 @@
                             </MudTooltip>
                         </MudTd>
                         <MudTd DataLabel="Actual">
-                            <MudNumericField T="decimal?"
-                                             Value="context.ActualValue"
-                                             ValueChanged="value => OnActualValueChanged(context, value)"
-                                             Variant="Variant.Outlined"
-                                             Placeholder="Enter value"
-                                             Margin="Margin.Dense"
-                                             Immediate="false"
-                                             Min="0"
-                                             Disabled="@_model.IsReadOnly"
-                                             Validation="@(new Func<decimal?, string?>(v => v < 0 ? UIConstants.AppraisalFill.NegativeValueError : null))" />
+                            @if (_model.IsReadOnly)
+                            {
+                                <MudText Typo="Typo.body2">@(context.ActualValue?.ToString("F2") ?? "—")</MudText>
+                            }
+                            else
+                            {
+                                <MudNumericField T="decimal?"
+                                                 Value="context.ActualValue"
+                                                 ValueChanged="value => OnActualValueChanged(context, value)"
+                                                 Variant="Variant.Outlined"
+                                                 Placeholder="Enter value"
+                                                 Margin="Margin.Dense"
+                                                 Immediate="false"
+                                                 Min="0"
+                                                 Validation="@(new Func<decimal?, string?>(v => v < 0 ? UIConstants.AppraisalFill.NegativeValueError : null))" />
+                            }
                         </MudTd>
                         <MudTd DataLabel="Score">
                             <MudText Typo="Typo.body2" Align="Align.Right">@context.Score.ToString("F2")</MudText>

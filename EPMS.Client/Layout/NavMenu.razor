@@ -7,35 +7,35 @@
 <div style="display: flex; flex-direction: column; height: 100%;">
 <MudNavMenu>
 
-    @if (_canViewLevels || _canViewPositions || _canViewDepartments || _canViewTeams || _canViewEmployees || _isSA)
+        @if (_canViewLevels || _canViewPositions || _canViewDepartments || _canViewTeams || _canViewEmployees || _isAdmin)
     {
     <MudTooltip Text="HR Management" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
     <MudNavGroup Title="HR Management" Icon="@Icons.Material.Filled.ManageAccounts" Expanded="false">
-        @if (_canViewLevels || _isSA)
+                    @if (_canViewLevels || _isAdmin)
         {
             <MudTooltip Text="Levels" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
                 <MudNavLink Href="hr/levels" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Stairs">Levels</MudNavLink>
             </MudTooltip>
         }
-        @if (_canViewPositions || _isSA)
+                    @if (_canViewPositions || _isAdmin)
         {
             <MudTooltip Text="Positions" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
                 <MudNavLink Href="hr/positions" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Work">Positions</MudNavLink>
             </MudTooltip>
         }
-        @if (_canViewDepartments || _isSA)
+                    @if (_canViewDepartments || _isAdmin)
         {
             <MudTooltip Text="Departments" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
                 <MudNavLink Href="hr/departments" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Business">Departments</MudNavLink>
             </MudTooltip>
         }
-        @if (_canViewTeams || _isSA)
+                    @if (_canViewTeams || _isAdmin)
         {
             <MudTooltip Text="Teams" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
                 <MudNavLink Href="hr/teams" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Groups">Teams</MudNavLink>
             </MudTooltip>
         }
-        @if (_canViewEmployees || _isSA)
+                    @if (_canViewEmployees || _isAdmin)
         {
             <MudTooltip Text="Employee Directory" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
                 <MudNavLink Href="hr/employees" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.People">Employee Directory</MudNavLink>
@@ -45,23 +45,23 @@
         </MudTooltip>
     }
 
-    @if (_canViewApprCycles || _canViewAppraisals || _canViewRatingScales || _isSA)
+        @if (_canViewApprCycles || _canViewAppraisals || _canViewRatingScales || _isAdmin)
     {
     <MudTooltip Text="Appraisal Management" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
     <MudNavGroup Title="Appraisal Management" Icon="@Icons.Material.Filled.Assessment" Expanded="false">
-        @if (_canViewApprCycles || _isSA)
+                    @if (_canViewApprCycles || _isAdmin)
         {
             <MudTooltip Text="Appraisal Cycle" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
                 <MudNavLink Href="performance/appraisal-cycles" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.CalendarMonth">Appraisal Cycle</MudNavLink>
             </MudTooltip>
         }
-        @if (_canViewAppraisals || _isSA)
+                    @if (_canViewAppraisals || _isAdmin)
         {
             <MudTooltip Text="Appraisal" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
                 <MudNavLink Href="performance/appraisals" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Assessment">Appraisal</MudNavLink>
             </MudTooltip>
         }
-        @if (_canViewRatingScales || _isSA)
+                    @if (_canViewRatingScales || _isAdmin)
         {
             <MudTooltip Text="Rating Scale" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
                 <MudNavLink Href="performance/rating-scales" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Star">Rating Scale</MudNavLink>
@@ -71,29 +71,29 @@
     </MudTooltip>
     }
 
-    @if (_canViewKpiMasters || _canViewEntityKpis || _canViewEmployeeKpis || _canViewKpiWeights || _isSA)
+        @if (_canViewKpiMasters || _canViewEntityKpis || _canViewEmployeeKpis || _canViewKpiWeights || _isAdmin)
     {
     <MudTooltip Text="KPIs Management" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
     <MudNavGroup Title="KPIs Management" Icon="@Icons.Material.Filled.BarChart" Expanded="false">
-        @if (_canViewKpiMasters || _isSA)
+                    @if (_canViewKpiMasters || _isAdmin)
         {
             <MudTooltip Text="KPI Master" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
                 <MudNavLink Href="performance/kpi-masters" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.LibraryBooks">KPI Master</MudNavLink>
             </MudTooltip>
         }
-        @if (_canViewEntityKpis || _isSA)
+                    @if (_canViewEntityKpis || _isAdmin)
         {
             <MudTooltip Text="KPI Assignment" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
                 <MudNavLink Href="performance/entity-kpis" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Assignment">KPI Assignment</MudNavLink>
             </MudTooltip>
         }
-        @if (_canViewEmployeeKpis || _isSA)
+                    @if (_canViewEmployeeKpis || _isAdmin)
         {
             <MudTooltip Text="Employee KPI Assignment" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
                 <MudNavLink Href="performance/employee-kpis" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PersonPin">Employee KPI Assignment</MudNavLink>
             </MudTooltip>
         }
-        @if (_canViewKpiWeights || _isSA)
+                    @if (_canViewKpiWeights || _isAdmin)
         {
             <MudTooltip Text="KPI Weight" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
                 <MudNavLink Href="performance/kpi-weight-priorities" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Scale">KPI Weight</MudNavLink>
@@ -103,23 +103,23 @@
     </MudTooltip>
     }
 
-    @if (_canViewFormTemplates || _canViewPositionFormTemplates || _canViewQuestRating || _isSA)
+        @if (_canViewFormTemplates || _canViewPositionFormTemplates || _canViewQuestRating || _isAdmin)
     {
     <MudTooltip Text="Form Management" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
     <MudNavGroup Title="Form Management" Icon="@Icons.Material.Filled.Description" Expanded="false">
-        @if (_canViewFormTemplates || _isSA)
+                    @if (_canViewFormTemplates || _isAdmin)
         {
             <MudTooltip Text="Form Template" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
                 <MudNavLink Href="performance/form-templates" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Description">Form Template</MudNavLink>
             </MudTooltip>
         }
-        @if (_canViewPositionFormTemplates || _isSA)
+                    @if (_canViewPositionFormTemplates || _isAdmin)
         {
             <MudTooltip Text="Position Form Template" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
                 <MudNavLink Href="performance/position-form-templates" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AssignmentInd">Position Form Template</MudNavLink>
             </MudTooltip>
         }
-        @if (_canViewQuestRating || _isSA)
+                    @if (_canViewQuestRating || _isAdmin)
         {
             <MudTooltip Text="Question Rating Scale" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
                 <MudNavLink Href="performance/question-rating-scales" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.RateReview">Question Rating Scale</MudNavLink>

@@ -5,7 +5,7 @@
 
 <MudThemeProvider Theme="EPMSTheme.GetTheme()" IsDarkMode="@_isDarkMode" />
 
-<MudLayout>
+<MudLayout Class="@(_isDarkMode ? "theme-dark" : "theme-light")">
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="ToggleDrawer" />
         <MudSpacer />
@@ -17,7 +17,14 @@
     <MudDrawer @bind-Open="_drawerOpen" Variant="DrawerVariant.Mini" Elevation="2" Width="300px" Style="--mud-drawer-width-mini: 56px;">
         <MudDrawerHeader Class="@(_drawerOpen ? "" : "drawer-header-collapsed")">
             <MudLink Href="/dashboard" Underline="Underline.None" Class="d-flex align-center justify-center" Style="width: 100%;">
-                <img src="@(_isDarkMode ? "ACE-dark.svg" : "ACE.svg")" alt="ACE" class="@(_drawerOpen ? "drawer-logo" : "drawer-logo-collapsed")" />
+                @if (_drawerOpen)
+                {
+                    <img src="@(_isDarkMode ? "ACE-dark.svg" : "ACE.svg")" alt="ACE" class="drawer-logo" />
+                }
+                else
+                {
+                    <img src="@(_isDarkMode ? "ACE-mini-dark.svg" : "ACE-mini.svg")" alt="ACE" class="drawer-logo-collapsed" />
+                }
             </MudLink>
         </MudDrawerHeader>
         <div class="@(_drawerOpen ? "" : "drawer-collapsed")">
@@ -35,7 +42,6 @@
 @code {
     bool _drawerOpen = true;
     bool _isDarkMode = false;
-    bool _pendingThemeSync = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -48,9 +54,6 @@
         {
             _isDarkMode = false;
         }
-
-        StateHasChanged();
-        _pendingThemeSync = true;
     }
 
     void ToggleDrawer()
@@ -61,17 +64,7 @@
     async Task ToggleTheme()
     {
         _isDarkMode = !_isDarkMode;
-        
-        await JS.InvokeVoidAsync("localStorage.setItem", "epms-dark-mode", _isDarkMode.ToString().ToLower());
-        await JS.InvokeVoidAsync("epmsSyncTheme", _isDarkMode);
-    }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (_pendingThemeSync)
-        {
-            _pendingThemeSync = false;
-            await JS.InvokeVoidAsync("epmsSyncTheme", _isDarkMode);
-        }
+        await JS.InvokeVoidAsync("localStorage.setItem", "epms-dark-mode", _isDarkMode.ToString().ToLower());
     }
 }

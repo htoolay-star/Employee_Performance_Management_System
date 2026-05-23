@@ -6,11 +6,14 @@
 <MudThemeProvider Theme="EPMSTheme.GetTheme()" IsDarkMode="@_isDarkMode" />
 <MudPopoverProvider />
 
-@Body
+<div class="mud-layout @(_isDarkMode ? "theme-dark" : "theme-light")" style="min-height: 100vh; overflow: hidden;">
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4 d-flex justify-center align-center" Style="min-height: 100vh;">
+        @Body
+    </MudContainer>
+</div>
 
 @code {
     bool _isDarkMode = false;
-    bool _pendingThemeSync = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -22,18 +25,6 @@
         catch
         {
             _isDarkMode = false;
-        }
-
-        StateHasChanged();
-        _pendingThemeSync = true;
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (_pendingThemeSync)
-        {
-            _pendingThemeSync = false;
-            await JS.InvokeVoidAsync("epmsSyncTheme", _isDarkMode);
         }
     }
 }

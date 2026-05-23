@@ -33,7 +33,6 @@ namespace EPMS.Domain.Data.Seeding
             await SeedRolesAsync();
             await SeedSystemAdminAsync();
             await SeedPermissionsAsync();
-            await SeedAdminPositionPermissionsAsync();
         }
 
         private async Task SeedSystemSettingsAsync()
@@ -196,28 +195,6 @@ namespace EPMS.Domain.Data.Seeding
             foreach (var p in missing)
             {
                 _uow.Auth.Permissions.Add(p);
-            }
-
-            await _uow.CompleteAsync();
-        }
-
-        private async Task SeedAdminPositionPermissionsAsync()
-        {
-            var setting = await _uow.App.SystemSettings.GetByKeyAsync("AdminPositionId");
-            if (setting == null || !long.TryParse(setting.Value, out var adminPositionId))
-                return;
-
-            var adminPosition = await _uow.HR.Positions.FindAsync(
-                p => p.Id == adminPositionId && !p.IsDeleted,
-                true, default,
-                p => p.PositionPermissions);
-            if (adminPosition == null)
-                return;
-
-            var allPermissions = await _uow.Auth.Permissions.GetAllAsync();
-            foreach (var perm in allPermissions)
-            {
-                adminPosition.AssignPermission(perm.Id);
             }
 
             await _uow.CompleteAsync();

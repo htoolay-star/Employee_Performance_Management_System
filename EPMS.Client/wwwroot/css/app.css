@@ -2,13 +2,60 @@
     font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
-body, .mud-layout, .mud-main-content, #app {
-    background-color: var(--app-bg, #FAFAFA);
-    background-image: radial-gradient(circle, var(--dot-color-1) 1.5px, transparent 1.5px), radial-gradient(circle, var(--dot-color-2) 1px, transparent 1px);
-    background-size: 28px 28px, 14px 14px;
-    background-position: 0 0, 7px 7px;
-    transition: background-color 0.3s ease;
+body, #app, .mud-main-content {
+    background: transparent !important;
 }
+
+.mud-layout {
+    position: relative;
+    background-color: #FAFAFA;
+    transition: background-color 0.4s ease-in-out;
+    z-index: 1;
+    min-height: 100vh;
+}
+
+    .mud-layout.theme-dark {
+        background-color: #252540 !important;
+    }
+
+    .mud-layout::before,
+    .mud-layout::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: -1;
+        background-size: 28px 28px, 14px 14px;
+        background-position: 0 0, 7px 7px;
+        transition: opacity 0.4s ease-in-out;
+        pointer-events: none;
+    }
+
+    .mud-layout::before {
+        background-image: radial-gradient(circle, rgba(33, 64, 154, 0.05) 1.5px, transparent 1.5px), radial-gradient(circle, rgba(33, 64, 154, 0.05) 1px, transparent 1px);
+        opacity: 1;
+    }
+
+    .mud-layout::after {
+        background-image: radial-gradient(circle, rgba(138, 180, 248, 0.05) 1.5px, transparent 1.5px), radial-gradient(circle, rgba(138, 180, 248, 0.05) 1px, transparent 1px);
+        opacity: 0;
+    }
+
+    .mud-layout.theme-dark::before {
+        opacity: 0;
+    }
+
+    .mud-layout.theme-dark::after {
+        opacity: 1;
+    }
+
+    .mud-layout.theme-dark .mud-appbar,
+    .mud-layout.theme-dark .mud-drawer {
+        background-color: #252540 !important;
+        background-image: none !important;
+    }
 
 .mud-paper {
     background-image: radial-gradient(circle, var(--paper-dot-color-1) 1.5px, transparent 1.5px), radial-gradient(circle, var(--paper-dot-color-2) 1px, transparent 1px);
@@ -66,25 +113,21 @@ body, .mud-layout, .mud-main-content, #app {
     100% { transform: translateY(0); }
 }
 
-.theme-light .mud-paper {
+.mud-layout.theme-light .mud-paper {
     background-color: #FFFFFF;
-    background-image: 
-        radial-gradient(circle, var(--paper-dot-color-1, rgba(33, 64, 154, 0.02)) 1.5px, transparent 1.5px),
-        radial-gradient(circle, var(--paper-dot-color-2, rgba(33, 64, 154, 0.04)) 1px, transparent 1px);
+    background-image: radial-gradient(circle, var(--paper-dot-color-1, rgba(33, 64, 154, 0.02)) 1.5px, transparent 1.5px), radial-gradient(circle, var(--paper-dot-color-2, rgba(33, 64, 154, 0.04)) 1px, transparent 1px);
     background-size: 28px 28px, 14px 14px;
     background-position: 0 0, 7px 7px;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.4s ease-in-out, box-shadow 0.4s ease-in-out;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02) !important;
 }
 
-.theme-dark .mud-paper {
+.mud-layout.theme-dark .mud-paper {
     background-color: #252540;
-    background-image: 
-        radial-gradient(circle, var(--paper-dot-color-1, rgba(138, 180, 248, 0.01)) 1.5px, transparent 1.5px),
-        radial-gradient(circle, var(--paper-dot-color-2, rgba(37, 37, 64, 0.14)) 1px, transparent 1px);
+    background-image: radial-gradient(circle, var(--paper-dot-color-1, rgba(138, 180, 248, 0.01)) 1.5px, transparent 1.5px), radial-gradient(circle, var(--paper-dot-color-2, rgba(37, 37, 64, 0.14)) 1px, transparent 1px);
     background-size: 28px 28px, 14px 14px;
     background-position: 0 0, 7px 7px;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.4s ease-in-out, box-shadow 0.4s ease-in-out;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.1) !important;
 }
 
@@ -110,7 +153,7 @@ code {
 }
 
 .drawer-logo-collapsed {
-    width: 36px;
+    width: 44px;
     height: auto;
     display: block;
 }
@@ -119,6 +162,8 @@ code {
     display: flex;
     align-items: center;
     justify-content: center;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
 }
 
 .drawer-collapsed {
