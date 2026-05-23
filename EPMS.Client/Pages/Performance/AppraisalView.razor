@@ -279,7 +279,7 @@
 
         try
         {
-            var response = await AppraisalApiClient.FinalizeAsync(AppraisalId);
+            var response = await AppraisalApiClient.FinalizeKpiAsync(AppraisalId);
             if (response.Success)
             {
                 Snackbar.Add(UIConstants.AppraisalView.FinalizeSuccess, Severity.Success);

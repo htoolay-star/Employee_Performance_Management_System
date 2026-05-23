@@ -22,6 +22,7 @@ public class CurrentEmployeeContextService : ICurrentEmployeeContextService
 
     public bool IsAuthenticated => _currentUser.IsAuthenticated;
     public long? UserId => _currentUser.UserId;
+    public bool IsAdmin => _currentUser.IsAdmin;
 
     public async Task<EmployeeProfile?> GetEmployeeProfileAsync(CancellationToken cancellationToken = default)
     {

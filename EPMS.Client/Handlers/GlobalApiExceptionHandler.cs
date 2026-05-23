@@ -33,11 +33,6 @@ namespace EPMS.Client.Handlers
                 {
                     switch (response.StatusCode)
                     {
-                        case System.Net.HttpStatusCode.Unauthorized:
-                            _snackbar.Add("Session expired. Please log in again.", Severity.Error);
-                            _navigationManager.NavigateTo("/login");
-                            break;
-
                         case System.Net.HttpStatusCode.Forbidden:
                             var content = await response.Content.ReadAsByteArrayAsync(cancellationToken);
                             var body = Encoding.UTF8.GetString(content);

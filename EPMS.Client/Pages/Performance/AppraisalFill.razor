@@ -101,71 +101,69 @@
 
                 @* KPI Details Grid *@
                 <MudPaper Elevation="0" Outlined="true" Class="pa-4 mb-4 rounded-lg">
-                    <MudTable Items="@_model.Details"
-                              Hover="true"
-                              Elevation="0"
-                              Class="mb-0">
-                        <ColGroup>
-                            <col style="width: 40px;" />
-                            <col style="width: 220px;" />
-                            <col style="width: 80px;" />
-                            <col style="width: 80px;" />
-                            <col style="width: 20px;" />
-                            <col style="width: 100px;" />
-                            <col style="width: 90px;" />
-                            <col style="width: 120px;" />
-                            <col style="width: 180px;" />
-                        </ColGroup>
-                        <HeaderContent>
-                            <MudTh>#</MudTh>
-                            <MudTh>@UIConstants.AppraisalFill.ColumnKPI</MudTh>
-                            <MudTh>@UIConstants.AppraisalFill.ColumnWeight</MudTh>
-                            <MudTh>@UIConstants.AppraisalFill.ColumnTarget</MudTh>
-                            <MudTh>@UIConstants.AppraisalFill.ColumnDirection</MudTh>
-                        <MudTh>@UIConstants.AppraisalFill.ColumnActual</MudTh>
-                        <MudTh>@UIConstants.AppraisalFill.ColumnScore</MudTh>
-                        <MudTh>@UIConstants.AppraisalFill.ColumnWeighted</MudTh>
-                        <MudTh>@UIConstants.AppraisalFill.ColumnRemarks</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="#">@(_model.Details.IndexOf(context) + 1)</MudTd>
-                        <MudTd DataLabel="KPI">@context.KPIName</MudTd>
-                        <MudTd DataLabel="Weight">@context.Weightage%</MudTd>
-                        <MudTd DataLabel="Target">@context.TargetValue</MudTd>
-                        <MudTd DataLabel="Direction" Style="text-align: center;">
-                            <MudTooltip Text="@GetDirectionTooltip(context.ScoringDirection)">
-                                <MudIcon Icon="@GetDirectionIcon(context.ScoringDirection)"
-                                         Size="Size.Small"
-                                         Color="Color.Primary" />
-                            </MudTooltip>
-                        </MudTd>
-                        <MudTd DataLabel="Actual">
-                            <MudNumericField T="decimal?"
-                                             Value="context.ActualValue"
-                                             ValueChanged="value => OnActualValueChanged(context, value)"
-                                             Variant="Variant.Outlined"
-                                             Placeholder="Enter value"
-                                             Margin="Margin.Dense"
-                                             Immediate="false"
-                                             Min="0"
-                                             Validation="@(new Func<decimal?, string?>(v => v < 0 ? UIConstants.AppraisalFill.NegativeValueError : null))" />
-                        </MudTd>
-                        <MudTd DataLabel="Score">
-                            <MudText Typo="Typo.body2" Align="Align.Right">@context.Score.ToString("F2")</MudText>
-                        </MudTd>
-                        <MudTd DataLabel="Weighted">
-                            <MudText Typo="Typo.body2" Align="Align.Right">@context.WeightedScore.ToString("F2")</MudText>
-                        </MudTd>
-                        <MudTd DataLabel="Remarks">
-                            <MudTextField T="string"
-                                          @bind-Value="context.Remarks"
-                                          Variant="Variant.Outlined"
-                                          Placeholder="Notes"
-                                          Margin="Margin.Dense"
-                                          Lines="3" />
-                        </MudTd>
-                    </RowTemplate>
-                </MudTable>
+                    <MudSimpleTable Class="w-100">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;">#</th>
+                                <th style="width: 220px;">@UIConstants.AppraisalFill.ColumnKPI</th>
+                                <th style="width: 80px;">@UIConstants.AppraisalFill.ColumnWeight</th>
+                                <th style="width: 80px;">@UIConstants.AppraisalFill.ColumnTarget</th>
+                                <th style="width: 20px;">@UIConstants.AppraisalFill.ColumnDirection</th>
+                                <th style="width: 100px;">@UIConstants.AppraisalFill.ColumnActual</th>
+                                <th style="width: 90px;">@UIConstants.AppraisalFill.ColumnScore</th>
+                                <th style="width: 120px;">@UIConstants.AppraisalFill.ColumnWeighted</th>
+                                <th style="width: 180px;">@UIConstants.AppraisalFill.ColumnRemarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (_model.Details.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="9"><MudText Color="Color.Secondary" Align="Align.Center">No KPI details.</MudText></td>
+                                </tr>
+                            }
+                            @for (var i = 0; i < _model.Details.Count; i++)
+                            {
+                                var detail = _model.Details[i];
+                                <tr>
+                                    <td>@(i + 1)</td>
+                                    <td>@detail.KPIName</td>
+                                    <td>@detail.Weightage%</td>
+                                    <td>@detail.TargetValue</td>
+                                    <td style="text-align: center;">
+                                        <MudTooltip Text="@GetDirectionTooltip(detail.ScoringDirection)">
+                                            <MudIcon Icon="@GetDirectionIcon(detail.ScoringDirection)" Size="Size.Small" Color="Color.Primary" />
+                                        </MudTooltip>
+                                    </td>
+                                    <td>
+                                        <MudNumericField T="decimal?"
+                                                         Value="detail.ActualValue"
+                                                         ValueChanged="value => OnActualValueChanged(detail, value)"
+                                                         Variant="Variant.Outlined"
+                                                         Placeholder="Enter value"
+                                                         Margin="Margin.Dense"
+                                                         Immediate="false"
+                                                         Min="0"
+                                                         Validation="ValidateNegativeValue" />
+                                    </td>
+                                    <td>
+                                        <MudText Typo="Typo.body2" Align="Align.Right">@detail.Score.ToString("F2")</MudText>
+                                    </td>
+                                    <td>
+                                        <MudText Typo="Typo.body2" Align="Align.Right">@detail.WeightedScore.ToString("F2")</MudText>
+                                    </td>
+                                    <td>
+                                        <MudTextField T="string"
+                                                      @bind-Value="detail.Remarks"
+                                                      Variant="Variant.Outlined"
+                                                      Placeholder="Notes"
+                                                      Margin="Margin.Dense"
+                                                      Lines="2" />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </MudSimpleTable>
                 </MudPaper>
 
                 @* Summary Row *@
@@ -374,5 +372,10 @@
         item.Score = KPIScoringCalculator.CalculateScore(item.ActualValue, item.TargetValue, item.ScoringDirection);
         item.WeightedScore = KPIScoringCalculator.CalculateWeightedScore(item.Score, item.Weightage);
         StateHasChanged();
+    }
+
+    private string? ValidateNegativeValue(decimal? v)
+    {
+        return v < 0 ? UIConstants.AppraisalFill.NegativeValueError : null;
     }
 }

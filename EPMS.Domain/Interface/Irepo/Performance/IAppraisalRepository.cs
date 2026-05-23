@@ -1,11 +1,13 @@
 ﻿using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Performance;
+using EPMS.Shared.DTOs.FormDTOs;
 
 namespace EPMS.Domain.Interface.Irepo.Performance
 {
     public interface IAppraisalRepository : IGenericRepository<Appraisal>
     {
         Task<Appraisal?> GetAppraisalWithDetailsAsync(long id);
+        Task<AppraisalFillDto?> GetAppraisalFillDtoAsync(long id);
         Task<IEnumerable<Appraisal>> GetEmployeeAppraisalsAsync(long employeeId, int cycleId);
         Task<bool> ExistsByEmployeeAndCycleAsync(long employeeId, long cycleId);
         Task<bool> ExistsByEntityAndCycleAsync(string entityType, long entityId, long cycleId);

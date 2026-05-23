@@ -2,6 +2,7 @@
 using EPMS.Domain.Entities.Performance;
 using EPMS.Domain.Interface.Irepo.Performance;
 using EPMS.Domain.Repository.Base;
+using EPMS.Shared.DTOs.FormDTOs;
 using Microsoft.EntityFrameworkCore;
 
 namespace EPMS.Domain.Repository.Performance
@@ -43,6 +44,47 @@ namespace EPMS.Domain.Repository.Performance
                 .Include(a => a.Cycle)
                 .Include(a => a.Details)
                 .FirstOrDefaultAsync(a => a.Id == id);
+        }
+
+        public async Task<AppraisalFillDto?> GetAppraisalFillDtoAsync(long id)
+        {
+            return await _dbSet
+                .Where(a => a.Id == id)
+                .Select(a => new AppraisalFillDto
+                {
+                    Id = a.Id,
+                    EmployeeId = a.EmployeeId ?? 0,
+                    EmployeeName = a.Employee != null ? a.Employee.StaffName : null,
+                    StaffNo = a.Employee != null ? a.Employee.StaffNo : string.Empty,
+                    PositionName = a.Employee != null && a.Employee.Employment != null
+                        ? a.Employee.Employment.Position.Name : null,
+                    DepartmentName = a.Employee != null && a.Employee.Employment != null
+                        ? a.Employee.Employment.Department.Name : null,
+                    TeamName = a.Employee != null && a.Employee.Employment != null && a.Employee.Employment.Team != null
+                        ? a.Employee.Employment.Team.Name : null,
+                    ManagerName = a.Employee != null && a.Employee.Employment != null && a.Employee.Employment.DirectManager != null
+                        ? a.Employee.Employment.DirectManager.StaffName : "Admin Team",
+                    CycleId = a.CycleId,
+                    CycleName = a.Cycle != null ? a.Cycle.Name : null,
+                    ManagerReviewerId = a.ManagerReviewerId,
+                    ManagerReviewerName = a.ManagerReviewer != null ? a.ManagerReviewer.StaffName : null,
+                    Status = a.Status,
+                    IsLocked = a.IsLocked,
+                    Details = a.Details.Select(d => new AppraisalDetailFillDto
+                    {
+                        KPIId = d.KPIId,
+                        KPIName = d.KPIName,
+                        CategoryName = d.CategoryName,
+                        Weightage = d.Weightage,
+                        TargetValue = d.TargetValue,
+                        ScoringDirection = d.ScoringDirection,
+                        ActualValue = d.ActualValue,
+                        Score = d.Score,
+                        WeightedScore = d.WeightedScore,
+                        Remarks = d.Remarks,
+                    }).ToList()
+                })
+                .FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<Appraisal>> GetEmployeeAppraisalsAsync(long employeeId, int cycleId)

@@ -56,4 +56,7 @@ public interface IAppraisalApiClient
 
     [Post("/api/performance/appraisals/{id}/finalize")]
     Task<SuccessResponse> FinalizeAsync(long id);
+
+    [Post("/api/performance/appraisals/{id}/finalize-kpi")]
+    Task<SuccessResponse> FinalizeKpiAsync(long id);
 }

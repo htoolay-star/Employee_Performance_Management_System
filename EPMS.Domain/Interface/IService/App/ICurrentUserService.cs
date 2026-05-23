@@ -11,5 +11,6 @@ namespace EPMS.Domain.Interface.IService.App
         long? UserId { get; }
         string? Email { get; }
         bool IsAuthenticated { get; }
+        bool IsAdmin { get; }
     }
 }

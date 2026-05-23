@@ -153,6 +153,14 @@ public class AppraisalController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [Authorize]
+    [HttpPost("{id:long}/finalize-kpi")]
+    public async Task<ActionResult<SuccessResponse>> FinalizeKpi(long id)
+    {
+        var result = await _service.FinalizeKpiAsync(id);
+        return HandleResult(result);
+    }
+
     [HttpPost("{id:long}/unlock-role")]
     public async Task<ActionResult<SuccessResponse>> UnlockRole(long id, [FromBody] UnlockRoleRequestDto dto)
     {

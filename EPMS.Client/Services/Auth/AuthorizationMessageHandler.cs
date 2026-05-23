@@ -1,6 +1,7 @@
 using EPMS.Shared.DTOs.Auth;
 using EPMS.Shared.DTOs.Common;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -17,16 +18,19 @@ namespace EPMS.Client.Services.Auth
         private readonly TokenStorage _tokenStorage;
         private readonly NavigationManager _navigationManager;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly AuthenticationStateProvider _authStateProvider;
         private readonly JsonSerializerOptions _jsonOptions;
 
         public AuthorizationMessageHandler(
             TokenStorage tokenStorage,
             NavigationManager navigationManager,
-            IHttpClientFactory httpClientFactory)
+            IHttpClientFactory httpClientFactory,
+            AuthenticationStateProvider authStateProvider)
         {
             _tokenStorage = tokenStorage;
             _navigationManager = navigationManager;
             _httpClientFactory = httpClientFactory;
+            _authStateProvider = authStateProvider;
             _jsonOptions = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
@@ -82,9 +86,6 @@ namespace EPMS.Client.Services.Auth
                 if (string.IsNullOrEmpty(refreshToken))
                     return false;
 
-                // Check if another request already refreshed the token
-                var currentAccessToken = await _tokenStorage.GetAccessTokenAsync();
-
                 var client = _httpClientFactory.CreateClient("RefreshClient");
                 var request = new RefreshTokenRequest { RefreshToken = refreshToken };
                 var response = await client.PostAsJsonAsync("/api/auth/refresh-token", request, _jsonOptions, ct);
@@ -117,6 +118,7 @@ namespace EPMS.Client.Services.Auth
         private async Task ForceLogoutAsync()
         {
             await _tokenStorage.ClearTokensAsync();
+            ((JwtAuthenticationStateProvider)_authStateProvider).MarkUserAsLoggedOut();
             _navigationManager.NavigateTo("/login");
         }
 

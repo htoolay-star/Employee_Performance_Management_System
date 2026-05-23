@@ -24,5 +24,6 @@ public interface IAppraisalService
 
     Task AutoGenerateForCycleAsync(long cycleId);
     Task<SuccessResponse> FinalizeAsync(long id);
+    Task<SuccessResponse> FinalizeKpiAsync(long id);
     Task<SuccessResponse> UnlockRoleAsync(long id, string role);
 }
