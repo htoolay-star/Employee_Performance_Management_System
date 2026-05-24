@@ -21,5 +21,15 @@ namespace EPMS.Domain.Repository.Info
                 .Include(e => e.DirectManager)
                 .FirstOrDefaultAsync(e => e.EmployeeId == employeeId);
         }
+
+        public async Task<IEnumerable<EmployeeEmployment>> GetByPositionIdAsync(long positionId)
+        {
+            return await _dbSet
+                .AsNoTracking()
+                .Include(e => e.Position)
+                .Include(e => e.Profile)
+                .Where(e => e.PositionId == positionId && !e.Profile.IsDeleted && !e.IsDeleted)
+                .ToListAsync();
+        }
     }
 }

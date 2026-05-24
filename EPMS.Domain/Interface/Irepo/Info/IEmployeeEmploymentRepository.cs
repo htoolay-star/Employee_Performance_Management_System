@@ -6,5 +6,6 @@ namespace EPMS.Domain.Interface.Irepo.Info
     public interface IEmployeeEmploymentRepository : IGenericRepository<EmployeeEmployment>
     {
         Task<EmployeeEmployment?> GetByEmployeeIdAsync(long employeeId);
+        Task<IEnumerable<EmployeeEmployment>> GetByPositionIdAsync(long positionId);
     }
 }

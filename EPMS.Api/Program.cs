@@ -1,8 +1,9 @@
 using EPMS.Api.Extensions;
+using EPMS.Api.Jobs;
 using EPMS.Api.Mapster;
 using EPMS.Domain.Contracts;
-using EPMS.Api.Jobs;
 using Hangfire;
+using Hangfire.Storage;
 using Microsoft.AspNetCore.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,6 +25,7 @@ builder.Services.AddHangfireServer(options =>
 {
     options.WorkerCount = 1;
 });
+builder.Services.AddSingleton<IMonitoringApi>(provider => provider.GetRequiredService<JobStorage>().GetMonitoringApi());
 
 builder.Services.AddCors(options =>
 {

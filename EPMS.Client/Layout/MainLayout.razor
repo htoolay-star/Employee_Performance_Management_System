@@ -67,3 +67,9 @@
         await JS.InvokeVoidAsync("localStorage.setItem", "epms-dark-mode", _isDarkMode.ToString().ToLower());
     }
 }
+
+<style>
+    html, body, #app {
+        background-color: @(_isDarkMode ? "#252540" : "#FAFAFA") !important;
+    }
+</style>

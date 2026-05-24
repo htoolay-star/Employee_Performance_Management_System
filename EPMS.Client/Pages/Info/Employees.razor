@@ -3,6 +3,7 @@
 @using EPMS.Client.Services.Hr
 @using EPMS.Client.Services.Auth
 @using EPMS.Client.Services.Info
+@using EPMS.Client.Services.Performance
 @using EPMS.Shared.Constants
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.EmployeeInfoDTOs
@@ -216,12 +217,23 @@
 
                 <TemplateColumn Title="@UIConstants.Employee.ColumnActions" Sortable="false">
                     <CellTemplate>
-                        <MudTooltip Text="View Details" Placement="Placement.Top">
-                            <MudIconButton Icon="@Icons.Material.Filled.Visibility"
-                                           Color="Color.Info"
-                                           Size="Size.Small"
-                                           OnClick="@(() => NavigateToDetail(context.Item.Id))" />
-                        </MudTooltip>
+                        <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                            <MudTooltip Text="View Details" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                               Color="Color.Info"
+                                               Size="Size.Small"
+                                               OnClick="@(() => NavigateToDetail(context.Item.Id))" />
+                            </MudTooltip>
+                            @if (_canViewEntityKpi)
+                            {
+                                <MudTooltip Text="View KPI" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.FactCheck"
+                                                   Color="Color.Info"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => OpenViewKpiDialog(context.Item))" />
+                                </MudTooltip>
+                            }
+                        </MudStack>
                     </CellTemplate>
                 </TemplateColumn>
 
@@ -257,6 +269,15 @@
     private string? _importFileName;
     private bool _canView;
     private bool _canCreate;
+    private bool _canViewEntityKpi;
+
+    private static readonly DialogOptions _kpiDialogOptions = new()
+    {
+        CloseOnEscapeKey = true,
+        MaxWidth = MaxWidth.Large,
+        FullWidth = true
+    };
+
     
     // Filters
     private string _searchString = string.Empty;
@@ -295,6 +316,7 @@
             var permSet = new HashSet<string>(perms);
             _canView = permSet.Contains("EMPLOYEES.VIEW");
             _canCreate = permSet.Contains("EMPLOYEES.CREATE");
+            _canViewEntityKpi = permSet.Contains("ENTITYKPI.VIEW");
         }
         catch (Exception)
         {
@@ -445,6 +467,18 @@
     private void NavigateToDetail(long id)
     {
         Navigation.NavigateTo($"/hr/employees/{id}");
+    }
+
+    private async Task OpenViewKpiDialog(EmployeeProfileGridItemDto employee)
+    {
+        var parameters = new DialogParameters<EmployeeKpiViewDialog>
+        {
+            { x => x.EmployeeId, employee.Id },
+            { x => x.EmployeeName, employee.StaffName }
+        };
+
+        await DialogService.ShowAsync<EmployeeKpiViewDialog>(
+            $"{UIConstants.Employee.ViewKpiDialogTitle} — {employee.StaffName}", parameters, _kpiDialogOptions);
     }
 
     private async Task OpenCreateWizardAsync()

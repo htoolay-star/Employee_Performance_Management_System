@@ -118,6 +118,11 @@ namespace EPMS.Domain.Services.Performance
 
             employeeKPI.Update(priority, dto.Weightage, dto.TargetValue, dto.TargetUnit);
 
+            // If this was auto-created from a position EntityKPI, detach it so
+            // future position updates don't overwrite the employee's customization.
+            if (employeeKPI.EntityKPIId != null)
+                employeeKPI.DetachFromEntitySource();
+
             _uow.Perf.EmployeeKPIs.Update(employeeKPI);
             await _uow.CompleteAsync();
 

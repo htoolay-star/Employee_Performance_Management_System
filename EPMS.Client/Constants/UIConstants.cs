@@ -461,6 +461,7 @@
             public const string ColumnPosition = "Position";
             public const string ColumnStatus = "Status";
             public const string ColumnActions = "Actions";
+            public const string ViewKpiDialogTitle = "KPI Assignments";
             public const string NoDataFound = "Try adjusting your search or add a new employee.";
         }
     }
