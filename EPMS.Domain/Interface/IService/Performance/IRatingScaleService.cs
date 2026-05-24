@@ -12,7 +12,5 @@ public interface IRatingScaleService
     Task<SuccessResponse<long>> CreateAsync(CreateRatingScaleDto dto);
     Task<SuccessResponse> UpdateAsync(long id, UpdateRatingScaleDto dto);
     Task<SuccessResponse> RestoreAsync(long id);
-        Task<SuccessResponse> DeleteAsync(long id);
-    Task<SuccessResponse> DeactivateAsync(long id);
-    Task<SuccessResponse> ReactivateAsync(long id);
+    Task<SuccessResponse> DeleteAsync(long id);
 }

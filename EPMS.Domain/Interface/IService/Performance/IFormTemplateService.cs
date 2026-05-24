@@ -7,11 +7,11 @@ namespace EPMS.Domain.Interface.IService.Performance
     {
         Task<SuccessResponse<IEnumerable<FormTemplateDto>>> GetAllAsync();
         Task<SuccessResponse<IEnumerable<FormTemplateDto>>> GetActiveAsync();
+        Task<SuccessResponse<IEnumerable<LookUpDto>>> GetLookupAsync();
         Task<SuccessResponse<FormTemplateDto>> GetByIdAsync(long id);
         Task<SuccessResponse<long>> CreateAsync(CreateFormTemplateDto dto);
         Task<SuccessResponse> UpdateAsync(long id, UpdateFormTemplateDto dto);
         Task<SuccessResponse> DeleteAsync(long id);
-        Task<SuccessResponse> DeactivateAsync(long id);
-        Task<SuccessResponse> ReactivateAsync(long id);
+        Task<SuccessResponse<FormTemplatePreviewDto>> GetPreviewAsync(long templateId);
     }
 }

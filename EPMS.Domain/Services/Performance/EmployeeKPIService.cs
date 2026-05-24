@@ -32,7 +32,7 @@ namespace EPMS.Domain.Services.Performance
 
         public async Task<SuccessResponse<IEnumerable<EmployeeKPIDto>>> GetAllAsync()
         {
-            var items = await _uow.Perf.EmployeeKPIs.GetAllAsync();
+            var items = await _uow.Perf.EmployeeKPIs.GetAllWithIncludesAsync();
             var dtos = await ResolveNamesAsync(items);
             return SuccessResponse<IEnumerable<EmployeeKPIDto>>.Ok(dtos, EmployeeKPIMsg.RetrievedAll);
         }
@@ -70,12 +70,27 @@ namespace EPMS.Domain.Services.Performance
             if (priority == null)
                 return SuccessResponse<long>.Fail(EmployeeKPIMsg.PriorityNotFound, ErrorType.NotFound);
 
+            var currentTotal = await _uow.Perf.EmployeeKPIs.GetTotalWeightageAsync(dto.EmployeeId, dto.CycleId);
+
+            var employment = await _uow.Info.EmployeeEmployments.GetByEmployeeIdAsync(dto.EmployeeId);
+            if (employment != null)
+            {
+                var entityTotal = await _uow.Perf.EntityKPIs.GetTotalWeightageAsync(
+                    AppraisalConstants.EntityTypes.Position, employment.PositionId);
+                currentTotal += entityTotal;
+            }
+
+            if (currentTotal + dto.Weightage > 100)
+                return SuccessResponse<long>.Fail(EmployeeKPIMsg.WeightExceeded(currentTotal, dto.Weightage), ErrorType.Validation);
+
             var employeeKPI = new EmployeeKPI(priority, dto.EmployeeId, dto.KPIId, dto.CycleId, priority.Id, dto.Weightage, dto.TargetValue, dto.TargetUnit);
 
             _uow.Perf.EmployeeKPIs.Add(employeeKPI);
             await _uow.CompleteAsync();
 
-            return SuccessResponse<long>.Ok(employeeKPI.Id, EmployeeKPIMsg.Created);
+            var newTotal = currentTotal + dto.Weightage;
+            var message = newTotal == 100 ? EmployeeKPIMsg.Created : EmployeeKPIMsg.WeightNotComplete(newTotal);
+            return SuccessResponse<long>.Ok(employeeKPI.Id, message);
         }
 
         public async Task<SuccessResponse> UpdateAsync(long id, UpdateEmployeeKPIDto dto)
@@ -88,12 +103,32 @@ namespace EPMS.Domain.Services.Performance
             if (priority == null)
                 return SuccessResponse.Fail(EmployeeKPIMsg.PriorityNotFound, ErrorType.NotFound);
 
+            var currentTotal = await _uow.Perf.EmployeeKPIs.GetTotalWeightageAsync(employeeKPI.EmployeeId, employeeKPI.CycleId, id);
+
+            var employment = await _uow.Info.EmployeeEmployments.GetByEmployeeIdAsync(employeeKPI.EmployeeId);
+            if (employment != null)
+            {
+                var entityTotal = await _uow.Perf.EntityKPIs.GetTotalWeightageAsync(
+                    AppraisalConstants.EntityTypes.Position, employment.PositionId);
+                currentTotal += entityTotal;
+            }
+
+            if (currentTotal + dto.Weightage > 100)
+                return SuccessResponse.Fail(EmployeeKPIMsg.WeightExceeded(currentTotal, dto.Weightage), ErrorType.Validation);
+
             employeeKPI.Update(priority, dto.Weightage, dto.TargetValue, dto.TargetUnit);
+
+            // If this was auto-created from a position EntityKPI, detach it so
+            // future position updates don't overwrite the employee's customization.
+            if (employeeKPI.EntityKPIId != null)
+                employeeKPI.DetachFromEntitySource();
 
             _uow.Perf.EmployeeKPIs.Update(employeeKPI);
             await _uow.CompleteAsync();
 
-            return SuccessResponse.Ok(EmployeeKPIMsg.Updated);
+            var newTotal = currentTotal + dto.Weightage;
+            var message = newTotal == 100 ? EmployeeKPIMsg.Updated : EmployeeKPIMsg.WeightNotComplete(newTotal);
+            return SuccessResponse.Ok(message);
         }
 
         public async Task<SuccessResponse> DeleteAsync(long id)

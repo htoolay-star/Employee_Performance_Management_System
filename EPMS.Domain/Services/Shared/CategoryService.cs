@@ -150,6 +150,7 @@ public class CategoryService : ICategoryService
             entity.DeletedBy = null;
             _unitOfWork.Shared.Categories.Update(entity);
             await _unitOfWork.CompleteAsync();
+            await _cacheService.RemoveAsync(CacheKeys.Shared.CategoryLookups());
             return SuccessResponse.Ok(CategoryMsg.Updated);
         }
 

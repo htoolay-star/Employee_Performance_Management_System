@@ -1,6 +1,12 @@
-﻿using EPMS.Shared.Models;
+﻿using EPMS.Api.Authorization;
+using EPMS.Domain.Interface.IService.App;
+using EPMS.Shared.Constants;
+using EPMS.Shared.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
 
 namespace EPMS.Api.Extensions
@@ -32,9 +38,31 @@ namespace EPMS.Api.Extensions
                         ValidateLifetime = true,
                         ClockSkew = TimeSpan.Zero
                     };
+
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnTokenValidated = async context =>
+                        {
+                            var jti = context.Principal?.FindFirstValue(JwtRegisteredClaimNames.Jti);
+                            if (!string.IsNullOrEmpty(jti))
+                            {
+                                var cacheService = context.HttpContext.RequestServices
+                                    .GetRequiredService<ICacheService>();
+                                var isBlacklisted = await cacheService.GetAsync<bool>(
+                                    CacheKeys.Auth.TokenBlacklist(jti));
+                                if (isBlacklisted)
+                                {
+                                    context.Fail("Token has been revoked.");
+                                }
+                            }
+                        }
+                    };
                 });
 
             services.AddAuthorization();
+            services.AddSingleton<IAuthorizationPolicyProvider, PermissionAuthorizationPolicyProvider>();
+            services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+            services.AddHttpContextAccessor();
             return services;
         }
     }

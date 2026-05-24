@@ -1,10 +1,10 @@
+using EPMS.Api.Authorization;
 using EPMS.Api.Controllers.Common;
 using EPMS.Domain.Interface.IService.Hr;
 using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.TeamDTOs;
 using EPMS.Shared.Features.Teams;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EPMS.Api.Controllers.Hr;
@@ -20,6 +20,7 @@ public class TeamsController : ApiControllerBase
         _teamService = teamService;
     }
 
+    [HasPermission("TEAMS.VIEW")]
     [HttpGet("lookup")]
     public async Task<ActionResult<SuccessResponse<IEnumerable<LookUpDto>>>> GetLookup()
     {
@@ -27,6 +28,7 @@ public class TeamsController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HasPermission("TEAMS.VIEW")]
     [HttpGet("by-department/{departmentId:long}")]
     public async Task<ActionResult<SuccessResponse<IEnumerable<TeamDto>>>> GetByDepartment(long departmentId)
     {
@@ -34,6 +36,7 @@ public class TeamsController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HasPermission("TEAMS.VIEW")]
     [HttpGet("paged")]
     public async Task<ActionResult<SuccessResponse<PaginatedResponse<TeamGridItemDto>>>> GetPaged([FromQuery] TeamQueryParameters parameters)
     {
@@ -41,6 +44,7 @@ public class TeamsController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HasPermission("TEAMS.VIEW")]
     [HttpGet]
     public async Task<ActionResult<SuccessResponse<IEnumerable<TeamDto>>>> GetAll()
     {
@@ -48,6 +52,7 @@ public class TeamsController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HasPermission("TEAMS.VIEW")]
     [HttpGet("{id:long}")]
     public async Task<ActionResult<SuccessResponse<TeamDto>>> GetById(long id)
     {
@@ -55,6 +60,7 @@ public class TeamsController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HasPermission("TEAMS.CREATE")]
     [HttpPost]
     public async Task<ActionResult<SuccessResponse<long>>> Create(CreateTeamDto dto)
     {
@@ -62,6 +68,7 @@ public class TeamsController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HasPermission("TEAMS.EDIT")]
     [HttpPut("{id:long}")]
     public async Task<ActionResult<SuccessResponse>> Update(long id, UpdateTeamDto dto)
     {
@@ -69,12 +76,14 @@ public class TeamsController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HasPermission("TEAMS.DELETE")]
     [HttpDelete("{id:long}")]
     public async Task<ActionResult<SuccessResponse>> Delete(long id)
     {
         var result = await _teamService.DeleteAsync(id);
         return HandleResult(result);
     }
+        [HasPermission("TEAMS.DELETE")]
         [HttpPost("{id:long}/restore")]
         public async Task<ActionResult<SuccessResponse>> Restore(long id)
         {

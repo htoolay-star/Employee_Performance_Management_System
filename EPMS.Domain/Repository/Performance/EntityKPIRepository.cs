@@ -10,6 +10,12 @@ namespace EPMS.Domain.Repository.Performance
     {
         public EntityKPIRepository(AppDbContext context) : base(context) { }
 
+        public async Task<IEnumerable<EntityKPI>> GetAllWithIncludesAsync()
+            => await _dbSet
+                .Include(e => e.KPI)
+                .Include(e => e.Priority)
+                .ToListAsync();
+
         public async Task<IEnumerable<EntityKPI>> GetByEntityAsync(string entityType, long entityId)
             => await _dbSet
                 .Include(e => e.KPI)
@@ -30,6 +36,14 @@ namespace EPMS.Domain.Repository.Performance
             if (excludeId.HasValue)
                 query = query.Where(e => e.Id != excludeId.Value);
             return await query.AnyAsync();
+        }
+
+        public async Task<decimal> GetTotalWeightageAsync(string entityType, long entityId, long? excludeId = null)
+        {
+            var query = _dbSet.Where(e => e.EntityType == entityType && e.EntityId == entityId);
+            if (excludeId.HasValue)
+                query = query.Where(e => e.Id != excludeId.Value);
+            return await query.SumAsync(e => (decimal?)e.Weightage) ?? 0;
         }
     }
 }

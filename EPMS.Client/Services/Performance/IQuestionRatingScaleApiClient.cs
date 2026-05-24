@@ -12,6 +12,9 @@ public interface IQuestionRatingScaleApiClient
     [Get("/api/QuestionRatingScales/active")]
     Task<SuccessResponse<IEnumerable<QuestionRatingScaleDto>>> GetActiveAsync();
 
+    [Get("/api/QuestionRatingScales/lookup")]
+    Task<SuccessResponse<IEnumerable<LookUpDto>>> GetLookupAsync();
+
     [Get("/api/QuestionRatingScales/{id}")]
     Task<SuccessResponse<QuestionRatingScaleDto>> GetByIdAsync(long id);
 

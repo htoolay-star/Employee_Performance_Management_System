@@ -1,6 +1,8 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Data;
 using EPMS.Domain.Entities.Performance;
+using EPMS.Domain.Interface.IService.Performance;
+using EPMS.Shared.Constants;
 using Microsoft.EntityFrameworkCore;
 
 namespace EPMS.Api.Jobs;
@@ -19,16 +21,30 @@ public class NightlyMaintenanceJob
         using var scope = _scopeFactory.CreateScope();
         var uow = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var appraisalService = scope.ServiceProvider.GetRequiredService<IAppraisalService>();
 
+        await AutoGenerateAppraisalsAsync(appraisalService, uow);
         await AutoLockCyclesAsync(uow);
+        await AutoLockRolesAsync(uow);
         await PurgeRecycleBinAsync(db);
+    }
+
+    private static async Task AutoGenerateAppraisalsAsync(IAppraisalService appraisalService, IUnitOfWork uow)
+    {
+        var now = DateOnly.FromDateTime(DateTime.UtcNow);
+        var cycles = await uow.Perf.AppraisalCycles.GetAllAsync();
+        var toGenerate = cycles.Where(c => c.IsActive && !c.IsLocked
+                                       && c.EvaluationStartDate <= now).ToList();
+
+        foreach (var cycle in toGenerate)
+            await appraisalService.AutoGenerateForCycleAsync(cycle.Id);
     }
 
     private static async Task AutoLockCyclesAsync(IUnitOfWork uow)
     {
         var now = DateOnly.FromDateTime(DateTime.UtcNow);
         var cycles = await uow.Perf.AppraisalCycles.GetAllAsync();
-        var toLock = cycles.Where(c => !c.IsLocked && c.IsActive && c.WindowStartDate <= now).ToList();
+        var toLock = cycles.Where(c => !c.IsLocked && c.IsActive && c.WindowEndDate <= now).ToList();
 
         if (toLock.Count == 0) return;
 
@@ -63,6 +79,64 @@ public class NightlyMaintenanceJob
         await uow.CompleteAsync();
     }
 
+    private static async Task AutoLockRolesAsync(IUnitOfWork uow)
+    {
+        var now = DateOnly.FromDateTime(DateTime.UtcNow);
+        var cycles = await uow.Perf.AppraisalCycles.GetAllAsync();
+        var activeCycles = cycles.Where(c => c.IsActive && !c.IsLocked).ToList();
+        if (activeCycles.Count == 0) return;
+
+        foreach (var cycle in activeCycles)
+        {
+            var appraisals = await uow.Perf.Appraisals.FindAllAsync(
+                a => a.CycleId == cycle.Id && !a.IsDeleted,
+                trackChanges: true);
+
+            foreach (var appraisal in appraisals)
+            {
+                var selfDeadline = cycle.SelfReviewDeadline ?? cycle.WindowEndDate;
+                if (!appraisal.SelfLocked && selfDeadline <= now)
+                {
+                    appraisal.LockSelf(isDeadline: true);
+                    var selfResponses = await uow.Perf.EvaluationResponses
+                        .FindAllAsync(r => r.AppraisalId == appraisal.Id && r.EvaluatorRole == EvaluatorRoles.Self
+                                        && !r.IsDeleted && !r.SubmittedAt.HasValue,
+                                      trackChanges: true);
+                    foreach (var r in selfResponses)
+                        r.Submit(TimeProvider.System);
+                }
+
+                var threeSixtyDeadline = cycle.ThreeSixtyReviewDeadline ?? cycle.WindowEndDate;
+                if (!appraisal.ThreeSixtyLocked && threeSixtyDeadline <= now)
+                {
+                    appraisal.LockThreeSixty(isDeadline: true);
+                    var threeSixtyResponses = await uow.Perf.EvaluationResponses
+                        .FindAllAsync(r => r.AppraisalId == appraisal.Id
+                                        && (r.EvaluatorRole == EvaluatorRoles.Manager || r.EvaluatorRole == EvaluatorRoles.Peer || r.EvaluatorRole == EvaluatorRoles.Subordinate)
+                                        && !r.IsDeleted && !r.SubmittedAt.HasValue,
+                                      trackChanges: true);
+                    foreach (var r in threeSixtyResponses)
+                        r.Submit(TimeProvider.System);
+                }
+
+                var appraisalDeadline = cycle.ManagerReviewDeadline ?? cycle.WindowEndDate;
+                if (!appraisal.AppraisalLocked && appraisalDeadline <= now)
+                {
+                    appraisal.LockAppraisal(isDeadline: true);
+                    var appraisalResponses = await uow.Perf.EvaluationResponses
+                        .FindAllAsync(r => r.AppraisalId == appraisal.Id
+                                        && r.EvaluatorRole == EvaluatorRoles.Appraisal
+                                        && !r.IsDeleted && !r.SubmittedAt.HasValue,
+                                      trackChanges: true);
+                    foreach (var r in appraisalResponses)
+                        r.Submit(TimeProvider.System);
+                }
+            }
+        }
+
+        await uow.CompleteAsync();
+    }
+
     private static async Task PurgeRecycleBinAsync(AppDbContext db)
     {
         var cutoff = DateTimeOffset.UtcNow.AddDays(-30);
@@ -70,7 +144,6 @@ public class NightlyMaintenanceJob
         var tables = new[]
         {
             ("perf.AppraisalCycles", "IsDeleted", "DeletedAt"),
-            ("perf.RatingScales", "IsDeleted", "DeletedAt"),
             ("perf.KPIWeightPriorities", "IsDeleted", "DeletedAt"),
             ("perf.QuestionRatingScales", "IsDeleted", "DeletedAt"),
             ("perf.KPIMaster", "IsDeleted", "DeletedAt"),
@@ -86,7 +159,8 @@ public class NightlyMaintenanceJob
             ("hr.Levels", "IsDeleted", "DeletedAt"),
             ("hr.Departments", "IsDeleted", "DeletedAt"),
             ("hr.Teams", "IsDeleted", "DeletedAt"),
-            ("hr.Categories", "IsDeleted", "DeletedAt"),
+            ("hr.RatingScales", "IsDeleted", "DeletedAt"),
+            ("shared.Categories", "IsDeleted", "DeletedAt"),
             ("shared.DocumentAttachments", "IsDeleted", "DeletedAt")
         };
 

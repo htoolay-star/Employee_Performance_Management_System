@@ -24,9 +24,11 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.Property(e => e.KPIId);
             entity.Property(e => e.EmployeeKPIId);
             entity.Property(e => e.CategoryName).HasMaxLength(100);
-            entity.Property(e => e.TargetValue).HasMaxLength(100);
-            entity.Property(e => e.ActualValue).HasMaxLength(100);
+            entity.Property(e => e.TargetValue).HasColumnType("decimal(18,4)");
+            entity.Property(e => e.ActualValue).HasColumnType("decimal(18,4)");
             entity.Property(e => e.Remarks).HasMaxLength(500);
+
+            entity.Property(e => e.ScoringDirection).HasMaxLength(20).IsRequired().HasDefaultValue("HigherIsBetter");
 
             entity.Property(e => e.Weightage).HasColumnType("decimal(5,2)").IsRequired();
             entity.Property(e => e.Score).HasColumnType("decimal(5,2)").IsRequired();
@@ -36,11 +38,6 @@ namespace EPMS.Domain.Data.Configurations.Performance
                   .WithMany(a => a.Details)
                   .HasForeignKey(e => e.AppraisalId)
                   .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(e => e.Question)
-                  .WithMany()
-                  .HasForeignKey(e => e.QuestionId)
-                  .OnDelete(DeleteBehavior.Restrict);
 
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.Property(e => e.UpdatedAt).IsRequired();

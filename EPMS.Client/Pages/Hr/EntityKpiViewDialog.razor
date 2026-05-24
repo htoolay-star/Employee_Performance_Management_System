@@ -1,0 +1,229 @@
+@using EPMS.Client.Constants
+@using EPMS.Client.Pages.Performance
+@using EPMS.Client.Services.Auth
+@using EPMS.Client.Services.Performance
+@using EPMS.Shared.Constants
+@using EPMS.Shared.DTOs.Performance.EntityKPI
+@using MudBlazor
+
+@inject IDialogService DialogService
+@inject IEntityKPIApiClient EntityKPIApiClient
+@inject ISnackbar Snackbar
+@inject CurrentUserPermissionService PermService
+
+<MudDialog>
+    <DialogContent>
+        @if (_loading)
+        {
+            <MudText>Loading...</MudText>
+        }
+        else
+        {
+            @if (_items.Sum(x => x.Weightage) == 100)
+            {
+                <MudAlert Severity="Severity.Success" Class="mb-4">
+                    <strong>Total Weightage: @(_items.Sum(x => x.Weightage))%</strong>
+                </MudAlert>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Warning" Class="mb-4">
+                    <strong>Total Weightage: @(_items.Sum(x => x.Weightage))% — total does not equal 100%</strong>
+                </MudAlert>
+            }
+            @if (_canAssignKpi)
+            {
+                <MudStack Row="true" Justify="Justify.FlexEnd" Class="mb-4">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               StartIcon="@Icons.Material.Filled.Add"
+                               OnClick="OpenAssignKpiDialog">
+                        Assign KPI
+                    </MudButton>
+                </MudStack>
+            }
+
+            @if (_items.Count == 0)
+            {
+                <MudAlert Severity="Severity.Info">No KPIs assigned to this entity.</MudAlert>
+            }
+            else
+            {
+                <MudTable Items="@_items" Hover="true" Striped="true" Dense="true" Elevation="0">
+                    <ColGroup>
+                        <col style="width: 50px;" />
+                        <col style="width: 120px;" />
+                        <col />
+                        <col style="width: 120px;" />
+                        <col style="width: 80px;" />
+                        <col style="width: 120px;" />
+                        <col style="width: 80px;" />
+                        <col style="width: 120px;" />
+                    </ColGroup>
+                    <HeaderContent>
+                        <MudTh>#</MudTh>
+                        <MudTh>@UIConstants.EntityKPI.ColumnKPI</MudTh>
+                        <MudTh>KPI Name</MudTh>
+                        <MudTh>@UIConstants.EntityKPI.ColumnWeightage</MudTh>
+                        <MudTh>@UIConstants.EntityKPI.ColumnPriority</MudTh>
+                        <MudTh>@UIConstants.EntityKPI.ColumnTarget</MudTh>
+                        <MudTh>@UIConstants.EntityKPI.ColumnUnit</MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate Context="item">
+                        <MudTd DataLabel="#"><span>@(_items.IndexOf(item) + 1)</span></MudTd>
+                        <MudTd DataLabel="KPI">@item.KPICode</MudTd>
+                        <MudTd DataLabel="Name">@item.KPIName</MudTd>
+                        <MudTd DataLabel="Weight">@($"{item.Weightage}%")</MudTd>
+                        <MudTd DataLabel="Priority">@item.PriorityName</MudTd>
+                        <MudTd DataLabel="Target">@item.TargetValue</MudTd>
+                        <MudTd DataLabel="Unit">@item.TargetUnit</MudTd>
+                        <MudTd DataLabel="Actions">
+                            <MudStack Row="true" Spacing="0">
+                                @if (_canEditKpi)
+                                {
+                                    <MudTooltip Text="Edit" Placement="Placement.Top">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                       Color="Color.Primary"
+                                                       Size="Size.Small"
+                                                       OnClick="@(() => OpenEditKpiDialog(item))" />
+                                    </MudTooltip>
+                                }
+                                @if (_canDeleteKpi)
+                                {
+                                    <MudTooltip Text="Delete" Placement="Placement.Top">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                       Color="Color.Error"
+                                                       Size="Size.Small"
+                                                       OnClick="@(() => OpenDeleteKpiDialog(item))" />
+                                    </MudTooltip>
+                                }
+                            </MudStack>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Close">@UIConstants.Common.Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private static readonly DialogOptions _assignDialogOptions = new()
+    {
+        CloseOnEscapeKey = true,
+        MaxWidth = MaxWidth.Small,
+        FullWidth = true
+    };
+
+    [CascadingParameter] private IMudDialogInstance? _mudDialog { get; set; }
+
+    [Parameter] public long EntityId { get; set; }
+    [Parameter] public string EntityName { get; set; } = string.Empty;
+    [Parameter] public string EntityType { get; set; } = string.Empty;
+
+    private bool _loading = true;
+    private bool _canAssignKpi;
+    private bool _canEditKpi;
+    private bool _canDeleteKpi;
+    private List<EntityKPIDto> _items = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _canAssignKpi = await PermService.HasPermissionAsync("ENTITYKPI.CREATE");
+        _canEditKpi = await PermService.HasPermissionAsync("ENTITYKPI.EDIT");
+        _canDeleteKpi = await PermService.HasPermissionAsync("ENTITYKPI.DELETE");
+        await LoadKpisAsync();
+    }
+
+    private async Task LoadKpisAsync()
+    {
+        _loading = true;
+        StateHasChanged();
+        try
+        {
+            var response = await EntityKPIApiClient.GetByEntityAsync(EntityType, EntityId);
+
+            if (response.Success && response.Data != null)
+                _items = response.Data.ToList();
+            else
+                Snackbar.Add(response.Message ?? "Failed to load KPIs.", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading KPIs: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OpenAssignKpiDialog()
+    {
+        var parameters = new DialogParameters<EntityKPIDialog>
+        {
+            { x => x.PrefilledEntityType, EntityType },
+            { x => x.PrefilledEntityId, EntityId }
+        };
+
+        var dialog = await DialogService.ShowAsync<EntityKPIDialog>(
+            $"Assign KPI", parameters, _assignDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+        {
+            Snackbar.Add("KPI assigned successfully.", Severity.Success);
+            await LoadKpisAsync();
+        }
+    }
+
+    private async Task OpenEditKpiDialog(EntityKPIDto item)
+    {
+        var parameters = new DialogParameters<EntityKPIDialog>
+        {
+            { x => x.KpiAssignment, item }
+        };
+
+        var dialog = await DialogService.ShowAsync<EntityKPIDialog>(
+            "Edit KPI", parameters, _assignDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+        {
+            Snackbar.Add("KPI updated successfully.", Severity.Success);
+            await LoadKpisAsync();
+        }
+    }
+
+    private async Task OpenDeleteKpiDialog(EntityKPIDto item)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, $"Delete KPI '{item.KPIName}'?" },
+            { x => x.ButtonText, "Delete" },
+            { x => x.Color, Color.Error }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(
+            "Confirm Delete", parameters);
+
+        if (await dialog.Result is { Canceled: false })
+        {
+            var response = await EntityKPIApiClient.DeleteAsync(item.Id);
+            if (response.Success)
+            {
+                Snackbar.Add("KPI deleted.", Severity.Success);
+                await LoadKpisAsync();
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? "Delete failed.", Severity.Error);
+            }
+        }
+    }
+
+    private void Close() => _mudDialog?.Cancel();
+}

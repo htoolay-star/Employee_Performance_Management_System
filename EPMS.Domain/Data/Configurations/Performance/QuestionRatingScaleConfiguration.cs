@@ -1,11 +1,6 @@
 using EPMS.Domain.Entities.Performance;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EPMS.Domain.Data.Configurations.Performance
 {
@@ -23,8 +18,6 @@ namespace EPMS.Domain.Data.Configurations.Performance
             builder.HasIndex(e => e.Name).IsUnique().HasFilter("[IsDeleted] = 0");
 
             builder.Property(e => e.Name).HasMaxLength(100).IsRequired();
-            builder.Property(e => e.MinScore).HasColumnType("decimal(5,2)").IsRequired();
-            builder.Property(e => e.MaxScore).HasColumnType("decimal(5,2)").IsRequired();
 
             builder.Property(e => e.IsActive).HasDefaultValue(true);
 
@@ -35,6 +28,11 @@ namespace EPMS.Domain.Data.Configurations.Performance
 
             builder.Property(e => e.IsDeleted).HasDefaultValue(false).IsRequired();
             builder.Property(e => e.DeletedAt);
+
+            builder.HasMany(e => e.Levels)
+                .WithOne(l => l.QuestionRatingScale)
+                .HasForeignKey(l => l.QuestionRatingScaleId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

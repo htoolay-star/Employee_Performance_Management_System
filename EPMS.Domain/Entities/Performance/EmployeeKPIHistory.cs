@@ -7,7 +7,7 @@ namespace EPMS.Domain.Entities.Performance
         private EmployeeKPIHistory() { }
 
         public EmployeeKPIHistory(long employeeId, long cycleId, long kpiId, long priorityId,
-                                  decimal weightage, string? targetValue, string? targetUnit,
+                                  decimal weightage, decimal? targetValue, string? targetUnit,
                                   DateTimeOffset snapshotDate)
         {
             EmployeeId = employeeId;
@@ -15,7 +15,7 @@ namespace EPMS.Domain.Entities.Performance
             KPIId = kpiId;
             PriorityId = priorityId;
             Weightage = weightage;
-            TargetValue = targetValue?.Trim();
+            TargetValue = targetValue;
             TargetUnit = targetUnit?.Trim();
             SnapshotDate = snapshotDate;
         }
@@ -25,7 +25,7 @@ namespace EPMS.Domain.Entities.Performance
         public long KPIId { get; private set; }
         public long PriorityId { get; private set; }
         public decimal Weightage { get; private set; }
-        public string? TargetValue { get; private set; }
+        public decimal? TargetValue { get; private set; }
         public string? TargetUnit { get; private set; }
         public DateTimeOffset SnapshotDate { get; private set; }
 

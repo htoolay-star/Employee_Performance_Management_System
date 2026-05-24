@@ -1,4 +1,5 @@
 using EPMS.Domain.Contracts;
+using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Shared.Constants;
 using System;
 
@@ -10,7 +11,10 @@ namespace EPMS.Domain.Entities.Performance
 
         public AppraisalCycle(string name, string appraisalType, string calendarType, string yearLabel,
                               DateOnly evalStart, DateOnly evalEnd,
-                              DateOnly windowStart, DateOnly windowEnd)
+                              DateOnly windowStart, DateOnly windowEnd,
+                              decimal kpiWeight = 50m, decimal selfWeight = 15m,
+                              decimal peerWeight = 10m,
+                              decimal appraisalWeight = 25m)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(name);
             ArgumentException.ThrowIfNullOrWhiteSpace(appraisalType);
@@ -40,6 +44,8 @@ namespace EPMS.Domain.Entities.Performance
             WindowStartDate = windowStart;
             WindowEndDate = windowEnd;
 
+            SetWeights(kpiWeight, selfWeight, peerWeight, appraisalWeight);
+
             IsActive = true;
             IsLocked = false;
         }
@@ -56,8 +62,8 @@ namespace EPMS.Domain.Entities.Performance
         public DateOnly WindowStartDate { get; private set; }
         public DateOnly WindowEndDate { get; private set; }
 
-        public DateOnly? PeerReviewStartDate { get; private set; }
-        public DateOnly? PeerReviewDeadline { get; private set; }
+        public DateOnly? ThreeSixtyReviewStartDate { get; private set; }
+        public DateOnly? ThreeSixtyReviewDeadline { get; private set; }
 
         public DateOnly? SelfReviewStartDate { get; private set; }
         public DateOnly? SelfReviewDeadline { get; private set; }
@@ -69,6 +75,11 @@ namespace EPMS.Domain.Entities.Performance
 
         public bool IsActive { get; private set; }
         public bool IsLocked { get; private set; }
+
+        public decimal KpiWeight { get; private set; }
+        public decimal SelfWeight { get; private set; }
+        public decimal ThreeSixtyWeight { get; private set; }
+        public decimal AppraisalWeight { get; private set; }
 
         public bool IsDeleted { get; set; }
         public DateTimeOffset? DeletedAt { get; set; }
@@ -91,19 +102,19 @@ namespace EPMS.Domain.Entities.Performance
             SelfReviewDeadline = deadline;
         }
 
-        public void ConfigureManagerReviewWindow(DateOnly start, DateOnly deadline)
+        public void ConfigureAppraisalReviewWindow(DateOnly start, DateOnly deadline)
         {
             if (start > deadline)
                 throw new ArgumentException("Start date cannot be after the deadline.");
 
             if (start < WindowStartDate || deadline > WindowEndDate)
-                throw new ArgumentException("The manager review window strictly must fall within the overall Appraisal Window dates.");
+                throw new ArgumentException("The appraisal review window strictly must fall within the overall Appraisal Window dates.");
 
             ManagerReviewStartDate = start;
             ManagerReviewDeadline = deadline;
         }
 
-        public void ConfigurePeerReviewWindow(DateOnly start, DateOnly deadline)
+        public void ConfigureThreeSixtyReviewWindow(DateOnly start, DateOnly deadline)
         {
             if (start > deadline)
                 throw new ArgumentException("Start date cannot be after the deadline.");
@@ -111,13 +122,16 @@ namespace EPMS.Domain.Entities.Performance
             if (start < WindowStartDate || deadline > WindowEndDate)
                 throw new ArgumentException("The peer review window strictly must fall within the overall Appraisal Window dates.");
 
-            PeerReviewStartDate = start;
-            PeerReviewDeadline = deadline;
+            ThreeSixtyReviewStartDate = start;
+            ThreeSixtyReviewDeadline = deadline;
         }
 
         public void Update(string name, string appraisalType, string calendarType, string yearLabel,
                            DateOnly evalStart, DateOnly evalEnd,
-                           DateOnly windowStart, DateOnly windowEnd)
+                           DateOnly windowStart, DateOnly windowEnd,
+                           decimal? kpiWeight = null, decimal? selfWeight = null,
+                           decimal? peerWeight = null,
+                           decimal? appraisalWeight = null)
         {
             if (IsLocked) throw new InvalidOperationException("Cannot update a locked cycle.");
             ArgumentException.ThrowIfNullOrWhiteSpace(name);
@@ -140,6 +154,28 @@ namespace EPMS.Domain.Entities.Performance
             EvaluationEndDate = evalEnd;
             WindowStartDate = windowStart;
             WindowEndDate = windowEnd;
+
+            if (kpiWeight.HasValue || selfWeight.HasValue || peerWeight.HasValue || appraisalWeight.HasValue)
+                SetWeights(
+                    kpiWeight ?? KpiWeight,
+                    selfWeight ?? SelfWeight,
+                    peerWeight ?? ThreeSixtyWeight,
+                    appraisalWeight ?? AppraisalWeight);
+        }
+
+        public void SetWeights(decimal kpiWeight, decimal selfWeight, decimal peerWeight, decimal appraisalWeight = 0m)
+        {
+            var total = kpiWeight + selfWeight + peerWeight + appraisalWeight;
+            if (total != 100m)
+                throw new ArgumentException($"Weights must sum to 100. Current total: {total}.");
+
+            if (kpiWeight < 0 || selfWeight < 0 || peerWeight < 0 || appraisalWeight < 0)
+                throw new ArgumentException("Individual weights cannot be negative.");
+
+            KpiWeight = kpiWeight;
+            SelfWeight = selfWeight;
+            ThreeSixtyWeight = peerWeight;
+            AppraisalWeight = appraisalWeight;
         }
 
         public void LockCycle()

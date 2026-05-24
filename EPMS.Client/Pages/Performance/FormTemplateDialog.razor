@@ -1,0 +1,240 @@
+@* ═══════════════════════════════════════════════════════════════════════════
+   FormTemplateDialog — Create / Edit dialog for the Form Template entity.
+   Shared by both OpenCreateDialog (FormTemplate == null) and OpenEditDialog (FormTemplate != null).
+   Determines mode via the IsEdit computed property.
+   ═══════════════════════════════════════════════════════════════════════════ *@
+@using EPMS.Client.Constants
+@using EPMS.Client.Extensions
+@using EPMS.Client.Models.Performance
+@using EPMS.Client.Services.Auth
+@using EPMS.Client.Services.Performance
+@using EPMS.Shared.Constants
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.PerformanceDTOs.FormTemplateDTOs
+@using EPMS.Shared.Validators.PerformanceDTOs.FormTemplateDTOs
+@using Mapster
+@using MudBlazor
+
+@inject IFormTemplateApiClient FormTemplateApiClient
+@inject LookupStateService LookupState
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="_form" Model="@_model" Validation="@ValidateField">
+            <MudStack Spacing="3">
+
+                <MudTextField @bind-Value="_model.Name"
+                              Label="@UIConstants.FormTemplate.NameLabel"
+                              For="@(() => _model.Name)"
+                              Variant="Variant.Outlined" />
+
+                <MudSelect T="string"
+                           @bind-Value="_model.FormType"
+                           Label="@UIConstants.FormTemplate.FormTypeLabel"
+                           Variant="Variant.Outlined"
+                           For="@(() => _model.FormType)">
+                    <MudSelectItem T="string" Value="@AppraisalConstants.FormTypes.Self">Self Assessment</MudSelectItem>
+                    <MudSelectItem T="string" Value="@AppraisalConstants.FormTypes.Manager">Manager Review</MudSelectItem>
+                    <MudSelectItem T="string" Value="@AppraisalConstants.FormTypes.Peer">Peer Review</MudSelectItem>
+                    <MudSelectItem T="string" Value="@AppraisalConstants.FormTypes.Subordinate">Subordinate Review</MudSelectItem>
+                    <MudSelectItem T="string" Value="@AppraisalConstants.FormTypes.Appraisal">Appraisal Review</MudSelectItem>
+                </MudSelect>
+
+                <MudAutocomplete T="long"
+                                 @bind-Value="_model.RatingScaleId"
+                                 Label="Rating Scale"
+                                 Variant="Variant.Outlined"
+                                 SearchFunc="SearchRatingScales"
+                                 ToStringFunc="GetRatingScaleName" />
+
+                <MudTextField @bind-Value="_model.QuestionsPerEvaluation"
+                               Label="@UIConstants.FormTemplate.QuestionsPerEvaluationLabel"
+                               HelperText="@UIConstants.FormTemplate.QuestionsPerEvaluationHelper"
+                               Variant="Variant.Outlined"
+                               For="@(() => _model.QuestionsPerEvaluation)"
+                               InputType="InputType.Number" />
+
+                <MudSwitch @bind-Value="_model.HasYesNo"
+                           Label="@UIConstants.FormQuestion.HasYesNoLabel"
+                           Color="Color.Primary" />
+
+                <MudSwitch @bind-Value="_model.HasComment"
+                           Label="@UIConstants.FormQuestion.HasCommentLabel"
+                           Color="Color.Primary" />
+
+                @if (IsEdit)
+                {
+                    <MudSwitch @bind-Value="_model.IsActive"
+                               Label="@UIConstants.Common.Active"
+                               Color="Color.Success" />
+                }
+
+            </MudStack>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@UIConstants.Common.Cancel</MudButton>
+        <MudButton Color="Color.Primary"
+                   OnClick="Submit"
+                   Disabled="@(_saving || !HasChanged())">
+            @if (_saving)
+            {
+                <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
+            }
+            @(IsEdit ? UIConstants.Common.Update : UIConstants.Common.Create)
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    // ── Parameters ────────────────────────────────────────────────────────────
+    [CascadingParameter] private IMudDialogInstance? _mudDialog { get; set; }
+
+    /// <summary>Pass a FormTemplateDto to open in Edit mode. Leave null for Create mode.</summary>
+    [Parameter] public FormTemplateDto? FormTemplate { get; set; }
+
+    // ── Computed ──────────────────────────────────────────────────────────────
+    private bool IsEdit => FormTemplate is not null;
+
+    // ── State ─────────────────────────────────────────────────────────────────
+    private MudForm? _form;
+    private bool _saving;
+    private FormTemplateFormModel _model = new();
+    private Dictionary<string, string> _serverErrors = new();
+    private bool _loaded;
+
+    private List<LookUpDto> _ratingScales = new();
+
+    // Validators instantiated once; no need to recreate per render.
+    private readonly CreateFormTemplateValidator _createValidator = new();
+    private readonly UpdateFormTemplateValidator _updateValidator = new();
+
+    // ── Lifecycle ─────────────────────────────────────────────────────────────
+    protected override async Task OnInitializedAsync()
+    {
+        _ratingScales = await LookupState.GetRatingScalesAsync();
+
+        if (FormTemplate is not null)
+            _model = FormTemplate.Adapt<FormTemplateFormModel>();
+
+        _loaded = true;
+        await base.OnInitializedAsync();
+    }
+
+    // ── Actions ───────────────────────────────────────────────────────────────
+
+    private async Task Submit()
+    {
+        _serverErrors.Clear();
+
+        await _form!.Validate();
+        if (!_form.IsValid)
+        {
+            Snackbar.Add(UIConstants.Common.ValidationFailed, Severity.Warning);
+            return;
+        }
+
+        _saving = true;
+        try
+        {
+            if (IsEdit)
+            {
+                var dto = _model.Adapt<UpdateFormTemplateDto>();
+                var response = await FormTemplateApiClient.UpdateAsync(FormTemplate!.Id, dto);
+
+                if (response.Success)
+                    _mudDialog?.Close(DialogResult.Ok(true));
+                else
+                    Snackbar.Add(response.Message ?? UIConstants.Common.UpdateFailed, Severity.Error);
+            }
+            else
+            {
+                var dto = _model.Adapt<CreateFormTemplateDto>();
+                var response = await FormTemplateApiClient.CreateAsync(dto);
+
+                if (response.Success)
+                    _mudDialog?.Close(DialogResult.Ok(true));
+                else
+                    Snackbar.Add(response.Message ?? UIConstants.Common.CreateFailed, Severity.Error);
+            }
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.BadRequest)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ValidationFailed, Severity.Error);
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            var errorMessage = error?.Message ?? UIConstants.Common.DuplicateEntry;
+
+            if (errorMessage.Contains(nameof(_model.Name), StringComparison.OrdinalIgnoreCase))
+                _serverErrors[nameof(_model.Name)] = errorMessage;
+            else
+                _serverErrors[nameof(_model.Name)] = errorMessage;
+
+            await _form!.Validate();
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void Cancel() => _mudDialog?.Cancel();
+
+    // ── Autocomplete Helpers ──────────────────────────────────────────────────
+
+    private Task<IEnumerable<long>> SearchRatingScales(string value, CancellationToken _)
+    {
+        var query = string.IsNullOrWhiteSpace(value)
+            ? _ratingScales
+            : _ratingScales.Where(x => x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
+        return Task.FromResult(query.Select(x => x.Id).ToList().AsEnumerable());
+    }
+
+    private string GetRatingScaleName(long id)
+    {
+        return _ratingScales.FirstOrDefault(x => x.Id == id)?.Name ?? string.Empty;
+    }
+
+    // ── Validation ────────────────────────────────────────────────────────────
+
+    private async Task<IEnumerable<string>> ValidateField(object model, string propertyName)
+    {
+        IEnumerable<string> fluentErrors;
+
+        if (IsEdit)
+        {
+            var fn = _updateValidator.ValidateMappedValue<FormTemplateFormModel, UpdateFormTemplateDto>(_model, _serverErrors);
+            fluentErrors = await fn(model, propertyName);
+        }
+        else
+        {
+            var fn = _createValidator.ValidateMappedValue<FormTemplateFormModel, CreateFormTemplateDto>(_model, _serverErrors);
+            fluentErrors = await fn(model, propertyName);
+        }
+
+        var errorList = fluentErrors.ToList();
+
+        if (_serverErrors.TryGetValue(propertyName, out var serverError))
+            errorList.Add(serverError);
+
+        return errorList;
+    }
+
+    private bool HasChanged()
+    {
+        if (!IsEdit) return true;
+
+        return _model.Name != FormTemplate!.Name ||
+               _model.FormType != FormTemplate.FormType ||
+               _model.RatingScaleId != FormTemplate.RatingScaleId ||
+               _model.IsActive != FormTemplate.IsActive ||
+               _model.QuestionsPerEvaluation != FormTemplate.QuestionsPerEvaluation ||
+               _model.HasYesNo != FormTemplate.HasYesNo ||
+               _model.HasComment != FormTemplate.HasComment;
+    }
+}

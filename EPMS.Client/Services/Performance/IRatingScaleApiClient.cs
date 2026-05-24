@@ -15,6 +15,9 @@ public interface IRatingScaleApiClient
     [Get("/api/performance/rating-scales/{id}")]
     Task<SuccessResponse<RatingScaleDto>> GetByIdAsync(long id);
 
+    [Get("/api/performance/rating-scales/by-rating/{rating}")]
+    Task<SuccessResponse<RatingScaleDto>> GetByRatingAsync(int rating);
+
     [Post("/api/performance/rating-scales")]
     Task<SuccessResponse<long>> CreateAsync([Body] CreateRatingScaleDto dto);
 
@@ -23,10 +26,4 @@ public interface IRatingScaleApiClient
 
     [Delete("/api/performance/rating-scales/{id}")]
     Task<SuccessResponse> DeleteAsync(long id);
-
-    [Post("/api/performance/rating-scales/{id}/deactivate")]
-    Task<SuccessResponse> DeactivateAsync(long id);
-
-    [Post("/api/performance/rating-scales/{id}/reactivate")]
-    Task<SuccessResponse> ReactivateAsync(long id);
 }

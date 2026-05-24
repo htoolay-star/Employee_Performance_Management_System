@@ -24,7 +24,11 @@
         <MudForm @ref="_form" Model="@_model" Validation="@ValidateField">
             <MudStack Spacing="3">
 
-                @if (!IsEdit)
+                @if (!_loaded)
+                {
+                    <MudText>Loading...</MudText>
+                }
+                else if (!IsEdit)
                 {
                     <MudAutocomplete T="long?"
                                      Value="@_selectedEmployeeId"
@@ -37,8 +41,7 @@
                                      ResetValueOnEmptyText="true" />
 
                     <MudSelect T="long"
-                               Value="@_model.CycleId"
-                               ValueChanged="@(v => _model.CycleId = v)"
+                               @bind-Value="_model.CycleId"
                                Label="Cycle"
                                For="@(() => _model.CycleId)"
                                Variant="Variant.Outlined">
@@ -49,73 +52,63 @@
                     </MudSelect>
 
                     <MudAutocomplete T="long?"
-                                     Value="@_selectedKPIId"
-                                     ValueChanged="@(v => { _selectedKPIId = v; _model.KPIId = v; })"
+                                     @bind-Value="_model.KPIId"
                                      Label="KPI"
                                      For="@(() => _model.KPIId)"
                                      Variant="Variant.Outlined"
                                      SearchFunc="SearchKPIs"
                                      ToStringFunc="GetKPIDisplay"
+                                     Clearable="true"
                                      ResetValueOnEmptyText="true" />
 
-                    <MudSelect T="long"
-                               @bind-Value="_model.PriorityId"
-                               Label="Priority"
-                               For="@(() => _model.PriorityId)"
-                               Variant="Variant.Outlined">
-                        @foreach (var p in _priorities)
-                        {
-                            <MudSelectItem Value="@p.Id" @key="p.Id">@p.LevelName (@p.MinWeight%-@p.MaxWeight%)</MudSelectItem>
-                        }
-                    </MudSelect>
+                    <MudTextField @bind-Value="_model.Weightage"
+                                  @bind-Value:after="() => AutoSetPriority()"
+                                  Label="Weightage (%)"
+                                  For="@(() => _model.Weightage)"
+                                  Variant="Variant.Outlined"
+                                  InputType="InputType.Number" />
 
-                    <MudNumericField @bind-Value="_model.Weightage"
-                                     Label="Weightage (%)"
-                                     For="@(() => _model.Weightage)"
-                                     Variant="Variant.Outlined" />
+                    <MudTextField Value="@GetPriorityDisplay()"
+                                  Label="Priority"
+                                  Variant="Variant.Outlined"
+                                  ReadOnly="true" />
 
                     <MudTextField @bind-Value="_model.TargetValue"
                                   Label="Target Value"
                                   For="@(() => _model.TargetValue)"
-                                  Variant="Variant.Outlined" />
+                                  Variant="Variant.Outlined"
+                                  InputType="InputType.Number" />
 
                     <MudTextField @bind-Value="_model.TargetUnit"
-                                  Label="Target Unit"
+                                  Label="Unit"
                                   For="@(() => _model.TargetUnit)"
                                   Variant="Variant.Outlined" />
                 }
                 else
                 {
-                    <MudText Typo="Typo.body2" Color="Color.Primary">
-                        <strong>Employee:</strong> @Kpi!.EmployeeName
-                    </MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Primary">
-                        <strong>KPI:</strong> @Kpi.KPIName (@Kpi.KPICode)
-                    </MudText>
+                    <MudTextField Value="@Kpi!.EmployeeName" Label="Employee" Variant="Variant.Outlined" ReadOnly="true" />
+                    <MudTextField Value="@Kpi.KPIName" Label="KPI" Variant="Variant.Outlined" ReadOnly="true" />
 
-                    <MudSelect T="long"
-                               @bind-Value="_model.PriorityId"
-                               Label="Priority"
-                               For="@(() => _model.PriorityId)"
-                               Variant="Variant.Outlined">
-                        @foreach (var p in _priorities)
-                        {
-                            <MudSelectItem T="long" Value="@p.Id" @key="p.Id">@p.LevelName (@p.MinWeight%-@p.MaxWeight%)</MudSelectItem>
-                        }
-                    </MudSelect>
+                    <MudTextField @bind-Value="_model.Weightage"
+                                  @bind-Value:after="() => AutoSetPriority()"
+                                  Label="Weightage (%)"
+                                  For="@(() => _model.Weightage)"
+                                  Variant="Variant.Outlined"
+                                  InputType="InputType.Number" />
 
-                    <MudNumericField @bind-Value="_model.Weightage"
-                                     Label="Weightage (%)"
-                                     For="@(() => _model.Weightage)"
-                                     Variant="Variant.Outlined" />
+                    <MudTextField Value="@GetPriorityDisplay()"
+                                  Label="Priority"
+                                  Variant="Variant.Outlined"
+                                  ReadOnly="true" />
 
                     <MudTextField @bind-Value="_model.TargetValue"
                                   Label="Target Value"
                                   For="@(() => _model.TargetValue)"
-                                  Variant="Variant.Outlined" />
+                                  Variant="Variant.Outlined"
+                                  InputType="InputType.Number" />
 
                     <MudTextField @bind-Value="_model.TargetUnit"
-                                  Label="Target Unit"
+                                  Label="Unit"
                                   For="@(() => _model.TargetUnit)"
                                   Variant="Variant.Outlined" />
                 }
@@ -149,11 +142,11 @@
 
     private MudForm? _form;
     private bool _saving;
+    private bool _loaded;
     private EmployeeKPIFormModel _model = new();
     private Dictionary<string, string> _serverErrors = new();
 
     private long? _selectedEmployeeId;
-    private long? _selectedKPIId;
 
     private List<AppraisalCycleDto> _cycles = new();
     private List<KPIMasterDto> _kpis = new();
@@ -177,7 +170,6 @@
         if (IsEdit)
         {
             _model = Kpi!.Adapt<EmployeeKPIFormModel>();
-            _selectedKPIId = Kpi.KPIId;
             _selectedEmployeeId = Kpi.EmployeeId;
         }
         else
@@ -188,9 +180,10 @@
                 _model.CycleId = PrefilledCycleId.Value;
             else if (_cycles.Any())
                 _model.CycleId = _cycles.First().Id;
-            if (_priorities.Any())
-                _model.PriorityId = _priorities.First().Id;
         }
+
+        AutoSetPriority();
+        _loaded = true;
     }
 
     private async Task Submit()
@@ -261,13 +254,34 @@
             errors.Add("KPI is required.");
         if (propertyName == nameof(_model.PriorityId) && _model.PriorityId <= 0)
             errors.Add("Priority is required.");
-        if (propertyName == nameof(_model.Weightage) && (_model.Weightage < 0 || _model.Weightage > 100))
-            errors.Add("Weightage must be between 0 and 100.");
+        if (propertyName == nameof(_model.Weightage))
+        {
+            if (_model.Weightage < 0 || _model.Weightage > 100)
+                errors.Add("Weightage must be between 0 and 100.");
+            else if (_model.PriorityId > 0)
+            {
+                var priority = _priorities.FirstOrDefault(p => p.Id == _model.PriorityId);
+                if (priority != null && (_model.Weightage < priority.MinWeight || _model.Weightage > priority.MaxWeight))
+                    errors.Add($"Weightage must be between {priority.MinWeight}% and {priority.MaxWeight}% for the selected priority.");
+            }
+        }
 
         if (_serverErrors.TryGetValue(propertyName, out var serverError))
             errors.Add(serverError);
 
         return errors;
+    }
+
+    private void AutoSetPriority()
+    {
+        var match = _priorities.FirstOrDefault(p => _model.Weightage >= p.MinWeight && _model.Weightage <= p.MaxWeight);
+        _model.PriorityId = match?.Id ?? 0;
+    }
+
+    private string GetPriorityDisplay()
+    {
+        var p = _priorities.FirstOrDefault(x => x.Id == _model.PriorityId);
+        return p != null ? $"{p.LevelName} ({p.MinWeight}%-{p.MaxWeight}%)" : string.Empty;
     }
 
     private bool HasChanged()
@@ -308,6 +322,7 @@
     {
         if (id == null) return string.Empty;
         var kpi = _kpis.FirstOrDefault(x => x.Id == id);
-        return kpi != null ? $"{kpi.Code} - {kpi.Name}" : id.ToString()!;
+        return kpi != null ? kpi.Name : id.ToString()!;
     }
+
 }

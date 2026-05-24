@@ -3,6 +3,7 @@
 @using EPMS.Client.Services.Hr
 @using EPMS.Client.Services.Auth
 @using EPMS.Client.Services.Info
+@using EPMS.Client.Services.Performance
 @using EPMS.Shared.Constants
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.EmployeeInfoDTOs
@@ -20,12 +21,20 @@
 @inject NavigationManager Navigation
 @inject LookupStateService LookupState
 @inject IJSRuntime JS
+@inject CurrentUserPermissionService PermService
 
 <PageTitle>@UIConstants.Employee.PageTitle - EPMS</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
     <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.Employee.PageTitle</MudText>
 
+    @if (!_canView)
+    {
+        <MudAlert Severity="Severity.Warning" Class="mb-4">You do not have permission to view employees.</MudAlert>
+    }
+
+    @if (_canView)
+    {
     <MudPaper Elevation="2" Class="pa-4">
 
         @* ── Toolbar ──────────────────────────────────────────────────── *@
@@ -58,7 +67,7 @@
                         @if (dept != null)
                         {
                             <MudStack Row="true" AlignItems="AlignItems.Center">
-                                <MudText>@dept.Code</MudText>
+                                <MudText>@dept.Name</MudText>
                                 @if (!dept.IsActive)
                                 {
                                         <MudTooltip Text="This department is inactive" Placement="Placement.Right">
@@ -86,7 +95,7 @@
                         @if (team != null)
                         {
                             <MudStack Row="true" AlignItems="AlignItems.Center">
-                                <MudText>@team.Code</MudText>
+                                <MudText>@team.Name</MudText>
                                 @if (!team.IsActive)
                                 {
                                         <MudTooltip Text="This team is inactive" Placement="Placement.Right">
@@ -114,7 +123,7 @@
                         @if (pos != null)
                         {
                             <MudStack Row="true" AlignItems="AlignItems.Center">
-                                <MudText>@pos.Code</MudText>
+                                <MudText>@pos.Name</MudText>
                                 @if (!pos.IsActive)
                                 {
                                         <MudTooltip Text="This position is inactive" Placement="Placement.Right">
@@ -132,6 +141,8 @@
                                   SortDirection="@_sortDirection"
                                   SortColumns="@_sortableColumns"
                                   OnSortChanged="OnSortChanged" />
+                @if (_canCreate)
+                {
                 <MudButton Variant="Variant.Outlined" Color="Color.Info"
                            StartIcon="@Icons.Material.Filled.Download"
                            OnClick="DownloadTemplateAsync">
@@ -145,16 +156,20 @@
                         </MudButton>
                     </ActivatorContent>
                 </MudFileUpload>
+                }
                 <MudButton Variant="Variant.Outlined" Color="Color.Success"
                            StartIcon="@Icons.Material.Filled.FileDownload"
                            OnClick="ExportAsync">
                     Export
                 </MudButton>
+                @if (_canCreate)
+                {
                 <MudButton Variant="Variant.Filled" Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.Add"
                            OnClick="OpenCreateWizardAsync">
                     Add Employee
                 </MudButton>
+                }
             </MudStack>
 
         </MudStack>
@@ -202,12 +217,23 @@
 
                 <TemplateColumn Title="@UIConstants.Employee.ColumnActions" Sortable="false">
                     <CellTemplate>
-                        <MudTooltip Text="View Details" Placement="Placement.Top">
-                            <MudIconButton Icon="@Icons.Material.Filled.Visibility"
-                                           Color="Color.Info"
-                                           Size="Size.Small"
-                                           OnClick="@(() => NavigateToDetail(context.Item.Id))" />
-                        </MudTooltip>
+                        <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center">
+                            <MudTooltip Text="View Details" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                               Color="Color.Info"
+                                               Size="Size.Small"
+                                               OnClick="@(() => NavigateToDetail(context.Item.Id))" />
+                            </MudTooltip>
+                            @if (_canViewEntityKpi)
+                            {
+                                <MudTooltip Text="View KPI" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.FactCheck"
+                                                   Color="Color.Info"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => OpenViewKpiDialog(context.Item))" />
+                                </MudTooltip>
+                            }
+                        </MudStack>
                     </CellTemplate>
                 </TemplateColumn>
 
@@ -232,6 +258,7 @@
         </MudDataGrid>
 
     </MudPaper>
+    }
 </MudContainer>
 
 @code {
@@ -240,6 +267,17 @@
     private bool _importing = false;
     private byte[]? _importFileBytes;
     private string? _importFileName;
+    private bool _canView;
+    private bool _canCreate;
+    private bool _canViewEntityKpi;
+
+    private static readonly DialogOptions _kpiDialogOptions = new()
+    {
+        CloseOnEscapeKey = true,
+        MaxWidth = MaxWidth.Large,
+        FullWidth = true
+    };
+
     
     // Filters
     private string _searchString = string.Empty;
@@ -266,12 +304,19 @@
             var deptTask = LookupState.GetDepartmentsAsync();
             var teamTask = LookupState.GetTeamsAsync();
             var posTask = LookupState.GetPositionsAsync();
+            var permTask = PermService.GetPermissionsAsync();
 
-            await Task.WhenAll(deptTask, teamTask, posTask);
+            await Task.WhenAll(deptTask, teamTask, posTask, permTask);
 
             _departments = await deptTask;
             _teams = await teamTask;
             _positions = await posTask;
+
+            var perms = await permTask;
+            var permSet = new HashSet<string>(perms);
+            _canView = permSet.Contains("EMPLOYEES.VIEW");
+            _canCreate = permSet.Contains("EMPLOYEES.CREATE");
+            _canViewEntityKpi = permSet.Contains("ENTITYKPI.VIEW");
         }
         catch (Exception)
         {
@@ -369,7 +414,7 @@
     {
         var query = _departments.AsQueryable();
         if (!string.IsNullOrWhiteSpace(value))
-            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(x => x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
         return Task.FromResult(query.Select(x => (long?)x.Id).AsEnumerable());
     }
 
@@ -378,14 +423,14 @@
         if (id == null) return string.Empty;
         var dept = _departments.FirstOrDefault(x => x.Id == id);
         if (dept == null) return string.Empty;
-        return dept.IsActive ? dept.Code : $"{dept.Code} (Inactive)";
+        return dept.IsActive ? dept.Name : $"{dept.Name} (Inactive)";
     }
 
     private Task<IEnumerable<long?>> SearchFilterTeams(string value, CancellationToken token)
     {
         var query = _teams.AsQueryable();
         if (!string.IsNullOrWhiteSpace(value))
-            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(x => x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
         return Task.FromResult(query.Select(x => (long?)x.Id).AsEnumerable());
     }
 
@@ -394,14 +439,14 @@
         if (id == null) return string.Empty;
         var team = _teams.FirstOrDefault(x => x.Id == id);
         if (team == null) return string.Empty;
-        return team.IsActive ? team.Code : $"{team.Code} (Inactive)";
+        return team.IsActive ? team.Name : $"{team.Name} (Inactive)";
     }
 
     private Task<IEnumerable<long?>> SearchFilterPositions(string value, CancellationToken token)
     {
         var query = _positions.AsQueryable();
         if (!string.IsNullOrWhiteSpace(value))
-            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(x => x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
         return Task.FromResult(query.Select(x => (long?)x.Id).AsEnumerable());
     }
 
@@ -410,7 +455,7 @@
         if (id == null) return string.Empty;
         var pos = _positions.FirstOrDefault(x => x.Id == id);
         if (pos == null) return string.Empty;
-        return pos.IsActive ? pos.Code : $"{pos.Code} (Inactive)";
+        return pos.IsActive ? pos.Name : $"{pos.Name} (Inactive)";
     }
 
     private async Task RefreshDataAsync()
@@ -422,6 +467,18 @@
     private void NavigateToDetail(long id)
     {
         Navigation.NavigateTo($"/hr/employees/{id}");
+    }
+
+    private async Task OpenViewKpiDialog(EmployeeProfileGridItemDto employee)
+    {
+        var parameters = new DialogParameters<EmployeeKpiViewDialog>
+        {
+            { x => x.EmployeeId, employee.Id },
+            { x => x.EmployeeName, employee.StaffName }
+        };
+
+        await DialogService.ShowAsync<EmployeeKpiViewDialog>(
+            $"{UIConstants.Employee.ViewKpiDialogTitle} — {employee.StaffName}", parameters, _kpiDialogOptions);
     }
 
     private async Task OpenCreateWizardAsync()

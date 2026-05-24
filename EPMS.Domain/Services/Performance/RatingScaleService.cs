@@ -60,11 +60,20 @@ public class RatingScaleService : IRatingScaleService
         if (await _uow.Perf.RatingScales.RatingExistsAsync(dto.Rating))
             return SuccessResponse<long>.Fail(string.Format(RatingScaleMsg.DuplicateRating, dto.Rating), ErrorType.Conflict);
 
+        // Validate label uniqueness
+        if (await _uow.Perf.RatingScales.LabelExistsAsync(dto.Label))
+            return SuccessResponse<long>.Fail(string.Format(RatingScaleMsg.DuplicateLabel, dto.Label), ErrorType.Conflict);
+
         // Validate score bounds
         if (dto.MinScore > dto.MaxScore)
             return SuccessResponse<long>.Fail(RatingScaleMsg.MinGreaterThanMax, ErrorType.Validation);
 
+        // Validate no overlap with existing ranges
+        if (await _uow.Perf.RatingScales.HasOverlapAsync(dto.MinScore, dto.MaxScore))
+            return SuccessResponse<long>.Fail(RatingScaleMsg.ScoreRangeOverlap, ErrorType.Validation);
+
         var ratingScale = new RatingScale(dto.Rating, dto.Label, dto.MinScore, dto.MaxScore);
+        ratingScale.UpdateDetails(dto.PromotionEligibility, dto.Description);
 
         _uow.Perf.RatingScales.Add(ratingScale);
         await _uow.CompleteAsync();
@@ -88,11 +97,22 @@ public class RatingScaleService : IRatingScaleService
         {
             var minScore = dto.MinScore ?? ratingScale.MinScore;
             var maxScore = dto.MaxScore ?? ratingScale.MaxScore;
+
+            // Validate no overlap with existing ranges (excluding self)
+            if (await _uow.Perf.RatingScales.HasOverlapAsync(minScore, maxScore, id))
+                return SuccessResponse.Fail(RatingScaleMsg.ScoreRangeOverlap, ErrorType.Validation);
+
             ratingScale.UpdateBounds(minScore, maxScore);
         }
 
         // Update additional details
-        ratingScale.UpdateDetails(dto.PerformanceLevel, dto.PromotionEligibility, dto.Description);
+        ratingScale.UpdateDetails(dto.PromotionEligibility, dto.Description);
+
+        if (dto.IsActive.HasValue)
+        {
+            if (dto.IsActive.Value) ratingScale.Reactivate();
+            else ratingScale.Deactivate();
+        }
 
         await _uow.CompleteAsync();
         return SuccessResponse.Ok(RatingScaleMsg.Updated);
@@ -111,32 +131,7 @@ public class RatingScaleService : IRatingScaleService
         return SuccessResponse.Ok(RatingScaleMsg.Deleted);
     }
 
-    public async Task<SuccessResponse> DeactivateAsync(long id)
-    {
-        var ratingScale = await _uow.Perf.RatingScales.GetByIdAsync(id);
-
-        if (ratingScale == null)
-            return SuccessResponse.Fail(RatingScaleMsg.NotFound(id), ErrorType.NotFound);
-
-        ratingScale.Deactivate();
-        await _uow.CompleteAsync();
-
-        return SuccessResponse.Ok(RatingScaleMsg.Deactivated);
-    }
-
-    public async Task<SuccessResponse> ReactivateAsync(long id)
-    {
-        var ratingScale = await _uow.Perf.RatingScales.GetByIdAsync(id);
-
-        if (ratingScale == null)
-            return SuccessResponse.Fail(RatingScaleMsg.NotFound(id), ErrorType.NotFound);
-
-        ratingScale.Reactivate();
-        await _uow.CompleteAsync();
-
-        return SuccessResponse.Ok(RatingScaleMsg.Reactivated);
-    }
-        public async Task<SuccessResponse> RestoreAsync(long id)
+    public async Task<SuccessResponse> RestoreAsync(long id)
         {
             var entity = await _uow.Perf.RatingScales.GetByIdAsync(id);
             if (entity == null)

@@ -1,0 +1,35 @@
+@inherits LayoutComponentBase
+@using MudBlazor
+@using EPMS.Client.Themes
+@inject IJSRuntime JS
+
+<MudThemeProvider Theme="EPMSTheme.GetTheme()" IsDarkMode="@_isDarkMode" />
+
+<div class="mud-layout @(_isDarkMode ? "theme-dark" : "theme-light")" style="min-height: 100vh; overflow: hidden;">
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4 d-flex justify-center align-center" Style="min-height: 100vh;">
+        @Body
+    </MudContainer>
+</div>
+
+@code {
+    bool _isDarkMode = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var stored = await JS.InvokeAsync<string>("localStorage.getItem", "epms-dark-mode");
+            _isDarkMode = stored == "true";
+        }
+        catch
+        {
+            _isDarkMode = false;
+        }
+    }
+}
+
+<style>
+    html, body, #app {
+        background-color: @(_isDarkMode ? "#252540" : "#FAFAFA") !important;
+    }
+</style>

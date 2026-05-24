@@ -1,33 +1,75 @@
 @inherits LayoutComponentBase
 @using MudBlazor
 @using EPMS.Client.Themes
+@inject IJSRuntime JS
 
-<MudLayout>
+<MudThemeProvider Theme="EPMSTheme.GetTheme()" IsDarkMode="@_isDarkMode" />
+
+<MudLayout Class="@(_isDarkMode ? "theme-dark" : "theme-light")">
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="ToggleDrawer" />
-        <MudText Typo="Typo.h5" Class="ml-3">EPMS</MudText>
         <MudSpacer />
+        <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.DarkMode : Icons.Material.Filled.LightMode)"
+                       Color="Color.Inherit"
+                       OnClick="ToggleTheme" />
         <LoginDisplay />
     </MudAppBar>
-    <MudDrawer @bind-Open="_drawerOpen" Elevation="2">
-        <MudDrawerHeader>
-            <MudText Typo="Typo.h6">EPMS Navigation</MudText>
+    <MudDrawer @bind-Open="_drawerOpen" Variant="DrawerVariant.Mini" Elevation="2" Width="300px" Style="--mud-drawer-width-mini: 56px;">
+        <MudDrawerHeader Class="@(_drawerOpen ? "" : "drawer-header-collapsed")">
+            <MudLink Href="/dashboard" Underline="Underline.None" Class="d-flex align-center justify-center" Style="width: 100%;">
+                @if (_drawerOpen)
+                {
+                    <img src="@(_isDarkMode ? "ACE-dark.svg" : "ACE.svg")" alt="ACE" class="drawer-logo" />
+                }
+                else
+                {
+                    <img src="@(_isDarkMode ? "ACE-mini-dark.svg" : "ACE-mini.svg")" alt="ACE" class="drawer-logo-collapsed" />
+                }
+            </MudLink>
         </MudDrawerHeader>
-        <NavMenu />
+        <div class="@(_drawerOpen ? "" : "drawer-collapsed")">
+            <NavMenu DrawerCollapsed="@(!_drawerOpen)" />
+        </div>
     </MudDrawer>
     <MudMainContent>
         <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
             @Body
         </MudContainer>
     </MudMainContent>
-    <MudPopoverProvider />
 </MudLayout>
 
 @code {
     bool _drawerOpen = true;
+    bool _isDarkMode = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var stored = await JS.InvokeAsync<string>("localStorage.getItem", "epms-dark-mode");
+            _isDarkMode = stored == "true";
+        }
+        catch
+        {
+            _isDarkMode = false;
+        }
+    }
 
     void ToggleDrawer()
     {
         _drawerOpen = !_drawerOpen;
     }
+
+    async Task ToggleTheme()
+    {
+        _isDarkMode = !_isDarkMode;
+
+        await JS.InvokeVoidAsync("localStorage.setItem", "epms-dark-mode", _isDarkMode.ToString().ToLower());
+    }
 }
+
+<style>
+    html, body, #app {
+        background-color: @(_isDarkMode ? "#252540" : "#FAFAFA") !important;
+    }
+</style>

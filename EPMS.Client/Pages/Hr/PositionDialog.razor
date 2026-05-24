@@ -60,7 +60,7 @@
                 @if (level != null)
                 {
                     <MudStack Row="true" AlignItems="AlignItems.Center">
-                        <MudText>@level.Code</MudText>
+                        <MudText>@level.Name</MudText>
                         @if (!level.IsActive)
                         {
                                 <MudTooltip Text="This level is inactive" Placement="Placement.Right">
@@ -256,7 +256,7 @@
             return AvailableLevels.Select(x => (long?)x.Id).ToList();
 
         return AvailableLevels
-            .Where(x => x.Code != null && x.Code.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Where(x => x.Name != null && x.Name.Contains(value, StringComparison.OrdinalIgnoreCase))
             .Select(x => (long?)x.Id)
             .ToList();
     }
@@ -267,6 +267,6 @@
         var level = AvailableLevels.FirstOrDefault(x => x.Id == id);
         if (level == null) return string.Empty;
 
-        return level.IsActive ? level.Code : $"{level.Code} (Inactive)";
+        return level.IsActive ? level.Name : $"{level.Name} (Inactive)";
     }
 }

@@ -8,10 +8,9 @@ public interface IQuestionRatingScaleService
     Task<SuccessResponse<IEnumerable<QuestionRatingScaleDto>>> GetAllAsync();
     Task<SuccessResponse<QuestionRatingScaleDto>> GetByIdAsync(long id);
     Task<SuccessResponse<IEnumerable<QuestionRatingScaleDto>>> GetActiveAsync();
+    Task<SuccessResponse<IEnumerable<LookUpDto>>> GetLookupAsync();
     Task<SuccessResponse<long>> CreateAsync(CreateQuestionRatingScaleDto dto);
     Task<SuccessResponse> UpdateAsync(long id, UpdateQuestionRatingScaleDto dto);
     Task<SuccessResponse> RestoreAsync(long id);
-        Task<SuccessResponse> DeleteAsync(long id);
-    Task<SuccessResponse> DeactivateAsync(long id);
-    Task<SuccessResponse> ReactivateAsync(long id);
+    Task<SuccessResponse> DeleteAsync(long id);
 }

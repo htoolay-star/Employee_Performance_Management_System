@@ -33,4 +33,17 @@ public class RatingScaleRepository : GenericRepository<RatingScale>, IRatingScal
     {
         return await _dbSet.AnyAsync(rs => rs.Rating == rating && rs.Id != excludeId && !rs.IsDeleted);
     }
+
+    public async Task<bool> LabelExistsAsync(string label, long? excludeId = null)
+    {
+        return await _dbSet.AnyAsync(rs =>
+            rs.Label == label && rs.Id != (excludeId ?? 0) && !rs.IsDeleted);
+    }
+
+    public async Task<bool> HasOverlapAsync(decimal minScore, decimal maxScore, long? excludeId = null)
+    {
+        return await _dbSet.AnyAsync(rs =>
+            rs.MinScore < maxScore && rs.MaxScore > minScore
+            && rs.Id != (excludeId ?? 0) && !rs.IsDeleted);
+    }
 }

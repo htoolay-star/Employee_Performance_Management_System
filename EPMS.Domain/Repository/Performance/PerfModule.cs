@@ -29,6 +29,7 @@ public class PerfModule(IServiceProvider serviceProvider) : IPerfModule
     private IEmployeeKPIRepository? _perfEmployeeKPIRepository;
     private IEmployeeKPIHistoryRepository? _perfEmployeeKPIHistoryRepository;
     private IQuestionRatingScaleRepository? _perfQuestionRatingScaleRepository;
+    private IQuestionRatingScaleLevelRepository? _perfQuestionRatingScaleLevelRepository;
     private IPositionPIPTemplateRepository? _perfPositionPIPTemplateRepository;
     private IPositionFormTemplateRepository? _perfPositionFormTemplateRepository;
     private IPIPObjectiveRepository? _perfPIPObjectiveRepository;
@@ -83,6 +84,9 @@ public class PerfModule(IServiceProvider serviceProvider) : IPerfModule
 
     public IQuestionRatingScaleRepository QuestionRatingScales =>
         _perfQuestionRatingScaleRepository ??= serviceProvider.GetRequiredService<IQuestionRatingScaleRepository>();
+
+    public IQuestionRatingScaleLevelRepository QuestionRatingScaleLevels =>
+        _perfQuestionRatingScaleLevelRepository ??= serviceProvider.GetRequiredService<IQuestionRatingScaleLevelRepository>();
 
     public IPositionPIPTemplateRepository PositionPIPTemplates =>
         _perfPositionPIPTemplateRepository ??= serviceProvider.GetRequiredService<IPositionPIPTemplateRepository>();

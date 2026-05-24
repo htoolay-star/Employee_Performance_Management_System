@@ -1,0 +1,73 @@
+Using launch settings from C:\OJT-21\EMPS_FInal_Project_Team(5)\EPMS_Solution\EPMS.Api\Properties\launchSettings.json...
+info: Hangfire.SqlServer.SqlServerObjectsInstaller[0]
+      Start installing Hangfire SQL objects...
+info: Hangfire.SqlServer.SqlServerObjectsInstaller[0]
+      Hangfire SQL objects installed.
+warn: Microsoft.EntityFrameworkCore.Model.Validation[10622]
+      Entity 'User' has a global query filter defined and is the required end of a relationship with the entity 'Notification'. This may lead to unexpected results when the required entity is filtered out. Either configure the navigation as optional, or define matching query filters for both entities in the navigation. See https://go.microsoft.com/fwlink/?linkid=2131316 for more information.
+warn: Microsoft.EntityFrameworkCore.Model.Validation[10622]
+      Entity 'User' has a global query filter defined and is the required end of a relationship with the entity 'PasswordResetRequest'. This may lead to unexpected results when the required entity is filtered out. Either configure the navigation as optional, or define matching query filters for both entities in the navigation. See https://go.microsoft.com/fwlink/?linkid=2131316 for more information.
+warn: Microsoft.EntityFrameworkCore.Model.Validation[10622]
+      Entity 'User' has a global query filter defined and is the required end of a relationship with the entity 'UserRefreshToken'. This may lead to unexpected results when the required entity is filtered out. Either configure the navigation as optional, or define matching query filters for both entities in the navigation. See https://go.microsoft.com/fwlink/?linkid=2131316 for more information.
+warn: Microsoft.EntityFrameworkCore.Model.Validation[10622]
+      Entity 'Department' has a global query filter defined and is the required end of a relationship with the entity 'EmployeeEmploymentHistory'. This may lead to unexpected results when the required entity is filtered out. Either configure the navigation as optional, or define matching query filters for both entities in the navigation. See https://go.microsoft.com/fwlink/?linkid=2131316 for more information.
+warn: Microsoft.EntityFrameworkCore.Model.Validation[10622]
+      Entity 'EmployeeProfile' has a global query filter defined and is the required end of a relationship with the entity 'EmployeeSalaryHistory'. This may lead to unexpected results when the required entity is filtered out. Either configure the navigation as optional, or define matching query filters for both entities in the navigation. See https://go.microsoft.com/fwlink/?linkid=2131316 for more information.
+warn: Microsoft.EntityFrameworkCore.Model.Validation[10622]
+      Entity 'Appraisal' has a global query filter defined and is the required end of a relationship with the entity 'AppraisalStatusHistory'. This may lead to unexpected results when the required entity is filtered out. Either configure the navigation as optional, or define matching query filters for both entities in the navigation. See https://go.microsoft.com/fwlink/?linkid=2131316 for more information.
+warn: Microsoft.EntityFrameworkCore.Model.Validation[10622]
+      Entity 'AppraisalCycle' has a global query filter defined and is the required end of a relationship with the entity 'EmployeeKPIHistory'. This may lead to unexpected results when the required entity is filtered out. Either configure the navigation as optional, or define matching query filters for both entities in the navigation. See https://go.microsoft.com/fwlink/?linkid=2131316 for more information.
+warn: Microsoft.EntityFrameworkCore.Model.Validation[10622]
+      Entity 'AppraisalCycle' has a global query filter defined and is the required end of a relationship with the entity 'EntityKPIHistory'. This may lead to unexpected results when the required entity is filtered out. Either configure the navigation as optional, or define matching query filters for both entities in the navigation. See https://go.microsoft.com/fwlink/?linkid=2131316 for more information.
+warn: Microsoft.EntityFrameworkCore.Model.Validation[10622]
+      Entity 'User' has a global query filter defined and is the required end of a relationship with the entity 'PIPStatusHistory'. This may lead to unexpected results when the required entity is filtered out. Either configure the navigation as optional, or define matching query filters for both entities in the navigation. See https://go.microsoft.com/fwlink/?linkid=2131316 for more information.
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (44ms) [Parameters=[@__key_0='?' (Size = 100)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [s].[Id], [s].[CreatedAt], [s].[CreatedBy], [s].[DeletedAt], [s].[DeletedBy], [s].[Description], [s].[IsDeleted], [s].[Key], [s].[PublicId], [s].[UpdatedAt], [s].[UpdatedBy], [s].[Value], [s].[Version]
+      FROM [app].[SystemSettings] AS [s]
+      WHERE [s].[IsDeleted] = CAST(0 AS bit) AND [s].[Key] = @__key_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (8ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT [r].[Id], [r].[CreatedAt], [r].[CreatedBy], [r].[DeletedAt], [r].[DeletedBy], [r].[Description], [r].[IsDeleted], [r].[Name], [r].[PublicId], [r].[UpdatedAt], [r].[UpdatedBy], [r].[Version]
+      FROM [auth].[Roles] AS [r]
+      WHERE [r].[IsDeleted] = CAST(0 AS bit)
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[@__email_0='?' (Size = 256)], CommandType='Text', CommandTimeout='30']
+      SELECT CASE
+          WHEN EXISTS (
+              SELECT 1
+              FROM [auth].[Users] AS [u]
+              WHERE [u].[IsDeleted] = CAST(0 AS bit) AND [u].[Email] = @__email_0) THEN CAST(1 AS bit)
+          ELSE CAST(0 AS bit)
+      END
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (6ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT [p].[Id], [p].[Code], [p].[CreatedAt], [p].[CreatedBy], [p].[DeletedAt], [p].[DeletedBy], [p].[Description], [p].[IsActive], [p].[IsDeleted], [p].[Name], [p].[PublicId], [p].[UpdatedAt], [p].[UpdatedBy], [p].[Version]
+      FROM [auth].[Permissions] AS [p]
+      WHERE [p].[IsDeleted] = CAST(0 AS bit)
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:5100
+info: Hangfire.BackgroundJobServer[0]
+      Starting Hangfire Server using job storage: 'SQL Server: .@EPMSDb'
+info: Hangfire.BackgroundJobServer[0]
+      Using the following options for SQL Server job storage: Queue poll interval: 00:00:00.
+info: Hangfire.BackgroundJobServer[0]
+      Using the following options for Hangfire Server:
+          Worker count: 1
+          Listening queues: 'default'
+          Shutdown timeout: 00:00:15
+          Schedule polling interval: 00:00:15
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: C:\OJT-21\EMPS_FInal_Project_Team(5)\EPMS_Solution\EPMS.Api
+info: Hangfire.Server.BackgroundServerProcess[0]
+      Server desktop-8fdd78k:18108:b25cd84f successfully announced in 26.4823 ms
+info: Hangfire.Server.BackgroundServerProcess[0]
+      Server desktop-8fdd78k:18108:b25cd84f is starting the registered dispatchers: ServerWatchdog, ServerJobCancellationWatcher, ExpirationManager, CountersAggregator, SqlServerHeartbeatProcess, Worker, DelayedJobScheduler, RecurringJobScheduler...
+info: Hangfire.Server.BackgroundServerProcess[0]
+      Server desktop-8fdd78k:18108:b25cd84f all the dispatchers started
+info: Hangfire.Server.ServerWatchdog[0]
+      1 servers were removed due to timeout

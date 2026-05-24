@@ -37,7 +37,7 @@ public class LevelRepository : GenericRepository<Level>, ILevelRepository
             .Select(p => new LookUpDto
             {
                 Id = p.Id,
-                Code = p.Code,
+                Name = p.Name,
                 IsActive = p.IsActive,
             })
             .ToListAsync();

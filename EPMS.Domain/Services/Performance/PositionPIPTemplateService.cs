@@ -75,6 +75,12 @@ public class PositionPIPTemplateService : IPositionPIPTemplateService
             dto.SuccessCriteria ?? template.SuccessCriteria,
             dto.Description);
 
+        if (dto.IsActive.HasValue)
+        {
+            if (dto.IsActive.Value) template.Reactivate();
+            else template.Deactivate();
+        }
+
         await _uow.CompleteAsync();
         return SuccessResponse.Ok(PositionPIPTemplateMsg.Updated);
     }
@@ -90,31 +96,5 @@ public class PositionPIPTemplateService : IPositionPIPTemplateService
         await _uow.CompleteAsync();
 
         return SuccessResponse.Ok(PositionPIPTemplateMsg.Deleted);
-    }
-
-    public async Task<SuccessResponse> DeactivateAsync(long id)
-    {
-        var template = await _uow.Perf.PositionPIPTemplates.GetByIdAsync(id);
-
-        if (template == null)
-            return SuccessResponse.Fail(PositionPIPTemplateMsg.NotFound(id), ErrorType.NotFound);
-
-        template.Deactivate();
-        await _uow.CompleteAsync();
-
-        return SuccessResponse.Ok(PositionPIPTemplateMsg.Updated);
-    }
-
-    public async Task<SuccessResponse> ReactivateAsync(long id)
-    {
-        var template = await _uow.Perf.PositionPIPTemplates.GetByIdAsync(id);
-
-        if (template == null)
-            return SuccessResponse.Fail(PositionPIPTemplateMsg.NotFound(id), ErrorType.NotFound);
-
-        template.Reactivate();
-        await _uow.CompleteAsync();
-
-        return SuccessResponse.Ok(PositionPIPTemplateMsg.Updated);
     }
 }

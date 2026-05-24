@@ -199,6 +199,7 @@ public class PositionService : IPositionService
             entity.DeletedBy = null;
             _uow.HR.Positions.Update(entity);
             await _uow.CompleteAsync();
+            await _cacheService.RemoveAsync(CacheKeys.Hr.PositionLookups());
             return SuccessResponse.Ok(PositionMsg.Updated);
         }
 

@@ -1,0 +1,330 @@
+@page "/performance/kpi-masters"
+@* ═══════════════════════════════════════════════════════════════════════════
+   PATTERN: GetAll + Client-side QuickFilter + Client-side Sorting
+   Use this pattern when the dataset is small (< ~500 rows).
+   - Loads all rows once into memory on page load.
+   - Filtering is done via MudDataGrid QuickFilter (client-side).
+   - Sorting is done via MudDataGrid built-in column headers (client-side, no API call).
+   - After every CUD operation, re-calls LoadAllAsync() to refresh the list.
+   ═══════════════════════════════════════════════════════════════════════════ *@
+@using EPMS.Client.Constants
+@using EPMS.Client.Services.Performance
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.PerformanceDTOs.KPIMasterDTOs
+@using MudBlazor
+@using Refit
+@using static EPMS.Shared.Constants.ServiceResponseMessages
+
+@inject IKPIMasterApiClient KPIMasterApiClient
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<PageTitle>@UIConstants.KPIMaster.PageTitle</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.KPIMaster.PageTitle</MudText>
+
+    <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+
+        @* {{!-- ── Toolbar ──────────────────────────────────────────────────── --}} *@
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+            <MudTextField @bind-Value="_searchString"
+                          Placeholder="@UIConstants.KPIMaster.SearchPlaceholder"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          IconSize="Size.Medium"
+                          Variant="Variant.Outlined"
+                          Clearable="true"
+                          Immediate="true"
+                          DebounceInterval="500"
+                          Style="max-width: 300px;" />
+
+            <MudSelect T="bool"
+                       Value="@_statusFilter"
+                       ValueChanged="OnStatusFilterChanged"
+                       Variant="Variant.Outlined"
+                       Style="max-width: 150px;">
+                <MudSelectItem T="bool" Value="@(true)">@UIConstants.Common.Active</MudSelectItem>
+                <MudSelectItem T="bool" Value="@(false)">@UIConstants.Common.Inactive</MudSelectItem>
+            </MudSelect>
+
+            <TableSortControl SortBy="@_sortBy"
+                              SortDirection="@_sortDirection"
+                              SortColumns="@_sortableColumns"
+                              OnSortChanged="HandleSortChanged" />
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenCreateDialog">
+                @UIConstants.KPIMaster.AddButton
+            </MudButton>
+        </MudStack>
+
+        @* {{!-- ── Data Grid ────────────────────────────────────────────────── --}} *@
+        <MudDataGrid Items="@_kpis"
+                     QuickFilter="@QuickFilter"
+                     Loading="@_loading"
+                     SortMode="SortMode.None"
+                     Hover="true"
+                     Elevation="0">
+            <Columns>
+                <TemplateColumn Title="@UIConstants.Common.ColumnNo" Sortable="false">
+                    <CellTemplate>
+                        <span style="display: block; text-align: left;">@_rowNumbers.GetValueOrDefault(context.Item.Id)</span>
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.Code" Title="@UIConstants.KPIMaster.ColumnCode" />
+                <PropertyColumn Property="x => x.Name" Title="@UIConstants.KPIMaster.ColumnName" />
+                <PropertyColumn Property="x => x.CategoryName" Title="@UIConstants.KPIMaster.ColumnCategory" />
+                <PropertyColumn Property="x => x.Description" Title="@UIConstants.Common.Description" />
+                <TemplateColumn Title="@UIConstants.Common.Status">
+                    <CellTemplate>
+                        <MudChip Color="@(context.Item.IsActive ? Color.Success : Color.Default)"
+                                 Size="Size.Small">
+                            @(context.Item.IsActive ? UIConstants.Common.Active : UIConstants.Common.Inactive)
+                        </MudChip>
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="@UIConstants.Common.Actions" Sortable="false">
+                    <CellTemplate>
+                        <MudStack Row="true" Spacing="0">
+                            <MudTooltip Text="Edit KPI Master" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Color="Color.Primary"
+                                               Size="Size.Small"
+                                               OnClick="@(() => OpenEditDialog(context.Item))" />
+                            </MudTooltip>
+                            <MudTooltip Text="Delete KPI Master" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Color="Color.Error"
+                                               Size="Size.Small"
+                                               OnClick="@(() => OpenDeleteDialog(context.Item))" />
+                            </MudTooltip>
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+            <NoRecordsContent>
+                <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
+                    <MudIcon Icon="@Icons.Material.Outlined.Inbox" Style="font-size: 4rem;" Color="Color.Default" />
+                    <MudText Typo="Typo.h6" Color="Color.Default">@UIConstants.Common.NoRecords</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">@UIConstants.KPIMaster.NoDataFound</MudText>
+                </MudStack>
+            </NoRecordsContent>
+            <LoadingContent>
+                <MudStack Spacing="3" Class="w-100">
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                </MudStack>
+            </LoadingContent>
+            <PagerContent>
+                <MudDataGridPager T="KPIMasterDto" />
+            </PagerContent>
+        </MudDataGrid>
+
+    </MudPaper>
+</MudContainer>
+
+@code {
+
+    // ── Dialog options (static: created once, reused for every dialog open) ──
+    private static readonly DialogOptions _formDialogOptions = new()
+    {
+        CloseOnEscapeKey = true,
+        MaxWidth = MaxWidth.Small,
+        FullWidth = true
+    };
+    private static readonly DialogOptions _confirmDialogOptions = new()
+    {
+        CloseOnEscapeKey = true
+    };
+
+    // ── State ─────────────────────────────────────────────────────────────────
+    private List<KPIMasterDto> _allKpis = new();
+    private List<KPIMasterDto> _kpis = new();
+    private bool _loading = true;
+    private string _searchString = string.Empty;
+    private Dictionary<long, int> _rowNumbers = new();
+    private bool _statusFilter = true;
+
+    private string _sortBy = "Code";
+    private string _sortDirection = "asc";
+    private Dictionary<string, string> _sortableColumns = new()
+    {
+        { "Code", "Code" },
+        { "Name", "Name" }
+    };
+
+    // ── Lifecycle ─────────────────────────────────────────────────────────────
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAllAsync();
+    }
+
+    // ── QuickFilter (runs client-side on every keystroke) ─────────────────────
+    private bool QuickFilter(KPIMasterDto x)
+    {
+        if (x.IsActive != _statusFilter)
+            return false;
+
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+
+        return x.Code.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
+          || x.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+    }
+
+    // ── Data ──────────────────────────────────────────────────────────────────
+
+    private async Task HandleSortChanged((string SortBy, string SortDirection) sortData)
+    {
+        _loading = true;
+        await Task.Yield();
+
+        _sortBy = sortData.SortBy;
+        _sortDirection = sortData.SortDirection;
+
+        _loading = false;
+        ApplyFiltersAndSort();
+    }
+
+    private async Task LoadAllAsync()
+    {
+        _loading = true;
+        StateHasChanged();
+        try
+        {
+            var response = await KPIMasterApiClient.GetAllAsync();
+            if (response.Success && response.Data != null)
+            {
+                _allKpis = response.Data.ToList();
+                ApplyFiltersAndSort();
+            }
+
+            else
+                Snackbar.Add(response.Message ?? UIConstants.Common.LoadFailed, Severity.Error);
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DeleteAsync(long id)
+    {
+        try
+        {
+            var response = await KPIMasterApiClient.DeleteAsync(id);
+            if (response.Success)
+            {
+                Snackbar.Add(KPIMasterMsg.Deleted, Severity.Success);
+                await LoadAllAsync();
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? UIConstants.Common.DeleteFailed, Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+    }
+
+    // ── Dialogs ───────────────────────────────────────────────────────────────
+
+    private async Task OpenCreateDialog()
+    {
+        var dialog = await DialogService.ShowAsync<KPIMasterDialog>(
+          UIConstants.KPIMaster.CreateDialogTitle, _formDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+        {
+            Snackbar.Add(KPIMasterMsg.Created, Severity.Success);
+            await LoadAllAsync();
+        }
+    }
+
+    private async Task OpenEditDialog(KPIMasterDto kpi)
+    {
+        var parameters = new DialogParameters<KPIMasterDialog>
+        {
+            { x => x.KPIMaster, kpi }
+        };
+
+        var dialog = await DialogService.ShowAsync<KPIMasterDialog>(
+          UIConstants.KPIMaster.EditDialogTitle, parameters, _formDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+        {
+            Snackbar.Add(KPIMasterMsg.Updated, Severity.Success);
+            await LoadAllAsync();
+        }
+    }
+
+    private async Task OpenDeleteDialog(KPIMasterDto kpi)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, string.Format(UIConstants.Common.DeleteConfirmationFormat, kpi.Name) },
+            { x => x.ButtonText, UIConstants.Common.Delete },
+            { x => x.Color, Color.Error }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(
+          UIConstants.KPIMaster.DeleteDialogTitle, parameters, _confirmDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+            await DeleteAsync(kpi.Id);
+    }
+
+    private void ApplyFiltersAndSort()
+    {
+        if (!_allKpis.Any())
+        {
+            _kpis = new();
+            _rowNumbers = new();
+            return;
+        }
+
+        var filteredList = _allKpis.Where(x => x.IsActive == _statusFilter).ToList();
+
+        filteredList = _sortBy switch
+        {
+            "Name" => _sortDirection == "asc" ? filteredList.OrderBy(x => x.Name).ToList() : filteredList.OrderByDescending(x => x.Name).ToList(),
+            _ => _sortDirection == "asc" ? filteredList.OrderBy(x => x.Code).ToList() : filteredList.OrderByDescending(x => x.Code).ToList(),
+        };
+
+        _kpis = filteredList;
+
+        _rowNumbers = filteredList
+          .Select((x, i) => (x.Id, Index: i + 1))
+          .ToDictionary(x => x.Id, x => x.Index);
+    }
+
+    private async Task OnStatusFilterChanged(bool value)
+    {
+        _statusFilter = value;
+        _loading = true;
+        await Task.Yield();
+        ApplyFiltersAndSort();
+        _loading = false;
+    }
+}

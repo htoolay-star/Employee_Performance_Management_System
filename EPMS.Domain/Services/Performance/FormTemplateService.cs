@@ -1,27 +1,45 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Performance;
+using EPMS.Domain.Interface.IService.App;
 using EPMS.Domain.Interface.IService.Performance;
+using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.PerformanceDTOs.FormTemplateDTOs;
 using EPMS.Shared.Enums;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 using Mapster;
+
 namespace EPMS.Domain.Services.Performance
 {
     public class FormTemplateService : IFormTemplateService
     {
         private readonly IUnitOfWork _uow;
-        
-        public FormTemplateService(IUnitOfWork uow)
+        private readonly ICacheService _cacheService;
+
+        public FormTemplateService(IUnitOfWork uow, ICacheService cacheService)
         {
             _uow = uow;
+            _cacheService = cacheService;
         }
 
         public async Task<SuccessResponse<IEnumerable<FormTemplateDto>>> GetAllAsync()
         {
-            var templates = await _uow.Perf.FormTemplates.GetAllAsync();
-            var dtos = templates.Adapt<IEnumerable<FormTemplateDto>>();
+            var templates = await _uow.Perf.FormTemplates.GetAllWithQuestionsAsync();
+            var dtos = templates.Select(t => new FormTemplateDto
+            {
+                Id = t.Id,
+                Name = t.Name,
+                FormType = t.FormType,
+                RatingScaleId = t.QuestionRatingScaleId,
+                RatingScaleName = t.RatingScale?.Name ?? string.Empty,
+                QuestionsPerEvaluation = t.QuestionsPerEvaluation,
+                IsActive = t.IsActive,
+                CreatedAt = t.CreatedAt,
+                QuestionCount = t.Questions?.Count ?? 0,
+                HasYesNo = t.HasYesNo,
+                HasComment = t.HasComment
+            }).ToList();
             return SuccessResponse<IEnumerable<FormTemplateDto>>.Ok(dtos, FormTemplateMsg.RetrievedAll);
         }
 
@@ -30,6 +48,24 @@ namespace EPMS.Domain.Services.Performance
             var templates = await _uow.Perf.FormTemplates.GetActiveAsync();
             var dtos = templates.Adapt<IEnumerable<FormTemplateDto>>();
             return SuccessResponse<IEnumerable<FormTemplateDto>>.Ok(dtos, FormTemplateMsg.RetrievedActive);
+        }
+
+        public async Task<SuccessResponse<IEnumerable<LookUpDto>>> GetLookupAsync()
+        {
+            var lookups = await _cacheService.GetOrCreateAsync(
+                CacheKeys.Performance.FormTemplateLookups(),
+                async () =>
+                {
+                    var templates = await _uow.Perf.FormTemplates.FindAllAsync(
+                        t => t.IsActive && !t.IsDeleted,
+                        trackChanges: false);
+
+                    return templates.Select(t => new LookUpDto { Id = t.Id, Name = t.Name, IsActive = t.IsActive }).ToList();
+                },
+                TimeSpan.FromHours(12)
+            );
+
+            return SuccessResponse<IEnumerable<LookUpDto>>.Ok(lookups ?? [], FormTemplateMsg.RetrievedAll);
         }
 
         public async Task<SuccessResponse<FormTemplateDto>> GetByIdAsync(long id)
@@ -51,10 +87,17 @@ namespace EPMS.Domain.Services.Performance
                 return SuccessResponse<long>.Fail(string.Format(FormTemplateMsg.DuplicateName, dto.Name), ErrorType.Conflict);
             }
 
-            var template = new FormTemplate(dto.Name, dto.FormType);
+            if (!await _uow.Perf.QuestionRatingScales.AnyAsync(s => s.Id == dto.RatingScaleId))
+            {
+                return SuccessResponse<long>.Fail("Rating scale not found.", ErrorType.NotFound);
+            }
+
+            var template = new FormTemplate(dto.Name, dto.FormType, dto.RatingScaleId, dto.QuestionsPerEvaluation, dto.HasYesNo, dto.HasComment);
 
             _uow.Perf.FormTemplates.Add(template);
             await _uow.CompleteAsync();
+
+            await _cacheService.RemoveAsync(CacheKeys.Performance.FormTemplateLookups());
 
             return SuccessResponse<long>.Ok(template.Id, FormTemplateMsg.Created);
         }
@@ -71,10 +114,31 @@ namespace EPMS.Domain.Services.Performance
                 return SuccessResponse.Fail(string.Format(FormTemplateMsg.DuplicateName, dto.Name), ErrorType.Conflict);
             }
 
-            template.Update(dto.Name, dto.FormType);
+            if (dto.RatingScaleId.HasValue && !await _uow.Perf.QuestionRatingScales.AnyAsync(s => s.Id == dto.RatingScaleId.Value))
+            {
+                return SuccessResponse.Fail("Rating scale not found.", ErrorType.NotFound);
+            }
+
+            if (dto.QuestionsPerEvaluation.HasValue)
+            {
+                var questionCount = template.Questions?.Count ?? 0;
+                if (questionCount > 0 && dto.QuestionsPerEvaluation > questionCount)
+                    return SuccessResponse.Fail(
+                        $"Questions per evaluation ({dto.QuestionsPerEvaluation}) cannot exceed total questions ({questionCount}).",
+                        ErrorType.Validation);
+            }
+
+            template.Update(dto.Name, dto.FormType, dto.RatingScaleId, dto.QuestionsPerEvaluation, dto.HasYesNo, dto.HasComment);
+
+            if (dto.IsActive.HasValue)
+            {
+                if (dto.IsActive.Value) template.Reactivate();
+                else template.Deactivate();
+            }
 
             _uow.Perf.FormTemplates.Update(template);
             await _uow.CompleteAsync();
+            await _cacheService.RemoveAsync(CacheKeys.Performance.FormTemplateLookups());
 
             return SuccessResponse.Ok(FormTemplateMsg.Updated);
         }
@@ -89,37 +153,50 @@ namespace EPMS.Domain.Services.Performance
             _uow.Perf.FormTemplates.Delete(template);
             await _uow.CompleteAsync();
 
+            await _cacheService.RemoveAsync(CacheKeys.Performance.FormTemplateLookups());
+
             return SuccessResponse.Ok(FormTemplateMsg.Deleted);
         }
 
-        public async Task<SuccessResponse> DeactivateAsync(long id)
+        public async Task<SuccessResponse<FormTemplatePreviewDto>> GetPreviewAsync(long templateId)
         {
-            var template = await _uow.Perf.FormTemplates.GetByIdAsync(id);
-
+            var template = await _uow.Perf.FormTemplates.GetByIdAsync(templateId);
             if (template == null)
-                return SuccessResponse.Fail(FormTemplateMsg.NotFound(id), ErrorType.NotFound);
+                return SuccessResponse<FormTemplatePreviewDto>.Fail(FormTemplateMsg.NotFound(templateId), ErrorType.NotFound);
 
-            template.Deactivate();
+            var questions = await _uow.Perf.FormQuestions
+                .FindAllAsync(q => q.TemplateId == templateId && !q.IsDeleted,
+                    false, default, q => q.Category);
 
-            _uow.Perf.FormTemplates.Update(template);
-            await _uow.CompleteAsync();
+            var scaleWithLevels = await _uow.Perf.QuestionRatingScales
+                .FindAllAsync(s => s.Id == template.QuestionRatingScaleId,
+                    trackChanges: false,
+                    includes: s => s.Levels);
 
-            return SuccessResponse.Ok(FormTemplateMsg.Deactivated);
-        }
+            var scale = scaleWithLevels.FirstOrDefault();
 
-        public async Task<SuccessResponse> ReactivateAsync(long id)
-        {
-            var template = await _uow.Perf.FormTemplates.GetByIdAsync(id);
+            var preview = new FormTemplatePreviewDto
+            {
+                Id = template.Id,
+                Name = template.Name,
+                FormType = template.FormType,
+                QuestionsPerEvaluation = template.QuestionsPerEvaluation,
+                RatingScaleId = template.QuestionRatingScaleId,
+                RatingScaleName = scale?.Name,
+                RatingMaxScore = scale?.Levels.Any() == true ? (int)scale.Levels.Max(l => l.MaxScore) : null,
+                HasYesNo = template.HasYesNo,
+                HasComment = template.HasComment,
+                Questions = questions.OrderBy(q => q.Sequence).Select(q => new FormTemplatePreviewQuestionDto
+                {
+                    Id = q.Id,
+                    QuestionText = q.QuestionText,
+                    Sequence = q.Sequence,
+                    CategoryId = q.CategoryId,
+                    CategoryName = q.Category?.Name
+                }).ToList()
+            };
 
-            if (template == null)
-                return SuccessResponse.Fail(FormTemplateMsg.NotFound(id), ErrorType.NotFound);
-
-            template.Reactivate();
-
-            _uow.Perf.FormTemplates.Update(template);
-            await _uow.CompleteAsync();
-
-            return SuccessResponse.Ok(FormTemplateMsg.Reactivated);
+            return SuccessResponse<FormTemplatePreviewDto>.Ok(preview, FormTemplateMsg.Retrieved);
         }
     }
 }

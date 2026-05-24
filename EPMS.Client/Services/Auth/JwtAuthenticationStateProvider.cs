@@ -35,11 +35,12 @@ namespace EPMS.Client.Services.Auth
             return new AuthenticationState(user);
         }
 
-        public void MarkUserAsAuthenticated(string name)
+        public void MarkUserAsAuthenticated(string token)
         {
-            var authenticatedUser = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.Name, name) }, "jwt"));
-            var authState = Task.FromResult(new AuthenticationState(authenticatedUser));
-            NotifyAuthenticationStateChanged(authState);
+            var identity = new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt");
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            var user = new ClaimsPrincipal(identity);
+            NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(user)));
         }
 
         public void MarkUserAsLoggedOut()
@@ -56,7 +57,12 @@ namespace EPMS.Client.Services.Auth
             var jsonBytes = ParseBase64WithoutPadding(payload);
             var keyValuePairs = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonBytes);
 
-            keyValuePairs.TryGetValue(ClaimTypes.Role, out object roles);
+            // JwtSecurityTokenHandler shortens claim types by default (e.g. ClaimTypes.Role → "role")
+            // Try long URI first, then fall back to short form
+            if (!keyValuePairs.TryGetValue(ClaimTypes.Role, out object roles))
+            {
+                keyValuePairs.TryGetValue("role", out roles);
+            }
 
             if (roles != null)
             {
@@ -75,6 +81,7 @@ namespace EPMS.Client.Services.Auth
                 }
 
                 keyValuePairs.Remove(ClaimTypes.Role);
+                keyValuePairs.Remove("role");
             }
 
             claims.AddRange(keyValuePairs.Select(kvp => new Claim(kvp.Key, kvp.Value.ToString())));

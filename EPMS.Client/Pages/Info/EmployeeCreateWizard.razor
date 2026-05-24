@@ -25,7 +25,6 @@
             <MudStack Spacing="3">
 
                 @* ── ✏️ Text Fields ── *@
-                <MudText Typo="Typo.subtitle1" Class="mt-2">Text Fields</MudText>
                 <MudText Typo="Typo.body2" Class="mb-2 mud-text-secondary">Enter text values</MudText>
                 <MudGrid>
                     <MudItem xs="12" sm="6">
@@ -130,7 +129,6 @@
                 </MudGrid>
 
                 @* ── ▼ Select Fields ── *@
-                <MudText Typo="Typo.subtitle1" Class="mt-4">Select Fields</MudText>
                 <MudText Typo="Typo.body2" Class="mb-2 mud-text-secondary">Choose from list</MudText>
                 <MudGrid>
                     <MudItem xs="12" sm="6">
@@ -208,61 +206,63 @@
                 </MudGrid>
 
                 @* ── 🔍 Search Fields ── *@
-                <MudText Typo="Typo.subtitle1" Class="mt-4">Search Fields</MudText>
                 <MudText Typo="Typo.body2" Class="mb-2 mud-text-secondary">Type to search and select</MudText>
                 <MudGrid>
                     <MudItem xs="12" sm="6">
-                        <MudAutocomplete T="long"
-                           @bind-Value="_model.DepartmentId"
-                           Label="Department"
-                           Variant="Variant.Outlined"
-                           For="@(() => _model.DepartmentId)"
-                           SearchFunc="SearchDepartments"
-                           ToStringFunc="GetDepartmentDisplay"
-                           OpenIcon="@Icons.Material.Filled.ArrowDropDown">
-                            <ItemTemplate Context="deptId">
-                                @{ var dept = _departments.FirstOrDefault(x => x.Id == deptId); }
-                                 @if (dept != null)
-                                 {
-                                     <MudText>@dept.Code</MudText>
-                                 }
-                             </ItemTemplate>
-                         </MudAutocomplete>
-                     </MudItem>
-                     <MudItem xs="12" sm="6">
-                         <MudAutocomplete T="long"
-                            @bind-Value="_model.ParentDepartmentId"
-                            Label="Parent Department"
+                     <MudAutocomplete T="long"
+                            @bind-Value="_model.DepartmentId"
+                            Label="Department"
                             Variant="Variant.Outlined"
-                            For="@(() => _model.ParentDepartmentId)"
+                            For="@(() => _model.DepartmentId)"
+                            Clearable="true"
                             SearchFunc="SearchDepartments"
                             ToStringFunc="GetDepartmentDisplay"
                             OpenIcon="@Icons.Material.Filled.ArrowDropDown">
                              <ItemTemplate Context="deptId">
                                  @{ var dept = _departments.FirstOrDefault(x => x.Id == deptId); }
-                                 @if (dept != null)
-                                 {
-                                     <MudText>@dept.Code</MudText>
-                                }
-                            </ItemTemplate>
-                        </MudAutocomplete>
-                    </MudItem>
-                    <MudItem xs="12" sm="6">
-                        <MudAutocomplete T="long"
-                           @bind-Value="_model.PositionId"
-                           Label="Position"
-                           Variant="Variant.Outlined"
-                           For="@(() => _model.PositionId)"
-                           SearchFunc="SearchPositions"
-                           ToStringFunc="GetPositionDisplay"
-                           OpenIcon="@Icons.Material.Filled.ArrowDropDown">
-                            <ItemTemplate Context="posId">
-                                @{ var pos = _positions.FirstOrDefault(x => x.Id == posId); }
-                                 @if (pos != null)
-                                 {
-                                     <MudText>@pos.Code</MudText>
-                                 }
-                             </ItemTemplate>
+                                  @if (dept != null)
+                                  {
+                                      <MudText>@dept.Name</MudText>
+                                  }
+                              </ItemTemplate>
+                          </MudAutocomplete>
+                      </MudItem>
+                      <MudItem xs="12" sm="6">
+                          <MudAutocomplete T="long"
+                             @bind-Value="_model.ParentDepartmentId"
+                             Label="Parent Department"
+                             Variant="Variant.Outlined"
+                             For="@(() => _model.ParentDepartmentId)"
+                             Clearable="true"
+                             SearchFunc="SearchDepartments"
+                             ToStringFunc="GetDepartmentDisplay"
+                             OpenIcon="@Icons.Material.Filled.ArrowDropDown">
+                              <ItemTemplate Context="deptId">
+                                  @{ var dept = _departments.FirstOrDefault(x => x.Id == deptId); }
+                                  @if (dept != null)
+                                  {
+                                      <MudText>@dept.Name</MudText>
+                                  }
+                              </ItemTemplate>
+                          </MudAutocomplete>
+                      </MudItem>
+                      <MudItem xs="12" sm="6">
+                          <MudAutocomplete T="long"
+                             @bind-Value="_model.PositionId"
+                             Label="Position"
+                             Variant="Variant.Outlined"
+                             For="@(() => _model.PositionId)"
+                             Clearable="true"
+                             SearchFunc="SearchPositions"
+                             ToStringFunc="GetPositionDisplay"
+                             OpenIcon="@Icons.Material.Filled.ArrowDropDown">
+                              <ItemTemplate Context="posId">
+                                  @{ var pos = _positions.FirstOrDefault(x => x.Id == posId); }
+                                  @if (pos != null)
+                                  {
+                                      <MudText>@pos.Name</MudText>
+                                  }
+                              </ItemTemplate>
                          </MudAutocomplete>
                      </MudItem>
                      <MudItem xs="12" sm="6">
@@ -280,7 +280,7 @@
                                  @{ var team = teamId.HasValue ? _teams.FirstOrDefault(x => x.Id == teamId.Value) : null; }
                                  @if (team != null)
                                  {
-                                     <MudText>@team.Code</MudText>
+                                     <MudText>@team.Name</MudText>
                                 }
                             </ItemTemplate>
                         </MudAutocomplete>
@@ -308,25 +308,23 @@
                 </MudGrid>
 
                 @* ── 🔢 Number Fields ── *@
-                <MudText Typo="Typo.subtitle1" Class="mt-4">Number Fields</MudText>
                 <MudText Typo="Typo.body2" Class="mb-2 mud-text-secondary">Enter numeric values</MudText>
                 <MudGrid>
                     <MudItem xs="12" sm="6">
-                        <MudNumericField @bind-Value="_model.ProbationMonth" Label="Probation Months" Variant="Variant.Outlined" For="@(() => _model.ProbationMonth)" Style="text-align: right;" />
+                        <MudTextField @bind-Value="_model.ProbationMonth" Label="Probation Months" Variant="Variant.Outlined" For="@(() => _model.ProbationMonth)" Style="text-align: right;" InputType="InputType.Number" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudNumericField @bind-Value="_model.Salary" Label="Salary" Variant="Variant.Outlined" For="@(() => _model.Salary)" Style="text-align: right;" />
+                        <MudTextField @bind-Value="_model.Salary" Label="Salary" Variant="Variant.Outlined" For="@(() => _model.Salary)" Style="text-align: right;" InputType="InputType.Number" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudNumericField @bind-Value="_model.ComplianceEarnedPoints" Label="Compliance Earned Points" Variant="Variant.Outlined" For="@(() => _model.ComplianceEarnedPoints)" Style="text-align: right;" />
+                        <MudTextField @bind-Value="_model.ComplianceEarnedPoints" Label="Compliance Earned Points" Variant="Variant.Outlined" For="@(() => _model.ComplianceEarnedPoints)" Style="text-align: right;" InputType="InputType.Number" />
                     </MudItem>
                     <MudItem xs="12" sm="6">
-                        <MudNumericField @bind-Value="_model.ComplianceBalancePoints" Label="Compliance Balance Points" Variant="Variant.Outlined" For="@(() => _model.ComplianceBalancePoints)" Style="text-align: right;" />
+                        <MudTextField @bind-Value="_model.ComplianceBalancePoints" Label="Compliance Balance Points" Variant="Variant.Outlined" For="@(() => _model.ComplianceBalancePoints)" Style="text-align: right;" InputType="InputType.Number" />
                     </MudItem>
                 </MudGrid>
 
                 @* ── 📅 Date Fields ── *@
-                <MudText Typo="Typo.subtitle1" Class="mt-4">Date Fields</MudText>
                 <MudText Typo="Typo.body2" Class="mb-2 mud-text-secondary">Pick dates</MudText>
                 <MudGrid>
                     <MudItem xs="12" sm="6">
@@ -353,7 +351,6 @@
                 </MudGrid>
 
                 @* ── ⬆ Toggle ── *@
-                <MudText Typo="Typo.subtitle1" Class="mt-4">Toggle</MudText>
                 <MudText Typo="Typo.body2" Class="mb-2 mud-text-secondary">Turn on or off</MudText>
                 <MudGrid>
                     <MudItem xs="12">
@@ -473,6 +470,7 @@
             var response = await EmployeeProfileApiClient.CreateFullAsync(dto);
             if (response.Success)
             {
+                LookupState.ClearEmployeeCache();
                 Snackbar.Add("Employee created successfully", Severity.Success);
                 _mudDialog?.Close(DialogResult.Ok(response.Data));
             }
@@ -497,7 +495,7 @@
     {
         var query = _departments.AsQueryable();
         if (!string.IsNullOrWhiteSpace(value))
-            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(x => x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
         return Task.FromResult(query.Select(x => x.Id).AsEnumerable());
     }
 
@@ -506,14 +504,14 @@
         if (id <= 0) return string.Empty;
         var dept = _departments.FirstOrDefault(x => x.Id == id);
         if (dept == null) return string.Empty;
-        return dept.IsActive ? dept.Code : $"{dept.Code} (Inactive)";
+        return dept.IsActive ? dept.Name : $"{dept.Name} (Inactive)";
     }
 
     private Task<IEnumerable<long>> SearchPositions(string value, CancellationToken token)
     {
         var query = _positions.AsQueryable();
         if (!string.IsNullOrWhiteSpace(value))
-            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(x => x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
         return Task.FromResult(query.Select(x => x.Id).AsEnumerable());
     }
 
@@ -522,14 +520,14 @@
         if (id <= 0) return string.Empty;
         var pos = _positions.FirstOrDefault(x => x.Id == id);
         if (pos == null) return string.Empty;
-        return pos.IsActive ? pos.Code : $"{pos.Code} (Inactive)";
+        return pos.IsActive ? pos.Name : $"{pos.Name} (Inactive)";
     }
 
     private Task<IEnumerable<long?>> SearchTeams(string value, CancellationToken token)
     {
         var query = _teams.AsQueryable();
         if (!string.IsNullOrWhiteSpace(value))
-            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(x => x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
         return Task.FromResult(query.Select(x => (long?)x.Id).AsEnumerable());
     }
 
@@ -538,7 +536,7 @@
         if (id == null || id <= 0) return string.Empty;
         var team = _teams.FirstOrDefault(x => x.Id == id);
         if (team == null) return string.Empty;
-        return team.IsActive ? team.Code : $"{team.Code} (Inactive)";
+        return team.IsActive ? team.Name : $"{team.Name} (Inactive)";
     }
 
     private Task<IEnumerable<long?>> SearchEmployees(string value, CancellationToken token)

@@ -1,0 +1,286 @@
+@page "/performance/form-templates/{TemplateId:long}/questions"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using EPMS.Client.Constants
+@using EPMS.Client.Services.Auth
+@using EPMS.Client.Services.Performance
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.PerformanceDTOs.FormTemplateDTOs
+@using EPMS.Shared.DTOs.PerformanceDTOs.FormQuestionDTOs
+@using MudBlazor
+@using Refit
+
+@inject IFormTemplateApiClient FormTemplateApiClient
+@inject IFormQuestionApiClient FormQuestionApiClient
+@inject IDialogService DialogService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject LookupStateService LookupState
+@inject CurrentUserPermissionService PermService
+
+<PageTitle>@UIConstants.FormQuestion.PageTitle</PageTitle>
+
+@if (_error)
+{
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+        <MudAlert Severity="Severity.Error">@_errorMessage</MudAlert>
+    </MudContainer>
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+        <MudText Typo="Typo.h4" Class="mb-4">
+            <BackButton Href="/performance/form-templates" />
+            @UIConstants.FormQuestion.PageTitle — @_templateName
+        </MudText>
+
+    <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Info"
+                       StartIcon="@Icons.Material.Filled.Visibility"
+                       OnClick="OpenPreview">
+                Preview
+            </MudButton>
+            @if (_canCreate)
+            {
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenCreateDialog">
+                    @UIConstants.FormQuestion.AddButton
+                </MudButton>
+            }
+        </MudStack>
+
+        @* Rating scale info *@
+        <MudText Typo="Typo.body2" Class="mb-2">
+            <strong>Rating Scale:</strong> @_ratingScaleName
+        </MudText>
+
+        <MudDataGrid Items="@_questions"
+                     Loading="@_loading"
+                     Hover="true"
+                     Elevation="0"
+                     SortMode="SortMode.None">
+            <Columns>
+                <TemplateColumn Title="@UIConstants.Common.ColumnNo" Sortable="false" Style="width: 60px;">
+                    <CellTemplate>
+                        <span style="display: block; text-align: left; padding-right: 12px;">@_rowNumbers.GetValueOrDefault(context.Item.Id)</span>
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.Sequence" Title="@UIConstants.FormQuestion.ColumnSequence" Sortable="true" />
+                <PropertyColumn Property="x => x.QuestionText" Title="@UIConstants.FormQuestion.ColumnQuestion" />
+                <PropertyColumn Property="x => x.CategoryName" Title="@UIConstants.FormQuestion.ColumnCategory" />
+                <TemplateColumn Title="@UIConstants.Common.Actions" Sortable="false">
+                    <CellTemplate>
+                        <MudStack Row="true" Spacing="0">
+                            @if (_canEdit)
+                            {
+                                <MudTooltip Text="Edit Question" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                   Color="Color.Primary"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => OpenEditDialog(context.Item))" />
+                                </MudTooltip>
+                            }
+                            @if (_canDelete)
+                            {
+                                <MudTooltip Text="Delete Question" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   Color="Color.Error"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => OpenDeleteDialog(context.Item))" />
+                                </MudTooltip>
+                            }
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+            <NoRecordsContent>
+                <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
+                    <MudIcon Icon="@Icons.Material.Outlined.Inbox" Style="font-size: 4rem;" Color="Color.Default" />
+                    <MudText Typo="Typo.h6" Color="Color.Default">@UIConstants.Common.NoRecords</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">@UIConstants.FormQuestion.NoDataFound</MudText>
+                </MudStack>
+            </NoRecordsContent>
+            <LoadingContent>
+                <MudStack Spacing="3" Class="w-100">
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                </MudStack>
+            </LoadingContent>
+            <PagerContent>
+                <MudDataGridPager T="FormQuestionDto" />
+            </PagerContent>
+        </MudDataGrid>
+
+    </MudPaper>
+</MudContainer>
+}
+
+@code {
+
+    [Parameter] public long TemplateId { get; set; }
+
+    private static readonly DialogOptions _formDialogOptions = new()
+    {
+        CloseOnEscapeKey = true,
+        MaxWidth = MaxWidth.Medium,
+        FullWidth = true
+    };
+    private static readonly DialogOptions _confirmDialogOptions = new()
+    {
+        CloseOnEscapeKey = true
+    };
+
+    private string _templateName = string.Empty;
+    private string _ratingScaleName = string.Empty;
+    private List<FormQuestionDto> _questions = new();
+    private Dictionary<long, int> _rowNumbers = new();
+    private bool _loading = true;
+
+    private bool _error;
+    private string _errorMessage = string.Empty;
+    private bool _canView;
+    private bool _canCreate;
+    private bool _canEdit;
+    private bool _canDelete;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _canView = await PermService.HasPermissionAsync("FORMTEMPLATE.VIEW");
+        if (!_canView)
+        {
+            _error = true;
+            _errorMessage = "You do not have permission to view Form Template Questions.";
+            return;
+        }
+
+        _canCreate = await PermService.HasPermissionAsync("FORMTEMPLATE.CREATE");
+        _canEdit = await PermService.HasPermissionAsync("FORMTEMPLATE.EDIT");
+        _canDelete = await PermService.HasPermissionAsync("FORMTEMPLATE.DELETE");
+
+        _ = LookupState.GetCategoriesAsync();
+
+        var templateResponse = await FormTemplateApiClient.GetByIdAsync(TemplateId);
+        if (templateResponse.Success && templateResponse.Data != null)
+        {
+            _templateName = templateResponse.Data.Name;
+            var scales = await LookupState.GetRatingScalesAsync();
+            _ratingScaleName = scales.FirstOrDefault(s => s.Id == templateResponse.Data.RatingScaleId)?.Name ?? $"Scale #{templateResponse.Data.RatingScaleId}";
+        }
+        else
+        {
+            _templateName = $"Template #{TemplateId}";
+            _ratingScaleName = "N/A";
+        }
+
+        await LoadQuestionsAsync();
+    }
+
+    private async Task LoadQuestionsAsync()
+    {
+        _loading = true;
+        StateHasChanged();
+        try
+        {
+            var response = await FormQuestionApiClient.GetByTemplateIdAsync(TemplateId);
+            if (response.Success && response.Data != null)
+            {
+                _questions = response.Data.OrderBy(q => q.Sequence).ToList();
+                _rowNumbers = _questions.Select((x, i) => (x.Id, Index: i + 1)).ToDictionary(x => x.Id, x => x.Index);
+            }
+            else
+                Snackbar.Add(response.Message ?? UIConstants.Common.LoadFailed, Severity.Error);
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DeleteAsync(long id)
+    {
+        try
+        {
+            var response = await FormQuestionApiClient.DeleteAsync(id);
+            if (response.Success)
+            {
+                Snackbar.Add("Question deleted.", Severity.Success);
+                await LoadQuestionsAsync();
+            }
+            else
+                Snackbar.Add(response.Message ?? UIConstants.Common.DeleteFailed, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+    }
+
+    private void OpenPreview() => Navigation.NavigateTo($"/performance/form-templates/{TemplateId}/preview");
+
+    private async Task OpenCreateDialog()
+    {
+        var nextSequence = _questions.Count > 0 ? _questions.Max(q => q.Sequence) + 1 : 1;
+        var parameters = new DialogParameters<FormQuestionDialog>
+        {
+            { x => x.TemplateId, TemplateId },
+            { x => x.NextSequence, nextSequence }
+        };
+
+        var dialog = await DialogService.ShowAsync<FormQuestionDialog>(
+            UIConstants.FormQuestion.CreateDialogTitle, parameters, _formDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+        {
+            Snackbar.Add("Question created.", Severity.Success);
+            await LoadQuestionsAsync();
+        }
+    }
+
+    private async Task OpenEditDialog(FormQuestionDto question)
+    {
+        var parameters = new DialogParameters<FormQuestionDialog>
+        {
+            { x => x.Question, question }
+        };
+
+        var dialog = await DialogService.ShowAsync<FormQuestionDialog>(
+            UIConstants.FormQuestion.EditDialogTitle, parameters, _formDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+        {
+            Snackbar.Add("Question updated.", Severity.Success);
+            await LoadQuestionsAsync();
+        }
+    }
+
+    private async Task OpenDeleteDialog(FormQuestionDto question)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, string.Format(UIConstants.Common.DeleteConfirmationFormat, question.QuestionText) },
+            { x => x.ButtonText, UIConstants.Common.Delete },
+            { x => x.Color, Color.Error }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(
+            UIConstants.FormQuestion.DeleteDialogTitle, parameters, _confirmDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+            await DeleteAsync(question.Id);
+    }
+}

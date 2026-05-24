@@ -166,42 +166,64 @@ public class CreateAppraisalCycleValidator : AbstractValidator<CreateAppraisalCy
                 PerformanceValidationMessages.AppraisalCycle.SelfReviewOutsideWindow,
                 x.WindowStartDate, x.WindowEndDate));
 
-        RuleFor(x => x.ManagerReviewStartDate)
-            .LessThanOrEqualTo(x => x.ManagerReviewDeadline)
-            .When(x => x.ManagerReviewStartDate.HasValue && x.ManagerReviewDeadline.HasValue)
-            .WithMessage(PerformanceValidationMessages.AppraisalCycle.ManagerReviewStartBeforeDeadline);
+        RuleFor(x => x.AppraisalReviewStartDate)
+            .LessThanOrEqualTo(x => x.AppraisalReviewDeadline)
+            .When(x => x.AppraisalReviewStartDate.HasValue && x.AppraisalReviewDeadline.HasValue)
+            .WithMessage(PerformanceValidationMessages.AppraisalCycle.AppraisalReviewStartBeforeDeadline);
 
-        RuleFor(x => x.ManagerReviewStartDate)
+        RuleFor(x => x.AppraisalReviewStartDate)
             .GreaterThanOrEqualTo(x => x.WindowStartDate)
-            .When(x => x.ManagerReviewStartDate.HasValue)
+            .When(x => x.AppraisalReviewStartDate.HasValue)
             .WithMessage(x => string.Format(
-                PerformanceValidationMessages.AppraisalCycle.ManagerReviewOutsideWindow,
+                PerformanceValidationMessages.AppraisalCycle.AppraisalReviewOutsideWindow,
                 x.WindowStartDate, x.WindowEndDate));
 
-        RuleFor(x => x.ManagerReviewDeadline)
+        RuleFor(x => x.AppraisalReviewDeadline)
             .LessThanOrEqualTo(x => x.WindowEndDate)
-            .When(x => x.ManagerReviewDeadline.HasValue)
+            .When(x => x.AppraisalReviewDeadline.HasValue)
             .WithMessage(x => string.Format(
-                PerformanceValidationMessages.AppraisalCycle.ManagerReviewOutsideWindow,
+                PerformanceValidationMessages.AppraisalCycle.AppraisalReviewOutsideWindow,
                 x.WindowStartDate, x.WindowEndDate));
 
-        RuleFor(x => x.PeerReviewStartDate)
-            .LessThanOrEqualTo(x => x.PeerReviewDeadline)
-            .When(x => x.PeerReviewStartDate.HasValue && x.PeerReviewDeadline.HasValue)
-            .WithMessage(PerformanceValidationMessages.AppraisalCycle.PeerReviewStartBeforeDeadline);
+        RuleFor(x => x.ThreeSixtyReviewStartDate)
+            .LessThanOrEqualTo(x => x.ThreeSixtyReviewDeadline)
+            .When(x => x.ThreeSixtyReviewStartDate.HasValue && x.ThreeSixtyReviewDeadline.HasValue)
+            .WithMessage(PerformanceValidationMessages.AppraisalCycle.ThreeSixtyReviewStartBeforeDeadline);
 
-        RuleFor(x => x.PeerReviewStartDate)
+        RuleFor(x => x.ThreeSixtyReviewStartDate)
             .GreaterThanOrEqualTo(x => x.WindowStartDate)
-            .When(x => x.PeerReviewStartDate.HasValue)
+            .When(x => x.ThreeSixtyReviewStartDate.HasValue)
             .WithMessage(x => string.Format(
-                PerformanceValidationMessages.AppraisalCycle.PeerReviewOutsideWindow,
+                PerformanceValidationMessages.AppraisalCycle.ThreeSixtyReviewOutsideWindow,
                 x.WindowStartDate, x.WindowEndDate));
 
-        RuleFor(x => x.PeerReviewDeadline)
+        RuleFor(x => x.ThreeSixtyReviewDeadline)
             .LessThanOrEqualTo(x => x.WindowEndDate)
-            .When(x => x.PeerReviewDeadline.HasValue)
+            .When(x => x.ThreeSixtyReviewDeadline.HasValue)
             .WithMessage(x => string.Format(
-                PerformanceValidationMessages.AppraisalCycle.PeerReviewOutsideWindow,
+                PerformanceValidationMessages.AppraisalCycle.ThreeSixtyReviewOutsideWindow,
                 x.WindowStartDate, x.WindowEndDate));
+
+        RuleFor(x => x.KpiWeight)
+            .GreaterThanOrEqualTo(0)
+            .WithMessage(PerformanceValidationMessages.AppraisalCycle.WeightCannotBeNegative);
+
+        RuleFor(x => x.SelfWeight)
+            .GreaterThanOrEqualTo(0)
+            .WithMessage(PerformanceValidationMessages.AppraisalCycle.WeightCannotBeNegative);
+
+        RuleFor(x => x.ThreeSixtyWeight)
+            .GreaterThanOrEqualTo(0)
+            .WithMessage(PerformanceValidationMessages.AppraisalCycle.WeightCannotBeNegative);
+
+        RuleFor(x => x.AppraisalWeight)
+            .GreaterThanOrEqualTo(0)
+            .WithMessage(PerformanceValidationMessages.AppraisalCycle.WeightCannotBeNegative);
+
+        RuleFor(x => x)
+            .Must(x => x.KpiWeight + x.SelfWeight + x.ThreeSixtyWeight + x.AppraisalWeight == 100m)
+            .WithMessage(x => string.Format(
+                PerformanceValidationMessages.AppraisalCycle.WeightsMustSumTo100,
+                x.KpiWeight, x.SelfWeight, x.ThreeSixtyWeight, x.AppraisalWeight));
     }
 }

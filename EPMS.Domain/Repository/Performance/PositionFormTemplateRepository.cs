@@ -18,6 +18,15 @@ public class PositionFormTemplateRepository : GenericRepository<PositionFormTemp
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<PositionFormTemplate>> GetByPositionIdWithQuestionsAsync(long positionId)
+    {
+        return await _dbSet
+            .Where(p => p.PositionId == positionId && !p.IsDeleted)
+            .Include(p => p.FormTemplate)
+                .ThenInclude(t => t.Questions)
+            .ToListAsync();
+    }
+
     public async Task<bool> ExistsAsync(long positionId, long formTemplateId)
     {
         return await _dbSet.AnyAsync(p => 

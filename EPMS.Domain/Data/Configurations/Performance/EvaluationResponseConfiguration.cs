@@ -26,6 +26,7 @@ namespace EPMS.Domain.Data.Configurations.Performance
             builder.Property(e => e.YesNoAnswer);
             builder.Property(e => e.RatingValue);
             builder.Property(e => e.QuestionComment).HasMaxLength(500);
+            builder.Property(e => e.SubmittedAt);
 
             builder.HasOne(e => e.Appraisal)
                    .WithMany(a => a.Responses)

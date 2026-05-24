@@ -5,6 +5,7 @@
 @inject TokenStorage TokenStorage
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject CurrentUserPermissionService PermService
 
 @code {
     protected override async Task OnInitializedAsync()
@@ -24,6 +25,7 @@
 
         await TokenStorage.ClearTokensAsync();
         ((JwtAuthenticationStateProvider)AuthenticationStateProvider).MarkUserAsLoggedOut();
+        PermService.InvalidateCache();
         Navigation.NavigateTo("/login");
     }
 }

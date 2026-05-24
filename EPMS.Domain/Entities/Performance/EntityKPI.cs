@@ -7,7 +7,7 @@ namespace EPMS.Domain.Entities.Performance
     {
         private EntityKPI() { }
 
-        public EntityKPI(string entityType, long entityId, long kpiId, KPIWeightPriority priority, decimal weightage, string? targetValue, string? targetUnit)
+        public EntityKPI(string entityType, long entityId, long kpiId, KPIWeightPriority priority, decimal weightage, decimal? targetValue, string? targetUnit)
         {
             if (!priority.IsValidWeight(weightage))
                 throw new ArgumentException($"Weightage {weightage} falls outside the allowed bounds for {priority.LevelName}.");
@@ -18,7 +18,7 @@ namespace EPMS.Domain.Entities.Performance
             PriorityId = priority.Id;
             Weightage = weightage;
 
-            TargetValue = targetValue?.Trim();
+            TargetValue = targetValue;
             TargetUnit = targetUnit?.Trim();
         }
 
@@ -27,7 +27,7 @@ namespace EPMS.Domain.Entities.Performance
         public long KPIId { get; private set; }
         public long PriorityId { get; private set; }
 
-        public string? TargetValue { get; private set; }
+        public decimal? TargetValue { get; private set; }
         public string? TargetUnit { get; private set; }
         public decimal Weightage { get; private set; }
 
@@ -40,14 +40,14 @@ namespace EPMS.Domain.Entities.Performance
         public virtual KPIMaster KPI { get; private set; } = null!;
         public virtual KPIWeightPriority Priority { get; private set; } = null!;
 
-        public void Update(KPIWeightPriority priority, decimal weightage, string? targetValue, string? targetUnit)
+        public void Update(KPIWeightPriority priority, decimal weightage, decimal? targetValue, string? targetUnit)
         {
             if (!priority.IsValidWeight(weightage))
                 throw new ArgumentException($"Weightage {weightage} falls outside the allowed bounds for {priority.LevelName}.");
 
             PriorityId = priority.Id;
             Weightage = weightage;
-            TargetValue = targetValue?.Trim();
+            TargetValue = targetValue;
             TargetUnit = targetUnit?.Trim();
         }
 

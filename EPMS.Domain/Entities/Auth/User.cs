@@ -46,6 +46,7 @@ namespace EPMS.Domain.Entities.Auth
         public byte[] Version { get; private set; } = Array.Empty<byte>();
 
         public long RoleId { get; private set; }
+        public long? PositionId { get; private set; }
         public virtual Role Role { get; private set; } = null!;
         public virtual EmployeeProfile? Profile { get; private set; }
 
@@ -125,6 +126,11 @@ namespace EPMS.Domain.Entities.Auth
         public void ChangeRole(UserRole newRole)
         {
             RoleId = (long)newRole;
+        }
+
+        public void AssignPosition(long positionId)
+        {
+            PositionId = positionId;
         }
 
         public void UpdateLastLogin(TimeProvider timeProvider)

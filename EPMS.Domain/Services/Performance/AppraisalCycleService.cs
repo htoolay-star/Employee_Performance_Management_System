@@ -13,10 +13,12 @@ namespace EPMS.Domain.Services.Performance;
 public class AppraisalCycleService : IAppraisalCycleService
 {
     private readonly IUnitOfWork _uow;
-    
-    public AppraisalCycleService(IUnitOfWork uow)
+    private readonly IEntityKPIService _kpiService;
+
+    public AppraisalCycleService(IUnitOfWork uow, IEntityKPIService kpiService)
     {
         _uow = uow;
+        _kpiService = kpiService;
     }
 
     public async Task<SuccessResponse<IEnumerable<AppraisalCycleDto>>> GetAllAsync()
@@ -105,7 +107,11 @@ public class AppraisalCycleService : IAppraisalCycleService
             dto.EvaluationStartDate.Value,
             dto.EvaluationEndDate.Value,
             dto.WindowStartDate,
-            dto.WindowEndDate
+            dto.WindowEndDate,
+            dto.KpiWeight,
+            dto.SelfWeight,
+            dto.ThreeSixtyWeight,
+            dto.AppraisalWeight
         );
 
         try
@@ -120,8 +126,8 @@ public class AppraisalCycleService : IAppraisalCycleService
 
         try
         {
-            if (dto.ManagerReviewStartDate.HasValue && dto.ManagerReviewDeadline.HasValue)
-                cycle.ConfigureManagerReviewWindow(dto.ManagerReviewStartDate.Value, dto.ManagerReviewDeadline.Value);
+            if (dto.AppraisalReviewStartDate.HasValue && dto.AppraisalReviewDeadline.HasValue)
+                cycle.ConfigureAppraisalReviewWindow(dto.AppraisalReviewStartDate.Value, dto.AppraisalReviewDeadline.Value);
         }
         catch (ArgumentException ex)
         {
@@ -130,8 +136,8 @@ public class AppraisalCycleService : IAppraisalCycleService
 
         try
         {
-            if (dto.PeerReviewStartDate.HasValue && dto.PeerReviewDeadline.HasValue)
-                cycle.ConfigurePeerReviewWindow(dto.PeerReviewStartDate.Value, dto.PeerReviewDeadline.Value);
+            if (dto.ThreeSixtyReviewStartDate.HasValue && dto.ThreeSixtyReviewDeadline.HasValue)
+                cycle.ConfigureThreeSixtyReviewWindow(dto.ThreeSixtyReviewStartDate.Value, dto.ThreeSixtyReviewDeadline.Value);
         }
         catch (ArgumentException ex)
         {
@@ -257,7 +263,9 @@ public class AppraisalCycleService : IAppraisalCycleService
 
         cycle.Update(dto.Name, dto.AppraisalType, dto.CalendarType, dto.YearLabel,
                      dto.EvaluationStartDate, dto.EvaluationEndDate,
-                     dto.WindowStartDate, dto.WindowEndDate);
+                     dto.WindowStartDate, dto.WindowEndDate,
+                     dto.KpiWeight, dto.SelfWeight, dto.ThreeSixtyWeight,
+                     dto.AppraisalWeight);
 
         try
         {
@@ -271,8 +279,8 @@ public class AppraisalCycleService : IAppraisalCycleService
 
         try
         {
-            if (dto.ManagerReviewStartDate.HasValue && dto.ManagerReviewDeadline.HasValue)
-                cycle.ConfigureManagerReviewWindow(dto.ManagerReviewStartDate.Value, dto.ManagerReviewDeadline.Value);
+            if (dto.AppraisalReviewStartDate.HasValue && dto.AppraisalReviewDeadline.HasValue)
+                cycle.ConfigureAppraisalReviewWindow(dto.AppraisalReviewStartDate.Value, dto.AppraisalReviewDeadline.Value);
         }
         catch (ArgumentException ex)
         {
@@ -281,8 +289,8 @@ public class AppraisalCycleService : IAppraisalCycleService
 
         try
         {
-            if (dto.PeerReviewStartDate.HasValue && dto.PeerReviewDeadline.HasValue)
-                cycle.ConfigurePeerReviewWindow(dto.PeerReviewStartDate.Value, dto.PeerReviewDeadline.Value);
+            if (dto.ThreeSixtyReviewStartDate.HasValue && dto.ThreeSixtyReviewDeadline.HasValue)
+                cycle.ConfigureThreeSixtyReviewWindow(dto.ThreeSixtyReviewStartDate.Value, dto.ThreeSixtyReviewDeadline.Value);
         }
         catch (ArgumentException ex)
         {
@@ -291,6 +299,17 @@ public class AppraisalCycleService : IAppraisalCycleService
 
         _uow.Perf.AppraisalCycles.Update(cycle);
         await _uow.CompleteAsync();
+
+        if (dto.IsActive.HasValue)
+        {
+            if (dto.IsActive.Value)
+            {
+                cycle.Reactivate();
+                await _kpiService.PropagatePositionKPIsForAllEmployeesAsync();
+            }
+            else cycle.Deactivate();
+            await _uow.CompleteAsync();
+        }
 
         return SuccessResponse.Ok(AppraisalCycleMsg.Updated);
     }
@@ -358,46 +377,7 @@ public class AppraisalCycleService : IAppraisalCycleService
         return SuccessResponse.Ok(AppraisalCycleMsg.Locked);
     }
 
-    public async Task<SuccessResponse> DeactivateAsync(long id)
-    {
-        var cycle = await _uow.Perf.AppraisalCycles.GetByIdAsync(id);
-        if (cycle == null)
-        {
-            return SuccessResponse.Fail(AppraisalCycleMsg.NotFound(id), ErrorType.NotFound);
-        }
-
-        if (!cycle.IsActive)
-        {
-            return SuccessResponse.Fail(AppraisalCycleMsg.AlreadyDeactivated, ErrorType.Validation);
-        }
-
-        cycle.Deactivate();
-        _uow.Perf.AppraisalCycles.Update(cycle);
-        await _uow.CompleteAsync();
-
-        return SuccessResponse.Ok(AppraisalCycleMsg.Deactivated);
-    }
-
-    public async Task<SuccessResponse> ReactivateAsync(long id)
-    {
-        var cycle = await _uow.Perf.AppraisalCycles.GetByIdAsync(id);
-        if (cycle == null)
-        {
-            return SuccessResponse.Fail(AppraisalCycleMsg.NotFound(id), ErrorType.NotFound);
-        }
-
-        if (cycle.IsActive)
-        {
-            return SuccessResponse.Fail(AppraisalCycleMsg.AlreadyActive, ErrorType.Validation);
-        }
-
-        cycle.Reactivate();
-        _uow.Perf.AppraisalCycles.Update(cycle);
-        await _uow.CompleteAsync();
-
-        return SuccessResponse.Ok(AppraisalCycleMsg.Reactivated);
-    }
-        public async Task<SuccessResponse> RestoreAsync(long id)
+    public async Task<SuccessResponse> RestoreAsync(long id)
         {
             var entity = await _uow.Perf.AppraisalCycles.GetByIdAsync(id);
             if (entity == null)

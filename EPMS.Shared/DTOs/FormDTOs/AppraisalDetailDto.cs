@@ -9,9 +9,7 @@ namespace EPMS.Shared.DTOs.FormDTOs
     public class AppraisalDetailDto
     {
         public long? KPIId { get; set; }
-        public int? QuestionId { get; set; }
-        public decimal Rating { get; set; } 
-        public string? ActualValue { get; set; } 
+        public decimal? ActualValue { get; set; }
         public string? Comment { get; set; }
     }
 }

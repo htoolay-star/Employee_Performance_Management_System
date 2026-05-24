@@ -9,10 +9,33 @@ public class CreateQuestionRatingScaleValidator : AbstractValidator<CreateQuesti
     public CreateQuestionRatingScaleValidator()
     {
         RuleFor(x => x.Name).ApplyQuestionRatingScaleNameRules();
-        RuleFor(x => x.MinScore).ApplyMinScoreRules();
-        RuleFor(x => x.MaxScore).ApplyMaxScoreRules();
-        RuleFor(x => x.MaxScore)
-            .GreaterThan(x => x.MinScore)
-            .WithMessage("Maximum score must be greater than minimum score.");
+
+        RuleFor(x => x.Levels)
+            .NotEmpty()
+            .WithMessage("At least one rating level is required.");
+
+        RuleForEach(x => x.Levels)
+            .SetValidator(new CreateQuestionRatingScaleLevelValidator());
+
+        RuleFor(x => x.Levels)
+            .Must(levels => levels.Select(l => l.Rating).Distinct().Count() == levels.Count)
+            .WithMessage("Rating values must be unique.");
+
+        RuleFor(x => x.Levels)
+            .Must(HasNoOverlappingRanges)
+            .WithMessage("Score ranges must not overlap.");
+    }
+
+    private bool HasNoOverlappingRanges(List<CreateQuestionRatingScaleLevelDto> levels)
+    {
+        for (int i = 0; i < levels.Count; i++)
+        {
+            for (int j = i + 1; j < levels.Count; j++)
+            {
+                if (levels[i].MinScore <= levels[j].MaxScore && levels[j].MinScore <= levels[i].MaxScore)
+                    return false;
+            }
+        }
+        return true;
     }
 }

@@ -2,6 +2,7 @@ using EPMS.Domain.Data;
 using EPMS.Domain.Entities.Performance;
 using EPMS.Domain.Interface.Irepo.Performance;
 using EPMS.Domain.Repository.Base;
+using EPMS.Shared.DTOs.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace EPMS.Domain.Repository.Performance
@@ -29,6 +30,20 @@ namespace EPMS.Domain.Repository.Performance
         {
             return await _dbSet
                 .AnyAsync(x => x.Code == code && !x.IsDeleted && (excludeId == null || x.Id != excludeId));
+        }
+
+        public async Task<IEnumerable<LookUpDto>> GetLookupDtoAsync()
+        {
+            return await _dbSet
+                .AsNoTracking()
+                .Where(x => !x.IsDeleted)
+                .Select(x => new LookUpDto
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    IsActive = x.IsActive,
+                })
+                .ToListAsync();
         }
     }
 }

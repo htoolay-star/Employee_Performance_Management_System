@@ -6,5 +6,5 @@ using System.Threading.Tasks;
 
 namespace EPMS.Shared.Enums
 {
-    public enum ErrorType { None, NotFound, Validation, Unauthorized, Forbidden, Conflict, ServerError }
+    public enum ErrorType { None, NotFound, Validation, Unauthorized, Forbidden, Conflict, ServerError, TooManyRequests }
 }

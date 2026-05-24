@@ -34,6 +34,7 @@ public static class ServiceCollectionExtensions
 
         // Auth
         services.AddSecureRefitClient<IAuthApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IPermissionApiClient>(refitSettings, baseUri);
 
         // Hr
         services.AddSecureRefitClient<IPositionApiClient>(refitSettings, baseUri);
@@ -50,7 +51,12 @@ public static class ServiceCollectionExtensions
         services.AddSecureRefitClient<IEntityKPIApiClient>(refitSettings, baseUri);
         services.AddSecureRefitClient<IKPIMasterApiClient>(refitSettings, baseUri);
         services.AddSecureRefitClient<IEmployeeKPIApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IFormTemplateApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IFormQuestionApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IPositionFormTemplateApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IAppraisalApiClient>(refitSettings, baseUri);
         services.AddSecureRefitClient<IRecycleBinApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IEvaluationResponseApiClient>(refitSettings, baseUri);
 
         // Info
         services.AddSecureRefitClient<IEmployeeProfileApiClient>(refitSettings, baseUri);

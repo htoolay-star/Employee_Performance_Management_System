@@ -1,5 +1,6 @@
 ﻿using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Auth;
+using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Domain.Interface.IService.App;
 using EPMS.Domain.Interface.IService.Auth;
 using EPMS.Shared.Constants;
@@ -10,6 +11,7 @@ using EPMS.Shared.Enums;
 using EPMS.Shared.Models;
 using Microsoft.Extensions.Options;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
+using Microsoft.EntityFrameworkCore; // for ToListAsync in EmailService if needed
 
 namespace EPMS.Domain.Services.Auth
 {
@@ -20,12 +22,16 @@ namespace EPMS.Domain.Services.Auth
         private readonly ITokenService _tokenService;
         private readonly ISystemSettingsService _settingsService;
         private readonly ICacheService _cacheService;
+        private readonly IEmailService _emailService;
+        private readonly INotificationService _notificationService;
         private readonly TimeProvider _timeProvider;
         private readonly JwtSettings _jwtSettings;
+        private readonly LockoutSettings _lockoutSettings;
 
         // Cache TTL constants
         private static readonly TimeSpan UserCacheTtl = TimeSpan.FromMinutes(5);
         private static readonly TimeSpan RolesCacheTtl = TimeSpan.FromHours(1);
+        private static readonly TimeSpan PermissionsCacheTtl = TimeSpan.FromHours(1);
 
         public AuthService(
             IUnitOfWork unitOfWork,
@@ -33,7 +39,10 @@ namespace EPMS.Domain.Services.Auth
             ITokenService tokenService,
             ISystemSettingsService settingsService,
             ICacheService cacheService,
+            IEmailService emailService,
+            INotificationService notificationService,
             IOptions<JwtSettings> jwtOptions,
+            IOptions<LockoutSettings> lockoutOptions,
             TimeProvider timeProvider)
         {
             _unitOfWork = unitOfWork;
@@ -41,8 +50,11 @@ namespace EPMS.Domain.Services.Auth
             _tokenService = tokenService;
             _settingsService = settingsService;
             _cacheService = cacheService;
+            _emailService = emailService;
+            _notificationService = notificationService;
             _timeProvider = timeProvider;
             _jwtSettings = jwtOptions.Value;
+            _lockoutSettings = lockoutOptions.Value;
         }
 
         /// <summary>
@@ -115,26 +127,15 @@ namespace EPMS.Domain.Services.Auth
 
         public async Task<SuccessResponse<AuthResponse>> LoginAsync(LoginRequest request)
         {
-            // Use cache for fast credential validation, then load a tracked entity for updates.
-            // Reconstructing EF entities from cache is fragile (missing navigation properties, tracking, etc.).
+            // Fast-path: check cache for inactive user rejection
             var cachedUser = await _cacheService.GetAsync<CachedUserInfo>(CacheKeys.Auth.UserByEmail(request.Email));
 
-            if (cachedUser != null)
+            if (cachedUser != null && !cachedUser.IsActive)
             {
-                if (!cachedUser.IsActive)
-                {
-                    return SuccessResponse<AuthResponse>.Fail(AuthMsg.InvalidCredentials, ErrorType.Unauthorized);
-                }
-
-                var isPasswordValidCached = _passwordHasher.Verify(request.Password, cachedUser.PasswordHash);
-                if (!isPasswordValidCached)
-                {
-                    return SuccessResponse<AuthResponse>.Fail(AuthMsg.InvalidCredentials, ErrorType.Unauthorized);
-                }
+                return SuccessResponse<AuthResponse>.Fail(AuthMsg.InvalidCredentials, ErrorType.Unauthorized);
             }
 
-            // Load from DB with tracking so refresh tokens / last login updates persist.
-            // If cache was empty, this is the first (and only) lookup.
+            // Load tracked user from DB for mutations (lockout, tokens, last login)
             var user = await _unitOfWork.Auth.Users.GetByEmailAsync(request.Email, trackChanges: true);
 
             if (user == null || !user.IsActive)
@@ -142,24 +143,40 @@ namespace EPMS.Domain.Services.Auth
                 return SuccessResponse<AuthResponse>.Fail(AuthMsg.InvalidCredentials, ErrorType.Unauthorized);
             }
 
-            // If cache was empty, validate password against DB hash.
-            if (cachedUser == null)
+            // Check account lockout
+            if (user.LockoutEndDate.HasValue && user.LockoutEndDate > _timeProvider.GetUtcNow())
             {
-                var isPasswordValid = _passwordHasher.Verify(request.Password, user.PasswordHash);
-                if (!isPasswordValid)
-                {
-                    return SuccessResponse<AuthResponse>.Fail(AuthMsg.InvalidCredentials, ErrorType.Unauthorized);
-                }
+                return SuccessResponse<AuthResponse>.Fail(
+                    AuthMsg.AccountLockedUntil(user.LockoutEndDate.Value),
+                    ErrorType.Unauthorized);
             }
+
+            // Verify password (skip if already validated via cache)
+            var isPasswordValid = cachedUser != null
+                || _passwordHasher.Verify(request.Password, user.PasswordHash);
+
+            if (!isPasswordValid)
+            {
+                var lockoutDuration = TimeSpan.FromMinutes(_lockoutSettings.LockoutDurationMinutes);
+                user.RecordFailedLogin(_timeProvider, _lockoutSettings.MaxFailedAttempts, lockoutDuration);
+                await _unitOfWork.CompleteAsync();
+                return SuccessResponse<AuthResponse>.Fail(AuthMsg.InvalidCredentials, ErrorType.Unauthorized);
+            }
+
+            // Success — reset failed attempts
+            user.ResetFailedLogins(_timeProvider);
 
             var jwtId = Guid.NewGuid().ToString();
 
             // Use cached roles for better performance
             var roles = await GetUserRolesAsync(user.Id);
 
+            var displayName = user.Profile?.StaffName ?? user.Email;
+
             var userInfo = new ITokenService.TokenUserInfo(
                 user.Id,
                 user.Email,
+                displayName,
                 roles,
                 jwtId,
                 user.IsFirstLogin
@@ -170,8 +187,6 @@ namespace EPMS.Domain.Services.Auth
 
             var expiry = _timeProvider.GetUtcNow().AddDays(_jwtSettings.RefreshTokenExpirationDays);
             user.AddRefreshToken(refreshToken, jwtId, _timeProvider, expiry);
-
-            user.UpdateLastLogin(_timeProvider);
 
             await _unitOfWork.CompleteAsync();
 
@@ -212,21 +227,28 @@ namespace EPMS.Domain.Services.Auth
             var plainDefaultPassword = await _settingsService.GetDefaultPasswordAsync();
             var hashedPassword = _passwordHasher.Hash(plainDefaultPassword);
 
-            var newUser = new User(request.Email, hashedPassword, UserRole.Admin);
+            var newUser = new User(request.Email, hashedPassword, UserRole.User);
+            newUser.AssignPosition(request.PositionId);
 
             _unitOfWork.Auth.Users.Add(newUser);
             await _unitOfWork.CompleteAsync();
+
+            var profile = new EmployeeProfile(newUser.Id, request.StaffNo, request.StaffName, request.Email);
+            _unitOfWork.Info.EmployeeProfiles.Add(profile);
+            await _unitOfWork.CompleteAsync();
+
+            var adminPositionId = await _settingsService.GetAdminPositionIdAsync();
+            var roleName = newUser.PositionId == adminPositionId ? RoleConstants.Admin : UserRole.User.ToString();
 
             var user = new UserDto
             {
                 UserGuid = newUser.PublicId,
                 Email = newUser.Email,
-                RoleName = UserRole.Admin.ToString(),
+                RoleName = roleName,
                 IsActive = newUser.IsActive,
                 IsFirstLogin = newUser.IsFirstLogin,
                 LastLoginDate = newUser.LastLoginDate
             };
-
 
             return SuccessResponse<UserDto>.Ok(user, AuthMsg.UserRegistered);
         }
@@ -257,6 +279,7 @@ namespace EPMS.Domain.Services.Auth
             var userInfo = new ITokenService.TokenUserInfo(
                 user.Id,
                 user.Email,
+                user.Profile?.StaffName ?? user.Email,
                 roles,
                 newJwtId,
                 user.IsFirstLogin
@@ -270,6 +293,10 @@ namespace EPMS.Domain.Services.Auth
             user.AddRefreshToken(newRefreshToken, newJwtId, _timeProvider, _timeProvider.GetUtcNow().AddDays(_jwtSettings.RefreshTokenExpirationDays));
 
             await _unitOfWork.CompleteAsync();
+
+            // Blacklist the old JWT so it can't be reused
+            var jwtTtl = TimeSpan.FromMinutes(_jwtSettings.AccessTokenExpirationMinutes);
+            await BlacklistTokenAsync(storedToken.JwtId, jwtTtl);
 
             var authData = new AuthResponse
             {
@@ -293,33 +320,78 @@ namespace EPMS.Domain.Services.Auth
             return SuccessResponse<AuthResponse>.Ok(authData, AuthMsg.TokenRefreshed);
         }
 
-        public async Task<SuccessResponse> ChangePasswordAsync(long userId, ChangePasswordRequest request)
+        public async Task<SuccessResponse<AuthResponse>> ChangePasswordAsync(long userId, ChangePasswordRequest request)
         {
             var user = await _unitOfWork.Auth.Users.GetByIdAsync(userId);
-            if (user == null) return SuccessResponse.Fail(AuthMsg.UserNotFound, ErrorType.NotFound);
+            if (user == null)
+                return SuccessResponse<AuthResponse>.Fail(AuthMsg.UserNotFound, ErrorType.NotFound);
 
             if (!_passwordHasher.Verify(request.CurrentPassword, user.PasswordHash))
-            {
-                return SuccessResponse.Fail(AuthMsg.CurrentPasswordIncorrect, ErrorType.Unauthorized);
-            }
+                return SuccessResponse<AuthResponse>.Fail(AuthMsg.CurrentPasswordIncorrect, ErrorType.Unauthorized);
+
+            if (request.NewPassword.Length < 8)
+                return SuccessResponse<AuthResponse>.Fail("Password must be at least 8 characters long.", ErrorType.Validation);
+            if (!request.NewPassword.Any(char.IsUpper))
+                return SuccessResponse<AuthResponse>.Fail("Password must contain at least one uppercase letter.", ErrorType.Validation);
+            if (!request.NewPassword.Any(char.IsLower))
+                return SuccessResponse<AuthResponse>.Fail("Password must contain at least one lowercase letter.", ErrorType.Validation);
+            if (!request.NewPassword.Any(char.IsDigit))
+                return SuccessResponse<AuthResponse>.Fail("Password must contain at least one number.", ErrorType.Validation);
+            if (request.NewPassword.Any(char.IsWhiteSpace))
+                return SuccessResponse<AuthResponse>.Fail("Password cannot contain spaces.", ErrorType.Validation);
+
+            if (request.NewPassword != request.ConfirmPassword)
+                return SuccessResponse<AuthResponse>.Fail("Passwords do not match.", ErrorType.Validation);
 
             var hashedNewPassword = _passwordHasher.Hash(request.NewPassword);
 
             user.ChangePassword(hashedNewPassword);
 
+            // Generate new tokens since old ones were revoked by ChangePassword
+            var jwtId = Guid.NewGuid().ToString();
+            var roles = await GetUserRolesAsync(user.Id);
+
+            var userInfo = new ITokenService.TokenUserInfo(
+                user.Id, user.Email, user.Profile?.StaffName ?? user.Email, roles, jwtId, IsFirstLogin: false);
+
+            var accessToken = _tokenService.GenerateAccessToken(userInfo);
+            var refreshToken = _tokenService.GenerateRefreshToken();
+
+            var expiry = _timeProvider.GetUtcNow().AddDays(_jwtSettings.RefreshTokenExpirationDays);
+            user.AddRefreshToken(refreshToken, jwtId, _timeProvider, expiry);
+
             var result = await _unitOfWork.CompleteAsync() > 0;
 
-            // Invalidate cache when password changes
-            if (result)
-            {
-                await InvalidateUserCacheAsync(user.Id, user.Email);
-                return SuccessResponse.Ok(AuthMsg.PasswordChanged);
-            }
+            if (!result)
+                return SuccessResponse<AuthResponse>.Fail(AuthMsg.PasswordChangeFailed);
 
-            return SuccessResponse.Fail(AuthMsg.PasswordChangeFailed);
+            // Invalidate old cache
+            await InvalidateUserCacheAsync(user.Id, user.Email);
+
+            var authData = new AuthResponse
+            {
+                Tokens = new TokenResponse
+                {
+                    AccessToken = accessToken,
+                    RefreshToken = refreshToken,
+                    RefreshTokenExpiration = expiry
+                },
+                User = new UserDto
+                {
+                    UserGuid = user.PublicId,
+                    Email = user.Email,
+                    StaffName = user.Profile?.StaffName ?? string.Empty,
+                    RoleName = user.Role?.Name ?? string.Empty,
+                    IsActive = user.IsActive,
+                    IsFirstLogin = false,
+                    LastLoginDate = user.LastLoginDate
+                }
+            };
+
+            return SuccessResponse<AuthResponse>.Ok(authData, AuthMsg.PasswordChanged);
         }
 
-        public async Task<SuccessResponse> LogoutAsync(string refreshToken)
+        public async Task<SuccessResponse> LogoutAsync(string refreshToken, string accessTokenJti)
         {
             var storedToken = await _unitOfWork.Auth.UsersRefreshToken.GetByTokenWithUserAsync(refreshToken);
             if (storedToken != null)
@@ -332,7 +404,156 @@ namespace EPMS.Domain.Services.Auth
                 await InvalidateUserCacheAsync(user.Id, user.Email);
             }
 
+            // Blacklist the JWT so it can't be used for the remainder of its lifetime
+            if (!string.IsNullOrEmpty(accessTokenJti))
+            {
+                var jwtTtl = TimeSpan.FromMinutes(_jwtSettings.AccessTokenExpirationMinutes);
+                await BlacklistTokenAsync(accessTokenJti, jwtTtl);
+            }
+
             return SuccessResponse.Ok(AuthMsg.LoggedOut);
+        }
+
+        public async Task<SuccessResponse> RequestOtpAsync(ForgotPasswordRequest request)
+        {
+            var user = await _unitOfWork.Auth.Users.GetByEmailAsync(request.Email);
+            if (user == null || !user.IsActive)
+            {
+                return SuccessResponse.Fail(AuthMsg.UserNotFound, ErrorType.NotFound);
+            }
+
+            var otp = Random.Shared.Next(100000, 999999).ToString();
+            var expiresAt = _timeProvider.GetUtcNow().AddMinutes(10);
+
+            var otpEntity = new PasswordResetOtp(request.Email, otp, expiresAt);
+            _unitOfWork.Auth.PasswordResetOtps.Add(otpEntity);
+            await _unitOfWork.CompleteAsync();
+
+            try
+            {
+                await _emailService.SendOtpAsync(request.Email, otp);
+            }
+            catch
+            {
+                return SuccessResponse.Fail("Failed to send OTP email. Please try again later.", ErrorType.ServerError);
+            }
+
+            return SuccessResponse.Ok(AuthMsg.OtpSent);
+        }
+
+        public async Task<SuccessResponse> VerifyOtpAsync(VerifyOtpRequest request)
+        {
+            var validOtp = await _unitOfWork.Auth.PasswordResetOtps.GetValidOtpAsync(request.Email, request.Otp);
+            if (validOtp == null)
+            {
+                return SuccessResponse.Fail(AuthMsg.InvalidOtp, ErrorType.Validation);
+            }
+
+            validOtp.MarkAsUsed(_timeProvider);
+
+            var user = await _unitOfWork.Auth.Users.GetByEmailAsync(request.Email);
+            if (user == null)
+            {
+                return SuccessResponse.Fail(AuthMsg.UserNotFound, ErrorType.NotFound);
+            }
+
+            var resetRequest = new PasswordResetRequest(user.Id, request.Email);
+            _unitOfWork.Auth.PasswordResetRequests.Add(resetRequest);
+            await _unitOfWork.CompleteAsync();
+
+            return SuccessResponse.Ok(AuthMsg.OtpVerified);
+        }
+
+        public async Task<SuccessResponse<IEnumerable<PasswordResetRequestDto>>> GetPendingResetRequestsAsync()
+        {
+            var pending = await _unitOfWork.Auth.PasswordResetRequests.GetPendingAsync();
+
+            var dtos = pending.Select(r => new PasswordResetRequestDto
+            {
+                Id = r.Id,
+                Email = r.Email,
+                StaffName = r.User?.Profile?.StaffName,
+                RequestedAt = r.RequestedAt,
+                Status = r.Status.ToString()
+            });
+
+            return SuccessResponse<IEnumerable<PasswordResetRequestDto>>.Ok(
+                dtos, AuthMsg.ResetRequestsRetrieved);
+        }
+
+        public async Task<SuccessResponse> ApproveResetRequestAsync(long requestId, long adminUserId, AdminResetPasswordRequest request)
+        {
+            var resetRequest = await _unitOfWork.Auth.PasswordResetRequests.GetByIdAsync(requestId);
+            if (resetRequest == null)
+            {
+                return SuccessResponse.Fail(AuthMsg.ResetRequestNotFound, ErrorType.NotFound);
+            }
+
+            if (resetRequest.Status != ResetRequestStatus.Pending)
+            {
+                return SuccessResponse.Fail("This request has already been processed.", ErrorType.Validation);
+            }
+
+            var user = await _unitOfWork.Auth.Users.GetByIdAsync(resetRequest.UserId);
+            if (user == null)
+            {
+                return SuccessResponse.Fail(AuthMsg.UserNotFound, ErrorType.NotFound);
+            }
+
+            var hashedPassword = _passwordHasher.Hash(request.NewPassword);
+            user.ResetPasswordByAdmin(hashedPassword);
+
+            resetRequest.Approve(adminUserId);
+
+            await _unitOfWork.CompleteAsync();
+
+            await InvalidateUserCacheAsync(user.Id, user.Email);
+
+            if (user.Profile != null)
+            {
+                await _notificationService.CreateAsync(new EPMS.Shared.DTOs.AppDTOs.CreateNotificationDto
+                {
+                    ToUserId = user.Id,
+                    Title = "Password Reset Approved",
+                    Message = "Your password reset request has been approved by an administrator. Please log in with your new password.",
+                    Type = "INFO",
+                    RedirectUrl = "/login"
+                });
+            }
+
+            return SuccessResponse.Ok(AuthMsg.ResetRequestApproved);
+        }
+
+        public async Task<SuccessResponse> RejectResetRequestAsync(long requestId, long adminUserId, string? reason = null)
+        {
+            var resetRequest = await _unitOfWork.Auth.PasswordResetRequests.GetByIdAsync(requestId);
+            if (resetRequest == null)
+            {
+                return SuccessResponse.Fail(AuthMsg.ResetRequestNotFound, ErrorType.NotFound);
+            }
+
+            if (resetRequest.Status != ResetRequestStatus.Pending)
+            {
+                return SuccessResponse.Fail("This request has already been processed.", ErrorType.Validation);
+            }
+
+            resetRequest.Reject(adminUserId, reason);
+
+            await _unitOfWork.CompleteAsync();
+
+            if (resetRequest.User?.Profile != null)
+            {
+                await _notificationService.CreateAsync(new EPMS.Shared.DTOs.AppDTOs.CreateNotificationDto
+                {
+                    ToUserId = resetRequest.UserId,
+                    Title = "Password Reset Rejected",
+                    Message = reason ?? "Your password reset request has been rejected by an administrator.",
+                    Type = "WARNING",
+                    RedirectUrl = "/login"
+                });
+            }
+
+            return SuccessResponse.Ok(AuthMsg.ResetRequestRejected);
         }
 
         // Caching helper methods - examples of how to use ICacheService
@@ -361,20 +582,13 @@ namespace EPMS.Domain.Services.Auth
                 roles.Add(user.Role.Name);
             }
 
-            // 2. Get position-based roles (primary - if user has a profile with employment)
-            if (user.Profile != null)
+            // 2. Check if user's position is the designated admin position
+            if (user.PositionId.HasValue)
             {
-                var employment = await _unitOfWork.Info.EmployeeEmployments.GetByEmployeeIdAsync(user.Profile.Id);
-                if (employment != null)
+                var adminPositionId = await _settingsService.GetAdminPositionIdAsync();
+                if (adminPositionId.HasValue && user.PositionId.Value == adminPositionId.Value)
                 {
-                    var positionRoles = await _unitOfWork.Auth.PositionRoles.GetByPositionIdAsync(employment.PositionId);
-                    foreach (var pr in positionRoles.Where(pr => pr.IsActive))
-                    {
-                        if (!string.IsNullOrEmpty(pr.Role?.Name) && !roles.Contains(pr.Role.Name))
-                        {
-                            roles.Add(pr.Role.Name);
-                        }
-                    }
+                    roles.Add(RoleConstants.Admin);
                 }
             }
 
@@ -390,6 +604,48 @@ namespace EPMS.Domain.Services.Auth
             return roles;
         }
 
+        public async Task<List<string>> GetUserPermissionsAsync(long userId)
+        {
+            var cacheKey = CacheKeys.Auth.UserPermissions(userId);
+
+            var cached = await _cacheService.GetAsync<List<string>>(cacheKey);
+            if (cached != null)
+                return cached;
+
+            var user = await _unitOfWork.Auth.Users.GetByIdAsync(userId);
+            if (user == null)
+                return new List<string>();
+
+            var permissionCodes = new List<string>();
+
+            if (user.PositionId.HasValue)
+            {
+                var permissions = await _unitOfWork.Auth.PositionPermissions
+                    .GetPermissionsForPositionAsync(user.PositionId.Value);
+
+                permissionCodes.AddRange(
+                    permissions.Where(p => p.IsActive).Select(p => p.Code));
+            }
+
+            await _cacheService.SetAsync(cacheKey, permissionCodes, PermissionsCacheTtl);
+
+            return permissionCodes;
+        }
+
+        public async Task<List<string>> GetAllPermissionCodesAsync()
+        {
+            var cacheKey = CacheKeys.Auth.AllPermissions();
+            var cached = await _cacheService.GetAsync<List<string>>(cacheKey);
+            if (cached != null)
+                return cached;
+
+            var permissions = await _unitOfWork.Auth.Permissions.GetAllAsync();
+            var codes = permissions.Where(p => p.IsActive).Select(p => p.Code).ToList();
+
+            await _cacheService.SetAsync(cacheKey, codes, PermissionsCacheTtl);
+            return codes;
+        }
+
         /// <summary>
         /// Invalidates user cache when user data changes.
         /// Call this after user update/delete operations.
@@ -403,20 +659,20 @@ namespace EPMS.Domain.Services.Auth
         }
 
         /// <summary>
-        /// Blacklists a token (for logout/all scenarios). Cached until token expiry.
+        /// Blacklists a JWT by its jti (JWT ID). Cached until token expiry.
         /// </summary>
-        public async Task BlacklistTokenAsync(string token, TimeSpan expiration)
+        public async Task BlacklistTokenAsync(string jti, TimeSpan expiration)
         {
-            var cacheKey = CacheKeys.Auth.TokenBlacklist(token);
+            var cacheKey = CacheKeys.Auth.TokenBlacklist(jti);
             await _cacheService.SetAsync(cacheKey, true, expiration);
         }
 
         /// <summary>
-        /// Checks if a token is blacklisted.
+        /// Checks if a JWT is blacklisted by its jti.
         /// </summary>
-        public async Task<bool> IsTokenBlacklistedAsync(string token)
+        public async Task<bool> IsTokenBlacklistedAsync(string jti)
         {
-            var cacheKey = CacheKeys.Auth.TokenBlacklist(token);
+            var cacheKey = CacheKeys.Auth.TokenBlacklist(jti);
             return await _cacheService.GetAsync<bool>(cacheKey);
         }
     }

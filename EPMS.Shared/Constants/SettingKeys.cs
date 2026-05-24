@@ -9,5 +9,6 @@ namespace EPMS.Shared.Constants
     public static class SettingKeys
     {
         public const string DefaultUserPassword = "DefaultUserPassword";
+        public const string AdminPositionId = "AdminPositionId";
     }
 }

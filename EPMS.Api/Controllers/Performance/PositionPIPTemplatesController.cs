@@ -67,18 +67,4 @@ public class PositionPIPTemplatesController : ApiControllerBase
         var result = await _positionPIPTemplateService.DeleteAsync(id);
         return HandleResult(result);
     }
-
-    [HttpPut("{id}/deactivate")]
-    public async Task<ActionResult<SuccessResponse>> Deactivate(long id)
-    {
-        var result = await _positionPIPTemplateService.DeactivateAsync(id);
-        return HandleResult(result);
-    }
-
-    [HttpPut("{id}/reactivate")]
-    public async Task<ActionResult<SuccessResponse>> Reactivate(long id)
-    {
-        var result = await _positionPIPTemplateService.ReactivateAsync(id);
-        return HandleResult(result);
-    }
 }

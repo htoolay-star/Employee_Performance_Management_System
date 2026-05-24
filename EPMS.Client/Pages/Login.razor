@@ -1,12 +1,15 @@
 @page "/login"
+@layout BlankLayout
 @using EPMS.Client.Services.Auth
 @using EPMS.Shared.DTOs.Auth
 @using MudBlazor
+@using Refit
 @inject IAuthApiClient AuthApiClient
 @inject TokenStorage TokenStorage
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject ISnackbar Snackbar
+@inject CurrentUserPermissionService PermService
 @attribute [AllowAnonymous]
 
 <MudContainer MaxWidth="MaxWidth.Small" Class="d-flex align-center justify-center" Style="height:100vh;">
@@ -28,7 +31,7 @@
                 </MudItem>
                 <MudItem xs="12" Class="d-flex justify-space-between align-center">
                     <MudCheckBox T="bool" @bind-Value="_loginModel.RememberMe" Color="Color.Primary" Label="Remember me" />
-                    <MudLink Href="#" Typo="Typo.body2">Forgot password?</MudLink>
+                    <MudLink Href="forgot-password" Typo="Typo.body2">Forgot password?</MudLink>
                 </MudItem>
                 <MudItem xs="12" Class="mt-4">
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Class="py-3" OnClick="Submit" Disabled="!success || _isLoading">
@@ -43,10 +46,18 @@
                         }
                     </MudButton>
                 </MudItem>
-                @if (!string.IsNullOrEmpty(_errorMessage))
+                 @if (!string.IsNullOrEmpty(_errorMessage))
                 {
                     <MudItem xs="12" Class="mt-4">
                         <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Dense="true" Class="mt-2">@_errorMessage</MudAlert>
+                    </MudItem>
+                }
+                @if (_showPasswordChangedMessage)
+                {
+                    <MudItem xs="12" Class="mt-4">
+                        <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Dense="true" Class="mt-2">
+                            Password changed successfully. Please login with your new password.
+                        </MudAlert>
                     </MudItem>
                 }
             </MudGrid>
@@ -62,6 +73,15 @@
     private string _errorMessage = string.Empty;
     private bool showPassword = false;
     private bool _isLoading = false;
+    private bool _showPasswordChangedMessage = false;
+
+    protected override void OnInitialized()
+    {
+        if (Navigation.Uri.Contains("from=password-changed"))
+        {
+            _showPasswordChangedMessage = true;
+        }
+    }
 
     private void TogglePasswordVisibility()
     {
@@ -77,22 +97,47 @@
         {
             _errorMessage = string.Empty;
             var loginRequest = new LoginRequest { Email = _loginModel.Email, Password = _loginModel.Password };
-            var result = await AuthApiClient.Login(loginRequest);
 
-            if (result.Success && result.Data != null)
+            try
             {
-                await TokenStorage.SetTokensAsync(result.Data.Tokens.AccessToken, result.Data.Tokens.RefreshToken);
-                var displayName = !string.IsNullOrWhiteSpace(result.Data.User.StaffName)
-                    ? result.Data.User.StaffName
-                    : result.Data.User.Email;
-                ((JwtAuthenticationStateProvider)AuthenticationStateProvider).MarkUserAsAuthenticated(displayName);
-                Navigation.NavigateTo("/dashboard");
-                Snackbar.Add("Login successful!", Severity.Success);
+                var result = await AuthApiClient.Login(loginRequest);
+
+                if (result.Success && result.Data != null)
+                {
+                    var accessToken = result.Data.Tokens.AccessToken;
+                    await TokenStorage.SetTokensAsync(accessToken, result.Data.Tokens.RefreshToken);
+                    ((JwtAuthenticationStateProvider)AuthenticationStateProvider).MarkUserAsAuthenticated(accessToken);
+                    PermService.InvalidateCache();
+
+                    Snackbar.Add(result.Message ?? "Login successful", Severity.Success);
+
+                    _isLoading = false;
+
+                    if (result.Data.User.IsFirstLogin)
+                    {
+                        Navigation.NavigateTo("/change-password", forceLoad: false);
+                    }
+                    else
+                    {
+                        Navigation.NavigateTo("/dashboard", forceLoad: false);
+                    }
+                    return;
+                }
+                else
+                {
+                    _errorMessage = result.Message;
+                    Snackbar.Add(result.Message, Severity.Error);
+                }
             }
-            else
+            catch (ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
             {
-                _errorMessage = result.Message;
-                Snackbar.Add(result.Message, Severity.Error);
+                _errorMessage = "Too many login attempts. Please try again later.";
+                Snackbar.Add(_errorMessage, Severity.Error);
+            }
+            catch (ApiException)
+            {
+                _errorMessage = "Login failed due to a network error. Please try again.";
+                Snackbar.Add(_errorMessage, Severity.Error);
             }
         }
         _isLoading = false;

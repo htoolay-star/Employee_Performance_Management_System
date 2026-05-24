@@ -20,6 +20,8 @@ namespace EPMS.Domain.Services.Performance
         Task<SuccessResponse> UpdateAsync(long id, UpdateEntityKPIDto dto);
         Task<SuccessResponse> RestoreAsync(long id);
         Task<SuccessResponse> DeleteAsync(long id);
+        Task PropagatePositionKPIsToEmployeeAsync(long employeeId, long positionId);
+        Task PropagatePositionKPIsForAllEmployeesAsync();
     }
 
     public class EntityKPIService : IEntityKPIService
@@ -38,9 +40,114 @@ namespace EPMS.Domain.Services.Performance
             _uow = uow;
         }
 
+        private enum PropagationAction { Create, Update, Delete }
+
+        private async Task PropagateToPositionEmployeesAsync(
+            long entityKpiId, long kpiId, long priorityId, decimal weightage,
+            decimal? targetValue, string? targetUnit, long positionId,
+            PropagationAction action)
+        {
+            var activeCycle = await _uow.Perf.AppraisalCycles.GetCurrentCycleAsync();
+            if (activeCycle == null)
+                return;
+
+            var employments = await _uow.Info.EmployeeEmployments.GetByPositionIdAsync(positionId);
+
+            if (action == PropagationAction.Create)
+            {
+                var priority = await _uow.Perf.KPIWeightPriorities.GetByIdAsync(priorityId);
+                foreach (var emp in employments)
+                {
+                    var exists = await _uow.Perf.EmployeeKPIs.ExistsAsync(
+                        emp.EmployeeId, kpiId, activeCycle.Id);
+                    if (!exists)
+                    {
+                        var employeeKpi = new EmployeeKPI(
+                            priority, emp.EmployeeId, kpiId, activeCycle.Id,
+                            priorityId, weightage, targetValue, targetUnit, entityKpiId);
+                        _uow.Perf.EmployeeKPIs.Add(employeeKpi);
+                    }
+                }
+            }
+            else if (action == PropagationAction.Update)
+            {
+                var priority = await _uow.Perf.KPIWeightPriorities.GetByIdAsync(priorityId);
+                foreach (var emp in employments)
+                {
+                    var existing = await _uow.Perf.EmployeeKPIs.FindAsync(
+                        k => k.EntityKPIId == entityKpiId
+                          && k.EmployeeId == emp.EmployeeId
+                          && k.CycleId == activeCycle.Id
+                          && !k.IsDeleted,
+                        trackChanges: true);
+                    if (existing != null)
+                        existing.Update(priority, weightage, targetValue, targetUnit);
+                }
+            }
+            else if (action == PropagationAction.Delete)
+            {
+                foreach (var emp in employments)
+                {
+                    var existing = await _uow.Perf.EmployeeKPIs.FindAllAsync(
+                        k => k.EntityKPIId == entityKpiId
+                          && k.EmployeeId == emp.EmployeeId
+                          && !k.IsDeleted,
+                        trackChanges: true);
+                    foreach (var kpi in existing)
+                        _uow.Perf.EmployeeKPIs.Delete(kpi);
+                }
+            }
+        }
+
+        public async Task PropagatePositionKPIsToEmployeeAsync(long employeeId, long positionId)
+        {
+            var activeCycle = await _uow.Perf.AppraisalCycles.GetCurrentCycleAsync();
+            if (activeCycle == null)
+                return;
+
+            var entityKpis = await _uow.Perf.EntityKPIs.GetByEntityAsync(
+                AppraisalConstants.EntityTypes.Position, positionId);
+
+            var runningWeight = await _uow.Perf.EmployeeKPIs.GetTotalWeightageAsync(
+                employeeId, activeCycle.Id);
+
+            foreach (var entityKpi in entityKpis)
+            {
+                var exists = await _uow.Perf.EmployeeKPIs.ExistsAsync(
+                    employeeId, entityKpi.KPIId, activeCycle.Id);
+                if (!exists)
+                {
+                    if (runningWeight + entityKpi.Weightage > 100)
+                        continue;
+
+                    var priority = await _uow.Perf.KPIWeightPriorities.GetByIdAsync(entityKpi.PriorityId);
+                    if (priority != null)
+                    {
+                        var employeeKpi = new EmployeeKPI(
+                            priority, employeeId, entityKpi.KPIId, activeCycle.Id,
+                            entityKpi.PriorityId, entityKpi.Weightage,
+                            entityKpi.TargetValue, entityKpi.TargetUnit, entityKpi.Id);
+                        _uow.Perf.EmployeeKPIs.Add(employeeKpi);
+                        runningWeight += entityKpi.Weightage;
+                    }
+                }
+            }
+        }
+
+        public async Task PropagatePositionKPIsForAllEmployeesAsync()
+        {
+            var activeCycle = await _uow.Perf.AppraisalCycles.GetCurrentCycleAsync();
+            if (activeCycle == null)
+                return;
+
+            var employments = await _uow.Info.EmployeeEmployments.GetAllAsync();
+            foreach (var emp in employments.Where(e => !e.IsDeleted))
+                await PropagatePositionKPIsToEmployeeAsync(emp.EmployeeId, emp.PositionId);
+        }
+
         public async Task<SuccessResponse<IEnumerable<EntityKPIDto>>> GetAllAsync()
         {
-            var items = await _uow.Perf.EntityKPIs.GetAllAsync();
+            var items = await _uow.Perf.EntityKPIs.GetAllWithIncludesAsync();
             var dtos = await ResolveEntityNamesAsync(items);
             return SuccessResponse<IEnumerable<EntityKPIDto>>.Ok(dtos, EntityKPIMsg.RetrievedAll);
         }
@@ -81,12 +188,27 @@ namespace EPMS.Domain.Services.Performance
             if (priority == null)
                 return SuccessResponse<long>.Fail(EntityKPIMsg.PriorityNotFound, ErrorType.NotFound);
 
+            var currentTotal = await _uow.Perf.EntityKPIs.GetTotalWeightageAsync(dto.EntityType, dto.EntityId);
+            if (currentTotal + dto.Weightage > 100)
+                return SuccessResponse<long>.Fail(EntityKPIMsg.WeightExceeded(currentTotal, dto.Weightage), ErrorType.Validation);
+
             var entity = new EntityKPI(dto.EntityType, dto.EntityId, dto.KPIId, priority, dto.Weightage, dto.TargetValue, dto.TargetUnit);
 
             _uow.Perf.EntityKPIs.Add(entity);
+
+            if (dto.EntityType == AppraisalConstants.EntityTypes.Position)
+            {
+                await PropagateToPositionEmployeesAsync(
+                    entity.Id, entity.KPIId, entity.PriorityId, entity.Weightage,
+                    entity.TargetValue, entity.TargetUnit, dto.EntityId,
+                    PropagationAction.Create);
+            }
+
             await _uow.CompleteAsync();
 
-            return SuccessResponse<long>.Ok(entity.Id, EntityKPIMsg.Created);
+            var newTotal = currentTotal + dto.Weightage;
+            var message = newTotal == 100 ? EntityKPIMsg.Created : EntityKPIMsg.WeightNotComplete(newTotal);
+            return SuccessResponse<long>.Ok(entity.Id, message);
         }
 
         public async Task<SuccessResponse> UpdateAsync(long id, UpdateEntityKPIDto dto)
@@ -99,12 +221,32 @@ namespace EPMS.Domain.Services.Performance
             if (priority == null)
                 return SuccessResponse.Fail(EntityKPIMsg.PriorityNotFound, ErrorType.NotFound);
 
+            var currentTotal = await _uow.Perf.EntityKPIs.GetTotalWeightageAsync(entity.EntityType, entity.EntityId, id);
+            if (currentTotal + dto.Weightage > 100)
+                return SuccessResponse.Fail(EntityKPIMsg.WeightExceeded(currentTotal, dto.Weightage), ErrorType.Validation);
+
+            var entityType = entity.EntityType;
+            var entityKpiId = entity.Id;
+            var kpiId = entity.KPIId;
+            var entityId = entity.EntityId;
+
             entity.Update(priority, dto.Weightage, dto.TargetValue, dto.TargetUnit);
 
             _uow.Perf.EntityKPIs.Update(entity);
+
+            if (entityType == AppraisalConstants.EntityTypes.Position)
+            {
+                await PropagateToPositionEmployeesAsync(
+                    entityKpiId, kpiId, dto.PriorityId, dto.Weightage,
+                    dto.TargetValue, dto.TargetUnit, entityId,
+                    PropagationAction.Update);
+            }
+
             await _uow.CompleteAsync();
 
-            return SuccessResponse.Ok(EntityKPIMsg.Updated);
+            var newTotal = currentTotal + dto.Weightage;
+            var message = newTotal == 100 ? EntityKPIMsg.Updated : EntityKPIMsg.WeightNotComplete(newTotal);
+            return SuccessResponse.Ok(message);
         }
 
         public async Task<SuccessResponse> DeleteAsync(long id)
@@ -113,7 +255,20 @@ namespace EPMS.Domain.Services.Performance
             if (entity == null)
                 return SuccessResponse.Fail(EntityKPIMsg.NotFound(id), ErrorType.NotFound);
 
+            var entityType = entity.EntityType;
+            var entityKpiId = entity.Id;
+            var kpiId = entity.KPIId;
+            var entityId = entity.EntityId;
+
             _uow.Perf.EntityKPIs.Delete(entity);
+
+            if (entityType == AppraisalConstants.EntityTypes.Position)
+            {
+                await PropagateToPositionEmployeesAsync(
+                    entityKpiId, kpiId, 0, 0, null, null, entityId,
+                    PropagationAction.Delete);
+            }
+
             await _uow.CompleteAsync();
 
             return SuccessResponse.Ok(EntityKPIMsg.Deleted);

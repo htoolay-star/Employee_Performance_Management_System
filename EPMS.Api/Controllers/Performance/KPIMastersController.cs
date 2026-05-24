@@ -17,6 +17,13 @@ namespace EPMS.Api.Controllers.Performance
             _kpiMasterService = kpiMasterService;
         }
 
+        [HttpGet("lookup")]
+        public async Task<ActionResult<SuccessResponse<IEnumerable<LookUpDto>>>> GetLookup()
+        {
+            var result = await _kpiMasterService.GetLookupAsync();
+            return HandleResult(result);
+        }
+
         [HttpGet]
         public async Task<ActionResult<SuccessResponse<IEnumerable<KPIMasterDto>>>> GetAll()
         {
@@ -56,20 +63,6 @@ namespace EPMS.Api.Controllers.Performance
         public async Task<ActionResult<SuccessResponse>> Delete(long id)
         {
             var result = await _kpiMasterService.DeleteAsync(id);
-            return HandleResult(result);
-        }
-
-        [HttpPost("{id:long}/deactivate")]
-        public async Task<ActionResult<SuccessResponse>> Deactivate(long id)
-        {
-            var result = await _kpiMasterService.DeactivateAsync(id);
-            return HandleResult(result);
-        }
-
-        [HttpPost("{id:long}/reactivate")]
-        public async Task<ActionResult<SuccessResponse>> Reactivate(long id)
-        {
-            var result = await _kpiMasterService.ReactivateAsync(id);
             return HandleResult(result);
         }
     }

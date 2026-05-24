@@ -16,10 +16,10 @@ namespace EPMS.Domain.Repository.Base
             _dbSet = _context.Set<T>();
         }
 
-        public async Task<T?> GetByIdAsync(object id, CancellationToken cancellationToken = default)
+        public virtual async Task<T?> GetByIdAsync(object id, CancellationToken cancellationToken = default)
             => await _dbSet.FindAsync(new object[] { id }, cancellationToken);
 
-        public async Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken = default)
+        public virtual async Task<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken = default)
             => await _dbSet.AsNoTracking().ToListAsync(cancellationToken);
 
         public async Task<T?> FindAsync(

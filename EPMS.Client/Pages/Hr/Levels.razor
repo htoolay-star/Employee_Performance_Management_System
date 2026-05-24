@@ -1,13 +1,15 @@
 @page "/hr/levels"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @* ═══════════════════════════════════════════════════════════════════════════
-   PATTERN: GetAll + Client-side QuickFilter + Client-side Sorting
-   Use this pattern when the dataset is small (< ~500 rows).
-   - Loads all rows once into memory on page load.
-   - Filtering is done via MudDataGrid QuickFilter (client-side).
-   - Sorting is done via MudDataGrid built-in column headers (client-side, no API call).
-   - After every CUD operation, re-calls LoadAllAsync() to refresh the list.
-   ═══════════════════════════════════════════════════════════════════════════ *@
+   PATTERN: GetAll + Client-side QuickFilter + Client-side Sorting
+   Use this pattern when the dataset is small (< ~500 rows).
+   - Loads all rows once into memory on page load.
+   - Filtering is done via MudDataGrid QuickFilter (client-side).
+   - Sorting is done via MudDataGrid built-in column headers (client-side, no API call).
+   - After every CUD operation, re-calls LoadAllAsync() to refresh the list.
+   ═══════════════════════════════════════════════════════════════════════════ *@
 @using EPMS.Client.Constants
+@using EPMS.Client.Services.Auth
 @using EPMS.Client.Services.Hr
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.LevelDTOs
@@ -18,13 +20,20 @@
 @inject ILevelApiClient LevelApiClient
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
+@inject CurrentUserPermissionService PermService
 
 <PageTitle>@UIConstants.Level.PageTitle</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
     <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.Level.PageTitle</MudText>
 
-    <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+    @if (_error)
+    {
+        <MudAlert Severity="Severity.Warning" Class="mt-4">@_errorMessage</MudAlert>
+    }
+    else
+    {
+        <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
 
         @* {{!-- ── Toolbar ──────────────────────────────────────────────────── --}} *@
         <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
@@ -53,12 +62,15 @@
                               SortColumns="@_sortableColumns"
                               OnSortChanged="HandleSortChanged" />
 
-            <MudButton Variant="Variant.Filled"
-                       Color="Color.Primary"
-                       StartIcon="@Icons.Material.Filled.Add"
-                       OnClick="OpenCreateDialog">
-                @UIConstants.Level.AddButton
-            </MudButton>
+            @if (_canCreate)
+            {
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenCreateDialog">
+                    @UIConstants.Level.AddButton
+                </MudButton>
+            }
         </MudStack>
 
         @* {{!-- ── Data Grid ────────────────────────────────────────────────── --}}
@@ -94,18 +106,24 @@
                 <TemplateColumn Title="@UIConstants.Common.Actions" Sortable="false">
                     <CellTemplate>
                         <MudStack Row="true" Spacing="0">
-                            <MudTooltip Text="Edit Level" Placement="Placement.Top">
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                               Color="Color.Primary"
-                                               Size="Size.Small"
-                                               OnClick="@(() => OpenEditDialog(context.Item))" />
-                            </MudTooltip>
-                            <MudTooltip Text="Delete Level" Placement="Placement.Top">
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                               Color="Color.Error"
-                                               Size="Size.Small"
-                                               OnClick="@(() => OpenDeleteDialog(context.Item))" />
-                            </MudTooltip>
+                            @if (_canEdit)
+                            {
+                                <MudTooltip Text="Edit Level" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                   Color="Color.Primary"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => OpenEditDialog(context.Item))" />
+                                </MudTooltip>
+                            }
+                            @if (_canDelete)
+                            {
+                                <MudTooltip Text="Delete Level" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   Color="Color.Error"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => OpenDeleteDialog(context.Item))" />
+                                </MudTooltip>
+                            }
                         </MudStack>
                     </CellTemplate>
                 </TemplateColumn>
@@ -130,11 +148,11 @@
         </MudDataGrid>
 
     </MudPaper>
+    }
 </MudContainer>
 
 @code {
-
-    // ── Dialog options (static: created once, reused for every dialog open) ──
+    // ── Dialog options (static: created once, reused for every dialog open) ──
     private static readonly DialogOptions _formDialogOptions = new()
     {
         CloseOnEscapeKey = true,
@@ -146,8 +164,16 @@
         CloseOnEscapeKey = true
     };
 
-    // ── State ─────────────────────────────────────────────────────────────────
-     private List<LevelDto> _allLevels = new();
+    // ── Permission fields ─────────────────────────────────────────────────────
+    private bool _canView;
+    private bool _canCreate;
+    private bool _canEdit;
+    private bool _canDelete;
+    private bool _error;
+    private string _errorMessage = string.Empty;
+
+    // ── State ─────────────────────────────────────────────────────────────────
+    private List<LevelDto> _allLevels = new();
     private List<LevelDto> _levels = new();
     private bool _loading = true;
     private string _searchString = string.Empty;
@@ -163,8 +189,20 @@
   };
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
+        _canView = await PermService.HasPermissionAsync("LEVELS.VIEW");
+        _canCreate = await PermService.HasPermissionAsync("LEVELS.CREATE");
+        _canEdit = await PermService.HasPermissionAsync("LEVELS.EDIT");
+        _canDelete = await PermService.HasPermissionAsync("LEVELS.DELETE");
+
+        if (!_canView)
+        {
+            _error = true;
+            _errorMessage = "You do not have permission to view levels.";
+            return;
+        }
+
         await LoadLevelsAsync();
     }
 
@@ -304,7 +342,12 @@
 
     private void ApplyFiltersAndSort()
     {
-        if (!_allLevels.Any()) return;
+        if (!_allLevels.Any())
+        {
+            _levels = new();
+            _rowNumbers = new();
+            return;
+        }
 
         var filteredList = _allLevels.Where(x => x.IsActive == _statusFilter).ToList();
 

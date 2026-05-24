@@ -8,11 +8,14 @@ using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using EPMS.Shared.DTOs.FormDTOs;
 using EPMS.Shared.DTOs.Performance.EntityKPI;
 using EPMS.Shared.DTOs.Performance.EmployeeKPI;
+using EPMS.Shared.DTOs.PerformanceDTOs.AppraisalCycleDTOs;
 using EPMS.Shared.DTOs.PerformanceDTOs.ContinuousFeedbackDTOs;
 using EPMS.Shared.DTOs.PerformanceDTOs.FormQuestionDTOs;
+using EPMS.Shared.DTOs.PerformanceDTOs.FormTemplateDTOs;
 using EPMS.Shared.DTOs.PerformanceDTOs.KPIMasterDTOs;
 using EPMS.Shared.DTOs.PerformanceDTOs.OneOnOneMeetingDTOs;
 using EPMS.Shared.DTOs.PerformanceDTOs.PIPDTOs;
+using EPMS.Shared.DTOs.PerformanceDTOs.QuestionRatingScaleDTOs;
 using EPMS.Shared.DTOs.TeamDTOs;
 using Mapster;
 
@@ -64,11 +67,23 @@ public static class MapsterConfig
         TypeAdapterConfig<Appraisal, AppraisalDto>.NewConfig()
             .Map(dest => dest.EmployeeName, src => src.Employee != null ? src.Employee.StaffName : null)
             .Map(dest => dest.CycleName, src => src.Cycle != null ? src.Cycle.Name : null)
-            .Map(dest => dest.AppraiserName, src => src.Appraiser != null ? src.Appraiser.StaffName : null);
+            .Map(dest => dest.ManagerReviewerName, src => src.ManagerReviewer != null ? src.ManagerReviewer.StaffName : null);
 
         TypeAdapterConfig<AppraisalRecommendation, AppraisalRecommendationDto>.NewConfig()
             .Map(dest => dest.AppraisalEmployeeName, src => src.Appraisal != null && src.Appraisal.Employee != null ? src.Appraisal.Employee.StaffName : null)
             .Map(dest => dest.ProcessedByName, src => src.ProcessedBy != null ? src.ProcessedBy.StaffName : null);
+
+        TypeAdapterConfig<AppraisalCycle, AppraisalCycleDto>.NewConfig()
+            .Map(dest => dest.AppraisalReviewStartDate, src => src.ManagerReviewStartDate)
+            .Map(dest => dest.AppraisalReviewDeadline, src => src.ManagerReviewDeadline);
+
+        TypeAdapterConfig<CreateAppraisalCycleDto, AppraisalCycle>.NewConfig()
+            .Map(dest => dest.ManagerReviewStartDate, src => src.AppraisalReviewStartDate)
+            .Map(dest => dest.ManagerReviewDeadline, src => src.AppraisalReviewDeadline);
+
+        TypeAdapterConfig<UpdateAppraisalCycleDto, AppraisalCycle>.NewConfig()
+            .Map(dest => dest.ManagerReviewStartDate, src => src.AppraisalReviewStartDate)
+            .Map(dest => dest.ManagerReviewDeadline, src => src.AppraisalReviewDeadline);
 
         TypeAdapterConfig<EvaluationResponse, EvaluationResponseDto>.NewConfig()
             .Map(dest => dest.AppraisalEmployeeName, src => src.Appraisal != null && src.Appraisal.Employee != null ? src.Appraisal.Employee.StaffName : null)
@@ -93,15 +108,28 @@ public static class MapsterConfig
 
         // EmployeeInfo - Employment with navigation flattening
         TypeAdapterConfig<EmployeeEmployment, EmployeeEmploymentDto>.NewConfig()
-            .Map(dest => dest.DepartmentName, src => src.Department.Name)
-            .Map(dest => dest.ParentDepartmentName, src => src.ParentDepartment.Name)
+            .Map(dest => dest.DepartmentName, src => src.Department != null ? src.Department.Name : null)
+            .Map(dest => dest.ParentDepartmentName, src => src.ParentDepartment != null ? src.ParentDepartment.Name : null)
             .Map(dest => dest.TeamName, src => src.Team != null ? src.Team.Name : null)
-            .Map(dest => dest.PositionName, src => src.Position.Name)
+            .Map(dest => dest.PositionName, src => src.Position != null ? src.Position.Name : null)
             .Map(dest => dest.DirectManagerName, src => src.DirectManager != null ? src.DirectManager.StaffName : null);
+
+        // Performance - FormTemplate
+        TypeAdapterConfig<FormTemplate, FormTemplateDto>.NewConfig()
+            .Map(dest => dest.RatingScaleId, src => src.QuestionRatingScaleId)
+            .Map(dest => dest.RatingScaleName, src => src.RatingScale != null ? src.RatingScale.Name : string.Empty);
 
         // Performance - FormQuestion
         TypeAdapterConfig<FormQuestion, FormQuestionDto>.NewConfig()
-            .Map(dest => dest.CategoryName, src => src.Category != null ? src.Category.Name : null)
-            .Map(dest => dest.RatingScaleName, src => src.RatingScale != null ? src.RatingScale.Name : null);
+            .Map(dest => dest.CategoryName, src => src.Category != null ? src.Category.Name : null);
+
+        TypeAdapterConfig<QuestionRatingScaleLevel, QuestionRatingScaleLevelDto>.NewConfig()
+            .Map(dest => dest.Id, src => src.Id);
+
+        TypeAdapterConfig<CreateQuestionRatingScaleLevelDto, QuestionRatingScaleLevel>.NewConfig()
+            .ConstructUsing(src => new QuestionRatingScaleLevel(0, src.Rating, src.MinScore, src.MaxScore));
+
+        TypeAdapterConfig<UpdateQuestionRatingScaleLevelDto, QuestionRatingScaleLevel>.NewConfig()
+            .Map(dest => dest.Id, src => src.Id.HasValue ? src.Id.Value : default);
     }
 }

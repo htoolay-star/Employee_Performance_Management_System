@@ -25,6 +25,7 @@ public interface IPerfModule
     IEmployeeKPIRepository EmployeeKPIs { get; }
     IEmployeeKPIHistoryRepository EmployeeKPIHistories { get; }
     IQuestionRatingScaleRepository QuestionRatingScales { get; }
+    IQuestionRatingScaleLevelRepository QuestionRatingScaleLevels { get; }
     IPositionPIPTemplateRepository PositionPIPTemplates { get; }
     IPositionFormTemplateRepository PositionFormTemplates { get; }
     IPIPObjectiveRepository PIPObjectives { get; }

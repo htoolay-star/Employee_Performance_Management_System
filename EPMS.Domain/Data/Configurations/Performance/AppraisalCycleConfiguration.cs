@@ -34,6 +34,11 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.IsLocked).HasDefaultValue(false);
 
+            entity.Property(e => e.KpiWeight).HasPrecision(5, 2).HasDefaultValue(50m);
+            entity.Property(e => e.SelfWeight).HasPrecision(5, 2).HasDefaultValue(15m);
+            entity.Property(e => e.ThreeSixtyWeight).HasPrecision(5, 2).HasDefaultValue(10m);
+            entity.Property(e => e.AppraisalWeight).HasPrecision(5, 2).HasDefaultValue(25m);
+
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.Property(e => e.UpdatedAt).IsRequired();
             entity.Property(e => e.Version).IsRowVersion();
@@ -41,8 +46,8 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.Property(e => e.IsDeleted).HasDefaultValue(false).IsRequired();
             entity.Property(e => e.DeletedAt);
 
-            entity.Property(e => e.PeerReviewStartDate);
-            entity.Property(e => e.PeerReviewDeadline);
+            entity.Property(e => e.ThreeSixtyReviewStartDate);
+            entity.Property(e => e.ThreeSixtyReviewDeadline);
             entity.Property(e => e.SelfReviewStartDate);
             entity.Property(e => e.SelfReviewDeadline);
             entity.Property(e => e.ManagerReviewStartDate);

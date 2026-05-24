@@ -10,11 +10,23 @@ namespace EPMS.Domain.Repository.Performance
     {
         public FormTemplateRepository(AppDbContext context) : base(context) { }
 
+        public async Task<IEnumerable<FormTemplate>> GetAllWithQuestionsAsync()
+        {
+            return await _dbSet
+                .Where(x => !x.IsDeleted)
+                .Include(x => x.Questions)
+                .Include(x => x.RatingScale)
+                .OrderBy(x => x.Name)
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
         public async Task<IEnumerable<FormTemplate>> GetActiveAsync()
         {
             return await _dbSet
                 .Where(x => x.IsActive && !x.IsDeleted)
                 .Include(x => x.Questions)
+                .Include(x => x.RatingScale)
                 .OrderBy(x => x.Name)
                 .ToListAsync();
         }

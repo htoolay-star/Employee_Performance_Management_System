@@ -1,8 +1,10 @@
 ﻿using EPMS.Client.Services.Hr;
 using EPMS.Client.Services.Info;
+using EPMS.Client.Services.Performance;
 using EPMS.Client.Services.Shared;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
+using EPMS.Shared.DTOs.PerformanceDTOs.QuestionRatingScaleDTOs;
 
 namespace EPMS.Client.Services.Auth
 {
@@ -14,15 +16,21 @@ namespace EPMS.Client.Services.Auth
         private readonly ILevelApiClient _levelApi;
         private readonly ICategoryApiClient _categoryApi;
         private readonly IEmployeeProfileApiClient _employeeApi;
+        private readonly IKPIMasterApiClient _kpiMasterApi;
+        private readonly IQuestionRatingScaleApiClient _ratingScaleApi;
+        private readonly IFormTemplateApiClient _formTemplateApi;
 
         private List<LookUpDto>? _departments;
         private List<LookUpDto>? _teams;
         private List<LookUpDto>? _positions;
         private List<LookUpDto>? _levels;
         private List<LookUpDto>? _categories;
+        private List<LookUpDto>? _kpiMasters;
+        private List<LookUpDto>? _ratingScales;
+        private List<LookUpDto>? _formTemplates;
         private List<EmployeeLookupDto>? _employees;
 
-        public LookupStateService(IDepartmentApiClient deptApi, ITeamApiClient teamApi, IPositionApiClient posApi, ILevelApiClient levelApi, ICategoryApiClient categoryApi, IEmployeeProfileApiClient employeeApi)
+        public LookupStateService(IDepartmentApiClient deptApi, ITeamApiClient teamApi, IPositionApiClient posApi, ILevelApiClient levelApi, ICategoryApiClient categoryApi, IEmployeeProfileApiClient employeeApi, IKPIMasterApiClient kpiMasterApi, IQuestionRatingScaleApiClient ratingScaleApi, IFormTemplateApiClient formTemplateApi)
         {
             _deptApi = deptApi;
             _teamApi = teamApi;
@@ -30,6 +38,9 @@ namespace EPMS.Client.Services.Auth
             _levelApi = levelApi;
             _categoryApi = categoryApi;
             _employeeApi = employeeApi;
+            _kpiMasterApi = kpiMasterApi;
+            _ratingScaleApi = ratingScaleApi;
+            _formTemplateApi = formTemplateApi;
         }
 
         public async Task<List<LookUpDto>> GetDepartmentsAsync()
@@ -82,6 +93,36 @@ namespace EPMS.Client.Services.Auth
             return _categories;
         }
 
+        public async Task<List<LookUpDto>> GetKPIMastersAsync()
+        {
+            if (_kpiMasters == null)
+            {
+                var response = await _kpiMasterApi.GetLookupAsync();
+                _kpiMasters = response.Data?.ToList() ?? new List<LookUpDto>();
+            }
+            return _kpiMasters;
+        }
+
+        public async Task<List<LookUpDto>> GetRatingScalesAsync()
+        {
+            if (_ratingScales == null)
+            {
+                var response = await _ratingScaleApi.GetLookupAsync();
+                _ratingScales = response.Data?.ToList() ?? new List<LookUpDto>();
+            }
+            return _ratingScales;
+        }
+
+        public async Task<List<LookUpDto>> GetFormTemplatesAsync()
+        {
+            if (_formTemplates == null)
+            {
+                var response = await _formTemplateApi.GetLookupAsync();
+                _formTemplates = response.Data?.ToList() ?? new List<LookUpDto>();
+            }
+            return _formTemplates;
+        }
+
         public async Task<List<EmployeeLookupDto>> GetEmployeesAsync()
         {
             if (_employees == null)
@@ -97,6 +138,9 @@ namespace EPMS.Client.Services.Auth
         public void ClearPositionCache() => _positions = null;
         public void ClearLevelCache() => _levels = null;
         public void ClearCategoryCache() => _categories = null;
+        public void ClearKPIMasterCache() => _kpiMasters = null;
+        public void ClearRatingScaleCache() => _ratingScales = null;
+        public void ClearFormTemplateCache() => _formTemplates = null;
         public void ClearEmployeeCache() => _employees = null;
     }
 }

@@ -1,0 +1,204 @@
+@using EPMS.Client.Services.Auth
+@using EPMS.Shared.DTOs.AuthDTOs.PermissionDTOS
+@using EPMS.Shared.DTOs.Common
+@using MudBlazor
+@using Refit
+
+@inject IPermissionApiClient PermissionApiClient
+@inject ISnackbar Snackbar
+
+<MudDialog Options="_dialogOptions">
+    <DialogContent>
+        @if (_loading)
+        {
+            <div class="d-flex justify-center pa-8">
+                <MudProgressCircular Indeterminate="true" Size="Size.Medium" />
+            </div>
+        }
+        else
+        {
+            <MudText Typo="Typo.body2" Class="mb-4">
+                Assign permissions for <strong>@PositionName</strong>
+            </MudText>
+
+            @foreach (var group in _groups)
+            {
+                <MudText Typo="Typo.subtitle2" Class="mud-text-secondary mt-6 mb-3" Style="text-transform: uppercase;">
+                    @group.Key
+                </MudText>
+                <MudStack Row="true" Spacing="8" Class="mb-4" Wrap="Wrap.Wrap">
+                    @foreach (var permission in group.Value)
+                    {
+                        <div style="display: inline-flex; align-items: center; gap: 8px; cursor: pointer; min-width: 180px; user-select: none;"
+                             @onclick="@(() => OnPermissionChanged(permission.Id, !_permissionChecked[permission.Id]))">
+                            <MudIcon Icon="@(_permissionChecked[permission.Id] ? Icons.Material.Filled.CheckBox : Icons.Material.Filled.CheckBoxOutlineBlank)"
+                                     Color="@(_permissionChecked[permission.Id] ? Color.Primary : Color.Default)"
+                                     Size="Size.Small"
+                                     Style="pointer-events: none;" />
+                            <span>@permission.Name</span>
+                        </div>
+                    }
+                </MudStack>
+            }
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Disabled="_saving">Cancel</MudButton>
+        <MudButton Color="Color.Primary"
+                   OnClick="Save"
+                   Disabled="_saving || _loading">
+            @if (_saving)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+            }
+            Save
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance? _mudDialog { get; set; }
+
+    [Parameter] public long PositionId { get; set; }
+    [Parameter] public string? PositionName { get; set; }
+    [Parameter] public bool IsAdminPosition { get; set; }
+
+    private bool _loading;
+    private bool _saving;
+    private List<PermissionDto> _allPermissions = new();
+    private Dictionary<long, bool> _permissionChecked = new();
+    private Dictionary<string, List<PermissionDto>> _groups = new();
+
+    private DialogOptions _dialogOptions = new()
+    {
+        MaxWidth = MaxWidth.ExtraExtraLarge,
+        FullWidth = true
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _loading = true;
+        try
+        {
+            var permissionsTask = PermissionApiClient.GetAllPermissions();
+            var assignedTask = PermissionApiClient.GetPermissionsForPosition(PositionId);
+
+            await Task.WhenAll(permissionsTask, assignedTask);
+
+            var permissionsResult = await permissionsTask;
+            var assignedResult = await assignedTask;
+
+            if (permissionsResult.Success && permissionsResult.Data != null)
+            {
+                _allPermissions = permissionsResult.Data.Where(p => p.IsActive).ToList();
+                GroupPermissions();
+            }
+
+            var assignedIds = new HashSet<long>();
+            if (assignedResult.Success && assignedResult.Data != null)
+            {
+                assignedIds = assignedResult.Data.Where(p => p.IsActive).Select(p => p.Id).ToHashSet();
+            }
+
+            _permissionChecked = _allPermissions.ToDictionary(p => p.Id, p => IsAdminPosition || assignedIds.Contains(p.Id));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load permissions: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void GroupPermissions()
+    {
+        _groups = _allPermissions
+            .GroupBy(p => p.Code.Split('.').FirstOrDefault() ?? "Other")
+            .ToDictionary(g => g.Key, g => g.ToList());
+    }
+
+    private void OnPermissionChanged(long id, bool value)
+    {
+        var permission = _allPermissions.FirstOrDefault(p => p.Id == id);
+        if (permission == null) return;
+
+        var groupCode = permission.Code.Split('.').FirstOrDefault();
+        if (groupCode == null) return;
+
+        if (value)
+        {
+            _permissionChecked[id] = true;
+
+            if (!permission.Code.EndsWith(".VIEW"))
+            {
+                var viewPerm = _allPermissions.FirstOrDefault(p =>
+                    p.Code == $"{groupCode}.VIEW" && p.IsActive);
+                if (viewPerm != null)
+                    _permissionChecked[viewPerm.Id] = true;
+            }
+        }
+        else
+        {
+            if (permission.Code.EndsWith(".VIEW"))
+            {
+                var hasNonViewChecked = _allPermissions.Any(p =>
+                    p.Code.StartsWith($"{groupCode}.") &&
+                    !p.Code.EndsWith(".VIEW") &&
+                    p.IsActive &&
+                    _permissionChecked.GetValueOrDefault(p.Id));
+                if (hasNonViewChecked)
+                {
+                    Snackbar.Add("Uncheck all actions (Create/Edit/Delete) first before unchecking View.", Severity.Warning);
+                    return;
+                }
+            }
+
+            _permissionChecked[id] = false;
+        }
+    }
+
+    private async Task Save()
+    {
+        _saving = true;
+        try
+        {
+            var selectedIds = _permissionChecked
+                .Where(kv => kv.Value)
+                .Select(kv => kv.Key)
+                .ToList();
+
+            var result = await PermissionApiClient.UpdatePositionPermissions(PositionId, selectedIds);
+
+            if (result.Success)
+            {
+                _mudDialog?.Close(DialogResult.Ok(true));
+            }
+            else
+            {
+                Snackbar.Add(result.Message ?? "Failed to save permissions.", Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Failed to save permissions.", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to save permissions: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void Cancel() => _mudDialog?.Cancel();
+}

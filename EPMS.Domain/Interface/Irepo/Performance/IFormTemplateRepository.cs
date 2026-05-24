@@ -5,6 +5,7 @@ namespace EPMS.Domain.Interface.Irepo.Performance
 {
     public interface IFormTemplateRepository : IGenericRepository<FormTemplate>
     {
+        Task<IEnumerable<FormTemplate>> GetAllWithQuestionsAsync();
         Task<IEnumerable<FormTemplate>> GetActiveAsync();
         Task<FormTemplate?> GetByNameAsync(string name);
         Task<bool> NameExistsAsync(string name, long? excludeId = null);

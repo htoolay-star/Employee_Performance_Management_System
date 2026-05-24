@@ -22,8 +22,5 @@ public class CreateFormQuestionValidator : AbstractValidator<CreateFormQuestionD
 
         RuleFor(x => x.CategoryId)
             .ApplyOptionalFormQuestionCategoryRules();
-
-        RuleFor(x => x.RatingScaleId)
-            .ApplyOptionalFormQuestionRatingScaleRules();
     }
 }

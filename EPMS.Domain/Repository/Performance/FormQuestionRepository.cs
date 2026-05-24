@@ -13,6 +13,7 @@ public class FormQuestionRepository : GenericRepository<FormQuestion>, IFormQues
     public async Task<IEnumerable<FormQuestion>> GetByTemplateIdAsync(long templateId, CancellationToken cancellationToken = default)
     {
         return await _dbSet
+            .Include(q => q.Category)
             .Where(q => q.TemplateId == templateId && !q.IsDeleted)
             .OrderBy(q => q.Sequence)
             .ToListAsync(cancellationToken);
@@ -21,6 +22,7 @@ public class FormQuestionRepository : GenericRepository<FormQuestion>, IFormQues
     public async Task<IEnumerable<FormQuestion>> GetByCategoryIdAsync(long categoryId, CancellationToken cancellationToken = default)
     {
         return await _dbSet
+            .Include(q => q.Category)
             .Where(q => q.CategoryId == categoryId && !q.IsDeleted)
             .OrderBy(q => q.Sequence)
             .ToListAsync(cancellationToken);

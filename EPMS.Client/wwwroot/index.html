@@ -1,33 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>EPMS.Client</title>
+    <title>ACE Data Systems</title>
     <base href="/" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style" />
+
     <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="css/app.css" />
-    <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="icon" type="image/svg+xml" href="ACE.svg" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
     <link href="EPMS.Client.styles.css" rel="stylesheet" />
     <link href="css/app.css" rel="stylesheet" />
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
 </head>
-
 <body>
     <div id="app">
-        <svg class="loading-progress">
-            <circle r="40%" cx="50%" cy="50%" />
-            <circle r="40%" cx="50%" cy="50%" />
-        </svg>
-        <div class="loading-progress-text"></div>
+        <div class="loading-container" id="loadingContainer">
+            <img src="ACE.svg" alt="Logo" class="loading-logo" id="loadingLogo" />
+            <div class="loading-text" id="loadingText">
+                <span class="l1">L</span><span class="l2">o</span><span class="l3">a</span><span class="l4">d</span><span class="l5">i</span><span class="l6">n</span><span class="l7">g</span><span class="l8">.</span><span class="l9">.</span><span class="l10">.</span>
+            </div>
+        </div>
     </div>
+
+    <script>
+        (function () {
+            var isDark = localStorage.getItem('epms-dark-mode') === 'true';
+            if (isDark) {
+                document.documentElement.classList.add('theme-dark');
+                document.getElementById('loadingContainer').style.backgroundColor = '#252540';
+                document.getElementById('loadingText').style.color = '#ffffff';
+                document.getElementById('loadingLogo').src = 'ACE-dark.svg';
+            } else {
+                document.documentElement.classList.add('theme-light');
+                document.getElementById('loadingContainer').style.backgroundColor = '#FAFAFA';
+                document.getElementById('loadingText').style.color = '#666666';
+            }
+        })();
+    </script>
 
     <div id="blazor-error-ui">
         An unhandled error has occurred.
         <a href="." class="reload">Reload</a>
         <span class="dismiss">🗙</span>
     </div>
+
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script>
         window.downloadFile = function (fileName, base64Data) {
@@ -41,5 +63,4 @@
     </script>
     <script src="_framework/blazor.webassembly.js"></script>
 </body>
-
 </html>

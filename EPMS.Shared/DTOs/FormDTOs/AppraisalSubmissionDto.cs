@@ -9,8 +9,6 @@ namespace EPMS.Shared.DTOs.FormDTOs
     public class AppraisalSubmissionDto
     {
         public long Id { get; set; }
-        public long EvaluatorId { get; set; }
-        public string EvaluatorRole { get; set; } = string.Empty;
         public List<AppraisalDetailDto> Details { get; set; } = new();
     }
 }

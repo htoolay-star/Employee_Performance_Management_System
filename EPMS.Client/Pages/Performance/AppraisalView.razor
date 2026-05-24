@@ -1,0 +1,343 @@
+@page "/performance/appraisals/{AppraisalId:long}/view"
+@layout BlankLayout
+@implements IDisposable
+@using EPMS.Client.Constants
+@using EPMS.Client.Models.Performance
+@using EPMS.Client.Services.Performance
+@using EPMS.Shared.Constants
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.FormDTOs
+@using Mapster
+@using MudBlazor
+@using Refit
+@inject IAppraisalApiClient AppraisalApiClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject AuthenticationStateProvider AuthState
+
+<PageTitle>@UIConstants.AppraisalView.PageTitle</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+
+    @if (_loading)
+    {
+        <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+            <MudStack Spacing="3">
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+            </MudStack>
+        </MudPaper>
+    }
+    else if (_error)
+    {
+        <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+            <MudText Color="Color.Error" Typo="Typo.body1">@_errorMessage</MudText>
+        </MudPaper>
+    }
+    else
+    {
+        <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+            @* Header: Back Button + Title *@
+            <MudPaper Elevation="0" Outlined="true" Class="pa-4 mb-4 rounded-lg">
+                <MudSimpleTable Class="w-100 mb-4">
+                    <tbody>
+                        <tr>
+                            <td style="width: 48px;">
+                                <BackButton Href="@_backUrl" />
+                            </td>
+                            <td style="text-align: center;">
+                                <MudText Typo="Typo.h5">@UIConstants.AppraisalView.PageTitle</MudText>
+                            </td>
+                        </tr>
+                    </tbody>
+                </MudSimpleTable>
+                <MudSimpleTable Class="w-100">
+                    <tbody>
+                        <tr>
+                            <td><strong>Cycle:</strong> @_model.CycleName</td>
+                            <td>
+                                <strong>Status:</strong>
+                                <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(_model.Status)">@_model.Status</MudChip>
+                            </td>
+                        </tr>
+                    </tbody>
+                </MudSimpleTable>
+            </MudPaper>
+
+            @* Employee Info *@
+            <MudPaper Elevation="0" Outlined="true" Class="pa-4 mb-4 rounded-lg">
+                <MudSimpleTable Class="employee-info-table">
+                    <thead>
+                        <tr>
+                            <th>Staff No</th>
+                            <th>Staff Name</th>
+                            <th>Position</th>
+                            <th>Department</th>
+                            @if (!string.IsNullOrEmpty(_model.TeamName))
+                            {
+                                <th>Team</th>
+                            }
+                            <th>Manager</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>@_model.StaffNo</td>
+                            <td>@_model.EmployeeName</td>
+                            <td>@_model.PositionName</td>
+                            <td>@_model.DepartmentName</td>
+                            @if (!string.IsNullOrEmpty(_model.TeamName))
+                            {
+                                <td>@_model.TeamName</td>
+                            }
+                            <td>@_model.ManagerName</td>
+                        </tr>
+                    </tbody>
+                </MudSimpleTable>
+            </MudPaper>
+
+            @* KPI Details Grid (read-only) *@
+            <MudPaper Elevation="0" Outlined="true" Class="pa-4 mb-4 rounded-lg">
+                <MudSimpleTable Class="w-100">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>@UIConstants.AppraisalFill.ColumnKPI</th>
+                            <th>@UIConstants.AppraisalFill.ColumnWeight</th>
+                            <th>@UIConstants.AppraisalFill.ColumnTarget</th>
+                            <th>@UIConstants.AppraisalFill.ColumnDirection</th>
+                            <th>@UIConstants.AppraisalFill.ColumnActual</th>
+                            <th>@UIConstants.AppraisalFill.ColumnScore</th>
+                            <th>@UIConstants.AppraisalFill.ColumnWeighted</th>
+                            <th>@UIConstants.AppraisalFill.ColumnRemarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (_model.Details.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="9"><MudText Color="Color.Secondary" Align="Align.Center">No KPI details.</MudText></td>
+                            </tr>
+                        }
+                        @for (var i = 0; i < _model.Details.Count; i++)
+                        {
+                            var detail = _model.Details[i];
+                            <tr>
+                                <td>@(i + 1)</td>
+                                <td>@detail.KPIName</td>
+                                <td>@detail.Weightage%</td>
+                                <td>@detail.TargetValue</td>
+                                <td style="text-align: center;">
+                                    <MudTooltip Text="@GetDirectionTooltip(detail.ScoringDirection)">
+                                        <MudIcon Icon="@GetDirectionIcon(detail.ScoringDirection)"
+                                                 Size="Size.Small"
+                                                 Color="Color.Primary" />
+                                    </MudTooltip>
+                                </td>
+                                <td>@(detail.ActualValue?.ToString("F2") ?? "—")</td>
+                                <td>@detail.Score.ToString("F2")</td>
+                                <td>@detail.WeightedScore.ToString("F2")</td>
+                                <td>@(detail.Remarks ?? "—")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </MudSimpleTable>
+
+                @* Total Score *@
+                <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
+                    <MudText Typo="Typo.body2">
+                        <strong>Total Weighted Score:</strong>
+                        <MudText Typo="Typo.body1" Color="Color.Primary" Style="display: inline; margin-left: 8px;">
+                            @_model.Details.Sum(d => d.WeightedScore).ToString("F2")
+                        </MudText>
+                    </MudText>
+                </MudStack>
+            </MudPaper>
+
+            @* Finalize Button (admin only on REVIEWED) *@
+            @if (_isAdmin && _model.Status == AppraisalStatuses.Reviewed)
+            {
+                <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               OnClick="Finalize"
+                               Disabled="@(_submitting)">
+                        @if (_submitting)
+                        {
+                            <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
+                        }
+                        @UIConstants.AppraisalView.FinalizeButton
+                    </MudButton>
+                </MudStack>
+            }
+            else if (_model.Status == AppraisalStatuses.Finalized)
+            {
+                <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
+                    <MudChip T="string" Color="Color.Success">Finalized</MudChip>
+                </MudStack>
+            }
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+
+    [Parameter] public long AppraisalId { get; set; }
+    [SupplyParameterFromQuery] public string? From { get; set; }
+
+    private AppraisalFillFormModel _model = new();
+    private string _backUrl = "/performance/my-kpi";
+    private bool _isAdmin;
+    private bool _loading = true;
+    private bool _error;
+    private string _errorMessage = string.Empty;
+    private bool _submitting;
+    private CancellationTokenSource? _cts;
+
+    private static readonly DialogOptions _confirmDialogOptions = new()
+    {
+        CloseOnEscapeKey = true
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        _cts = new CancellationTokenSource();
+
+        _backUrl = From switch
+        {
+            "pending" => "/performance/pending",
+            _ => "/performance/my-kpi"
+        };
+
+        var authState = await AuthState.GetAuthenticationStateAsync();
+        _isAdmin = authState.User.IsInRole("Admin") || authState.User.IsInRole("SystemAdmin");
+
+        await LoadAsync();
+    }
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _error = false;
+        StateHasChanged();
+
+        try
+        {
+            var response = await AppraisalApiClient.GetViewAsync(AppraisalId);
+            if (response.Success)
+            {
+                if (response.Data != null)
+                {
+                    _model = response.Data.Adapt<AppraisalFillFormModel>();
+                }
+                else
+                {
+                    _error = true;
+                    _errorMessage = "Appraisal data not found.";
+                }
+            }
+            else
+            {
+                _error = true;
+                _errorMessage = response.Message ?? UIConstants.Common.LoadFailed;
+            }
+        }
+        catch (ApiException ex)
+        {
+            _error = true;
+            _errorMessage = $"Error: {ex.StatusCode}";
+        }
+        catch (Exception ex)
+        {
+            _error = true;
+            _errorMessage = string.Format(UIConstants.Common.ErrorFormat, ex.Message);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task Finalize()
+    {
+        if (_submitting) return;
+
+        var confirmed = await ShowConfirmDialog();
+        if (!confirmed) return;
+
+        _submitting = true;
+        StateHasChanged();
+
+        try
+        {
+            var response = await AppraisalApiClient.FinalizeKpiAsync(AppraisalId);
+            if (response.Success)
+            {
+                Snackbar.Add(UIConstants.AppraisalView.FinalizeSuccess, Severity.Success);
+                await LoadAsync();
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _submitting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task<bool> ShowConfirmDialog()
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, "Are you sure you want to finalize this appraisal? This action cannot be undone." },
+            { x => x.ButtonText, "Finalize" },
+            { x => x.Color, Color.Primary }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(
+            "Confirm Finalization", parameters, _confirmDialogOptions);
+
+        var result = await dialog.Result;
+        return result is { Canceled: false };
+    }
+
+    private static Color GetStatusColor(string status) => status switch
+    {
+        "Draft" => Color.Warning,
+        "InProgress" => Color.Info,
+        AppraisalStatuses.Reviewed => Color.Primary,
+        AppraisalStatuses.Finalized => Color.Success,
+        _ => Color.Default
+    };
+
+    private static string GetDirectionTooltip(string? direction) =>
+        direction == AppraisalConstants.ScoringDirections.LowerIsBetter
+            ? "Lower is better"
+            : "Higher is better";
+
+    private static string GetDirectionIcon(string? direction) =>
+        direction == AppraisalConstants.ScoringDirections.LowerIsBetter
+            ? Icons.Material.Filled.TrendingDown
+            : Icons.Material.Filled.TrendingUp;
+}

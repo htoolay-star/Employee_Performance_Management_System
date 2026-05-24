@@ -26,10 +26,4 @@ public interface IAppraisalCycleApiClient
 
     [Post("/api/performance/appraisal-cycles/{id}/lock")]
     Task<SuccessResponse> LockAsync(long id);
-
-    [Post("/api/performance/appraisal-cycles/{id}/deactivate")]
-    Task<SuccessResponse> DeactivateAsync(long id);
-
-    [Post("/api/performance/appraisal-cycles/{id}/reactivate")]
-    Task<SuccessResponse> ReactivateAsync(long id);
 }

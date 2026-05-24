@@ -18,7 +18,7 @@ public class CategoryRepository : GenericRepository<Category>, ICategoryReposito
             .Select(x => new LookUpDto
             {
                 Id = x.Id,
-                Code = x.Code,
+                Name = x.Name,
                 IsActive = x.IsActive,
             })
             .ToListAsync();

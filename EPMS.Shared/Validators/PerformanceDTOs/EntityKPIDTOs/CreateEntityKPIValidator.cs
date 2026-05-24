@@ -20,7 +20,7 @@ namespace EPMS.Shared.Validators.PerformanceDTOs.EntityKPIDTOs
             RuleFor(x => x.Weightage)
                 .InclusiveBetween(0, 100).WithMessage(PerformanceValidationMessages.EntityKPI.WeightageInvalid);
             RuleFor(x => x.TargetValue)
-                .MaximumLength(100).WithMessage(PerformanceValidationMessages.EntityKPI.TargetValueMaxLength);
+                .InclusiveBetween(0, 9999999999m).WithMessage(PerformanceValidationMessages.EntityKPI.TargetValueInvalid);
             RuleFor(x => x.TargetUnit)
                 .MaximumLength(50).WithMessage(PerformanceValidationMessages.EntityKPI.TargetUnitMaxLength);
         }

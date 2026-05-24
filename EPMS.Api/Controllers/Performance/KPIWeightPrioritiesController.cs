@@ -68,23 +68,10 @@ public class KPIWeightPrioritiesController : ApiControllerBase
         return HandleResult(result);
     }
 
-    [HttpPost("{id:long}/deactivate")]
-    public async Task<ActionResult<SuccessResponse>> Deactivate(long id)
+    [HttpPost("{id:long}/restore")]
+    public async Task<ActionResult<SuccessResponse>> Restore(long id)
     {
-        var result = await _kpiWeightPriorityService.DeactivateAsync(id);
+        var result = await _kpiWeightPriorityService.RestoreAsync(id);
         return HandleResult(result);
     }
-
-    [HttpPost("{id:long}/reactivate")]
-    public async Task<ActionResult<SuccessResponse>> Reactivate(long id)
-    {
-        var result = await _kpiWeightPriorityService.ReactivateAsync(id);
-        return HandleResult(result);
-    }
-        [HttpPost("{id:long}/restore")]
-        public async Task<ActionResult<SuccessResponse>> Restore(long id)
-        {
-            var result = await _kpiWeightPriorityService.RestoreAsync(id);
-            return HandleResult(result);
-        }
 }

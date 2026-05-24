@@ -13,6 +13,6 @@ namespace EPMS.Domain.Interface.Irepo.Info
         Task<bool> ExistsByEmailAsync(string email, long? excludeId = null);
         Task<IEnumerable<EmployeeLookupDto>> GetLookupDtoAsync();
         Task<(IEnumerable<EmployeeProfileGridItemDto> Items, int TotalCount)> GetPagedDtoAsync(
-            EmployeeProfileQueryParameters parameters, string entitySortColumn, CancellationToken cancellationToken = default);
+            EmployeeProfileQueryParameters parameters, string entitySortColumn, HashSet<long>? excludeEmployeeIds = null, CancellationToken cancellationToken = default);
     }
 }

@@ -1,4 +1,5 @@
 @page "/performance/entity-kpis"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @using EPMS.Client.Constants
 @using EPMS.Client.Services.Auth
 @using EPMS.Client.Services.Performance
@@ -12,11 +13,20 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject LookupStateService LookupState
+@inject CurrentUserPermissionService PermService
 
 <PageTitle>@UIConstants.EntityKPI.PageTitle</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
-    <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.EntityKPI.PageTitle</MudText>
+@if (_error)
+{
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+        <MudAlert Severity="Severity.Error">@_errorMessage</MudAlert>
+    </MudContainer>
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+        <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.EntityKPI.PageTitle</MudText>
 
     <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
 
@@ -25,7 +35,7 @@
                 <MudSelect T="string"
                            Value="@_entityTypeFilter"
                            ValueChanged="OnEntityTypeFilterChanged"
-                           Label="Entity Type"
+                            Label="Type"
                            Variant="Variant.Outlined"
                            Style="max-width: 200px;"
                            Clearable="true">
@@ -37,7 +47,7 @@
                 <MudAutocomplete T="long?"
                                  Value="@_selectedEntityId"
                                  ValueChanged="OnEntityFilterChanged"
-                                 Label="Entity"
+                                 Label="Assigned To"
                                  Variant="Variant.Outlined"
                                  Style="max-width: 250px;"
                                  Clearable="true"
@@ -47,12 +57,15 @@
                                  ResetValueOnEmptyText="true" />
             </MudStack>
 
-            <MudButton Variant="Variant.Filled"
-                       Color="Color.Primary"
-                       StartIcon="@Icons.Material.Filled.Add"
-                       OnClick="OpenCreateDialog">
-                @UIConstants.EntityKPI.AddButton
-            </MudButton>
+            @if (_canCreate)
+            {
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenCreateDialog">
+                    @UIConstants.EntityKPI.AddButton
+                </MudButton>
+            }
         </MudStack>
 
         <MudDataGrid Items="@_items"
@@ -72,21 +85,28 @@
                 <PropertyColumn Property="x => x.PriorityName" Title="@UIConstants.EntityKPI.ColumnPriority" />
                 <PropertyColumn Property="x => x.Weightage" Title="@UIConstants.EntityKPI.ColumnWeightage" Sortable="true" />
                 <PropertyColumn Property="x => x.TargetValue" Title="@UIConstants.EntityKPI.ColumnTarget" />
+                <PropertyColumn Property="x => x.TargetUnit" Title="@UIConstants.EntityKPI.ColumnUnit" />
                 <TemplateColumn Title="@UIConstants.Common.Actions" Sortable="false">
                     <CellTemplate>
                         <MudStack Row="true" Spacing="0">
-                            <MudTooltip Text="Edit" Placement="Placement.Top">
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                               Color="Color.Primary"
-                                               Size="Size.Small"
-                                               OnClick="@(() => OpenEditDialog(context.Item))" />
-                            </MudTooltip>
-                            <MudTooltip Text="Delete" Placement="Placement.Top">
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                               Color="Color.Error"
-                                               Size="Size.Small"
-                                               OnClick="@(() => OpenDeleteDialog(context.Item))" />
-                            </MudTooltip>
+                            @if (_canEdit)
+                            {
+                                <MudTooltip Text="Edit" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                   Color="Color.Primary"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => OpenEditDialog(context.Item))" />
+                                </MudTooltip>
+                            }
+                            @if (_canDelete)
+                            {
+                                <MudTooltip Text="Delete" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   Color="Color.Error"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => OpenDeleteDialog(context.Item))" />
+                                </MudTooltip>
+                            }
                         </MudStack>
                     </CellTemplate>
                 </TemplateColumn>
@@ -112,6 +132,7 @@
 
     </MudPaper>
 </MudContainer>
+}
 
 @code {
 
@@ -132,12 +153,31 @@
     private Dictionary<long, int> _rowNumbers = new();
     private bool _loading = true;
 
+    private bool _error;
+    private string _errorMessage = string.Empty;
+    private bool _canView;
+    private bool _canCreate;
+    private bool _canEdit;
+    private bool _canDelete;
+
     private List<LookUpDto> _departments = new();
     private List<LookUpDto> _positions = new();
     private List<LookUpDto> _teams = new();
 
     protected override async Task OnInitializedAsync()
     {
+        _canView = await PermService.HasPermissionAsync("ENTITYKPI.VIEW");
+        if (!_canView)
+        {
+            _error = true;
+            _errorMessage = "You do not have permission to view Entity KPIs.";
+            return;
+        }
+
+        _canCreate = await PermService.HasPermissionAsync("ENTITYKPI.CREATE");
+        _canEdit = await PermService.HasPermissionAsync("ENTITYKPI.EDIT");
+        _canDelete = await PermService.HasPermissionAsync("ENTITYKPI.DELETE");
+
         _departments = await LookupState.GetDepartmentsAsync();
         _positions = await LookupState.GetPositionsAsync();
         _teams = await LookupState.GetTeamsAsync();
@@ -202,7 +242,7 @@
 
         var query = source.AsEnumerable();
         if (!string.IsNullOrWhiteSpace(value))
-            query = query.Where(x => x.Code.Contains(value, StringComparison.OrdinalIgnoreCase));
+            query = query.Where(x => x.Name.Contains(value, StringComparison.OrdinalIgnoreCase));
         return Task.FromResult(query.Select(x => (long?)x.Id).ToList().AsEnumerable());
     }
 
@@ -217,7 +257,7 @@
             _ => Enumerable.Empty<LookUpDto>()
         };
         var item = source.FirstOrDefault(x => x.Id == id);
-        return item != null ? $"{item.Code}" : id.ToString()!;
+        return item != null ? $"{item.Name}" : id.ToString()!;
     }
 
     private async Task OnEntityTypeFilterChanged(string v)

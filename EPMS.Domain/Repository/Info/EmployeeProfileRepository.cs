@@ -46,7 +46,7 @@ namespace EPMS.Domain.Repository.Info
         }
 
         public async Task<(IEnumerable<EmployeeProfileGridItemDto> Items, int TotalCount)> GetPagedDtoAsync(
-            EmployeeProfileQueryParameters parameters, string entitySortColumn, CancellationToken cancellationToken = default)
+            EmployeeProfileQueryParameters parameters, string entitySortColumn, HashSet<long>? excludeEmployeeIds = null, CancellationToken cancellationToken = default)
         {
             IQueryable<EmployeeProfile> query = _dbSet.AsNoTracking();
 
@@ -78,6 +78,11 @@ namespace EPMS.Domain.Repository.Info
             if (!string.IsNullOrWhiteSpace(parameters.EmploymentStatus))
             {
                 query = query.Where(p => p.Employment != null && p.Employment.EmploymentStatus == parameters.EmploymentStatus);
+            }
+
+            if (excludeEmployeeIds?.Any() == true)
+            {
+                query = query.Where(p => p.UserId == null || !excludeEmployeeIds.Contains(p.UserId.Value));
             }
 
             var totalCount = await query.CountAsync(cancellationToken);

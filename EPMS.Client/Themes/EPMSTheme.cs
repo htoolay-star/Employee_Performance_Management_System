@@ -11,9 +11,9 @@ namespace EPMS.Client.Themes
             {
                 PaletteLight = new PaletteLight()
                 {
-                    Primary = "#0066CC",
-                    PrimaryDarken = "#004499",
-                    PrimaryLighten = "#E6F0FF",
+                    Primary = "#21409A",
+                    PrimaryDarken = "#1A3078",
+                    PrimaryLighten = "#E8EBF4",
                     Secondary = "#9AA0A6",
                     AppbarBackground = Colors.Shades.White,
                     AppbarText = Colors.Shades.Black,
@@ -29,7 +29,7 @@ namespace EPMS.Client.Themes
                     DarkLighten = Colors.Gray.Lighten4,
                     DarkDarken = Colors.Gray.Darken4,
                     Dark = Colors.Gray.Darken3,
-                    Info = Colors.Blue.Default,
+                    Info = "#21409A",
                     Success = Colors.Green.Default,
                     Warning = Colors.Orange.Default,
                     Error = Colors.Red.Default,
@@ -51,11 +51,46 @@ namespace EPMS.Client.Themes
                     OverlayLight = "#00000080",
                 },
 
+                PaletteDark = new PaletteDark()
+                {
+                    Primary = "#8AB4F8",
+                    PrimaryDarken = "#6A9CF8",
+                    PrimaryLighten = "#1A2B52",
+                    Secondary = "#9AA0A6",
+                    AppbarBackground = "#1A1A2E",
+                    AppbarText = Colors.Shades.White,
+                    Background = "#1E1E2E",
+                    TextPrimary = Colors.Shades.White,
+                    TextSecondary = Colors.Gray.Lighten1,
+                    DrawerBackground = "#1A1A2E",
+                    DrawerText = Colors.Shades.White,
+                    Surface = "#252540",
+                    ActionDefault = Colors.Gray.Lighten2,
+                    ActionDisabled = Colors.Gray.Darken1,
+                    ActionDisabledBackground = Colors.Gray.Darken4,
+                    DarkLighten = Colors.Gray.Darken2,
+                    DarkDarken = Colors.Gray.Darken4,
+                    Dark = Colors.Gray.Darken3,
+                    Info = "#8AB4F8",
+                    Success = Colors.Green.Lighten1,
+                    Warning = Colors.Orange.Lighten1,
+                    Error = Colors.Red.Lighten1,
+                    TextDisabled = Colors.Gray.Darken1,
+                    LinesDefault = Colors.Gray.Darken2,
+                    LinesInputs = Colors.Gray.Darken2,
+                    TableLines = Colors.Gray.Darken2,
+                    TableHover = Colors.Gray.Darken3,
+                    TableStriped = Colors.Gray.Darken3,
+                    Divider = Colors.Gray.Darken2,
+                    DividerLight = Colors.Gray.Darken3,
+                    HoverOpacity = 0.1,
+                },
+
                 Typography = new Typography()
                 {
                     Default = new DefaultTypography()
                     {
-                        FontFamily = new[] { "Inter", "Roboto", "Pyidaungsu", "sans-serif" },
+                        FontFamily = new[] { "Inter", "sans-serif" },
                         FontSize = "14px",
                         FontWeight = "400",
                     },

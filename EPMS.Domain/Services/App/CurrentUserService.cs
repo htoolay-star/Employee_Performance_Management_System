@@ -23,5 +23,9 @@ namespace EPMS.Domain.Services.App
         public string? Email => httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Email);
 
         public bool IsAuthenticated => httpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated ?? false;
+
+        public bool IsAdmin =>
+            httpContextAccessor.HttpContext?.User?.IsInRole("Admin") == true ||
+            httpContextAccessor.HttpContext?.User?.IsInRole("SystemAdmin") == true;
     }
 }

@@ -30,6 +30,8 @@ namespace EPMS.Domain.Data
         public DbSet<User> Users => Set<User>();
         public DbSet<Role> Roles => Set<Role>();
         public DbSet<UserRefreshToken> UserRefreshTokens => Set<UserRefreshToken>();
+        public DbSet<PasswordResetOtp> PasswordResetOtps => Set<PasswordResetOtp>();
+        public DbSet<PasswordResetRequest> PasswordResetRequests => Set<PasswordResetRequest>();
 
         // --- HR Schema ---
         public DbSet<Level> Levels => Set<Level>();
@@ -60,6 +62,7 @@ namespace EPMS.Domain.Data
         public DbSet<Appraisal> Appraisals => Set<Appraisal>();
         public DbSet<AppraisalDetail> AppraisalDetails => Set<AppraisalDetail>();
         public DbSet<QuestionRatingScale> QuestionRatingScales => Set<QuestionRatingScale>();
+        public DbSet<QuestionRatingScaleLevel> QuestionRatingScaleLevels => Set<QuestionRatingScaleLevel>();
         public DbSet<FormTemplate> FormTemplates => Set<FormTemplate>();
         public DbSet<FormQuestion> FormQuestions => Set<FormQuestion>();
         public DbSet<EvaluationResponse> EvaluationResponses => Set<EvaluationResponse>();

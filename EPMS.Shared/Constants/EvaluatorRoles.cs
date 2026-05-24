@@ -6,5 +6,6 @@ namespace EPMS.Shared.Constants
         public const string Manager = "MANAGER";
         public const string Peer = "PEER";
         public const string Subordinate = "SUBORDINATE";
+        public const string Appraisal = "APPRAISAL";
     }
 }

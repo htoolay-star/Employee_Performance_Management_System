@@ -1,3 +1,4 @@
+using EPMS.Api.Authorization;
 using EPMS.Api.Controllers.Common;
 using EPMS.Domain.Interface.IService.Hr;
 using EPMS.Shared.DTOs.Common;
@@ -17,6 +18,7 @@ public class LevelsController : ApiControllerBase
         _service = service;
     }
 
+    [HasPermission("LEVELS.VIEW")]
     [HttpGet("lookup")]
     public async Task<ActionResult<SuccessResponse<IEnumerable<LookUpDto>>>> GetLookup()
     {
@@ -24,6 +26,7 @@ public class LevelsController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HasPermission("LEVELS.VIEW")]
     [HttpGet]
     public async Task<ActionResult<SuccessResponse<IEnumerable<LevelDto>>>> GetAll()
     {
@@ -31,6 +34,7 @@ public class LevelsController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HasPermission("LEVELS.VIEW")]
     [HttpGet("{id:long}")]
     public async Task<ActionResult<SuccessResponse<LevelDto>>> GetById(long id)
     {
@@ -38,6 +42,7 @@ public class LevelsController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HasPermission("LEVELS.CREATE")]
     [HttpPost]
     public async Task<ActionResult<SuccessResponse<long>>> Create(CreateLevelDto dto)
     {
@@ -45,6 +50,7 @@ public class LevelsController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HasPermission("LEVELS.EDIT")]
     [HttpPut("{id:long}")]
     public async Task<ActionResult<SuccessResponse>> Update(long id, UpdateLevelDto dto)
     {
@@ -52,12 +58,14 @@ public class LevelsController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HasPermission("LEVELS.DELETE")]
     [HttpDelete("{id:long}")]
     public async Task<ActionResult<SuccessResponse>> Delete(long id)
     {
         var result = await _service.DeleteAsync(id);
         return HandleResult(result);
     }
+        [HasPermission("LEVELS.DELETE")]
         [HttpPost("{id:long}/restore")]
         public async Task<ActionResult<SuccessResponse>> Restore(long id)
         {

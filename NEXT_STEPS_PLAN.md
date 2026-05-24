@@ -1,100 +1,165 @@
-# EPMS - Next Steps & Development Plan
+# EPMS — Appraisal Auto-Create & Auto-Finalize Flow
 
-## Project Status Snapshot
+## Overview
 
-| Module | % Complete | Done | Missing / Pending |
-| :--- | :--- | :--- | :--- |
-| **Security & IAM** | 85% | JWT, Refresh Tokens, Basic RBAC, PBAC Foundations. | Granular Permission checks in some controllers, Password complexity enforcement. |
-| **Core HR** | 95% | Departments, Levels, Positions, Teams CRUD. | Soft-delete validation for related entities. |
-| **Employee Info** | 90% | Profile, Contact, Employment, Payroll, Salary History. | Comprehensive "Full Profile" view API. |
-| **Appraisal Workflow** | 60% | Appraisal/Cycle CRUD, Lock/Unlock, Detail Evaluation. | **Workflow Routing logic**, 360 Feedback dispatch, Final Score weighting (BR-01). |
-| **Performance Engine** | 40% | KPI Master, Weight/Priority setup. | **Auto-PIP Trigger (BR-02)**, KPI History tracking, Scoring formula implementation. |
-| **360° Feedback** | 20% | EvaluationResponse entities. | **Rater Cohort resolution**, Anonymous feedback sanitization, Radar Chart data API. |
-| **PIP** | 50% | PIP/Objective CRUD. | **Auto-trigger from Appraisal**, Status history tracking, PIP Template mapping. |
-| **Reporting** | 10% | Audit Log Infrastructure. | All performance dashboards, Departmental trends, HiPo identification. |
+```
+EvaluationStartDate
+  ↓ (Phase 1 & 2)
+Auto-create Appraisals + populate KPI details + prepare forms for all employees
 
----
+Between StartDate and WindowEndDate
+  → Users fill KPIs, Self, Peer, Manager forms
+  → Manager can manually create for late joiners
 
-## Epic Traceability Summary
-
-| Epic | User Stories | Status | Summary |
-| :--- | :--- | :--- | :--- |
-| **1. Security & IAM** | 13 | 🟢 Complete | Core auth is robust. |
-| **2. Core HR** | 11 | 🟢 Complete | Org mapping is fully functional. |
-| **3. Appraisal Workflow** | 23 | 🟡 In Progress | Basic CRUD exists; Routing & State Machine need refinement. |
-| **4. Performance Engine** | 13 | 🔴 Pending | Scoring formulas and weighting (BR-01) need implementation. |
-| **5. 360° Feedback** | 21 | 🔴 Pending | Rater cohort logic and anonymity features are missing. |
-| **6. PIP** | 9 | 🟡 In Progress | CRUD is done; Workflow integration (BR-02) is missing. |
-| **7. Reporting** | 11 | 🔴 Pending | Dashboards and analytical queries are not yet started. |
+WindowEndDate
+  ↓ (Phase 3)
+Auto-finalize → aggregate component scores → composite TotalScore → lock
+```
 
 ---
 
-## Prioritized Roadmap
+## Data Model (Appraisal Entity)
 
-### Sprint 1: Performance Core & Scoring (High Priority)
-- **Goal**: Implement mandatory business rules and the scoring engine.
-- **Tasks**:
-  - Implement **BR-01** weighted scoring formula (50/25/15/10) in `AppraisalService`.
-  - Implement **BR-02** Auto-PIP trigger when score < 60.
-  - Implement **BR-03** Deadline-based auto-locking mechanism (Background Service).
-  - **Acceptance**: Appraisal submission correctly calculates total score and triggers PIP if necessary.
+| Component | Entity | Feeds → |
+|---|---|---|
+| **KPI** | `AppraisalDetail` (`KPIId` not null) | `kpiScore` (50%) |
+| **Self-Assessment** | `EvaluationResponse` (`EvaluatorRole = "SELF"`) | `selfScore` (15%) |
+| **Peer/360** | `EvaluationResponse` (`EvaluatorRole = "PEER"`) | `peerScore` (10%) |
+| **Manager Review** | `EvaluationResponse` (`EvaluatorRole = "MANAGER"`) | `managerScore` (25%) |
 
-### Sprint 2: 360° Feedback & Rater Logic
-- **Goal**: Automate the 360-degree evaluation process.
-- **Tasks**:
-  - Develop `RaterService` to resolve Peer/Subordinate cohorts based on position levels.
-  - Implement cohort size checks (min 3) and randomization (max 5) for anonymity.
-  - Create API for sanitized (anonymous) qualitative feedback retrieval.
-  - **Acceptance**: System auto-assigns raters and displays aggregated anonymous scores.
-
-### Sprint 3: Workflow Routing & Notifications
-- **Goal**: Connect the appraisal lifecycle with automated routing.
-- **Tasks**:
-  - Implement "Submit to Manager" and "Route to Dept Head" logic based on Org Chart.
-  - Integrate `NotificationService` for appraisal triggers, PIP alerts, and deadlines.
-  - Implement 1-on-1 meeting workflow: "Start" (In-Progress) and Action Item tracking.
-  - **Acceptance**: Appraisal forms route correctly through levels; users receive alerts.
-
-### Sprint 4: Reporting, Analytics & UI Completion
-- **Goal**: Deliver visibility and a functional frontend.
-- **Tasks**:
-  - Develop Reporting API for "High-Potential" talent and departmental trends.
-  - Build core Blazor dashboards for Employee, Manager, and HR Admin.
-  - Implement Radar Chart data endpoints for Perception Gap analysis.
-  - **Acceptance**: HR can view org-wide performance trends; Employees see development charts.
+**Composite formula** (already in `Appraisal.FinalizeAppraisal()`):
+```
+TotalScore = (kpiScore × 0.50) + (selfScore × 0.15) + (peerScore × 0.10) + (managerScore × 0.25)
+```
 
 ---
 
-## Cross-Cutting Concerns to Fix
-1.  **Auth Pattern Alignment**: Ensure `EmployeeInfo` and `Shared` controllers fully inherit `ApiControllerBase` and use `HandleResult`.
-2.  **PBAC & Ownership Logic**: Enforce "Department-only" visibility in Repository global query filters.
-3.  **Audit Trail**: Verify all Performance entities are decorated with `AuditableEntity`.
-4.  **FluentValidation**: Increase coverage for `AppraisalSubmissionDto` and `PIP` requests.
+## Phase 1: Date Validation + KPI Resolution
+
+### AppraisalService.CreateAsync
+
+**New checks** (before existing validation):
+1. `UtcNow < cycle.EvaluationStartDate` → fail `"Evaluation period hasn't started yet."`
+2. `UtcNow > cycle.WindowEndDate` → fail `"The appraisal window has ended."`
+3. `cycle.IsLocked` → fail `"Cycle is locked."`
+
+**New private method** `ResolveAndAddKPIDetails(Appraisal, cycleId)`:
+
+```
+1. Load EmployeeEmployment (for PositionId, DepartmentId, TeamId)
+2. Fetch EmployeeKPI records for this employee + cycle
+3. Fetch EntityKPI records for:
+   - ("POSITION", PositionId)
+   - ("DEPARTMENT", DepartmentId)
+   - ("TEAM", TeamId) if employee has a team
+4. Merge (EmployeeKPI overrides EntityKPI for same KPIId)
+5. For each resolved KPI:
+   new AppraisalDetail(appraisalId, kpiId, kpiName, categoryName, weightage, targetValue, employeeKPIId: employeeKPI?.Id)
+   appraisal.AddDetail(detail)
+```
+
+### Existing repository methods (all available)
+
+| Method | Repository |
+|---|---|
+| `GetByEmployeeIdAsync(id)` → `EmployeeEmployment?` | `IEmployeeEmploymentRepository` |
+| `GetByEmployeeAndCycleAsync(empId, cycleId)` → `IEnumerable<EmployeeKPI>` | `IEmployeeKPIRepository` |
+| `GetByEntityAsync(entityType, entityId)` → `IEnumerable<EntityKPI>` | `IEntityKPIRepository` |
+
+### New on `AppraisalDetail` entity
+
+- Add constructor overload or setter for `EmployeeKPIId` (field already exists at line 37, just not set by current constructor).
 
 ---
 
-## Definition of Done (DoD)
-- [ ] Code follows the established **Auth Pattern** (SuccessResponse, HandleResult).
-- [ ] Unit tests cover core business logic (Scoring, PIP trigger).
-- [ ] API endpoints are documented in Swagger.
-- [ ] Permissions are correctly applied via `[Authorize(Roles = ...)]` or PBAC.
-- [ ] Database migrations are created and tested.
+## Phase 2: Background Service — Auto-create at EvaluationStartDate
+
+### New file: `EPMS.Domain/Services/Performance/AppraisalAutoCreationService.cs`
+
+```csharp
+public class AppraisalAutoCreationService : BackgroundService
+{
+    private readonly IServiceScopeFactory _scopeFactory;
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            await ProcessCyclesAsync(stoppingToken);
+            await Task.Delay(TimeSpan.FromHours(1), stoppingToken);
+        }
+    }
+}
+```
+
+**Logic** (runs hourly):
+
+```
+For each cycle where:
+  EvaluationStartDate ≤ UtcNow ≤ WindowEndDate
+  AND IsActive = true AND IsLocked = false AND IsDeleted = false
+
+  For each employee in EmployeeProfile:
+    If NOT appraisal exists for this employee + cycle:
+      → Determine ManagerReviewerId = EmployeeEmployment.DirectManagerId
+      → Create new Appraisal(employeeId, cycleId, managerReviewerId)
+      → Call ResolveAndAddKPIDetails(appraisal, cycleId)
+      → Save
+```
+
+### DI Registration
+
+In `Program.cs`:
+```csharp
+builder.Services.AddHostedService<AppraisalAutoCreationService>();
+```
 
 ---
 
-## Risk Register
+## Phase 3: Background Service — Auto-finalize at WindowEndDate
 
-| Risk | Impact | Mitigation Strategy |
-| :--- | :--- | :--- |
-| **Scoring Formula Complexity** | High | Create dedicated unit tests for the weighting engine with edge-case scores. |
-| **Anonymity Breaches** | High | Strictly enforce the "min 3 raters" rule and sanitize text feedback in the DB query layer. |
-| **Deadline Race Conditions** | Medium | Use a robust background worker (Hangfire or Quartz.NET) for the auto-lock mechanism. |
-| **PBAC Scope Leaks** | Medium | Implement Global Query Filters in EF Core to restrict data by Department/Team ID. |
-| **Performance on Large Reports** | Low | Use Dapper or optimized EF Core Projections for reporting queries. |
+Same `AppraisalAutoCreationService`, new logic block:
+
+**WindowEndDate trigger** (runs hourly):
+
+```
+For each cycle where:
+  WindowEndDate < UtcNow
+  AND IsActive = true AND IsLocked = false AND IsDeleted = false
+
+  For each unlocked Appraisal in this cycle:
+    1. kpiScore   = avg of Details.WeightedScore WHERE KPIId IS NOT NULL
+    2. selfScore  = avg of Responses.RatingValue WHERE EvaluatorRole = "SELF"
+    3. peerScore  = avg of Responses.RatingValue WHERE EvaluatorRole = "PEER"
+    4. managerScore = avg of Responses.RatingValue WHERE EvaluatorRole = "MANAGER"
+    5. Match TotalScore against RatingScale to get FinalRating
+    6. Call appraisal.FinalizeAppraisal(kpiScore, selfScore, peerScore, managerScore, matchingScale, timeProvider)
+    → Save
+```
+
+### Repository additions
+
+- `IAppraisalRepository` — add `GetUnlockedByCycleIdAsync(long cycleId)` (or use base `FindAllAsync(a => a.CycleId == cycleId && !a.IsLocked)`).
 
 ---
 
-## Testing Strategy
-- **Unit Testing**: Focus on `AppraisalService` (scoring) and `RaterService` (cohort logic) using xUnit and Moq.
-- **Integration Testing**: Test the full Appraisal -> Score -> PIP workflow against a test database.
-- **E2E Testing**: Verify the Blazor UI flows for appraisal submission and manager approval.
+## Files Summary
+
+| File | Action |
+|---|---|
+| `AppraisalService.cs` | Add date validation + KPI resolution |
+| `AppraisalAutoCreationService.cs` | **New** — background service (auto-create + auto-finalize) |
+| `IAppraisalRepository.cs` | Add `GetUnlockedByCycleIdAsync(long cycleId)` |
+| `AppraisalDetail.cs` | Add `EmployeeKPIId` support in constructor |
+| `Program.cs` | Register `AddHostedService<AppraisalAutoCreationService>()` |
+
+**No new entities, no DTO changes, no migration needed.**
+
+---
+
+## Open Questions
+
+1. **Manager auto-assign** — use `DirectManagerId` from `EmployeeEmployment`, or leave null for manual assignment?
+2. **Late joiners** — auto-pick up employees hired after `EvaluationStartDate` on next hourly run?
+3. **Form questions** — this plan covers KPI detail population only. Should form questions (from `PositionFormTemplate`) also be auto-populated in this phase, or separate step?
+4. **Cycle lock check on Create** — currently `CreateAsync` doesn't check if cycle is locked. Add this?
