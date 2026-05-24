@@ -13,10 +13,12 @@ namespace EPMS.Domain.Services.Performance;
 public class AppraisalCycleService : IAppraisalCycleService
 {
     private readonly IUnitOfWork _uow;
-    
-    public AppraisalCycleService(IUnitOfWork uow)
+    private readonly IEntityKPIService _kpiService;
+
+    public AppraisalCycleService(IUnitOfWork uow, IEntityKPIService kpiService)
     {
         _uow = uow;
+        _kpiService = kpiService;
     }
 
     public async Task<SuccessResponse<IEnumerable<AppraisalCycleDto>>> GetAllAsync()
@@ -300,7 +302,11 @@ public class AppraisalCycleService : IAppraisalCycleService
 
         if (dto.IsActive.HasValue)
         {
-            if (dto.IsActive.Value) cycle.Reactivate();
+            if (dto.IsActive.Value)
+            {
+                cycle.Reactivate();
+                await _kpiService.PropagatePositionKPIsForAllEmployeesAsync();
+            }
             else cycle.Deactivate();
             await _uow.CompleteAsync();
         }

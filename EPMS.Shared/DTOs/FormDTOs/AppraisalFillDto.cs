@@ -16,5 +16,9 @@ public class AppraisalFillDto
     public string? ManagerReviewerName { get; set; }
     public string Status { get; set; } = string.Empty;
     public bool IsLocked { get; set; }
+    public string? EntityType { get; set; }
+    public long? EntityId { get; set; }
+    public string? EntityName { get; set; }
+    public string? EntityHeadName { get; set; }
     public List<AppraisalDetailFillDto> Details { get; set; } = new();
 }

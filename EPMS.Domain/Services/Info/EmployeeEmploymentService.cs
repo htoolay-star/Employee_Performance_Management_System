@@ -1,6 +1,8 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Domain.Interface.IService.Info;
+using EPMS.Domain.Services.Performance;
+using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using EPMS.Shared.Enums;
@@ -13,11 +15,13 @@ public class EmployeeEmploymentService : IEmployeeEmploymentService
 {
     private readonly IUnitOfWork _uow;
     private readonly TimeProvider _timeProvider;
+    private readonly IEntityKPIService _kpiService;
 
-    public EmployeeEmploymentService(IUnitOfWork uow, TimeProvider timeProvider)
+    public EmployeeEmploymentService(IUnitOfWork uow, TimeProvider timeProvider, IEntityKPIService kpiService)
     {
         _uow = uow;
         _timeProvider = timeProvider;
+        _kpiService = kpiService;
     }
 
     public async Task<SuccessResponse<IEnumerable<EmployeeEmploymentDto>>> GetAllAsync()
@@ -84,6 +88,8 @@ public class EmployeeEmploymentService : IEmployeeEmploymentService
             dto.StaffType, dto.ProbationMonth, dto.Shift, dto.FingerPrintId, dto.MobileAttendance);
 
         _uow.Info.EmployeeEmployments.Add(employment);
+
+        await _kpiService.PropagatePositionKPIsToEmployeeAsync(dto.EmployeeId, dto.PositionId);
         await _uow.CompleteAsync();
 
         return SuccessResponse<long>.Ok(employment.Id, EmployeeEmploymentMsg.Created);
@@ -138,6 +144,24 @@ public class EmployeeEmploymentService : IEmployeeEmploymentService
                 "Employment details updated");
 
             _uow.Info.EmployeeEmploymentHistories.Add(history);
+
+            if (oldPositionId != employment.PositionId)
+            {
+                var oldEntityKpis = await _uow.Perf.EntityKPIs.GetByEntityAsync(
+                    AppraisalConstants.EntityTypes.Position, oldPositionId);
+                foreach (var ekpi in oldEntityKpis)
+                {
+                    var linked = await _uow.Perf.EmployeeKPIs.FindAsync(
+                        k => k.EntityKPIId == ekpi.Id
+                          && k.EmployeeId == employment.EmployeeId
+                          && !k.IsDeleted,
+                        trackChanges: true);
+                    if (linked != null)
+                        _uow.Perf.EmployeeKPIs.Delete(linked);
+                }
+
+                await _kpiService.PropagatePositionKPIsToEmployeeAsync(employment.EmployeeId, employment.PositionId);
+            }
         }
 
         await _uow.CompleteAsync();

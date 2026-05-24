@@ -1,11 +1,15 @@
 @using EPMS.Client.Constants
+@using EPMS.Client.Pages.Performance
+@using EPMS.Client.Services.Auth
 @using EPMS.Client.Services.Performance
 @using EPMS.Shared.DTOs.Performance.EmployeeKPI
 @using MudBlazor
 
+@inject IDialogService DialogService
 @inject IEmployeeKPIApiClient EmployeeKPIApiClient
 @inject IAppraisalCycleApiClient AppraisalCycleApiClient
 @inject ISnackbar Snackbar
+@inject CurrentUserPermissionService PermService
 
 <MudDialog>
     <DialogContent>
@@ -32,6 +36,19 @@
                     </strong>
                 </MudAlert>
 
+                @if (_canAssignKpi)
+                {
+                    <MudStack Row="true" Justify="Justify.FlexEnd" Class="mb-4">
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.Add"
+                                   OnClick="OpenAssignKpiDialog">
+                            Assign KPI
+                        </MudButton>
+                    </MudStack>
+                }
+
                 <MudTable Items="@_items" Hover="true" Striped="true" Dense="true" Elevation="0">
                     <ColGroup>
                         <col style="width: 50px;" />
@@ -41,6 +58,7 @@
                         <col style="width: 80px;" />
                         <col style="width: 120px;" />
                         <col style="width: 80px;" />
+                        <col style="width: 120px;" />
                     </ColGroup>
                     <HeaderContent>
                         <MudTh>#</MudTh>
@@ -50,6 +68,7 @@
                         <MudTh>@UIConstants.EntityKPI.ColumnPriority</MudTh>
                         <MudTh>@UIConstants.EntityKPI.ColumnTarget</MudTh>
                         <MudTh>@UIConstants.EntityKPI.ColumnUnit</MudTh>
+                        <MudTh>Actions</MudTh>
                     </HeaderContent>
                     <RowTemplate Context="item">
                         <MudTd DataLabel="#"><span>@(_items.IndexOf(item) + 1)</span></MudTd>
@@ -59,6 +78,28 @@
                         <MudTd DataLabel="Priority">@item.PriorityName</MudTd>
                         <MudTd DataLabel="Target">@item.TargetValue</MudTd>
                         <MudTd DataLabel="Unit">@item.TargetUnit</MudTd>
+                        <MudTd DataLabel="Actions">
+                            <MudStack Row="true" Spacing="0">
+                                @if (_canEditKpi)
+                                {
+                                    <MudTooltip Text="Edit" Placement="Placement.Top">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                       Color="Color.Primary"
+                                                       Size="Size.Small"
+                                                       OnClick="@(() => OpenEditKpiDialog(item))" />
+                                    </MudTooltip>
+                                }
+                                @if (_canDeleteKpi)
+                                {
+                                    <MudTooltip Text="Delete" Placement="Placement.Top">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                       Color="Color.Error"
+                                                       Size="Size.Small"
+                                                       OnClick="@(() => OpenDeleteKpiDialog(item))" />
+                                    </MudTooltip>
+                                }
+                            </MudStack>
+                        </MudTd>
                     </RowTemplate>
                 </MudTable>
             }
@@ -70,16 +111,36 @@
 </MudDialog>
 
 @code {
+    private static readonly DialogOptions _assignDialogOptions = new()
+    {
+        CloseOnEscapeKey = true,
+        MaxWidth = MaxWidth.Small,
+        FullWidth = true
+    };
+
     [CascadingParameter] private IMudDialogInstance? _mudDialog { get; set; }
 
     [Parameter] public long EmployeeId { get; set; }
     [Parameter] public string EmployeeName { get; set; } = string.Empty;
 
     private bool _loading = true;
+    private bool _canAssignKpi;
+    private bool _canEditKpi;
+    private bool _canDeleteKpi;
     private List<EmployeeKPIDto> _items = new();
 
     protected override async Task OnInitializedAsync()
     {
+        _canAssignKpi = await PermService.HasPermissionAsync("EMPLOYEEKPI.CREATE");
+        _canEditKpi = await PermService.HasPermissionAsync("EMPLOYEEKPI.EDIT");
+        _canDeleteKpi = await PermService.HasPermissionAsync("EMPLOYEEKPI.DELETE");
+        await LoadKpisAsync();
+    }
+
+    private async Task LoadKpisAsync()
+    {
+        _loading = true;
+        StateHasChanged();
         try
         {
             var cycleResponse = await AppraisalCycleApiClient.GetActiveAsync();
@@ -105,6 +166,67 @@
         {
             _loading = false;
             StateHasChanged();
+        }
+    }
+
+    private async Task OpenAssignKpiDialog()
+    {
+        var parameters = new DialogParameters<EmployeeKPIDialog>
+        {
+            { x => x.PrefilledEmployeeId, EmployeeId }
+        };
+
+        var dialog = await DialogService.ShowAsync<EmployeeKPIDialog>(
+            $"Assign KPI", parameters, _assignDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+        {
+            Snackbar.Add("KPI assigned successfully.", Severity.Success);
+            await LoadKpisAsync();
+        }
+    }
+
+    private async Task OpenEditKpiDialog(EmployeeKPIDto item)
+    {
+        var parameters = new DialogParameters<EmployeeKPIDialog>
+        {
+            { x => x.Kpi, item }
+        };
+
+        var dialog = await DialogService.ShowAsync<EmployeeKPIDialog>(
+            "Edit KPI", parameters, _assignDialogOptions);
+
+        if (await dialog.Result is { Canceled: false })
+        {
+            Snackbar.Add("KPI updated successfully.", Severity.Success);
+            await LoadKpisAsync();
+        }
+    }
+
+    private async Task OpenDeleteKpiDialog(EmployeeKPIDto item)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, $"Delete KPI '{item.KPIName}'?" },
+            { x => x.ButtonText, "Delete" },
+            { x => x.Color, Color.Error }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(
+            "Confirm Delete", parameters);
+
+        if (await dialog.Result is { Canceled: false })
+        {
+            var response = await EmployeeKPIApiClient.DeleteAsync(item.Id);
+            if (response.Success)
+            {
+                Snackbar.Add("KPI deleted.", Severity.Success);
+                await LoadKpisAsync();
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? "Delete failed.", Severity.Error);
+            }
         }
     }
 

@@ -12,6 +12,7 @@
 @inject IAppraisalApiClient AppraisalApi
 @inject IAppraisalCycleApiClient CycleApi
 @inject ISnackbar Snackbar
+@inject NavigationManager Navigation
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
     <MudText Typo="Typo.h4" Class="mb-4">Team Appraisals</MudText>
@@ -96,8 +97,8 @@
                                    Color="Color.Primary"
                                    Size="Size.Small"
                                    StartIcon="@Icons.Material.Filled.EditNote"
-                                   OnClick="@(() => ToggleKpiDetails(context.Id))">
-                            @(_selectedAppraisalId == context.Id ? "Close KPIs" : "Manage KPIs")
+                                    OnClick="@(() => Navigation.NavigateTo($"/performance/team-appraisals/{context.Id}/fill"))">
+                            Fill
                         </MudButton>
                     </MudTd>
                     </MudTr>
@@ -111,89 +112,8 @@
                 </NoRecordsContent>
             </MudTable>
 
-            @if (_selectedAppraisalId.HasValue && _fillData != null)
-            {
-                <MudPaper Elevation="0" Outlined="true" Class="pa-4 rounded-lg mb-4">
-                    <MudText Typo="Typo.h6" Class="mb-3">
-                        KPI Details - @_fillData.CycleName
-                        @if (_fillData.IsLocked)
-                        {
-                            <MudChip T="string" Size="Size.Small" Color="Color.Error" Class="ml-2">Locked</MudChip>
-                        }
-                    </MudText>
-
-                    @if (_fillDetailsLoading)
-                    {
-                        <MudProgressLinear Indeterminate="true" Class="mb-3" />
-                    }
-                    else
-                    {
-                        <MudTable Items="@_fillData.Details"
-                                  Hover="true"
-                                  Elevation="0"
-                                  Class="mb-3">
-                            <ColGroup>
-                                <col />
-                                <col style="width: 180px;" />
-                                <col style="width: 100px;" />
-                                <col style="width: 120px;" />
-                                <col style="width: 120px;" />
-                                <col style="width: 100px;" />
-                                <col style="width: 120px;" />
-                            </ColGroup>
-                            <HeaderContent>
-                                <MudTh>Category</MudTh>
-                                <MudTh>KPI</MudTh>
-                                <MudTh>Target</MudTh>
-                                <MudTh>Actual Value</MudTh>
-                                <MudTh>Remarks</MudTh>
-                                <MudTh>Score</MudTh>
-                                <MudTh>Weighted Score</MudTh>
-                            </HeaderContent>
-                            <RowTemplate>
-                                <MudTd DataLabel="Category">@context.CategoryName</MudTd>
-                                <MudTd DataLabel="KPI">@context.KPIName</MudTd>
-                                <MudTd DataLabel="Target">@(context.TargetValue?.ToString("F2") ?? "-")</MudTd>
-                                <MudTd DataLabel="Actual">
-                                    <MudTextField @bind-Value="context.ActualValue"
-                                                  Variant="Variant.Outlined"
-                                                  Placeholder="Enter value"
-                                                  Margin="Margin.Dense"
-                                                  Disabled="@_fillData.IsLocked"
-                                                  InputType="InputType.Number" />
-                                </MudTd>
-                                <MudTd DataLabel="Remarks">
-                                    <MudTextField T="string"
-                                                  @bind-Value="context.Remarks"
-                                                  Variant="Variant.Outlined"
-                                                  Placeholder="Notes"
-                                                  Margin="Margin.Dense"
-                                                  Disabled="@_fillData.IsLocked" />
-                                </MudTd>
-                                <MudTd DataLabel="Score">
-                                    <MudText Typo="Typo.body2" Align="Align.Right">@context.Score.ToString("F2")</MudText>
-                                </MudTd>
-                                <MudTd DataLabel="Weighted">
-                                    <MudText Typo="Typo.body2" Align="Align.Right">@context.WeightedScore.ToString("F2")</MudText>
-                                </MudTd>
-                            </RowTemplate>
-                        </MudTable>
-
-                        <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-2">
-                            <MudButton Variant="Variant.Filled"
-                                       Color="Color.Primary"
-                                       OnClick="SaveKpiDetails"
-                                       Disabled="@(_savingDetails || _fillData.IsLocked || _fillData.Details.Count == 0)">
-                                @if (_savingDetails)
-                                {
-                                    <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
-                                }
-                                Save Details
-                            </MudButton>
-                        </MudStack>
-                    }
-                </MudPaper>
             }
+
         }
     </MudPaper>
 </MudContainer>
@@ -205,11 +125,6 @@
 
     private List<AppraisalDto> _appraisals = new();
     private bool _appraisalsLoading;
-
-    private long? _selectedAppraisalId;
-    private AppraisalFillDto? _fillData;
-    private bool _fillDetailsLoading;
-    private bool _savingDetails;
 
     private string _message = string.Empty;
     private Severity _alertSeverity = Severity.Normal;
@@ -251,8 +166,6 @@
     private async Task OnCycleChanged(long? cycleId)
     {
         _selectedCycleId = cycleId;
-        _selectedAppraisalId = null;
-        _fillData = null;
         _message = string.Empty;
         if (cycleId.HasValue)
         {
@@ -294,92 +207,6 @@
         }
     }
 
-    private async Task ToggleKpiDetails(long appraisalId)
-    {
-        if (_selectedAppraisalId == appraisalId)
-        {
-            _selectedAppraisalId = null;
-            _fillData = null;
-            return;
-        }
-
-        _selectedAppraisalId = appraisalId;
-        _fillData = null;
-        _fillDetailsLoading = true;
-        StateHasChanged();
-
-        try
-        {
-            var response = await AppraisalApi.GetFillAsync(appraisalId);
-            if (response.Success && response.Data != null)
-            {
-                _fillData = response.Data;
-            }
-            else
-            {
-                Snackbar.Add(response.Message ?? "Failed to load KPI details.", Severity.Error);
-                _selectedAppraisalId = null;
-            }
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Error loading KPI details: {ex.Message}", Severity.Error);
-            _selectedAppraisalId = null;
-        }
-        finally
-        {
-            _fillDetailsLoading = false;
-            StateHasChanged();
-        }
-    }
-
-    private async Task SaveKpiDetails()
-    {
-        if (_fillData == null || _selectedAppraisalId == null) return;
-
-        _savingDetails = true;
-        try
-        {
-            var details = _fillData.Details
-                .Where(d => d.KPIId.HasValue)
-                .Select(d => new AppraisalDetailDto
-                {
-                    KPIId = d.KPIId,
-                    ActualValue = d.ActualValue,
-                    Comment = d.Remarks,
-                })
-                .ToList();
-
-            var response = await AppraisalApi.UpdateDetailActualValuesAsync(_selectedAppraisalId.Value, details);
-            if (response.Success)
-            {
-                Snackbar.Add("KPI details saved successfully.", Severity.Success);
-                await ToggleKpiDetails(_selectedAppraisalId.Value);
-                if (_selectedCycleId.HasValue)
-                {
-                    await LoadAppraisalsAsync(_selectedCycleId.Value);
-                }
-            }
-            else
-            {
-                Snackbar.Add(response.Message ?? "Failed to save KPI details.", Severity.Error);
-            }
-        }
-        catch (Refit.ApiException ex)
-        {
-            var error = await ex.GetContentAsAsync<SuccessResponse>();
-            Snackbar.Add(error?.Message ?? "Error saving KPI details.", Severity.Error);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Error saving KPI details: {ex.Message}", Severity.Error);
-        }
-        finally
-        {
-            _savingDetails = false;
-            StateHasChanged();
-        }
-    }
 
     private static Color GetStatusColor(string status) => status switch
     {

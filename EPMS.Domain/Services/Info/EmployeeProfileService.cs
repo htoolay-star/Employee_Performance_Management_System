@@ -4,6 +4,7 @@ using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Domain.Interface.IService.App;
 using EPMS.Domain.Interface.IService.Auth;
 using EPMS.Domain.Interface.IService.Info;
+using EPMS.Domain.Services.Performance;
 using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
@@ -20,19 +21,22 @@ public class EmployeeProfileService : IEmployeeProfileService
     private readonly IPasswordHasher _passwordHasher;
     private readonly ISystemSettingsService _settingsService;
     private readonly ICacheService _cacheService;
+    private readonly IEntityKPIService _kpiService;
 
     public EmployeeProfileService(
         IUnitOfWork uow,
         ICurrentEmployeeContextService currentEmployee,
         IPasswordHasher passwordHasher,
         ISystemSettingsService settingsService,
-        ICacheService cacheService)
+        ICacheService cacheService,
+        IEntityKPIService kpiService)
     {
         _uow = uow;
         _currentEmployee = currentEmployee;
         _cacheService = cacheService;
         _passwordHasher = passwordHasher;
         _settingsService = settingsService;
+        _kpiService = kpiService;
     }
 
     public async Task<SuccessResponse<IEnumerable<EmployeeProfileDto>>> GetAllAsync()
@@ -154,6 +158,8 @@ public class EmployeeProfileService : IEmployeeProfileService
                 if (!string.IsNullOrEmpty(emp.ProductProject))
                     employment.AssignProject(emp.ProductProject);
                 _uow.Info.EmployeeEmployments.Add(employment);
+
+                await _kpiService.PropagatePositionKPIsToEmployeeAsync(employeeId, emp.PositionId);
             }
 
             // 3. Create Contact (if provided)

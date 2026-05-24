@@ -20,6 +20,8 @@ namespace EPMS.Domain.Services.Performance
         Task<SuccessResponse> UpdateAsync(long id, UpdateEntityKPIDto dto);
         Task<SuccessResponse> RestoreAsync(long id);
         Task<SuccessResponse> DeleteAsync(long id);
+        Task PropagatePositionKPIsToEmployeeAsync(long employeeId, long positionId);
+        Task PropagatePositionKPIsForAllEmployeesAsync();
     }
 
     public class EntityKPIService : IEntityKPIService
@@ -95,6 +97,52 @@ namespace EPMS.Domain.Services.Performance
                         _uow.Perf.EmployeeKPIs.Delete(kpi);
                 }
             }
+        }
+
+        public async Task PropagatePositionKPIsToEmployeeAsync(long employeeId, long positionId)
+        {
+            var activeCycle = await _uow.Perf.AppraisalCycles.GetCurrentCycleAsync();
+            if (activeCycle == null)
+                return;
+
+            var entityKpis = await _uow.Perf.EntityKPIs.GetByEntityAsync(
+                AppraisalConstants.EntityTypes.Position, positionId);
+
+            var runningWeight = await _uow.Perf.EmployeeKPIs.GetTotalWeightageAsync(
+                employeeId, activeCycle.Id);
+
+            foreach (var entityKpi in entityKpis)
+            {
+                var exists = await _uow.Perf.EmployeeKPIs.ExistsAsync(
+                    employeeId, entityKpi.KPIId, activeCycle.Id);
+                if (!exists)
+                {
+                    if (runningWeight + entityKpi.Weightage > 100)
+                        continue;
+
+                    var priority = await _uow.Perf.KPIWeightPriorities.GetByIdAsync(entityKpi.PriorityId);
+                    if (priority != null)
+                    {
+                        var employeeKpi = new EmployeeKPI(
+                            priority, employeeId, entityKpi.KPIId, activeCycle.Id,
+                            entityKpi.PriorityId, entityKpi.Weightage,
+                            entityKpi.TargetValue, entityKpi.TargetUnit, entityKpi.Id);
+                        _uow.Perf.EmployeeKPIs.Add(employeeKpi);
+                        runningWeight += entityKpi.Weightage;
+                    }
+                }
+            }
+        }
+
+        public async Task PropagatePositionKPIsForAllEmployeesAsync()
+        {
+            var activeCycle = await _uow.Perf.AppraisalCycles.GetCurrentCycleAsync();
+            if (activeCycle == null)
+                return;
+
+            var employments = await _uow.Info.EmployeeEmployments.GetAllAsync();
+            foreach (var emp in employments.Where(e => !e.IsDeleted))
+                await PropagatePositionKPIsToEmployeeAsync(emp.EmployeeId, emp.PositionId);
         }
 
         public async Task<SuccessResponse<IEnumerable<EntityKPIDto>>> GetAllAsync()

@@ -340,10 +340,11 @@ public class AppraisalService : IAppraisalService
         if (validationAppraisal.IsLocked)
             return SuccessResponse.Fail(AppraisalMsg.AlreadyLocked, ErrorType.Conflict);
 
+        var hasNoManager = validationAppraisal.Employee?.Employment?.DirectManagerId == null;
+        var isAdmin = await IsCurrentUserAdminAsync();
+
         if (currentEmployeeId != validationAppraisal.ManagerReviewerId)
         {
-            var hasNoManager = validationAppraisal.Employee?.Employment?.DirectManagerId == null;
-            var isAdmin = await IsCurrentUserAdminAsync();
             if (!(hasNoManager && isAdmin))
                 return SuccessResponse.Fail("You are not authorized to submit this appraisal.", ErrorType.Forbidden);
         }
@@ -381,13 +382,20 @@ public class AppraisalService : IAppraisalService
 
         if (trackedAppraisal.Status is AppraisalStatuses.Draft or AppraisalStatuses.InProgress)
         {
-            trackedAppraisal.UpdateDetails(status: AppraisalStatuses.Reviewed,
-                employeeComment: null, managerComment: null, ratingLabel: null);
+            if (hasNoManager && isAdmin)
+            {
+                trackedAppraisal.Lock(_timeProvider);
+            }
+            else
+            {
+                trackedAppraisal.UpdateDetails(status: AppraisalStatuses.Reviewed,
+                    employeeComment: null, managerComment: null, ratingLabel: null);
+            }
         }
 
         await _uow.CompleteAsync();
 
-        return SuccessResponse.Ok(AppraisalMsg.Submitted);
+        return SuccessResponse.Ok(hasNoManager && isAdmin ? AppraisalMsg.Locked : AppraisalMsg.Submitted);
     }
 
     public async Task<SuccessResponse> GetMyKpiAsync()

@@ -2,6 +2,7 @@
 using EPMS.Domain.Entities.Performance;
 using EPMS.Domain.Interface.Irepo.Performance;
 using EPMS.Domain.Repository.Base;
+using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.FormDTOs;
 using Microsoft.EntityFrameworkCore;
 
@@ -48,7 +49,7 @@ namespace EPMS.Domain.Repository.Performance
 
         public async Task<AppraisalFillDto?> GetAppraisalFillDtoAsync(long id)
         {
-            return await _dbSet
+            var dto = await _dbSet
                 .Where(a => a.Id == id)
                 .Select(a => new AppraisalFillDto
                 {
@@ -70,6 +71,8 @@ namespace EPMS.Domain.Repository.Performance
                     ManagerReviewerName = a.ManagerReviewer != null ? a.ManagerReviewer.StaffName : null,
                     Status = a.Status,
                     IsLocked = a.IsLocked,
+                    EntityType = a.EntityType,
+                    EntityId = a.EntityId,
                     Details = a.Details.Select(d => new AppraisalDetailFillDto
                     {
                         KPIId = d.KPIId,
@@ -85,6 +88,31 @@ namespace EPMS.Domain.Repository.Performance
                     }).ToList()
                 })
                 .FirstOrDefaultAsync();
+
+            if (dto == null) return null;
+
+            if (dto.EntityType == AppraisalConstants.EntityTypes.Department && dto.EntityId.HasValue)
+            {
+                var department = await _context.Departments
+                    .AsNoTracking()
+                    .Include(d => d.DeptHead)
+                    .FirstOrDefaultAsync(d => d.Id == dto.EntityId.Value);
+
+                dto.EntityName = department?.Name;
+                dto.EntityHeadName = department?.DeptHead?.StaffName;
+            }
+            else if (dto.EntityType == AppraisalConstants.EntityTypes.Team && dto.EntityId.HasValue)
+            {
+                var team = await _context.Teams
+                    .AsNoTracking()
+                    .Include(t => t.LeadTeam)
+                    .FirstOrDefaultAsync(t => t.Id == dto.EntityId.Value);
+
+                dto.EntityName = team?.Name;
+                dto.EntityHeadName = team?.LeadTeam?.StaffName;
+            }
+
+            return dto;
         }
 
         public async Task<IEnumerable<Appraisal>> GetEmployeeAppraisalsAsync(long employeeId, int cycleId)
