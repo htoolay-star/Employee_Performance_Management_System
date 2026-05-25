@@ -1,4 +1,5 @@
 @page "/performance/my-evaluations"
+@using EPMS.Client.Services.App
 @using EPMS.Client.Services.Performance
 @using EPMS.Shared.Constants
 @using EPMS.Shared.DTOs.Common
@@ -8,6 +9,7 @@
 @inject IAppraisalApiClient AppraisalApiClient
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject NavigationCacheService NavCache
 
 <PageTitle>My Evaluations</PageTitle>
 
@@ -99,6 +101,12 @@
 
     protected override async Task OnInitializedAsync()
     {
+        if (NavCache.KpiForms != null)
+        {
+            _items = NavCache.KpiForms;
+            _loading = false;
+            return;
+        }
         await LoadDataAsync();
     }
 
@@ -112,6 +120,7 @@
             if (response.Success && response.Data != null)
             {
                 _items = response.Data.ToList();
+                NavCache.KpiForms = _items;
             }
             else
             {

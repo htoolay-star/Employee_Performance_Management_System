@@ -61,7 +61,7 @@ namespace EPMS.Client.Services.Auth
                     return response;
                 }
 
-                if (await TryRefreshTokenAsync(cancellationToken))
+                if (await TryRefreshTokenAsync(token, cancellationToken))
                 {
                     var newToken = await _tokenStorage.GetAccessTokenAsync();
                     var retryRequest = await CloneRequestAsync(request, cancellationToken);
@@ -77,17 +77,24 @@ namespace EPMS.Client.Services.Auth
             return response;
         }
 
-        private async Task<bool> TryRefreshTokenAsync(CancellationToken ct)
+        private async Task<bool> TryRefreshTokenAsync(string failedAccessToken, CancellationToken ct)
         {
             await RefreshLock.WaitAsync(ct);
             try
             {
+                var currentAccessToken = await _tokenStorage.GetAccessTokenAsync();
+                if (currentAccessToken != failedAccessToken)
+                {
+                    return true;
+                }
+
                 var refreshToken = await _tokenStorage.GetRefreshTokenAsync();
                 if (string.IsNullOrEmpty(refreshToken))
                     return false;
 
                 var client = _httpClientFactory.CreateClient("RefreshClient");
                 var request = new RefreshTokenRequest { RefreshToken = refreshToken };
+
                 var response = await client.PostAsJsonAsync("/api/auth/refresh-token", request, _jsonOptions, ct);
 
                 if (!response.IsSuccessStatusCode)
@@ -105,8 +112,9 @@ namespace EPMS.Client.Services.Auth
 
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"[AuthHandler] Refresh Token Failed: {ex.Message}");
                 return false;
             }
             finally

@@ -185,6 +185,23 @@
                                    Style="text-align: center;" />
                 </MudStack>
 
+                <MudText Typo="Typo.subtitle1" Class="mt-2">@UIConstants.AppraisalCycle.KpiReview (Optional)</MudText>
+
+                <MudStack Row="true" Spacing="2">
+                    <MudDatePicker @bind-Date="_model.KpiReviewStartDateProxy"
+                                   Label="Start"
+                                   For="@(() => _model.KpiReviewStartDateProxy)"
+                                   Variant="Variant.Outlined"
+                                   Class="flex-1"
+                                   Style="text-align: center;" />
+                    <MudDatePicker @bind-Date="_model.KpiReviewDeadlineProxy"
+                                   Label="Deadline"
+                                   For="@(() => _model.KpiReviewDeadlineProxy)"
+                                   Variant="Variant.Outlined"
+                                   Class="flex-1"
+                                   Style="text-align: center;" />
+                </MudStack>
+
                 <MudText Typo="Typo.subtitle1" Class="mt-2">Scoring Weights (must total 100)</MudText>
 
                 <MudStack Row="true" Spacing="2">
@@ -386,6 +403,8 @@
                 _model.AppraisalReviewDeadline != Cycle.AppraisalReviewDeadline ||
                 _model.ThreeSixtyReviewStartDate != Cycle.ThreeSixtyReviewStartDate ||
                _model.ThreeSixtyReviewDeadline != Cycle.ThreeSixtyReviewDeadline ||
+                _model.KpiReviewStartDate != Cycle.KpiReviewStartDate ||
+                _model.KpiReviewDeadline != Cycle.KpiReviewDeadline ||
                _model.KpiWeight != Cycle.KpiWeight ||
                _model.SelfWeight != Cycle.SelfWeight ||
                _model.ThreeSixtyWeight != Cycle.ThreeSixtyWeight ||

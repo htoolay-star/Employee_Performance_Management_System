@@ -1,4 +1,5 @@
 using Blazored.LocalStorage;
+using EPMS.Client.Services.App;
 using EPMS.Client;
 using EPMS.Client.Extensions;
 using EPMS.Client.Handlers;
@@ -54,6 +55,7 @@ builder.Services.Configure<JsonSerializerOptions>(options =>
 
 builder.Services.AddScoped<AuthenticationStateProvider, JwtAuthenticationStateProvider>();
 builder.Services.AddScoped<LookupStateService>();
+builder.Services.AddSingleton<NavigationCacheService>();
 builder.Services.AddScoped<CurrentUserPermissionService>();
 builder.Services.AddAuthorizationCore();
 builder.Services.AddMudServices();

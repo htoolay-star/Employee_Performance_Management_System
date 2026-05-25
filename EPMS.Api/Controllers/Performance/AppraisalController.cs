@@ -132,13 +132,6 @@ public class AppraisalController : ApiControllerBase
         return HandleResult(result);
     }
 
-    [HttpPost("{id:long}/finalize")]
-    public async Task<ActionResult<SuccessResponse>> Finalize(long id)
-    {
-        var result = await _service.FinalizeAsync(id);
-        return HandleResult(result);
-    }
-
     [Authorize]
     [HttpPost("{id:long}/finalize-kpi")]
     public async Task<ActionResult<SuccessResponse>> FinalizeKpi(long id)

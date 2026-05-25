@@ -89,7 +89,7 @@ namespace EPMS.Api.Controllers.Auth
             return HandleResult(SuccessResponse<List<string>>.Ok(permissions, "Permissions retrieved."));
         }
 
-        [Authorize]
+        [AllowAnonymous]
         [HttpPost("logout")]
         public async Task<ActionResult<SuccessResponse>> Logout([FromBody] LogoutRequest request)
         {

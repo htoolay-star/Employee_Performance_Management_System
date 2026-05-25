@@ -1,9 +1,11 @@
 @using MudBlazor
 @using EPMS.Client.Services.Auth
+@using EPMS.Client.Services.App
 @using Microsoft.AspNetCore.Components.Authorization
 @inject CurrentUserPermissionService PermService
 @inject AuthenticationStateProvider AuthState
 @inject IAuthApiClient AuthApiClient
+@inject NavigationCacheService NavCache
 
 <div style="display: flex; flex-direction: column; height: 100%;">
 <MudNavMenu>
@@ -163,6 +165,12 @@
     }
     @if (_isAdmin || _isManager)
     {
+    <MudTooltip Text="Continuous Feedback" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+        <MudNavLink Href="performance/continuous-feedbacks" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Feedback">Continuous Feedback</MudNavLink>
+    </MudTooltip>
+    }
+    @if (_isAdmin || _isManager)
+    {
     <MudTooltip Text="Pending Forms" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
     <MudNavGroup Title="Pending Forms" Icon="@Icons.Material.Filled.PendingActions" Expanded="false">
         @if (_isManager)
@@ -238,11 +246,34 @@
 
     protected override async Task OnInitializedAsync()
     {
+        if (NavCache.NavLoaded)
+        {
+            _isSA = NavCache.IsSA;
+            _isAdmin = NavCache.IsAdmin;
+            _isManager = NavCache.IsManager;
+            var cachedPerms = NavCache.Permissions;
+            _canViewPositions = cachedPerms.Contains("POSITIONS.VIEW");
+            _canViewLevels = cachedPerms.Contains("LEVELS.VIEW");
+            _canViewDepartments = cachedPerms.Contains("DEPARTMENTS.VIEW");
+            _canViewTeams = cachedPerms.Contains("TEAMS.VIEW");
+            _canViewEntityKpis = cachedPerms.Contains("ENTITYKPI.VIEW");
+            _canViewEmployeeKpis = cachedPerms.Contains("EMPLOYEEKPI.VIEW");
+            _canViewFormTemplates = cachedPerms.Contains("FORMTEMPLATE.VIEW");
+            _canViewPositionFormTemplates = cachedPerms.Contains("POSITIONFORMTPL.VIEW");
+            _canViewEmployees = cachedPerms.Contains("EMPLOYEES.VIEW");
+            _canViewApprCycles = cachedPerms.Contains("APPRCYCLE.VIEW");
+            _canViewRatingScales = cachedPerms.Contains("RATINGSCALE.VIEW");
+            _canViewKpiMasters = cachedPerms.Contains("KPIMASTER.VIEW");
+            _canViewKpiWeights = cachedPerms.Contains("KPIWEIGHT.VIEW");
+            _canViewQuestRating = cachedPerms.Contains("QUESTRATING.VIEW");
+            _canViewAppraisals = cachedPerms.Contains("APPRAISAL.VIEW");
+            return;
+        }
+
         var permissionsTask = PermService.GetPermissionsAsync();
         var authStateTask = AuthState.GetAuthenticationStateAsync();
-        var isManagerTask = AuthApiClient.IsManagerAsync();
 
-        await Task.WhenAll(permissionsTask, authStateTask, isManagerTask);
+        await Task.WhenAll(permissionsTask, authStateTask);
 
         var permissions = await permissionsTask;
         var permSet = new HashSet<string>(permissions);
@@ -267,14 +298,25 @@
         _isSA = authState.User.IsInRole("SystemAdmin");
         _isAdmin = _isSA || authState.User.IsInRole("Admin");
 
-        try
+        _isManager = false;
+        if (authState.User.Identity is { IsAuthenticated: true })
         {
-            var mgr = await isManagerTask;
-            _isManager = mgr.Success && mgr.Data;
+            try
+            {
+                var mgr = await AuthApiClient.IsManagerAsync();
+                _isManager = mgr.Success && mgr.Data;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Manager status check failed: {ex.Message}");
+                _isManager = false;
+            }
         }
-        catch
-        {
-            _isManager = false;
-        }
+
+        NavCache.NavLoaded = true;
+        NavCache.IsSA = _isSA;
+        NavCache.IsAdmin = _isAdmin;
+        NavCache.IsManager = _isManager;
+        NavCache.Permissions = permissions.ToHashSet();
     }
 }

@@ -5,5 +5,6 @@ namespace EPMS.Shared.Constants
         public const string Public = "PUBLIC";
         public const string Private = "PRIVATE";
         public const string ManagerOnly = "MANAGER_ONLY";
+        public const string AdminOnly = "ADMIN_ONLY";
     }
 }

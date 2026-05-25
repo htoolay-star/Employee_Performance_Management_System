@@ -1,5 +1,6 @@
 @page "/performance/my-forms/appraisal"
 @using EPMS.Client.Constants
+@using EPMS.Client.Services.App
 @using EPMS.Client.Services.Performance
 @using EPMS.Shared.Constants
 @using EPMS.Shared.DTOs.Common
@@ -9,6 +10,7 @@
 @inject IEvaluationResponseApiClient EvalResponseApiClient
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject NavigationCacheService NavCache
 
 <PageTitle>@UIConstants.MyAppraisalForms.PageTitle</PageTitle>
 
@@ -75,6 +77,12 @@
 
     protected override async Task OnInitializedAsync()
     {
+        if (NavCache.AppraisalForms != null)
+        {
+            _evalItems = NavCache.AppraisalForms;
+            _loading = false;
+            return;
+        }
         await LoadDataAsync();
     }
 
@@ -88,6 +96,7 @@
             if (response.Success && response.Data != null)
             {
                 _evalItems = response.Data.ToList();
+                NavCache.AppraisalForms = _evalItems;
             }
             else
             {
