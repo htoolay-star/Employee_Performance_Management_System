@@ -26,6 +26,36 @@ public class AppraisalConfiguration : IEntityTypeConfiguration<Appraisal>
               .HasMaxLength(20)
               .IsRequired();
 
+        entity.Property(e => e.KpiStatus)
+              .HasMaxLength(20)
+              .IsRequired()
+              .HasDefaultValue("DRAFT");
+
+        entity.Property(e => e.SelfStatus)
+              .HasMaxLength(20)
+              .IsRequired()
+              .HasDefaultValue("DRAFT");
+
+        entity.Property(e => e.ManagerStatus)
+              .HasMaxLength(20)
+              .IsRequired()
+              .HasDefaultValue("DRAFT");
+
+        entity.Property(e => e.PeerStatus)
+              .HasMaxLength(20)
+              .IsRequired()
+              .HasDefaultValue("DRAFT");
+
+        entity.Property(e => e.SubordinateStatus)
+              .HasMaxLength(20)
+              .IsRequired()
+              .HasDefaultValue("DRAFT");
+
+        entity.Property(e => e.CommitteeStatus)
+              .HasMaxLength(20)
+              .IsRequired()
+              .HasDefaultValue("DRAFT");
+
         entity.Property(e => e.TotalScore)
               .HasPrecision(5, 2);
 
@@ -56,6 +86,8 @@ public class AppraisalConfiguration : IEntityTypeConfiguration<Appraisal>
 
         entity.Property(e => e.SelfLocked).HasDefaultValue(false);
         entity.Property(e => e.SelfLockIsDeadline).HasDefaultValue(false);
+        entity.Property(e => e.KpiLocked).HasDefaultValue(false);
+        entity.Property(e => e.KpiLockIsDeadline).HasDefaultValue(false);
         entity.Property(e => e.ThreeSixtyLocked).HasDefaultValue(false);
         entity.Property(e => e.ThreeSixtyLockIsDeadline).HasDefaultValue(false);
         entity.Property(e => e.AppraisalLocked).HasDefaultValue(false);

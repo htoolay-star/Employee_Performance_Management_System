@@ -12,9 +12,21 @@ public record EvaluationFormFillDto(
     string Role,
     bool IsSubmitted,
     bool IsLocked,
+    string KpiStatus,
+    string SelfStatus,
+    string ManagerStatus,
+    string PeerStatus,
+    string SubordinateStatus,
+    string CommitteeStatus,
     List<EvaluationFormQuestionItem> Questions,
     decimal? TotalPoint = null,
-    string? RatingLabel = null
+    string? RatingLabel = null,
+    string? ManagerName = null,
+    string? TeamName = null,
+    bool SelfLocked = false,
+    bool KpiLocked = false,
+    bool ThreeSixtyLocked = false,
+    bool AppraisalLocked = false
 );
 
 public class EvaluationFormQuestionItem

@@ -3,6 +3,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @inject CurrentUserPermissionService PermService
 @inject AuthenticationStateProvider AuthState
+@inject IAuthApiClient AuthApiClient
 
 <div style="display: flex; flex-direction: column; height: 100%;">
 <MudNavMenu>
@@ -128,24 +129,60 @@
     </MudNavGroup>
     </MudTooltip>
     }
-    <MudTooltip Text="My KPI" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
-        <MudNavLink Href="performance/my-kpi" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Person">My KPI</MudNavLink>
-    </MudTooltip>
-    <MudTooltip Text="My Evaluations" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
-        <MudNavLink Href="performance/my-evaluations" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.EditNote">My Evaluations</MudNavLink>
-    </MudTooltip>
-    @if (_isAdmin)
-    {
-        <MudTooltip Text="Pending" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
-            <MudNavLink Href="performance/pending" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PendingActions">Pending</MudNavLink>
+    <MudTooltip Text="My Forms" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+    <MudNavGroup Title="My Forms" Icon="@Icons.Material.Filled.Description" Expanded="false">
+        <MudTooltip Text="My KPI" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+            <MudNavLink Href="performance/my-kpi" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Person">My KPI</MudNavLink>
         </MudTooltip>
+        <MudTooltip Text="My Self Assessments" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+            <MudNavLink Href="performance/my-forms/self" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Person">Self Assessments</MudNavLink>
+        </MudTooltip>
+        <MudTooltip Text="My 360 Forms" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+            <MudNavLink Href="performance/my-forms/360" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Groups">360 Forms</MudNavLink>
+        </MudTooltip>
+    </MudNavGroup>
+    </MudTooltip>
+    @if (_isAdmin || _isManager)
+    {
+    <MudTooltip Text="Fill Forms" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+    <MudNavGroup Title="Fill Forms" Icon="@Icons.Material.Filled.EditNote" Expanded="false">
+        <MudTooltip Text="KPI Forms" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+            <MudNavLink Href="performance/my-evaluations" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.EditNote">KPI Forms</MudNavLink>
+        </MudTooltip>
+        <MudTooltip Text="Appraisal Forms" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+            <MudNavLink Href="performance/my-forms/appraisal" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.RateReview">Appraisal Forms</MudNavLink>
+        </MudTooltip>
+        <MudTooltip Text="Department KPIs" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+            <MudNavLink Href="performance/department-appraisals" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Assessment">Department KPIs</MudNavLink>
+        </MudTooltip>
+        <MudTooltip Text="Team KPIs" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+            <MudNavLink Href="performance/team-appraisals" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Assessment">Team KPIs</MudNavLink>
+        </MudTooltip>
+    </MudNavGroup>
+    </MudTooltip>
     }
-    <MudTooltip Text="Department Appraisals" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
-        <MudNavLink Href="performance/department-appraisals" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Assessment">Department Appraisals</MudNavLink>
+    @if (_isAdmin || _isManager)
+    {
+    <MudTooltip Text="Pending Forms" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+    <MudNavGroup Title="Pending Forms" Icon="@Icons.Material.Filled.PendingActions" Expanded="false">
+        @if (_isManager)
+        {
+        <MudTooltip Text="Pending Self Reviews" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+            <MudNavLink Href="performance/manager-self-pending" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.RateReview">Pending Self Reviews</MudNavLink>
+        </MudTooltip>
+        }
+        @if (_isAdmin)
+        {
+        <MudTooltip Text="KPI Pending" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+            <MudNavLink Href="performance/pending" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PendingActions">KPI Pending</MudNavLink>
+        </MudTooltip>
+        <MudTooltip Text="Eval-Forms Pending" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+            <MudNavLink Href="performance/evaluations/pending" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.RateReview">Eval-Forms Pending</MudNavLink>
+        </MudTooltip>
+        }
+    </MudNavGroup>
     </MudTooltip>
-    <MudTooltip Text="Team Appraisals" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
-        <MudNavLink Href="performance/team-appraisals" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Assessment">Team Appraisals</MudNavLink>
-    </MudTooltip>
+    }
     @if (_isAdmin)
     {
         <MudTooltip Text="Settings" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
@@ -197,10 +234,17 @@
     private bool _canViewAppraisals;
     private bool _isAdmin;
     private bool _isSA;
+    private bool _isManager;
 
     protected override async Task OnInitializedAsync()
     {
-        var permissions = await PermService.GetPermissionsAsync();
+        var permissionsTask = PermService.GetPermissionsAsync();
+        var authStateTask = AuthState.GetAuthenticationStateAsync();
+        var isManagerTask = AuthApiClient.IsManagerAsync();
+
+        await Task.WhenAll(permissionsTask, authStateTask, isManagerTask);
+
+        var permissions = await permissionsTask;
         var permSet = new HashSet<string>(permissions);
 
         _canViewPositions = permSet.Contains("POSITIONS.VIEW");
@@ -219,8 +263,18 @@
         _canViewQuestRating = permSet.Contains("QUESTRATING.VIEW");
         _canViewAppraisals = permSet.Contains("APPRAISAL.VIEW");
 
-        var authState = await AuthState.GetAuthenticationStateAsync();
+        var authState = await authStateTask;
         _isSA = authState.User.IsInRole("SystemAdmin");
         _isAdmin = _isSA || authState.User.IsInRole("Admin");
+
+        try
+        {
+            var mgr = await isManagerTask;
+            _isManager = mgr.Success && mgr.Data;
+        }
+        catch
+        {
+            _isManager = false;
+        }
     }
 }

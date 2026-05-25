@@ -1,0 +1,129 @@
+@page "/performance/my-forms/appraisal"
+@using EPMS.Client.Constants
+@using EPMS.Client.Services.Performance
+@using EPMS.Shared.Constants
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.FormDTOs
+@using MudBlazor
+@using Refit
+@inject IEvaluationResponseApiClient EvalResponseApiClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>@UIConstants.MyAppraisalForms.PageTitle</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.MyAppraisalForms.PageTitle</MudText>
+
+    <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+
+        <MudDataGrid Items="@_evalItems"
+                     Loading="@_loading"
+                     Hover="true"
+                     Elevation="0"
+                     SortMode="SortMode.None">
+            <Columns>
+                <TemplateColumn Title="#" Sortable="false" Style="width: 60px;">
+                    <CellTemplate>
+                        <span style="display: block; text-align: left; padding-right: 12px;">@(_evalItems.IndexOf(context.Item) + 1)</span>
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.EmployeeName" Title="Employee" Sortable="true" />
+                <PropertyColumn Property="x => x.DepartmentName" Title="Department" Sortable="true" />
+                <PropertyColumn Property="x => x.CycleName" Title="Cycle" Sortable="true" />
+                <TemplateColumn Title="Status" Sortable="false">
+                    <CellTemplate>
+                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Item.CommitteeStatus)">@context.Item.CommitteeStatus</MudChip>
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="Actions" Sortable="false">
+                    <CellTemplate>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="@(context.Item.IsSubmitted ? Color.Info : Color.Primary)"
+                                   Size="Size.Small"
+                                   OnClick="@(() => NavigateToEvalForm(context.Item))">
+                            @(context.Item.IsSubmitted ? "View" : "Fill")
+                        </MudButton>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+            <LoadingContent>
+                <MudStack Spacing="3" Class="w-100">
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                </MudStack>
+            </LoadingContent>
+            <NoRecordsContent>
+                <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
+                    <MudIcon Icon="@Icons.Material.Outlined.Inbox" Style="font-size: 4rem;" Color="Color.Default" />
+                    <MudText Typo="Typo.h6" Color="Color.Default">@UIConstants.MyAppraisalForms.NoData</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">You have no appraisal forms assigned.</MudText>
+                </MudStack>
+            </NoRecordsContent>
+            <PagerContent>
+                <MudDataGridPager T="MyEvaluationFormDto" />
+            </PagerContent>
+        </MudDataGrid>
+
+    </MudPaper>
+</MudContainer>
+
+@code {
+
+    private List<MyEvaluationFormDto> _evalItems = new();
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _loading = true;
+        StateHasChanged();
+        try
+        {
+            var response = await EvalResponseApiClient.GetMyAppraisalFormsAsync();
+            if (response.Success && response.Data != null)
+            {
+                _evalItems = response.Data.ToList();
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? "Failed to load forms.", Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Failed to load data.", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void NavigateToEvalForm(MyEvaluationFormDto item)
+    {
+        var url = item.IsSubmitted
+            ? $"/performance/appraisals/{item.AppraisalId}/evaluate?role={item.Role}&viewonly=true&from=my-forms/appraisal"
+            : $"/performance/appraisals/{item.AppraisalId}/evaluate?role={item.Role}&from=my-forms/appraisal";
+        Navigation.NavigateTo(url);
+    }
+
+    private static Color GetStatusColor(string status) => status switch
+    {
+        AppraisalStatuses.Committee.Draft => Color.Warning,
+        AppraisalStatuses.Committee.Reviewed => Color.Primary,
+        AppraisalStatuses.Committee.Finalized => Color.Success,
+        _ => Color.Default
+    };
+
+}

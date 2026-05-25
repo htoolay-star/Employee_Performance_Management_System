@@ -71,6 +71,9 @@ namespace EPMS.Domain.Entities.Performance
         public DateOnly? ManagerReviewStartDate { get; private set; }
         public DateOnly? ManagerReviewDeadline { get; private set; }
 
+        public DateOnly? KpiReviewStartDate { get; private set; }
+        public DateOnly? KpiReviewDeadline { get; private set; }
+
         public DateTimeOffset? FinalClosureDate { get; private set; }
 
         public bool IsActive { get; private set; }
@@ -124,6 +127,18 @@ namespace EPMS.Domain.Entities.Performance
 
             ThreeSixtyReviewStartDate = start;
             ThreeSixtyReviewDeadline = deadline;
+        }
+
+        public void ConfigureKpiReviewWindow(DateOnly start, DateOnly deadline)
+        {
+            if (start > deadline)
+                throw new ArgumentException("Start date cannot be after the deadline.");
+
+            if (start < WindowStartDate || deadline > WindowEndDate)
+                throw new ArgumentException("The KPI review window strictly must fall within the overall Appraisal Window dates.");
+
+            KpiReviewStartDate = start;
+            KpiReviewDeadline = deadline;
         }
 
         public void Update(string name, string appraisalType, string calendarType, string yearLabel,

@@ -255,6 +255,12 @@ public class AppraisalService : IAppraisalService
             ManagerReviewerId: appraisal.ManagerReviewerId,
             ManagerReviewerName: appraisal.ManagerReviewer?.StaffName,
             Status: appraisal.Status ?? "Draft",
+            KpiStatus: appraisal.KpiStatus ?? AppraisalStatuses.Kpi.Draft,
+            SelfStatus: appraisal.SelfStatus ?? AppraisalStatuses.Self.Draft,
+            ManagerStatus: appraisal.ManagerStatus ?? AppraisalStatuses.Manager.Draft,
+            PeerStatus: appraisal.PeerStatus ?? AppraisalStatuses.Peer.Draft,
+            SubordinateStatus: appraisal.SubordinateStatus ?? AppraisalStatuses.Subordinate.Draft,
+            CommitteeStatus: appraisal.CommitteeStatus ?? AppraisalStatuses.Committee.Draft,
             RatingLabel: appraisal.RatingLabel,
             TotalScore: appraisal.TotalScore,
             KpiScore: appraisal.KpiScore,
@@ -352,8 +358,8 @@ public class AppraisalService : IAppraisalService
         if (validationAppraisal.Cycle != null)
         {
             var today = DateOnly.FromDateTime(_timeProvider.GetUtcNow().DateTime);
-            var start = validationAppraisal.Cycle.ManagerReviewStartDate ?? validationAppraisal.Cycle.WindowStartDate;
-            var deadline = validationAppraisal.Cycle.ManagerReviewDeadline ?? validationAppraisal.Cycle.WindowEndDate;
+            var start = validationAppraisal.Cycle.KpiReviewStartDate ?? validationAppraisal.Cycle.WindowStartDate;
+            var deadline = validationAppraisal.Cycle.KpiReviewDeadline ?? validationAppraisal.Cycle.WindowEndDate;
 
             if (today < start)
                 return SuccessResponse.Fail($"Appraisal review window opens on {start:dd/MM/yyyy}.", ErrorType.Validation);
@@ -380,20 +386,28 @@ public class AppraisalService : IAppraisalService
             }
         }
 
-        if (trackedAppraisal.Status is AppraisalStatuses.Draft or AppraisalStatuses.InProgress)
+        bool allDone = false;
+
+        if (trackedAppraisal.KpiStatus is AppraisalStatuses.Kpi.Draft)
         {
+            trackedAppraisal.LockKpi(isDeadline: false);
             if (hasNoManager && isAdmin)
             {
-                trackedAppraisal.Lock(_timeProvider);
+                trackedAppraisal.SetKpiStatus(AppraisalStatuses.Kpi.Finalized);
+                if (trackedAppraisal.UpdateOverallStatusIfAllDone(_timeProvider))
+                    allDone = true;
             }
             else
             {
-                trackedAppraisal.UpdateDetails(status: AppraisalStatuses.Reviewed,
+                trackedAppraisal.UpdateDetails(status: AppraisalStatuses.Kpi.Reviewed,
                     employeeComment: null, managerComment: null, ratingLabel: null);
             }
         }
 
         await _uow.CompleteAsync();
+
+        if (allDone)
+            await CalculateAndStoreFinalScoreAsync(dto.Id);
 
         return SuccessResponse.Ok(hasNoManager && isAdmin ? AppraisalMsg.Locked : AppraisalMsg.Submitted);
     }
@@ -432,6 +446,13 @@ public class AppraisalService : IAppraisalService
             ManagerReviewerName = a.ManagerReviewer?.StaffName,
             Status = a.Status,
             IsLocked = a.IsLocked,
+            KpiLocked = a.KpiLocked,
+            KpiStatus = a.KpiStatus ?? AppraisalStatuses.Kpi.Draft,
+            SelfStatus = a.SelfStatus ?? AppraisalStatuses.Self.Draft,
+            ManagerStatus = a.ManagerStatus ?? AppraisalStatuses.Manager.Draft,
+            PeerStatus = a.PeerStatus ?? AppraisalStatuses.Peer.Draft,
+            SubordinateStatus = a.SubordinateStatus ?? AppraisalStatuses.Subordinate.Draft,
+            CommitteeStatus = a.CommitteeStatus ?? AppraisalStatuses.Committee.Draft,
             Details = a.Details.Select(d => new AppraisalDetailFillDto
             {
                 KPIId = d.KPIId,
@@ -453,7 +474,7 @@ public class AppraisalService : IAppraisalService
     public async Task<SuccessResponse> GetPendingAsync()
     {
         var appraisals = await _uow.Perf.Appraisals.FindAllAsync(
-            a => a.Status == AppraisalStatuses.Reviewed && !a.IsDeleted,
+            a => a.KpiStatus == AppraisalStatuses.Kpi.Reviewed && !a.IsDeleted,
             includes: new Expression<Func<Appraisal, object>>[]
             {
                 a => a.Employee,
@@ -463,47 +484,6 @@ public class AppraisalService : IAppraisalService
 
         var dtos = appraisals.Select(MapToDto).ToList();
         return SuccessResponse<IEnumerable<AppraisalDto>>.Ok(dtos, AppraisalMsg.RetrievedAll);
-    }
-
-    public async Task<SuccessResponse> LockAsync(long id, long adminId, string reason)
-    {
-        var positionId = await _currentEmployee.GetPositionIdAsync();
-        if (!positionId.HasValue)
-            return SuccessResponse.Fail("User position is required.", ErrorType.Forbidden);
-
-        var appraisal = await _uow.Perf.Appraisals.GetByIdAsync(id);
-        if (appraisal == null)
-            return SuccessResponse.Fail(AppraisalMsg.NotFound(id), ErrorType.NotFound);
-
-        if (appraisal.IsLocked)
-            return SuccessResponse.Fail(AppraisalMsg.AlreadyLocked, ErrorType.Conflict);
-
-        appraisal.Lock(_timeProvider);
-
-        await _uow.CompleteAsync();
-        return SuccessResponse.Ok(AppraisalMsg.Locked);
-    }
-
-    public async Task<SuccessResponse> UnlockAsync(long id, long adminId, string reason)
-    {
-        var positionId = await _currentEmployee.GetPositionIdAsync();
-        if (!positionId.HasValue)
-            return SuccessResponse.Fail("User position is required.", ErrorType.Forbidden);
-
-        var appraisal = await _uow.Perf.Appraisals.GetByIdAsync(id);
-        if (appraisal == null)
-            return SuccessResponse.Fail(AppraisalMsg.NotFound(id), ErrorType.NotFound);
-
-        if (!appraisal.IsLocked)
-            return SuccessResponse.Fail(AppraisalMsg.AlreadyUnlocked, ErrorType.Conflict);
-
-        if (string.IsNullOrWhiteSpace(reason))
-            return SuccessResponse.Fail(AppraisalMsg.UnlockReasonRequired, ErrorType.Validation);
-
-        appraisal.UnlockAppraisal(adminId, reason, _timeProvider);
-
-        await _uow.CompleteAsync();
-        return SuccessResponse.Ok(AppraisalMsg.Unlocked);
     }
 
     public async Task<SuccessResponse> UnlockRoleAsync(long id, string role)
@@ -518,6 +498,11 @@ public class AppraisalService : IAppraisalService
                 if (appraisal.SelfLockIsDeadline)
                     return SuccessResponse.Fail("Cannot unlock deadline-locked self evaluation.", ErrorType.Conflict);
                 appraisal.UnlockSelf();
+                break;
+            case "KPI":
+                if (appraisal.KpiLockIsDeadline)
+                    return SuccessResponse.Fail("Cannot unlock deadline-locked KPI.", ErrorType.Conflict);
+                appraisal.UnlockKpi();
                 break;
             case EvaluatorRoles.Manager:
             case EvaluatorRoles.Peer:
@@ -833,10 +818,196 @@ public class AppraisalService : IAppraisalService
         if (appraisal.IsLocked)
             return SuccessResponse.Fail(AppraisalMsg.AlreadyLocked, ErrorType.Conflict);
 
-        appraisal.Lock(_timeProvider);
+        appraisal.LockKpi(isDeadline: false);
+        appraisal.SetKpiStatus(AppraisalStatuses.Kpi.Finalized);
 
         await _uow.CompleteAsync();
+
+        if (appraisal.UpdateOverallStatusIfAllDone(_timeProvider))
+            await CalculateAndStoreFinalScoreAsync(id);
+
         return SuccessResponse.Ok(AppraisalMsg.Locked);
+    }
+
+    public async Task<SuccessResponse> FinalizeEvaluationAsync(long appraisalId, string role)
+    {
+        if (!await IsCurrentUserAdminAsync())
+            return SuccessResponse.Fail("Only administrators can finalize evaluations.", ErrorType.Forbidden);
+
+        var appraisal = await _uow.Perf.Appraisals.GetByIdAsync(appraisalId);
+        if (appraisal == null)
+            return SuccessResponse.Fail(AppraisalMsg.NotFound(appraisalId), ErrorType.NotFound);
+
+        if (appraisal.IsLocked)
+            return SuccessResponse.Fail(AppraisalMsg.AlreadyLocked, ErrorType.Conflict);
+
+        switch (role)
+        {
+            case EvaluatorRoles.Self:
+                appraisal.SetSelfStatus(AppraisalStatuses.Self.Finalized);
+                break;
+            case EvaluatorRoles.Manager:
+                appraisal.SetManagerStatus(AppraisalStatuses.Manager.Finalized);
+                break;
+            case EvaluatorRoles.Peer:
+                appraisal.SetPeerStatus(AppraisalStatuses.Peer.Finalized);
+                break;
+            case EvaluatorRoles.Subordinate:
+                appraisal.SetSubordinateStatus(AppraisalStatuses.Subordinate.Finalized);
+                break;
+            case EvaluatorRoles.Appraisal:
+                appraisal.SetCommitteeStatus(AppraisalStatuses.Committee.Finalized);
+                break;
+            default:
+                return SuccessResponse.Fail($"Unknown role: {role}", ErrorType.Validation);
+        }
+
+        bool allDone = appraisal.UpdateOverallStatusIfAllDone(_timeProvider);
+
+        await _uow.CompleteAsync();
+
+        if (allDone)
+            await CalculateAndStoreFinalScoreAsync(appraisalId);
+
+        return SuccessResponse.Ok(AppraisalMsg.Finalized);
+    }
+
+    public async Task AutoFinalizeAndCalculateScoreAsync(long appraisalId)
+    {
+        var appraisal = await _uow.Perf.Appraisals.FindAllAsync(
+            a => a.Id == appraisalId, trackChanges: true,
+            includes: new Expression<Func<Appraisal, object>>[] { a => a.Details, a => a.Cycle });
+        var tracked = appraisal.FirstOrDefault();
+        if (tracked == null) return;
+
+        if (!tracked.UpdateOverallStatusIfAllDone(_timeProvider))
+            return;
+
+        await CalculateAndStoreFinalScoreAsync(tracked);
+        await _uow.CompleteAsync();
+    }
+
+    private async Task CalculateAndStoreFinalScoreAsync(long appraisalId)
+    {
+        var appraisal = await _uow.Perf.Appraisals.FindAllAsync(
+            a => a.Id == appraisalId, trackChanges: true,
+            includes: new Expression<Func<Appraisal, object>>[] { a => a.Details, a => a.Cycle });
+        var tracked = appraisal.FirstOrDefault();
+        if (tracked == null) return;
+        await CalculateAndStoreFinalScoreAsync(tracked);
+    }
+
+    private async Task CalculateAndStoreFinalScoreAsync(Appraisal appraisal)
+    {
+        var kpiScore = appraisal.Details
+            .Where(d => d.KPIId.HasValue && d.Score > 0)
+            .Select(d => d.WeightedScore)
+            .DefaultIfEmpty(0)
+            .Average();
+
+        var responses = await _uow.Perf.EvaluationResponses
+            .FindAllAsync(r => r.AppraisalId == appraisal.Id && !r.IsDeleted,
+                includes: r => r.Question);
+
+        var anyResponse = responses.FirstOrDefault(r => r.TemplateId != 0);
+        var maxScale = 5m;
+        if (anyResponse != null)
+        {
+            var template = await _uow.Perf.FormTemplates.GetByIdAsync(anyResponse.TemplateId);
+            if (template != null)
+            {
+                var scaleWithLevels = await _uow.Perf.QuestionRatingScales.FindAsync(
+                    s => s.Id == template.QuestionRatingScaleId,
+                    includes: s => s.Levels);
+                maxScale = scaleWithLevels?.Levels.Any() == true
+                    ? Math.Max(scaleWithLevels.Levels.Max(l => l.Rating), 1m)
+                    : 5m;
+            }
+        }
+
+        var selfScore = responses
+            .Where(r => r.EvaluatorRole == EvaluatorRoles.Self && r.RatingValue.HasValue)
+            .Select(r => (decimal)r.RatingValue!.Value)
+            .DefaultIfEmpty(0)
+            .Average() * 100m / maxScale;
+
+        var threeSixtyScore = responses
+            .Where(r => (r.EvaluatorRole is EvaluatorRoles.Manager or EvaluatorRoles.Peer or EvaluatorRoles.Subordinate) && r.RatingValue.HasValue)
+            .Select(r => (decimal)r.RatingValue!.Value)
+            .DefaultIfEmpty(0)
+            .Average() * 100m / maxScale;
+
+        var appraisalScore = responses
+            .Where(r => r.EvaluatorRole == EvaluatorRoles.Appraisal && r.RatingValue.HasValue)
+            .Select(r => (decimal)r.RatingValue!.Value)
+            .DefaultIfEmpty(0)
+            .Average() * 100m / maxScale;
+
+        if (appraisal.Cycle == null) return;
+
+        var ratingScales = await _uow.Perf.RatingScales
+            .FindAllAsync(s => s.IsActive && !s.IsDeleted);
+
+        var totalBeforeMatch = (kpiScore * appraisal.Cycle.KpiWeight / 100m)
+                             + (selfScore * appraisal.Cycle.SelfWeight / 100m)
+                             + (threeSixtyScore * appraisal.Cycle.ThreeSixtyWeight / 100m)
+                             + (appraisalScore * appraisal.Cycle.AppraisalWeight / 100m);
+
+        var matchingScale = ratingScales.FirstOrDefault(s => s.IsMatch(totalBeforeMatch));
+        if (matchingScale == null) return;
+
+        appraisal.SetComputedScores(
+            kpiScore, selfScore, threeSixtyScore, appraisalScore,
+            appraisal.Cycle.KpiWeight, appraisal.Cycle.SelfWeight,
+            appraisal.Cycle.ThreeSixtyWeight, appraisal.Cycle.AppraisalWeight,
+            matchingScale);
+    }
+
+    public async Task<SuccessResponse> GetManagerSelfPendingAsync()
+    {
+        var currentEmployeeId = await _currentEmployee.GetEmployeeIdAsync();
+        if (!currentEmployeeId.HasValue)
+            return SuccessResponse.Fail("User identity not found.", ErrorType.Forbidden);
+
+        var appraisals = await _uow.Perf.Appraisals.FindAllAsync(
+            a => a.ManagerReviewerId == currentEmployeeId.Value
+              && a.SelfStatus == AppraisalStatuses.Self.InProgress
+              && !a.IsDeleted,
+            includes: new Expression<Func<Appraisal, object>>[] { a => a.Employee, a => a.Cycle });
+
+        var dtos = appraisals.Select(MapToDto).ToList();
+        return SuccessResponse<IEnumerable<AppraisalDto>>.Ok(dtos, "Pending self assessments retrieved.");
+    }
+
+    public async Task<SuccessResponse> ApproveSelfAssessmentAsync(long appraisalId)
+    {
+        var currentEmployeeId = await _currentEmployee.GetEmployeeIdAsync();
+        if (!currentEmployeeId.HasValue)
+            return SuccessResponse.Fail("User identity not found.", ErrorType.Forbidden);
+
+        var appraisal = await _uow.Perf.Appraisals.FindAllAsync(
+            a => a.Id == appraisalId, trackChanges: true,
+            includes: new Expression<Func<Appraisal, object>>[] { a => a.Employee, a => a.Cycle });
+        var tracked = appraisal.FirstOrDefault();
+        if (tracked == null)
+            return SuccessResponse.Fail(AppraisalMsg.NotFound(appraisalId), ErrorType.NotFound);
+
+        if (tracked.ManagerReviewerId != currentEmployeeId.Value)
+            return SuccessResponse.Fail("Only the direct manager can approve the self assessment.", ErrorType.Forbidden);
+
+        if (tracked.SelfStatus != AppraisalStatuses.Self.InProgress)
+            return SuccessResponse.Fail("Self assessment must be InProgress to approve.", ErrorType.Validation);
+
+        tracked.ApproveSelf();
+
+        bool allDone = tracked.UpdateOverallStatusIfAllDone(_timeProvider);
+
+        await _uow.CompleteAsync();
+
+        if (allDone)
+            await CalculateAndStoreFinalScoreAsync(appraisalId);
+
+        return SuccessResponse.Ok("Self assessment approved successfully.");
     }
 
     private async Task<List<(long EvaluatorId, string Role)>> ResolveEvaluatorEntriesAsync(

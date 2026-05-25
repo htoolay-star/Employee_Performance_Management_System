@@ -59,8 +59,8 @@
                             <tr>
                                 <td><strong>Cycle:</strong> @_model.CycleName</td>
                                 <td>
-                                    <strong>Status:</strong>
-                                    <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(_model.Status)">@_model.Status</MudChip>
+                                    <strong>KPI Status:</strong>
+                                    <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(_model.KpiStatus)">@_model.KpiStatus</MudChip>
                                 </td>
                             </tr>
                         </tbody>
@@ -144,7 +144,8 @@
                                                       Margin="Margin.Dense"
                                                       Immediate="false"
                                                       Validation="ValidateNegativeValue"
-                                                      InputType="InputType.Number" />
+                                                      InputType="InputType.Number"
+                                                      Disabled="@(_model.KpiLocked || _model.IsLocked)" />
                                     </td>
                                     <td>
                                         <MudText Typo="Typo.body2" Align="Align.Right">@detail.Score.ToString("F2")</MudText>
@@ -158,7 +159,8 @@
                                                       Variant="Variant.Outlined"
                                                       Placeholder="Notes"
                                                       Margin="Margin.Dense"
-                                                      Lines="2" />
+                                                      Lines="2"
+                                                      Disabled="@(_model.KpiLocked || _model.IsLocked)" />
                                     </td>
                                 </tr>
                             }
@@ -183,8 +185,8 @@
                     <MudButton Variant="Variant.Filled"
                                Color="Color.Primary"
                                OnClick="Submit"
-                               Visible="@(_model.Status is AppraisalStatuses.Draft or AppraisalStatuses.InProgress)"
-                               Disabled="@(_loading || _submitting || _model.IsLocked || _model.Details.Count == 0)">
+                               Visible="@(_model.KpiStatus is AppraisalStatuses.Kpi.Draft)"
+                               Disabled="@(_loading || _submitting || _model.IsLocked || _model.KpiStatus is AppraisalStatuses.Kpi.Finalized || _model.Details.Count == 0)">
                         @if (_submitting)
                         {
                             <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
@@ -256,7 +258,8 @@
         catch (ApiException ex)
         {
             _error = true;
-            _errorMessage = $"Error loading appraisal: {ex.StatusCode}";
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            _errorMessage = error?.Message ?? UIConstants.Common.LoadFailed;
         }
         catch (Exception ex)
         {
@@ -349,10 +352,9 @@
 
     private Color GetStatusColor(string status) => status switch
     {
-        "Draft" => Color.Warning,
-        "InProgress" => Color.Info,
-        "REVIEWED" => Color.Primary,
-        "Finalized" => Color.Success,
+        AppraisalStatuses.Kpi.Draft => Color.Warning,
+        AppraisalStatuses.Kpi.Reviewed => Color.Primary,
+        AppraisalStatuses.Kpi.Finalized => Color.Success,
         _ => Color.Default
     };
 

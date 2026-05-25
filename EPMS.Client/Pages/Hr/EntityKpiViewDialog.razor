@@ -3,8 +3,10 @@
 @using EPMS.Client.Services.Auth
 @using EPMS.Client.Services.Performance
 @using EPMS.Shared.Constants
+@using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.Performance.EntityKPI
 @using MudBlazor
+@using Refit
 
 @inject IDialogService DialogService
 @inject IEntityKPIApiClient EntityKPIApiClient
@@ -151,6 +153,11 @@
                 _items = response.Data.ToList();
             else
                 Snackbar.Add(response.Message ?? "Failed to load KPIs.", Severity.Error);
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Failed to load KPIs.", Severity.Error);
         }
         catch (Exception ex)
         {

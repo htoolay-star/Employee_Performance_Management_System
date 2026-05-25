@@ -34,7 +34,7 @@ public class NightlyMaintenanceJob
         var now = DateOnly.FromDateTime(DateTime.UtcNow);
         var cycles = await uow.Perf.AppraisalCycles.GetAllAsync();
         var toGenerate = cycles.Where(c => c.IsActive && !c.IsLocked
-                                       && c.EvaluationStartDate <= now).ToList();
+                                       && c.WindowStartDate <= now).ToList();
 
         foreach (var cycle in toGenerate)
             await appraisalService.AutoGenerateForCycleAsync(cycle.Id);
@@ -74,6 +74,54 @@ public class NightlyMaintenanceJob
                     kpi.TargetValue, kpi.TargetUnit, snapshotDate
                 ));
             }
+
+            var appraisals = await uow.Perf.Appraisals.FindAllAsync(
+                a => a.CycleId == cycle.Id && !a.IsDeleted,
+                trackChanges: true);
+
+            foreach (var appraisal in appraisals)
+            {
+                if (!appraisal.KpiLocked)
+                    appraisal.LockKpi(isDeadline: true);
+
+                if (!appraisal.SelfLocked)
+                {
+                    appraisal.LockSelf(isDeadline: true);
+                    var selfResponses = await uow.Perf.EvaluationResponses
+                        .FindAllAsync(r => r.AppraisalId == appraisal.Id
+                                        && r.EvaluatorRole == EvaluatorRoles.Self
+                                        && !r.IsDeleted && !r.SubmittedAt.HasValue,
+                                      trackChanges: true);
+                    foreach (var r in selfResponses)
+                        r.Submit(TimeProvider.System);
+                }
+
+                if (!appraisal.ThreeSixtyLocked)
+                {
+                    appraisal.LockThreeSixty(isDeadline: true);
+                    var threeSixtyResponses = await uow.Perf.EvaluationResponses
+                        .FindAllAsync(r => r.AppraisalId == appraisal.Id
+                                        && (r.EvaluatorRole == EvaluatorRoles.Manager
+                                         || r.EvaluatorRole == EvaluatorRoles.Peer
+                                         || r.EvaluatorRole == EvaluatorRoles.Subordinate)
+                                        && !r.IsDeleted && !r.SubmittedAt.HasValue,
+                                      trackChanges: true);
+                    foreach (var r in threeSixtyResponses)
+                        r.Submit(TimeProvider.System);
+                }
+
+                if (!appraisal.AppraisalLocked)
+                {
+                    appraisal.LockAppraisal(isDeadline: true);
+                    var appraisalResponses = await uow.Perf.EvaluationResponses
+                        .FindAllAsync(r => r.AppraisalId == appraisal.Id
+                                        && r.EvaluatorRole == EvaluatorRoles.Appraisal
+                                        && !r.IsDeleted && !r.SubmittedAt.HasValue,
+                                      trackChanges: true);
+                    foreach (var r in appraisalResponses)
+                        r.Submit(TimeProvider.System);
+                }
+            }
         }
 
         await uow.CompleteAsync();
@@ -104,6 +152,12 @@ public class NightlyMaintenanceJob
                                       trackChanges: true);
                     foreach (var r in selfResponses)
                         r.Submit(TimeProvider.System);
+                }
+
+                var kpiDeadline = cycle.KpiReviewDeadline ?? cycle.WindowEndDate;
+                if (!appraisal.KpiLocked && kpiDeadline <= now)
+                {
+                    appraisal.LockKpi(isDeadline: true);
                 }
 
                 var threeSixtyDeadline = cycle.ThreeSixtyReviewDeadline ?? cycle.WindowEndDate;

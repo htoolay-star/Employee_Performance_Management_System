@@ -16,7 +16,19 @@
 
 <PageTitle>@UIConstants.PositionFormTemplate.PageTitle</PageTitle>
 
-@if (_error)
+@if (!_initialized)
+{
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+        <MudPaper Elevation="2" Class="pa-6">
+            <MudStack Spacing="3">
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+            </MudStack>
+        </MudPaper>
+    </MudContainer>
+}
+else if (_error)
 {
     <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
         <MudAlert Severity="Severity.Error">@_errorMessage</MudAlert>
@@ -144,6 +156,7 @@ else
     private Dictionary<long, int> _rowNumbers = new();
     private bool _loading = true;
 
+    private bool _initialized;
     private bool _error;
     private string _errorMessage = string.Empty;
     private bool _canView;
@@ -156,21 +169,28 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        _canView = await PermService.HasPermissionAsync("POSITIONFORMTPL.VIEW");
-        if (!_canView)
+        try
         {
-            _error = true;
-            _errorMessage = "You do not have permission to view Position Form Templates.";
-            return;
+            _canView = await PermService.HasPermissionAsync("POSITIONFORMTPL.VIEW");
+            if (!_canView)
+            {
+                _error = true;
+                _errorMessage = "You do not have permission to view Position Form Templates.";
+                return;
+            }
+
+            _canCreate = await PermService.HasPermissionAsync("POSITIONFORMTPL.CREATE");
+            _canEdit = await PermService.HasPermissionAsync("POSITIONFORMTPL.EDIT");
+            _canDelete = await PermService.HasPermissionAsync("POSITIONFORMTPL.DELETE");
+
+            _positions = await LookupState.GetPositionsAsync();
+            _templates = await LookupState.GetFormTemplatesAsync();
+            await LoadDataAsync();
         }
-
-        _canCreate = await PermService.HasPermissionAsync("POSITIONFORMTPL.CREATE");
-        _canEdit = await PermService.HasPermissionAsync("POSITIONFORMTPL.EDIT");
-        _canDelete = await PermService.HasPermissionAsync("POSITIONFORMTPL.DELETE");
-
-        _positions = await LookupState.GetPositionsAsync();
-        _templates = await LookupState.GetFormTemplatesAsync();
-        await LoadDataAsync();
+        finally
+        {
+            _initialized = true;
+        }
     }
 
     private async Task LoadDataAsync()
@@ -301,6 +321,11 @@ else
                 }
                 else
                     Snackbar.Add(response.Message ?? UIConstants.Common.DeleteFailed, Severity.Error);
+            }
+            catch (ApiException ex)
+            {
+                var error = await ex.GetContentAsAsync<SuccessResponse>();
+                Snackbar.Add(error?.Message ?? UIConstants.Common.DeleteFailed, Severity.Error);
             }
             catch (Exception ex)
             {

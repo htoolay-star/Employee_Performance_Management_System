@@ -400,6 +400,43 @@
             public const string NoData = "No pending approvals.";
         }
 
+        public static class EvaluationPending
+        {
+            public const string PageTitle = "Pending Evaluations";
+            public const string NoData = "No pending evaluations.";
+        }
+
+        public static class MySelfAssessments
+        {
+            public const string PageTitle = "My Self Assessments";
+            public const string NoData = "No self assessment forms found.";
+        }
+
+        public static class My360Forms
+        {
+            public const string PageTitle = "My 360 Forms";
+            public const string NoData = "No 360 forms found.";
+        }
+
+        public static class MyAppraisalForms
+        {
+            public const string PageTitle = "My Appraisal Forms";
+            public const string NoData = "No appraisal forms found.";
+        }
+
+        public static class ManagerSelfPending
+        {
+            public const string PageTitle = "Pending Self Reviews";
+            public const string NoData = "No pending self reviews.";
+        }
+
+        public static class ManagerSelfReview
+        {
+            public const string PageTitle = "Self Assessment Review";
+            public const string ApproveButton = "Approve Self Assessment";
+            public const string Approved = "Self assessment approved successfully.";
+        }
+
         public static class AppraisalView
         {
             public const string PageTitle = "Appraisal View";

@@ -49,4 +49,7 @@ public interface IAuthApiClient
 
     [Post("/api/auth/password-reset-requests/{id}/reject")]
     Task<SuccessResponse> RejectResetRequest(long id);
+
+    [Get("/api/auth/is-manager")]
+    Task<SuccessResponse<bool>> IsManagerAsync();
 }

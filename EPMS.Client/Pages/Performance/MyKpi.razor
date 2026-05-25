@@ -35,7 +35,7 @@
                 <PropertyColumn Property="x => x.ManagerName" Title="Manager" Sortable="true" />
                 <TemplateColumn Title="Status" Sortable="false">
                     <CellTemplate>
-                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Item.Status)">@context.Item.Status</MudChip>
+                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Item.KpiStatus)">@context.Item.KpiStatus</MudChip>
                     </CellTemplate>
                 </TemplateColumn>
                 <TemplateColumn Title="Score" Sortable="true">
@@ -111,7 +111,8 @@
         }
         catch (ApiException ex)
         {
-            Snackbar.Add($"Error: {ex.StatusCode}", Severity.Error);
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.LoadFailed, Severity.Error);
         }
         catch (Exception ex)
         {
@@ -126,10 +127,9 @@
 
     private static Color GetStatusColor(string status) => status switch
     {
-        "Draft" => Color.Warning,
-        "InProgress" => Color.Info,
-        AppraisalStatuses.Reviewed => Color.Primary,
-        AppraisalStatuses.Finalized => Color.Success,
+        AppraisalStatuses.Kpi.Draft => Color.Warning,
+        AppraisalStatuses.Kpi.Reviewed => Color.Primary,
+        AppraisalStatuses.Kpi.Finalized => Color.Success,
         _ => Color.Default
     };
 }

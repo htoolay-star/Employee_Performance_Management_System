@@ -52,6 +52,20 @@ public class AppraisalCycleFormModel
         set => SelfReviewDeadline = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
     }
 
+    public DateOnly? KpiReviewStartDate { get; set; }
+    public DateTime? KpiReviewStartDateProxy
+    {
+        get => KpiReviewStartDate?.ToDateTime(TimeOnly.MinValue);
+        set => KpiReviewStartDate = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
+    }
+
+    public DateOnly? KpiReviewDeadline { get; set; }
+    public DateTime? KpiReviewDeadlineProxy
+    {
+        get => KpiReviewDeadline?.ToDateTime(TimeOnly.MinValue);
+        set => KpiReviewDeadline = value.HasValue ? DateOnly.FromDateTime(value.Value) : null;
+    }
+
     public DateOnly? AppraisalReviewStartDate { get; set; }
     public DateTime? AppraisalReviewStartDateProxy
     {

@@ -31,7 +31,7 @@
                 <PropertyColumn Property="x => x.CycleName" Title="Cycle" Sortable="true" />
                 <TemplateColumn Title="Status" Sortable="false">
                     <CellTemplate>
-                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Item.Status)">@context.Item.Status</MudChip>
+                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Item.KpiStatus)">@context.Item.KpiStatus</MudChip>
                     </CellTemplate>
                 </TemplateColumn>
                 <TemplateColumn Title="Score" Sortable="true">
@@ -48,7 +48,7 @@
                 </TemplateColumn>
                 <TemplateColumn Title="Actions" Sortable="false">
                     <CellTemplate>
-                        @if (context.Item.Status is AppraisalStatuses.Draft or AppraisalStatuses.InProgress or null)
+                        @if (context.Item.KpiStatus is AppraisalStatuses.Kpi.Draft or null)
                         {
                             <MudTooltip Text="KPI Evaluation" Placement="Placement.Top">
                                 <MudIconButton Icon="@Icons.Material.Filled.EditNote"
@@ -118,6 +118,11 @@
                 Snackbar.Add(response.Message ?? "Failed to load evaluations.", Severity.Error);
             }
         }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Failed to load evaluations.", Severity.Error);
+        }
         catch (Exception ex)
         {
             Snackbar.Add($"Error: {ex.Message}", Severity.Error);
@@ -137,10 +142,9 @@
 
     private static Color GetStatusColor(string status) => status switch
     {
-        AppraisalStatuses.Draft => Color.Warning,
-        AppraisalStatuses.InProgress => Color.Info,
-        AppraisalStatuses.Reviewed => Color.Primary,
-        AppraisalStatuses.Finalized => Color.Success,
+        AppraisalStatuses.Kpi.Draft => Color.Warning,
+        AppraisalStatuses.Kpi.Reviewed => Color.Primary,
+        AppraisalStatuses.Kpi.Finalized => Color.Success,
         _ => Color.Default
     };
 }

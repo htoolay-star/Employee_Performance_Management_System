@@ -27,6 +27,7 @@ namespace EPMS.Domain.Services.Auth
         private readonly TimeProvider _timeProvider;
         private readonly JwtSettings _jwtSettings;
         private readonly LockoutSettings _lockoutSettings;
+        private readonly ICurrentEmployeeContextService _currentEmployee;
 
         // Cache TTL constants
         private static readonly TimeSpan UserCacheTtl = TimeSpan.FromMinutes(5);
@@ -43,7 +44,8 @@ namespace EPMS.Domain.Services.Auth
             INotificationService notificationService,
             IOptions<JwtSettings> jwtOptions,
             IOptions<LockoutSettings> lockoutOptions,
-            TimeProvider timeProvider)
+            TimeProvider timeProvider,
+            ICurrentEmployeeContextService currentEmployee)
         {
             _unitOfWork = unitOfWork;
             _passwordHasher = passwordHasher;
@@ -55,6 +57,7 @@ namespace EPMS.Domain.Services.Auth
             _timeProvider = timeProvider;
             _jwtSettings = jwtOptions.Value;
             _lockoutSettings = lockoutOptions.Value;
+            _currentEmployee = currentEmployee;
         }
 
         /// <summary>
@@ -644,6 +647,18 @@ namespace EPMS.Domain.Services.Auth
 
             await _cacheService.SetAsync(cacheKey, codes, PermissionsCacheTtl);
             return codes;
+        }
+
+        public async Task<SuccessResponse<bool>> IsManagerAsync()
+        {
+            var employeeId = await _currentEmployee.GetEmployeeIdAsync();
+            if (!employeeId.HasValue)
+                return SuccessResponse<bool>.Ok(false, "User identity not found.");
+
+            var hasDirectReports = await _unitOfWork.Info.EmployeeEmployments
+                .AnyAsync(e => e.DirectManagerId == employeeId.Value);
+
+            return SuccessResponse<bool>.Ok(hasDirectReports, "Manager status checked.");
         }
 
         /// <summary>

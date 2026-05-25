@@ -8,6 +8,7 @@
 @using EPMS.Shared.Validators.EmployeeInfoDTOs
 @using Mapster
 @using MudBlazor
+@using Refit
 
 @inject IEmployeeProfileApiClient EmployeeProfileApiClient
 @inject ISnackbar Snackbar
@@ -478,6 +479,11 @@
             {
                 Snackbar.Add(response.Message ?? "Failed to create employee", Severity.Error);
             }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Failed to create employee.", Severity.Error);
         }
         catch (Exception ex)
         {

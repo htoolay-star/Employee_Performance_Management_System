@@ -12,6 +12,5 @@ namespace EPMS.Domain.Interface.IService.Performance
         Task<SuccessResponse> UpdateAsync(long id, UpdateAppraisalCycleDto dto);
         Task<SuccessResponse> RestoreAsync(long id);
         Task<SuccessResponse> DeleteAsync(long id);
-        Task<SuccessResponse> LockCycleAsync(long id);
     }
 }

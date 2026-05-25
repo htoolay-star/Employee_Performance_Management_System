@@ -174,6 +174,14 @@ namespace EPMS.Api.Controllers.Auth
             return HandleResult(response);
         }
 
+        [Authorize]
+        [HttpGet("is-manager")]
+        public async Task<ActionResult<SuccessResponse<bool>>> IsManager()
+        {
+            var result = await _authService.IsManagerAsync();
+            return HandleResult(result);
+        }
+
         [Authorize(Roles = $"{RoleConstants.Admin},{RoleConstants.SystemAdmin}")]
         [HttpPost("password-reset-requests/{id:long}/reject")]
         public async Task<ActionResult<SuccessResponse>> RejectResetRequest(long id)

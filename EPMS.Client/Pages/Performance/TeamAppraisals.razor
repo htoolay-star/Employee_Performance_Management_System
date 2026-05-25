@@ -87,7 +87,7 @@
                         <MudTd DataLabel="PM">@context.EntityHeadName</MudTd>
                         <MudTd DataLabel="Cycle">@context.CycleName</MudTd>
                         <MudTd DataLabel="Status">
-                            <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Status)">@context.Status</MudChip>
+                            <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.KpiStatus)">@context.KpiStatus</MudChip>
                         </MudTd>
                         <MudTd DataLabel="Score">
                             <MudText Typo="Typo.body2" Align="Align.Right">@(context.KpiScore?.ToString("F2") ?? "-")</MudText>
@@ -152,6 +152,11 @@
                 Snackbar.Add(response.Message ?? "Failed to load cycles.", Severity.Error);
             }
         }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Failed to load cycles.", Severity.Error);
+        }
         catch (Exception ex)
         {
             Snackbar.Add($"Error loading cycles: {ex.Message}", Severity.Error);
@@ -195,6 +200,12 @@
                 _alertSeverity = Severity.Error;
             }
         }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            _message = error?.Message ?? "Failed to load appraisals.";
+            _alertSeverity = Severity.Error;
+        }
         catch (Exception ex)
         {
             _message = $"Error loading appraisals: {ex.Message}";
@@ -210,10 +221,9 @@
 
     private static Color GetStatusColor(string status) => status switch
     {
-        AppraisalStatuses.Draft => Color.Warning,
-        AppraisalStatuses.InProgress => Color.Info,
-        AppraisalStatuses.Reviewed => Color.Primary,
-        AppraisalStatuses.Finalized => Color.Success,
+        AppraisalStatuses.Kpi.Draft => Color.Warning,
+        AppraisalStatuses.Kpi.Reviewed => Color.Primary,
+        AppraisalStatuses.Kpi.Finalized => Color.Success,
         _ => Color.Default
     };
 }

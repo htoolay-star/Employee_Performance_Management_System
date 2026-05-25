@@ -17,7 +17,19 @@
 
 <PageTitle>@UIConstants.EntityKPI.PageTitle</PageTitle>
 
-@if (_error)
+@if (!_initialized)
+{
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+        <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+            <MudStack Spacing="3">
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+            </MudStack>
+        </MudPaper>
+    </MudContainer>
+}
+else if (_error)
 {
     <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
         <MudAlert Severity="Severity.Error">@_errorMessage</MudAlert>
@@ -153,6 +165,7 @@ else
     private Dictionary<long, int> _rowNumbers = new();
     private bool _loading = true;
 
+    private bool _initialized;
     private bool _error;
     private string _errorMessage = string.Empty;
     private bool _canView;
@@ -166,22 +179,29 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        _canView = await PermService.HasPermissionAsync("ENTITYKPI.VIEW");
-        if (!_canView)
+        try
         {
-            _error = true;
-            _errorMessage = "You do not have permission to view Entity KPIs.";
-            return;
+            _canView = await PermService.HasPermissionAsync("ENTITYKPI.VIEW");
+            if (!_canView)
+            {
+                _error = true;
+                _errorMessage = "You do not have permission to view Entity KPIs.";
+                return;
+            }
+
+            _canCreate = await PermService.HasPermissionAsync("ENTITYKPI.CREATE");
+            _canEdit = await PermService.HasPermissionAsync("ENTITYKPI.EDIT");
+            _canDelete = await PermService.HasPermissionAsync("ENTITYKPI.DELETE");
+
+            _departments = await LookupState.GetDepartmentsAsync();
+            _positions = await LookupState.GetPositionsAsync();
+            _teams = await LookupState.GetTeamsAsync();
+            await LoadDataAsync();
         }
-
-        _canCreate = await PermService.HasPermissionAsync("ENTITYKPI.CREATE");
-        _canEdit = await PermService.HasPermissionAsync("ENTITYKPI.EDIT");
-        _canDelete = await PermService.HasPermissionAsync("ENTITYKPI.DELETE");
-
-        _departments = await LookupState.GetDepartmentsAsync();
-        _positions = await LookupState.GetPositionsAsync();
-        _teams = await LookupState.GetTeamsAsync();
-        await LoadDataAsync();
+        finally
+        {
+            _initialized = true;
+        }
     }
 
     private async Task LoadDataAsync()

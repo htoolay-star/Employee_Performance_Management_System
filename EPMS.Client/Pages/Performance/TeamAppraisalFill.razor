@@ -57,7 +57,7 @@
                                 <td><strong>Cycle:</strong> @_model.CycleName</td>
                                 <td>
                                     <strong>Status:</strong>
-                                    <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(_model.Status)">@_model.Status</MudChip>
+                                    <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(_model.KpiStatus)">@_model.KpiStatus</MudChip>
                                 </td>
                             </tr>
                         </tbody>
@@ -166,7 +166,7 @@
                     <MudButton Variant="Variant.Filled"
                                Color="Color.Primary"
                                OnClick="Submit"
-                               Visible="@(_model.Status is AppraisalStatuses.Draft or AppraisalStatuses.InProgress)"
+                               Visible="@(_model.KpiStatus is AppraisalStatuses.Kpi.Draft)"
                                Disabled="@(_loading || _submitting || _model.IsLocked || _model.Details.Count == 0)">
                         @if (_submitting)
                         {
@@ -239,7 +239,8 @@
         catch (ApiException ex)
         {
             _error = true;
-            _errorMessage = $"Error loading appraisal: {ex.StatusCode}";
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            _errorMessage = error?.Message ?? UIConstants.Common.LoadFailed;
         }
         catch (Exception ex)
         {
@@ -332,10 +333,9 @@
 
     private Color GetStatusColor(string status) => status switch
     {
-        "Draft" => Color.Warning,
-        "InProgress" => Color.Info,
-        "REVIEWED" => Color.Primary,
-        "Finalized" => Color.Success,
+        AppraisalStatuses.Kpi.Draft => Color.Warning,
+        AppraisalStatuses.Kpi.Reviewed => Color.Primary,
+        AppraisalStatuses.Kpi.Finalized => Color.Success,
         _ => Color.Default
     };
 

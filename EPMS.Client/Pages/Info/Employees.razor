@@ -28,12 +28,21 @@
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
     <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.Employee.PageTitle</MudText>
 
-    @if (!_canView)
+    @if (!_initialized)
+    {
+        <MudPaper Elevation="2" Class="pa-6" Style="width: 100%;">
+            <MudStack Spacing="3">
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+            </MudStack>
+        </MudPaper>
+    }
+    else if (!_canView)
     {
         <MudAlert Severity="Severity.Warning" Class="mb-4">You do not have permission to view employees.</MudAlert>
     }
-
-    @if (_canView)
+    else
     {
     <MudPaper Elevation="2" Class="pa-4">
 
@@ -267,6 +276,7 @@
     private bool _importing = false;
     private byte[]? _importFileBytes;
     private string? _importFileName;
+    private bool _initialized;
     private bool _canView;
     private bool _canCreate;
     private bool _canViewEntityKpi;
@@ -318,9 +328,18 @@
             _canCreate = permSet.Contains("EMPLOYEES.CREATE");
             _canViewEntityKpi = permSet.Contains("ENTITYKPI.VIEW");
         }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Failed to load lookup data", Severity.Error);
+        }
         catch (Exception)
         {
             Snackbar.Add("Failed to load lookup data", Severity.Error);
+        }
+        finally
+        {
+            _initialized = true;
         }
     }
 
@@ -365,6 +384,11 @@
             }
 
             Snackbar.Add(response.Message ?? UIConstants.Common.LoadFailed, Severity.Error);
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
         }
         catch (Exception)
         {
@@ -509,6 +533,11 @@
                 Snackbar.Add("Export failed.", Severity.Error);
             }
         }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Export failed.", Severity.Error);
+        }
         catch (Exception ex)
         {
             Snackbar.Add($"Export error: {ex.Message}", Severity.Error);
@@ -530,6 +559,11 @@
             {
                 Snackbar.Add("Template download failed.", Severity.Error);
             }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Template download failed.", Severity.Error);
         }
         catch (Exception ex)
         {
@@ -575,6 +609,11 @@
             {
                 await ImportConfirmedAsync();
             }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Import failed.", Severity.Error);
         }
         catch (Exception ex)
         {
@@ -626,6 +665,11 @@
                     break;
                 }
             }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Import failed.", Severity.Error);
         }
         catch (Exception ex)
         {

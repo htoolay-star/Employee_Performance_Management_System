@@ -1753,6 +1753,13 @@ namespace EPMS.Domain.Data.Migrations
                         .HasPrecision(5, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("CommitteeStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("DRAFT");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("datetimeoffset");
 
@@ -1802,9 +1809,26 @@ namespace EPMS.Domain.Data.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
+                    b.Property<bool>("KpiLockIsDeadline")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("KpiLocked")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<decimal?>("KpiScore")
                         .HasPrecision(5, 2)
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("KpiStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("DRAFT");
 
                     b.Property<DateTimeOffset?>("LockedAt")
                         .HasColumnType("datetimeoffset");
@@ -1815,6 +1839,20 @@ namespace EPMS.Domain.Data.Migrations
 
                     b.Property<long>("ManagerReviewerId")
                         .HasColumnType("bigint");
+
+                    b.Property<string>("ManagerStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("DRAFT");
+
+                    b.Property<string>("PeerStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("DRAFT");
 
                     b.Property<Guid>("PublicId")
                         .HasColumnType("uniqueidentifier");
@@ -1840,10 +1878,24 @@ namespace EPMS.Domain.Data.Migrations
                         .HasPrecision(5, 2)
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<string>("SelfStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("DRAFT");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("SubordinateStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("DRAFT");
 
                     b.Property<bool>("ThreeSixtyLockIsDeadline")
                         .ValueGeneratedOnAdd()
@@ -1969,6 +2021,12 @@ namespace EPMS.Domain.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
+
+                    b.Property<DateOnly?>("KpiReviewDeadline")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("KpiReviewStartDate")
+                        .HasColumnType("date");
 
                     b.Property<decimal>("KpiWeight")
                         .ValueGeneratedOnAdd()
@@ -2700,8 +2758,6 @@ namespace EPMS.Domain.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EvaluatorId");
-
                     b.HasIndex("PublicId")
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
@@ -2709,6 +2765,9 @@ namespace EPMS.Domain.Data.Migrations
                     b.HasIndex("QuestionId");
 
                     b.HasIndex("TemplateId");
+
+                    b.HasIndex("EvaluatorId", "EvaluatorRole")
+                        .HasFilter("[IsDeleted] = 0");
 
                     b.HasIndex("AppraisalId", "QuestionId", "EvaluatorId")
                         .IsUnique()

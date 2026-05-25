@@ -4,6 +4,7 @@
 @using EPMS.Client.Services.Hr
 @using EPMS.Shared.DTOs.Common
 @using MudBlazor
+@using Refit
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,SystemAdmin")]
 @inject IPermissionApiClient PermissionApiClient
 @inject IPositionApiClient PositionApiClient
@@ -75,6 +76,11 @@
             if (result.Success)
                 _adminPositionId = result.Data;
         }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Failed to load admin position.", Severity.Error);
+        }
         catch (Exception ex)
         {
             Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
@@ -90,6 +96,11 @@
             {
                 _positions = response.Data.ToList();
             }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Failed to load positions.", Severity.Error);
         }
         catch (Exception ex)
         {
