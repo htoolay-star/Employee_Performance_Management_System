@@ -1,17 +1,77 @@
 @inherits LayoutComponentBase
 @using Microsoft.AspNetCore.Components.Authorization
 @using MudBlazor
+@using EPMS.Client.Constants
+@using EPMS.Client.Services.App
 @using EPMS.Client.Themes
+@using EPMS.Shared.DTOs.AppDTOs
+@using System.Security.Claims
+@implements IDisposable
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
 @inject IDialogService DialogService
 @inject AuthenticationStateProvider AuthState
+@inject INotificationApiClient NotifClient
+@inject ISnackbar Snackbar
 
 <MudThemeProvider Theme="EPMSTheme.GetTheme()" IsDarkMode="@_isDarkMode" />
 
 <MudLayout Class="@(_isDarkMode ? "theme-dark" : "theme-light")">
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="ToggleDrawer" />
+        <MudSpacer />
+        <div style="position: relative;">
+            <MudBadge Content="@_unreadCount.ToString()"
+                      Color="Color.Error"
+                      Max="99"
+                      Placement="Placement.Top"
+                      Visible="@(_unreadCount > 0)">
+                <MudIconButton Icon="@Icons.Material.Filled.Notifications"
+                               Color="Color.Inherit"
+                               OnClick="ToggleNotifDropdown"
+                               title="@UIConstants.Notifications.DropdownTitle" />
+            </MudBadge>
+            @if (_notifDropdownOpen)
+            {
+                <MudOverlay Visible="@_notifDropdownOpen" OnClick="CloseNotifDropdown" Absolute="true" />
+                <MudPaper Elevation="8" Class="notif-dropdown">
+                    <MudText Typo="Typo.subtitle1" Class="pa-4 pb-2 notif-dropdown-header">
+                        <MudIcon Icon="@Icons.Material.Filled.Notifications" Size="Size.Small" Class="mr-1" />
+                        @UIConstants.Notifications.DropdownTitle
+                    </MudText>
+                    <MudDivider />
+                    @if (_unreadNotifications.Any())
+                    {
+                        <div class="notif-list">
+                            @foreach (var notif in _unreadNotifications.Take(10))
+                            {
+                                <div class="notif-item @(notif.IsRead ? "" : "notif-item-unread")"
+                                     @onclick="@(() => MarkAsReadAndNavigate(notif))">
+                                    <div class="notif-item-title">@notif.Title</div>
+                                    <div class="notif-item-message">@Truncate(notif.Message, 100)</div>
+                                    <div class="notif-item-time">@TimeAgo(notif.CreatedAt)</div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Default" Class="pa-4 text-center">
+                            @UIConstants.Notifications.NoUnread
+                        </MudText>
+                    }
+                    <MudDivider />
+                    <div class="pa-2 text-center">
+                        <MudButton Variant="Variant.Text"
+                                   Color="Color.Primary"
+                                   FullWidth="true"
+                                   OnClick="NavigateToNotifications">
+                            @UIConstants.Notifications.ViewAll
+                        </MudButton>
+                    </div>
+                </MudPaper>
+            }
+        </div>
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" Variant="DrawerVariant.Mini" Elevation="2" Width="300px" Style="--mud-drawer-width-mini: 56px;">
         <div style="display: flex; flex-direction: column; height: 100%;">
@@ -63,6 +123,11 @@
 @code {
     bool _drawerOpen = true;
     bool _isDarkMode = false;
+    bool _notifDropdownOpen;
+    long _userId;
+    int _unreadCount;
+    List<NotificationDto> _unreadNotifications = new();
+    CancellationTokenSource? _pollCts;
 
     protected override async Task OnInitializedAsync()
     {
@@ -75,6 +140,10 @@
         {
             _isDarkMode = false;
         }
+
+        await LoadUserIdAsync();
+        await LoadUnreadCountAsync();
+        StartPolling();
     }
 
     void ToggleDrawer()
@@ -85,7 +154,6 @@
     async Task ToggleTheme()
     {
         _isDarkMode = !_isDarkMode;
-
         await JS.InvokeVoidAsync("localStorage.setItem", "epms-dark-mode", _isDarkMode.ToString().ToLower());
     }
 
@@ -103,6 +171,136 @@
 
         if (await dialog.Result is { Canceled: false })
             Navigation.NavigateTo("logout");
+    }
+
+    private async Task LoadUserIdAsync()
+    {
+        var authState = await AuthState.GetAuthenticationStateAsync();
+        var idClaim = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        _userId = long.TryParse(idClaim, out var id) ? id : 0;
+    }
+
+    private void StartPolling()
+    {
+        _pollCts?.Cancel();
+        _pollCts = new CancellationTokenSource();
+        _ = PollNotificationsAsync(_pollCts.Token);
+    }
+
+    private async Task PollNotificationsAsync(CancellationToken ct)
+    {
+        while (!ct.IsCancellationRequested)
+        {
+            try
+            {
+                await Task.Delay(30000, ct);
+                if (!ct.IsCancellationRequested)
+                    await LoadUnreadCountAsync();
+            }
+            catch (TaskCanceledException)
+            {
+                break;
+            }
+        }
+    }
+
+    private async Task LoadUnreadCountAsync()
+    {
+        if (_userId == 0) return;
+        try
+        {
+            var result = await NotifClient.GetUnreadAsync(_userId);
+            if (result.Success)
+            {
+                _unreadNotifications = result.Data?.ToList() ?? new();
+                _unreadCount = _unreadNotifications.Count;
+                StateHasChanged();
+            }
+        }
+        catch
+        {
+        }
+    }
+
+    private async Task LoadDropdownNotificationsAsync()
+    {
+        if (_userId == 0) return;
+        try
+        {
+            var result = await NotifClient.GetUnreadAsync(_userId);
+            if (result.Success)
+            {
+                _unreadNotifications = result.Data?.ToList() ?? new();
+                _unreadCount = _unreadNotifications.Count;
+                StateHasChanged();
+            }
+        }
+        catch
+        {
+        }
+    }
+
+    private void ToggleNotifDropdown()
+    {
+        _notifDropdownOpen = !_notifDropdownOpen;
+        if (_notifDropdownOpen)
+            _ = LoadDropdownNotificationsAsync();
+    }
+
+    private void CloseNotifDropdown()
+    {
+        _notifDropdownOpen = false;
+    }
+
+    private async Task MarkAsReadAndNavigate(NotificationDto notif)
+    {
+        try
+        {
+            if (!notif.IsRead)
+            {
+                await NotifClient.MarkAsReadAsync(notif.Id);
+                notif.IsRead = true;
+                _unreadCount = Math.Max(0, _unreadCount - 1);
+                _unreadNotifications.Remove(notif);
+                StateHasChanged();
+            }
+        }
+        catch
+        {
+        }
+
+        _notifDropdownOpen = false;
+
+        if (!string.IsNullOrEmpty(notif.RedirectUrl))
+            Navigation.NavigateTo(notif.RedirectUrl);
+    }
+
+    private void NavigateToNotifications()
+    {
+        _notifDropdownOpen = false;
+        Navigation.NavigateTo("/notifications");
+    }
+
+    private static string TimeAgo(DateTimeOffset dt)
+    {
+        var span = DateTimeOffset.UtcNow - dt;
+        if (span.TotalMinutes < 1) return "just now";
+        if (span.TotalMinutes < 60) return string.Format(UIConstants.Notifications.AgoFormat, $"{(int)span.TotalMinutes}m");
+        if (span.TotalHours < 24) return string.Format(UIConstants.Notifications.AgoFormat, $"{(int)span.TotalHours}h");
+        if (span.TotalDays < 7) return string.Format(UIConstants.Notifications.AgoFormat, $"{(int)span.TotalDays}d");
+        return dt.ToLocalTime().ToString("dd/MM/yyyy");
+    }
+
+    private static string Truncate(string value, int maxLength)
+    {
+        if (string.IsNullOrEmpty(value) || value.Length <= maxLength) return value;
+        return value[..maxLength] + "...";
+    }
+
+    public void Dispose()
+    {
+        _pollCts?.Cancel();
+        _pollCts?.Dispose();
     }
 }
 
@@ -132,5 +330,61 @@
         text-overflow: ellipsis;
         white-space: nowrap;
         max-width: 180px;
+    }
+
+    .notif-dropdown {
+        position: absolute;
+        top: 48px;
+        right: 0;
+        width: 360px;
+        max-height: 480px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        z-index: 1000;
+    }
+
+    .notif-dropdown-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .notif-list {
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    .notif-item {
+        padding: 10px 16px;
+        cursor: pointer;
+        border-bottom: 1px solid rgba(128, 128, 128, 0.15);
+        transition: background-color 0.15s;
+    }
+
+    .notif-item:hover {
+        background-color: rgba(128, 128, 128, 0.08);
+    }
+
+    .notif-item-unread {
+        background-color: rgba(33, 150, 243, 0.04);
+    }
+
+    .notif-item-title {
+        font-weight: 600;
+        font-size: 0.875rem;
+        margin-bottom: 2px;
+    }
+
+    .notif-item-message {
+        font-size: 0.8rem;
+        color: #888;
+        margin-bottom: 2px;
+        line-height: 1.3;
+    }
+
+    .notif-item-time {
+        font-size: 0.75rem;
+        color: #aaa;
     }
 </style>

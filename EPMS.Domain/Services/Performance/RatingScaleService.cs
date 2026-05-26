@@ -4,15 +4,14 @@ using EPMS.Domain.Interface.IService.Performance;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.PerformanceDTOs.RatingScaleDTOs;
 using EPMS.Shared.Enums;
-using static EPMS.Shared.Constants.ServiceResponseMessages;
-
 using Mapster;
+using static EPMS.Shared.Constants.ServiceResponseMessages;
 namespace EPMS.Domain.Services.Performance;
 
 public class RatingScaleService : IRatingScaleService
 {
     private readonly IUnitOfWork _uow;
-    
+
     public RatingScaleService(IUnitOfWork uow)
     {
         _uow = uow;
@@ -132,18 +131,18 @@ public class RatingScaleService : IRatingScaleService
     }
 
     public async Task<SuccessResponse> RestoreAsync(long id)
-        {
-            var entity = await _uow.Perf.RatingScales.GetByIdAsync(id);
-            if (entity == null)
-                return SuccessResponse.Fail(RatingScaleMsg.NotFound(id), ErrorType.NotFound);
-            if (!entity.IsDeleted)
-                return SuccessResponse.Fail("Item is not deleted.", ErrorType.Validation);
-            entity.IsDeleted = false;
-            entity.DeletedAt = null;
-            entity.DeletedBy = null;
-            _uow.Perf.RatingScales.Update(entity);
-            await _uow.CompleteAsync();
-            return SuccessResponse.Ok(RatingScaleMsg.Updated);
-        }
+    {
+        var entity = await _uow.Perf.RatingScales.GetByIdAsync(id);
+        if (entity == null)
+            return SuccessResponse.Fail(RatingScaleMsg.NotFound(id), ErrorType.NotFound);
+        if (!entity.IsDeleted)
+            return SuccessResponse.Fail("Item is not deleted.", ErrorType.Validation);
+        entity.IsDeleted = false;
+        entity.DeletedAt = null;
+        entity.DeletedBy = null;
+        _uow.Perf.RatingScales.Update(entity);
+        await _uow.CompleteAsync();
+        return SuccessResponse.Ok(RatingScaleMsg.Updated);
+    }
 
 }

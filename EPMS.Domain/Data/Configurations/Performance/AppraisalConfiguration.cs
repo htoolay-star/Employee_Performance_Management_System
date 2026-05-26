@@ -120,7 +120,7 @@ public class AppraisalConfiguration : IEntityTypeConfiguration<Appraisal>
         entity.Metadata.FindNavigation(nameof(Appraisal.Recommendations))?
               .SetPropertyAccessMode(PropertyAccessMode.Field);
 
-        entity.Metadata.FindNavigation(nameof(Appraisal.Responses)) ?
+        entity.Metadata.FindNavigation(nameof(Appraisal.Responses))?
               .SetPropertyAccessMode(PropertyAccessMode.Field);
     }
 }

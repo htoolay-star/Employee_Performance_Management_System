@@ -22,7 +22,7 @@ public class CategoryRepository : GenericRepository<Category>, ICategoryReposito
                 IsActive = x.IsActive,
             })
             .ToListAsync();
-    }        
+    }
     public async Task<bool> ExistsByCodeAsync(string code, long? excludeId = null)
     {
         var query = _dbSet.Where(c => c.Code == code);

@@ -1,11 +1,6 @@
 using EPMS.Domain.Entities.Hr;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EPMS.Domain.Data.Configurations.Hr
 {
@@ -13,7 +8,7 @@ namespace EPMS.Domain.Data.Configurations.Hr
     {
         public void Configure(EntityTypeBuilder<Position> entity)
         {
-            
+
             entity.ToTable("Positions", "hr");
 
             entity.HasKey(e => e.Id);

@@ -1,17 +1,14 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Hr;
-using EPMS.Domain.Interface.Irepo.Hr;
 using EPMS.Domain.Interface.IService.App;
 using EPMS.Domain.Interface.IService.Hr;
 using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
-using static EPMS.Shared.Constants.ServiceResponseMessages;
 using EPMS.Shared.DTOs.DepartmentDTOs;
-using EPMS.Shared.DTOs.TeamDTOs;
 using EPMS.Shared.Enums;
 using Mapster;
+using static EPMS.Shared.Constants.ServiceResponseMessages;
 using DeptMsg = EPMS.Shared.Constants.ServiceResponseMessages.DepartmentMsg;
-using TeamMsg = EPMS.Shared.Constants.ServiceResponseMessages.TeamMsg;
 
 namespace EPMS.Domain.Services.Hr;
 
@@ -90,7 +87,7 @@ public class DepartmentService : IDepartmentService
         department.Rename(dto.Name);
         department.SetDescription(dto.Description);
         department.SetDeptHead(dto.DeptHeadId);
-        
+
         if (dto.IsActive) department.Reactivate();
         else department.Deactivate();
 
@@ -114,20 +111,20 @@ public class DepartmentService : IDepartmentService
         await _cacheService.RemoveAsync(CacheKeys.Hr.DepartmentLookups());
         return SuccessResponse.Ok(DeptMsg.Deleted);
     }
-        public async Task<SuccessResponse> RestoreAsync(long id)
-        {
-            var entity = await _uow.HR.Departments.GetByIdAsync(id);
-            if (entity == null)
-                return SuccessResponse.Fail(DepartmentMsg.NotFound(id), ErrorType.NotFound);
-            if (!entity.IsDeleted)
-                return SuccessResponse.Fail("Item is not deleted.", ErrorType.Validation);
-            entity.IsDeleted = false;
-            entity.DeletedAt = null;
-            entity.DeletedBy = null;
-            _uow.HR.Departments.Update(entity);
-            await _uow.CompleteAsync();
-            await _cacheService.RemoveAsync(CacheKeys.Hr.DepartmentLookups());
-            return SuccessResponse.Ok(DepartmentMsg.Updated);
-        }
+    public async Task<SuccessResponse> RestoreAsync(long id)
+    {
+        var entity = await _uow.HR.Departments.GetByIdAsync(id);
+        if (entity == null)
+            return SuccessResponse.Fail(DepartmentMsg.NotFound(id), ErrorType.NotFound);
+        if (!entity.IsDeleted)
+            return SuccessResponse.Fail("Item is not deleted.", ErrorType.Validation);
+        entity.IsDeleted = false;
+        entity.DeletedAt = null;
+        entity.DeletedBy = null;
+        _uow.HR.Departments.Update(entity);
+        await _uow.CompleteAsync();
+        await _cacheService.RemoveAsync(CacheKeys.Hr.DepartmentLookups());
+        return SuccessResponse.Ok(DepartmentMsg.Updated);
+    }
 
 }

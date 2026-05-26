@@ -1,15 +1,10 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Shared.Constants;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class ContinuousFeedback : AuditableEntity , ISoftDeletable
+    public class ContinuousFeedback : AuditableEntity, ISoftDeletable
     {
         private ContinuousFeedback() { }
 

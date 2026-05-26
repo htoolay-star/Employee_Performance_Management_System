@@ -4,10 +4,10 @@ using EPMS.Domain.Interface.IService.App;
 using EPMS.Domain.Interface.IService.Hr;
 using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
-using static EPMS.Shared.Constants.ServiceResponseMessages;
 using EPMS.Shared.DTOs.LevelDTOs;
 using EPMS.Shared.Enums;
 using Mapster;
+using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 namespace EPMS.Domain.Services.Hr;
 
@@ -103,20 +103,20 @@ public class LevelService : ILevelService
         await _cacheService.RemoveAsync(CacheKeys.Hr.LevelLookups());
         return SuccessResponse.Ok(ServiceResponseMessages.LevelMsg.Deleted);
     }
-        public async Task<SuccessResponse> RestoreAsync(long id)
-        {
-            var entity = await _uow.HR.Levels.GetByIdAsync(id);
-            if (entity == null)
-                return SuccessResponse.Fail(LevelMsg.NotFound(id), ErrorType.NotFound);
-            if (!entity.IsDeleted)
-                return SuccessResponse.Fail("Item is not deleted.", ErrorType.Validation);
-            entity.IsDeleted = false;
-            entity.DeletedAt = null;
-            entity.DeletedBy = null;
-            _uow.HR.Levels.Update(entity);
-            await _uow.CompleteAsync();
-            await _cacheService.RemoveAsync(CacheKeys.Hr.LevelLookups());
-            return SuccessResponse.Ok(LevelMsg.Updated);
-        }
+    public async Task<SuccessResponse> RestoreAsync(long id)
+    {
+        var entity = await _uow.HR.Levels.GetByIdAsync(id);
+        if (entity == null)
+            return SuccessResponse.Fail(LevelMsg.NotFound(id), ErrorType.NotFound);
+        if (!entity.IsDeleted)
+            return SuccessResponse.Fail("Item is not deleted.", ErrorType.Validation);
+        entity.IsDeleted = false;
+        entity.DeletedAt = null;
+        entity.DeletedBy = null;
+        _uow.HR.Levels.Update(entity);
+        await _uow.CompleteAsync();
+        await _cacheService.RemoveAsync(CacheKeys.Hr.LevelLookups());
+        return SuccessResponse.Ok(LevelMsg.Updated);
+    }
 
 }

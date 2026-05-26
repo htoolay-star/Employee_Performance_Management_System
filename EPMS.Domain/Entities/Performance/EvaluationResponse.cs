@@ -1,14 +1,9 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.EmployeeInfo;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class EvaluationResponse : AuditableEntity , ISoftDeletable
+    public class EvaluationResponse : AuditableEntity, ISoftDeletable
     {
         private EvaluationResponse() { }
 

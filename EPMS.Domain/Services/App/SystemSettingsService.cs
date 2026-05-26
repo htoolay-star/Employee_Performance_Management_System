@@ -2,7 +2,6 @@
 using EPMS.Domain.Entities.App;
 using EPMS.Domain.Interface.IService.App;
 using EPMS.Shared.Constants;
-using Microsoft.EntityFrameworkCore;
 
 namespace EPMS.Domain.Services.App
 {

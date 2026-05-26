@@ -1,15 +1,8 @@
 ﻿using EPMS.Domain.Data;
 using EPMS.Domain.Entities.Auth;
-using EPMS.Domain.Entities.Hr;
-using EPMS.Domain.Interface.Irepo;
 using EPMS.Domain.Interface.Irepo.Auth;
 using EPMS.Domain.Repository.Base;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EPMS.Domain.Repository.Auth
 {

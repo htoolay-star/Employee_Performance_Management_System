@@ -2,7 +2,7 @@ using EPMS.Domain.Contracts;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class FormTemplate : AuditableEntity , ISoftDeletable
+    public class FormTemplate : AuditableEntity, ISoftDeletable
     {
         private FormTemplate() { }
 

@@ -4,11 +4,6 @@ using EPMS.Domain.Factories;
 using EPMS.Domain.Interface.IService.App;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EPMS.Domain.Data.Interceptors
 {

@@ -3,7 +3,6 @@ using EPMS.Domain.Entities.Hr;
 using EPMS.Domain.Interface.Irepo.Hr;
 using EPMS.Domain.Repository.Base;
 using EPMS.Shared.DTOs.Common;
-using EPMS.Shared.DTOs.EmployeeInfoDTOs;
 using Microsoft.EntityFrameworkCore;
 
 namespace EPMS.Domain.Repository.Hr;

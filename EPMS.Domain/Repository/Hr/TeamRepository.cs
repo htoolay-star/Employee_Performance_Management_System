@@ -25,10 +25,10 @@ public class TeamRepository : GenericRepository<Team>, ITeamRepository
     public async Task<bool> ExistsByNameInDepartmentAsync(string name, long departmentId, long? excludeId = null)
     {
         var query = _dbSet.Where(t => t.DepartmentId == departmentId && t.Name == name);
-        
+
         if (excludeId.HasValue)
             query = query.Where(t => t.Id != excludeId.Value);
-        
+
         return await query.AnyAsync();
     }
 
@@ -36,10 +36,10 @@ public class TeamRepository : GenericRepository<Team>, ITeamRepository
     {
         var normalized = code.Trim().ToUpperInvariant();
         var query = _dbSet.Where(t => t.Code == normalized);
-        
+
         if (excludeId.HasValue)
             query = query.Where(t => t.Id != excludeId.Value);
-        
+
         return await query.AnyAsync();
     }
 

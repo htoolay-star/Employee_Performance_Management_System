@@ -1,7 +1,5 @@
 using EPMS.Domain.Contracts;
-using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Shared.Constants;
-using System;
 
 namespace EPMS.Domain.Entities.Performance
 {

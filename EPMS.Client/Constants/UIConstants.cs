@@ -575,6 +575,29 @@
             public const string NoUpcoming = "No upcoming meetings.";
         }
 
+        public static class Notifications
+        {
+            public const string PageTitle = "Notifications";
+            public const string TabAll = "All";
+            public const string TabUnread = "Unread";
+            public const string ColumnTitle = "Title";
+            public const string ColumnMessage = "Message";
+            public const string ColumnType = "Type";
+            public const string ColumnDate = "Date";
+            public const string ColumnStatus = "Status";
+            public const string MarkAsRead = "Mark as Read";
+            public const string Read = "Read";
+            public const string Unread = "Unread";
+            public const string MarkedAsRead = "Notification marked as read.";
+            public const string Deleted = "Notification deleted.";
+            public const string DeleteConfirmFormat = "Are you sure you want to delete '{0}'?";
+            public const string NoDataFound = "No notifications found.";
+            public const string NoUnread = "No unread notifications.";
+            public const string ViewAll = "View All";
+            public const string DropdownTitle = "Notifications";
+            public const string AgoFormat = "{0} ago";
+        }
+
         public static class PIP
         {
             public const string PageTitle = "Performance Improvement Plans";

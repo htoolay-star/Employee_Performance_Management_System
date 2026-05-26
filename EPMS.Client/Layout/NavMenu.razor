@@ -10,6 +10,10 @@
 <div style="display: flex; flex-direction: column; height: 100%;">
 <MudNavMenu>
 
+    <MudTooltip Text="Notifications" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+        <MudNavLink Href="notifications" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Notifications">Notifications</MudNavLink>
+    </MudTooltip>
+
         @if (_canViewLevels || _canViewPositions || _canViewDepartments || _canViewTeams || _canViewEmployees || _isAdmin)
     {
     <MudTooltip Text="HR Management" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">

@@ -1,8 +1,7 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Hr;
-using EPMS.Domain.Entities.EmployeeInfo;
-using EPMS.Domain.Interface.Irepo.Hr;
 using EPMS.Domain.Interface.IService.App;
+using EPMS.Domain.Interface.IService.Hr;
 using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.TeamDTOs;
@@ -10,7 +9,6 @@ using EPMS.Shared.Enums;
 using EPMS.Shared.Features.Teams;
 using Mapster;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
-using EPMS.Domain.Interface.IService.Hr;
 
 namespace EPMS.Domain.Services.Hr;
 
@@ -153,20 +151,20 @@ public class TeamService : ITeamService
         await _cacheService.RemoveAsync(CacheKeys.Hr.TeamLookups());
         return SuccessResponse.Ok(TeamMsg.Deleted);
     }
-        public async Task<SuccessResponse> RestoreAsync(long id)
-        {
-            var entity = await _uow.HR.Teams.GetByIdAsync(id);
-            if (entity == null)
-                return SuccessResponse.Fail(TeamMsg.NotFound(id), ErrorType.NotFound);
-            if (!entity.IsDeleted)
-                return SuccessResponse.Fail("Item is not deleted.", ErrorType.Validation);
-            entity.IsDeleted = false;
-            entity.DeletedAt = null;
-            entity.DeletedBy = null;
-            _uow.HR.Teams.Update(entity);
-            await _uow.CompleteAsync();
-            await _cacheService.RemoveAsync(CacheKeys.Hr.TeamLookups());
-            return SuccessResponse.Ok(TeamMsg.Updated);
-        }
+    public async Task<SuccessResponse> RestoreAsync(long id)
+    {
+        var entity = await _uow.HR.Teams.GetByIdAsync(id);
+        if (entity == null)
+            return SuccessResponse.Fail(TeamMsg.NotFound(id), ErrorType.NotFound);
+        if (!entity.IsDeleted)
+            return SuccessResponse.Fail("Item is not deleted.", ErrorType.Validation);
+        entity.IsDeleted = false;
+        entity.DeletedAt = null;
+        entity.DeletedBy = null;
+        _uow.HR.Teams.Update(entity);
+        await _uow.CompleteAsync();
+        await _cacheService.RemoveAsync(CacheKeys.Hr.TeamLookups());
+        return SuccessResponse.Ok(TeamMsg.Updated);
+    }
 
 }

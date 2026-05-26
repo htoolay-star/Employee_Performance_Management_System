@@ -1,7 +1,6 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Auth;
 using EPMS.Domain.Entities.Hr;
-using System;
 
 namespace EPMS.Domain.Entities.EmployeeInfo
 {

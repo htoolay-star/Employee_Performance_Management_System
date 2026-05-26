@@ -1,20 +1,19 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Performance;
-using EPMS.Shared.Constants;
-using EPMS.Shared.DTOs.FormDTOs;
-using EPMS.Shared.DTOs.Common;
-using EPMS.Shared.Enums;
-using static EPMS.Shared.Constants.ServiceResponseMessages;
 using EPMS.Domain.Interface.IService.Performance;
-
+using EPMS.Shared.Constants;
+using EPMS.Shared.DTOs.Common;
+using EPMS.Shared.DTOs.FormDTOs;
+using EPMS.Shared.Enums;
 using Mapster;
+using static EPMS.Shared.Constants.ServiceResponseMessages;
 namespace EPMS.Domain.Services.Performance;
 
 public class AppraisalRecommendationService : IAppraisalRecommendationService
 {
     private readonly IUnitOfWork _uow;
     private readonly TimeProvider _timeProvider;
-    
+
     public AppraisalRecommendationService(IUnitOfWork uow, TimeProvider timeProvider)
     {
         _uow = uow;
@@ -31,10 +30,10 @@ public class AppraisalRecommendationService : IAppraisalRecommendationService
             return SuccessResponse.Fail(AppraisalMsg.AlreadyLocked, ErrorType.Conflict);
 
         var recommendation = new AppraisalRecommendation(
-            dto.AppraisalId, 
-            dto.Type, 
-            dto.Reason, 
-            dto.ProposedValue, 
+            dto.AppraisalId,
+            dto.Type,
+            dto.Reason,
+            dto.ProposedValue,
             dto.Priority);
 
         _uow.Perf.AppraisalRecommendations.Add(recommendation);

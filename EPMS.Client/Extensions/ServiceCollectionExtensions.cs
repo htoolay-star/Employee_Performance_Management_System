@@ -1,4 +1,5 @@
 ﻿using EPMS.Client.Handlers;
+using EPMS.Client.Services.App;
 using EPMS.Client.Services.Auth;
 using EPMS.Client.Services.Hr;
 using EPMS.Client.Services.Info;
@@ -62,6 +63,9 @@ public static class ServiceCollectionExtensions
         services.AddSecureRefitClient<IPIPApiClient>(refitSettings, baseUri);
         services.AddSecureRefitClient<IPIPObjectiveApiClient>(refitSettings, baseUri);
         services.AddSecureRefitClient<IPositionPIPTemplateApiClient>(refitSettings, baseUri);
+
+        // App
+        services.AddSecureRefitClient<INotificationApiClient>(refitSettings, baseUri);
 
         // Info
         services.AddSecureRefitClient<IEmployeeProfileApiClient>(refitSettings, baseUri);
