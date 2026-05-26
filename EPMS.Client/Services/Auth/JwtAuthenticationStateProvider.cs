@@ -14,6 +14,7 @@ namespace EPMS.Client.Services.Auth
         private readonly ILocalStorageService _localStorageService;
         private readonly HttpClient _httpClient;
         private readonly NavigationCacheService _navCache;
+        private ClaimsPrincipal? _cachedPrincipal;
 
         public JwtAuthenticationStateProvider(ILocalStorageService localStorageService, HttpClient httpClient, NavigationCacheService navCache)
         {
@@ -24,6 +25,9 @@ namespace EPMS.Client.Services.Auth
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
+            if (_cachedPrincipal != null)
+                return new AuthenticationState(_cachedPrincipal);
+
             var token = await _localStorageService.GetItemAsync<string>("accessToken");
             var identity = new ClaimsIdentity();
             _httpClient.DefaultRequestHeaders.Authorization = null;
@@ -35,6 +39,7 @@ namespace EPMS.Client.Services.Auth
             }
 
             var user = new ClaimsPrincipal(identity);
+            _cachedPrincipal = user;
             return new AuthenticationState(user);
         }
 
@@ -43,13 +48,15 @@ namespace EPMS.Client.Services.Auth
             _navCache.Invalidate();
             var identity = new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt");
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            var user = new ClaimsPrincipal(identity);
-            NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(user)));
+            _cachedPrincipal = new ClaimsPrincipal(identity);
+            NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_cachedPrincipal)));
         }
 
         public void MarkUserAsLoggedOut()
         {
             _navCache.Invalidate();
+            _cachedPrincipal = null;
+            _httpClient.DefaultRequestHeaders.Authorization = null;
             var anonymousUser = new ClaimsPrincipal(new ClaimsIdentity());
             var authState = Task.FromResult(new AuthenticationState(anonymousUser));
             NotifyAuthenticationStateChanged(authState);

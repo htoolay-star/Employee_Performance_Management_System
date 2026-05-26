@@ -10,6 +10,14 @@
 <div style="display: flex; flex-direction: column; height: 100%;">
 <MudNavMenu>
 
+    @if (_isLoading)
+    {
+        <div style="padding: 16px;">
+            <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+            <MudText Class="mt-4" Typo="Typo.body2" Align="Align.Center">Loading navigation...</MudText>
+        </div>
+    }
+
         @if (_canViewLevels || _canViewPositions || _canViewDepartments || _canViewTeams || _canViewEmployees || _isAdmin)
     {
     <MudTooltip Text="HR Management" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
@@ -249,6 +257,7 @@
     private bool _isAdmin;
     private bool _isSA;
     private bool _isManager;
+    private bool _isLoading;
 
     protected override async Task OnInitializedAsync()
     {
@@ -275,6 +284,9 @@
             _canViewAppraisals = cachedPerms.Contains("APPRAISAL.VIEW");
             return;
         }
+
+        _isLoading = true;
+        StateHasChanged();
 
         var permissionsTask = PermService.GetPermissionsAsync();
         var authStateTask = AuthState.GetAuthenticationStateAsync();
@@ -304,12 +316,18 @@
         _isSA = authState.User.IsInRole("SystemAdmin");
         _isAdmin = _isSA || authState.User.IsInRole("Admin");
 
-        _isManager = false;
+        Task<SuccessResponse<bool>>? managerTask = null;
         if (authState.User.Identity is { IsAuthenticated: true })
+        {
+            managerTask = AuthApiClient.IsManagerAsync();
+        }
+
+        _isManager = false;
+        if (managerTask != null)
         {
             try
             {
-                var mgr = await AuthApiClient.IsManagerAsync();
+                var mgr = await managerTask;
                 _isManager = mgr.Success && mgr.Data;
             }
             catch (Exception ex)
@@ -324,5 +342,7 @@
         NavCache.IsAdmin = _isAdmin;
         NavCache.IsManager = _isManager;
         NavCache.Permissions = permissions.ToHashSet();
+
+        _isLoading = false;
     }
 }

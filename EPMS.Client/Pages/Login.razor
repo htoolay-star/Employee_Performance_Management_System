@@ -109,6 +109,7 @@
                     await TokenStorage.SetTokensAsync(accessToken, result.Data.Tokens.RefreshToken);
                     ((JwtAuthenticationStateProvider)AuthenticationStateProvider).MarkUserAsAuthenticated(accessToken);
                     PermService.InvalidateCache();
+                    _ = PermService.GetPermissionsAsync();
 
                     Snackbar.Add(result.Message ?? "Login successful", Severity.Success);
 
