@@ -575,6 +575,98 @@
             public const string NoUpcoming = "No upcoming meetings.";
         }
 
+        public static class PIP
+        {
+            public const string PageTitle = "Performance Improvement Plans";
+            public const string SearchPlaceholder = "Search by employee or manager...";
+            public const string AddButton = "Create PIP";
+            public const string CreateDialogTitle = "Create PIP";
+            public const string EditDialogTitle = "Edit PIP";
+            public const string DeleteDialogTitle = "Delete PIP";
+            public const string ConcludeDialogTitle = "Conclude PIP";
+            public const string ExtendDialogTitle = "Extend PIP";
+            public const string ObjectivesDialogTitle = "PIP Objectives";
+
+            public const string TabActive = "Active";
+            public const string TabAll = "All PIPs";
+
+            public const string EmployeeLabel = "Employee";
+            public const string ManagerLabel = "Manager";
+            public const string ReasonLabel = "Reason";
+            public const string StartDateLabel = "Start Date";
+            public const string EndDateLabel = "End Date";
+            public const string NewEndDateLabel = "New End Date";
+            public const string ExtendReasonLabel = "Extension Reason";
+            public const string OutcomeLabel = "Outcome";
+            public const string NotesLabel = "Notes";
+            public const string SuccessfulLabel = "Successful";
+            public const string FailedLabel = "Failed";
+
+            public const string ObjectiveTitleLabel = "Title";
+            public const string ObjectiveSuccessCriteriaLabel = "Success Criteria";
+            public const string ObjectiveDescriptionLabel = "Description";
+            public const string ObjectiveStatusLabel = "Status";
+            public const string ObjectiveManagerCommentLabel = "Manager Comment";
+
+            public const string ColumnEmployee = "Employee";
+            public const string ColumnManager = "Manager";
+            public const string ColumnReason = "Reason";
+            public const string ColumnStartDate = "Start Date";
+            public const string ColumnEndDate = "End Date";
+            public const string ColumnStatus = "Status";
+            public const string ColumnCreatedAt = "Created";
+
+            public const string SelectEmployee = "-- Select Employee --";
+            public const string SelectManager = "-- Select Manager --";
+
+            public const string CreateObjectiveButton = "Add Objective";
+            public const string EditObjectiveButton = "Edit Objective";
+            public const string ConcludeButton = "Conclude";
+            public const string ExtendButton = "Extend";
+            public const string ViewButton = "View";
+
+            public const string Created = "PIP created successfully.";
+            public const string Updated = "PIP updated successfully.";
+            public const string Deleted = "PIP deleted successfully.";
+            public const string Concluded = "PIP concluded successfully.";
+            public const string Extended = "PIP extended successfully.";
+            public const string ObjectiveCreated = "Objective added successfully.";
+            public const string ObjectiveUpdated = "Objective updated successfully.";
+            public const string ObjectiveDeleted = "Objective deleted successfully.";
+
+            public const string DeleteConfirmFormat = "Are you sure you want to delete this PIP?";
+            public const string NoDataActive = "No active PIPs.";
+            public const string NoDataFound = "No PIPs found.";
+        }
+
+        public static class PositionPIPTemplate
+        {
+            public const string PageTitle = "Position PIP Templates";
+            public const string AddButton = "Add Template";
+            public const string CreateDialogTitle = "Create PIP Template";
+            public const string EditDialogTitle = "Edit PIP Template";
+            public const string DeleteDialogTitle = "Delete PIP Template";
+
+            public const string PositionLabel = "Position";
+            public const string TitleLabel = "Title";
+            public const string SuccessCriteriaLabel = "Success Criteria";
+            public const string DescriptionLabel = "Description";
+            public const string ActiveLabel = "Active";
+
+            public const string ColumnPosition = "Position";
+            public const string ColumnTitle = "Title";
+            public const string ColumnSuccessCriteria = "Success Criteria";
+            public const string ColumnActive = "Active";
+
+            public const string SelectPosition = "-- Select Position --";
+
+            public const string Created = "PIP template created successfully.";
+            public const string Updated = "PIP template updated successfully.";
+            public const string Deleted = "PIP template deleted successfully.";
+
+            public const string NoDataFound = "Select a position to see PIP templates.";
+        }
+
         public static class Employee
         {
             public const string PageTitle = "Employee Directory";

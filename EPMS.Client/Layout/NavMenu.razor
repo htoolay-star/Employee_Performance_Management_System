@@ -177,6 +177,12 @@
     <MudTooltip Text="One-on-One Meetings" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
         <MudNavLink Href="performance/one-on-one-meetings" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PersonSearch">One-on-One Meetings</MudNavLink>
     </MudTooltip>
+    <MudTooltip Text="Performance Improvement Plans" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+        <MudNavLink Href="performance/pips" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.TrendingUp">PIPs</MudNavLink>
+    </MudTooltip>
+    <MudTooltip Text="Position PIP Templates" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+        <MudNavLink Href="performance/position-pip-templates" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Assignment">Position PIP Templates</MudNavLink>
+    </MudTooltip>
     }
     @if (_isAdmin || _isManager)
     {

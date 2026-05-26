@@ -1,0 +1,397 @@
+@page "/performance/position-pip-templates"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using EPMS.Client.Constants
+@using EPMS.Client.Services.Auth
+@using EPMS.Client.Services.Performance
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.PerformanceDTOs.PositionPIPTemplateDTOs
+@using MudBlazor
+@using Refit
+
+@inject IPositionPIPTemplateApiClient TemplateApiClient
+@inject LookupStateService LookupState
+@inject ISnackbar Snackbar
+
+<PageTitle>@UIConstants.PositionPIPTemplate.PageTitle</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.PositionPIPTemplate.PageTitle</MudText>
+
+    <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4" Wrap="Wrap.Wrap">
+            <MudAutocomplete T="long?"
+                             Value="@_selectedPositionId"
+                             ValueChanged="OnPositionFilterChanged"
+                             Label="@UIConstants.PositionPIPTemplate.PositionLabel"
+                             Variant="Variant.Outlined"
+                             SearchFunc="@SearchPositions"
+                             ToStringFunc="@(x => _positions.FirstOrDefault(p => p.Id == x)?.Name ?? "")"
+                             Clearable="true"
+                             Style="min-width: 280px;" />
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       Disabled="@(_selectedPositionId == null)"
+                       OnClick="OpenCreateDialog">
+                @UIConstants.PositionPIPTemplate.AddButton
+            </MudButton>
+        </MudStack>
+
+        @if (_selectedPositionId == null)
+        {
+            <MudAlert Severity="Severity.Info" Class="mt-4">
+                @UIConstants.PositionPIPTemplate.NoDataFound
+            </MudAlert>
+        }
+        else
+        {
+            <MudDataGrid Items="@_templates"
+                         Loading="@_loading"
+                         Hover="true"
+                         Elevation="0"
+                         SortMode="SortMode.None">
+                <Columns>
+                    <TemplateColumn Title="@UIConstants.Common.ColumnNo" Sortable="false">
+                        <CellTemplate>
+                            <span>@(_templates.IndexOf(context.Item) + 1)</span>
+                        </CellTemplate>
+                    </TemplateColumn>
+                    <PropertyColumn Property="x => x.Title" Title="@UIConstants.PositionPIPTemplate.ColumnTitle" />
+                    <PropertyColumn Property="x => x.SuccessCriteria" Title="@UIConstants.PositionPIPTemplate.ColumnSuccessCriteria" />
+                    <TemplateColumn Title="@UIConstants.PositionPIPTemplate.ColumnActive">
+                        <CellTemplate>
+                            <MudChip T="bool" Size="Size.Small" Color="@(context.Item.IsActive ? Color.Success : Color.Default)">
+                                @(context.Item.IsActive ? "Yes" : "No")
+                            </MudChip>
+                        </CellTemplate>
+                    </TemplateColumn>
+                    <TemplateColumn Title="@UIConstants.Common.Actions" Sortable="false">
+                        <CellTemplate>
+                            <MudStack Row="true" Spacing="0">
+                                <MudTooltip Text="Edit" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                   Color="Color.Primary"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => OpenEditDialog(context.Item))" />
+                                </MudTooltip>
+                                <MudTooltip Text="Delete" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   Color="Color.Error"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => OpenDeleteConfirm(context.Item))" />
+                                </MudTooltip>
+                            </MudStack>
+                        </CellTemplate>
+                    </TemplateColumn>
+                </Columns>
+                <NoRecordsContent>
+                    <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
+                        <MudIcon Icon="@Icons.Material.Outlined.Inbox" Style="font-size: 4rem;" Color="Color.Default" />
+                        <MudText Typo="Typo.h6" Color="Color.Default">@UIConstants.Common.NoRecords</MudText>
+                    </MudStack>
+                </NoRecordsContent>
+                <LoadingContent>
+                    <MudStack Spacing="3" Class="w-100">
+                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                    </MudStack>
+                </LoadingContent>
+            </MudDataGrid>
+        }
+    </MudPaper>
+</MudContainer>
+
+@* Create/Edit Dialog *@
+<MudDialog @bind-Visible="_showDialog" Options="@_dialogOptions">
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-4">
+            @(_isEditMode ? UIConstants.PositionPIPTemplate.EditDialogTitle : UIConstants.PositionPIPTemplate.CreateDialogTitle)
+        </MudText>
+        <MudForm @ref="_form" @bind-IsValid="_formValid" @bind-Errors="_formErrors">
+            <MudTextField T="string"
+                          Label="@UIConstants.PositionPIPTemplate.TitleLabel"
+                          @bind-Value="_formTitle"
+                          Variant="Variant.Outlined"
+                          Class="mb-4"
+                          Required="true"
+                          RequiredError="Title is required"
+                          MaxLength="200" />
+            <MudTextField T="string"
+                          Label="@UIConstants.PositionPIPTemplate.SuccessCriteriaLabel"
+                          @bind-Value="_formSuccessCriteria"
+                          Variant="Variant.Outlined"
+                          Class="mb-4"
+                          Required="true"
+                          RequiredError="Success criteria is required"
+                          Lines="3"
+                          MaxLength="1000" />
+            <MudTextField T="string"
+                          Label="@UIConstants.PositionPIPTemplate.DescriptionLabel"
+                          @bind-Value="_formDescription"
+                          Variant="Variant.Outlined"
+                          Lines="3"
+                          MaxLength="500" />
+            @if (_isEditMode)
+            {
+                <MudSwitch T="bool"
+                           Label="@UIConstants.PositionPIPTemplate.ActiveLabel"
+                           @bind-Value="_formIsActive"
+                           Color="Color.Primary" />
+            }
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="CancelForm">@UIConstants.Common.Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   Disabled="!_formValid || _isSaving"
+                   OnClick="ConfirmForm">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+            }
+            <span>@(_isEditMode ? UIConstants.Common.Update : UIConstants.Common.Create)</span>
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* Delete Confirmation *@
+<MudDialog @bind-Visible="_showDeleteDialog">
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-4">@UIConstants.PositionPIPTemplate.DeleteDialogTitle</MudText>
+        <MudText Typo="Typo.body2">Are you sure you want to delete this PIP template?</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="CancelDelete">@UIConstants.Common.Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error"
+                   Disabled="_isDeleting"
+                   OnClick="ConfirmDelete">
+            @if (_isDeleting)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+            }
+            <span>@UIConstants.Common.Delete</span>
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private bool _loading;
+    private List<PositionPIPTemplateDto> _templates = new();
+    private long? _selectedPositionId;
+    private List<LookUpDto> _positions = new();
+
+    private bool _showDialog;
+    private bool _showDeleteDialog;
+    private bool _isEditMode;
+    private bool _isSaving;
+    private bool _isDeleting;
+    private PositionPIPTemplateDto? _selectedTemplate;
+
+    private MudForm _form = new();
+    private bool _formValid;
+    private string[] _formErrors = { };
+    private string _formTitle = string.Empty;
+    private string _formSuccessCriteria = string.Empty;
+    private string _formDescription = string.Empty;
+    private bool _formIsActive = true;
+
+    private readonly DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+        _positions = await LookupState.GetPositionsAsync();
+    }
+
+    private Task<IEnumerable<long?>> SearchPositions(string value, CancellationToken _)
+    {
+        var results = _positions
+            .Where(p => string.IsNullOrWhiteSpace(value) || p.Name.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .Select(p => (long?)p.Id);
+        return Task.FromResult(results);
+    }
+
+    private async Task OnPositionFilterChanged(long? positionId)
+    {
+        _selectedPositionId = positionId;
+        if (positionId.HasValue)
+        {
+            await LoadTemplatesAsync(positionId.Value);
+        }
+        else
+        {
+            _templates.Clear();
+        }
+    }
+
+    private async Task LoadTemplatesAsync(long positionId)
+    {
+        _loading = true;
+        StateHasChanged();
+        try
+        {
+            var response = await TemplateApiClient.GetByPositionIdAsync(positionId);
+            if (response.Success && response.Data != null)
+            {
+                _templates = response.Data.ToList();
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? UIConstants.Common.LoadFailed, Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void OpenCreateDialog()
+    {
+        _isEditMode = false;
+        _formTitle = string.Empty;
+        _formSuccessCriteria = string.Empty;
+        _formDescription = string.Empty;
+        _formIsActive = true;
+        _showDialog = true;
+    }
+
+    private void OpenEditDialog(PositionPIPTemplateDto template)
+    {
+        _isEditMode = true;
+        _selectedTemplate = template;
+        _formTitle = template.Title;
+        _formSuccessCriteria = template.SuccessCriteria;
+        _formDescription = template.Description ?? string.Empty;
+        _formIsActive = template.IsActive;
+        _showDialog = true;
+    }
+
+    private void CancelForm()
+    {
+        _showDialog = false;
+        _selectedTemplate = null;
+    }
+
+    private async Task ConfirmForm()
+    {
+        await _form.Validate();
+        if (!_formValid) return;
+
+        _isSaving = true;
+        try
+        {
+            if (_isEditMode && _selectedTemplate != null)
+            {
+                var dto = new UpdatePositionPIPTemplateDto
+                {
+                    Title = _formTitle,
+                    SuccessCriteria = _formSuccessCriteria,
+                    Description = string.IsNullOrWhiteSpace(_formDescription) ? null : _formDescription,
+                    IsActive = _formIsActive
+                };
+                var result = await TemplateApiClient.UpdateAsync(_selectedTemplate.Id, dto);
+                if (result.Success)
+                {
+                    Snackbar.Add(UIConstants.PositionPIPTemplate.Updated, Severity.Success);
+                    _showDialog = false;
+                    _selectedTemplate = null;
+                    await LoadTemplatesAsync(_selectedPositionId!.Value);
+                }
+                else
+                {
+                    Snackbar.Add(result.Message ?? UIConstants.Common.UpdateFailed, Severity.Error);
+                }
+            }
+            else if (_selectedPositionId.HasValue)
+            {
+                var dto = new CreatePositionPIPTemplateDto
+                {
+                    PositionId = _selectedPositionId.Value,
+                    Title = _formTitle,
+                    SuccessCriteria = _formSuccessCriteria,
+                    Description = string.IsNullOrWhiteSpace(_formDescription) ? null : _formDescription
+                };
+                var result = await TemplateApiClient.CreateAsync(dto);
+                if (result.Success)
+                {
+                    Snackbar.Add(UIConstants.PositionPIPTemplate.Created, Severity.Success);
+                    _showDialog = false;
+                    await LoadTemplatesAsync(_selectedPositionId.Value);
+                }
+                else
+                {
+                    Snackbar.Add(result.Message ?? UIConstants.Common.CreateFailed, Severity.Error);
+                }
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private void OpenDeleteConfirm(PositionPIPTemplateDto template)
+    {
+        _selectedTemplate = template;
+        _showDeleteDialog = true;
+    }
+
+    private void CancelDelete()
+    {
+        _showDeleteDialog = false;
+        _selectedTemplate = null;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (_selectedTemplate == null) return;
+        _isDeleting = true;
+        try
+        {
+            var result = await TemplateApiClient.DeleteAsync(_selectedTemplate.Id);
+            if (result.Success)
+            {
+                Snackbar.Add(UIConstants.PositionPIPTemplate.Deleted, Severity.Success);
+                _showDeleteDialog = false;
+                _selectedTemplate = null;
+                await LoadTemplatesAsync(_selectedPositionId!.Value);
+            }
+            else
+            {
+                Snackbar.Add(result.Message ?? UIConstants.Common.DeleteFailed, Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _isDeleting = false;
+        }
+    }
+}

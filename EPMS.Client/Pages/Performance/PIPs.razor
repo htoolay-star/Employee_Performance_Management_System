@@ -1,0 +1,1087 @@
+@page "/performance/pips"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using EPMS.Client.Constants
+@using EPMS.Client.Services.Info
+@using EPMS.Client.Services.Performance
+@using EPMS.Shared.Constants
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.EmployeeInfoDTOs
+@using EPMS.Shared.DTOs.PerformanceDTOs.PIPDTOs
+@using EPMS.Shared.DTOs.PerformanceDTOs.PIPObjectiveDTOs
+@using MudBlazor
+@using Refit
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
+@inject IPIPApiClient PIPApiClient
+@inject IPIPObjectiveApiClient ObjectiveApiClient
+@inject IEmployeeProfileApiClient EmployeeApiClient
+@inject ISnackbar Snackbar
+@inject AuthenticationStateProvider AuthState
+
+<PageTitle>@UIConstants.PIP.PageTitle</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.PIP.PageTitle</MudText>
+
+    <MudTabs @bind-ActivePanelIndex="_activeTabIndex" Class="mb-4" Elevation="0" Outlined="true" Rounded="true">
+        <MudTabPanel Text="@UIConstants.PIP.TabActive" Icon="@Icons.Material.Filled.PlayCircle">
+            <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+                <MudDataGrid Items="@_activePIPs"
+                             Loading="@_loading"
+                             Hover="true"
+                             Elevation="0"
+                             SortMode="SortMode.None">
+                    <Columns>
+                        <TemplateColumn Title="@UIConstants.Common.ColumnNo" Sortable="false">
+                            <CellTemplate>
+                                <span>@(_activePIPs.IndexOf(context.Item) + 1)</span>
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <PropertyColumn Property="x => x.EmployeeName" Title="@UIConstants.PIP.ColumnEmployee" />
+                        <PropertyColumn Property="x => x.ManagerName" Title="@UIConstants.PIP.ColumnManager" />
+                        <PropertyColumn Property="x => x.Reason" Title="@UIConstants.PIP.ColumnReason" />
+                        <TemplateColumn Title="@UIConstants.PIP.ColumnStartDate">
+                            <CellTemplate>
+                                @context.Item.StartDate.ToString("dd/MM/yyyy")
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <TemplateColumn Title="@UIConstants.PIP.ColumnEndDate">
+                            <CellTemplate>
+                                @context.Item.EndDate.ToString("dd/MM/yyyy")
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <TemplateColumn Title="@UIConstants.PIP.ColumnStatus">
+                            <CellTemplate>
+                                <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Item.Status)">
+                                    @context.Item.Status
+                                </MudChip>
+                            </CellTemplate>
+                        </TemplateColumn>
+                    </Columns>
+                    <NoRecordsContent>
+                        <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
+                            <MudIcon Icon="@Icons.Material.Outlined.CheckCircle" Style="font-size: 4rem;" Color="Color.Success" />
+                            <MudText Typo="Typo.h6" Color="Color.Default">@UIConstants.PIP.NoDataActive</MudText>
+                        </MudStack>
+                    </NoRecordsContent>
+                    <LoadingContent>
+                        <MudStack Spacing="3" Class="w-100">
+                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                        </MudStack>
+                    </LoadingContent>
+                </MudDataGrid>
+            </MudPaper>
+        </MudTabPanel>
+        <MudTabPanel Text="@UIConstants.PIP.TabAll" Icon="@Icons.Material.Filled.ListAlt">
+            <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+                    <MudTextField @bind-Value="_searchString"
+                                  Placeholder="@UIConstants.PIP.SearchPlaceholder"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  IconSize="Size.Medium"
+                                  Variant="Variant.Outlined"
+                                  Clearable="true"
+                                  Immediate="true"
+                                  DebounceInterval="500"
+                                  Style="max-width: 350px;" />
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Add"
+                               OnClick="OpenCreateDialog">
+                        @UIConstants.PIP.AddButton
+                    </MudButton>
+                </MudStack>
+
+                <MudDataGrid Items="@_allPIPs"
+                             QuickFilter="@QuickFilter"
+                             Loading="@_loading"
+                             Hover="true"
+                             Elevation="0"
+                             SortMode="SortMode.None">
+                    <Columns>
+                        <TemplateColumn Title="@UIConstants.Common.ColumnNo" Sortable="false">
+                            <CellTemplate>
+                                <span>@(_allPIPs.IndexOf(context.Item) + 1)</span>
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <PropertyColumn Property="x => x.EmployeeName" Title="@UIConstants.PIP.ColumnEmployee" />
+                        <PropertyColumn Property="x => x.ManagerName" Title="@UIConstants.PIP.ColumnManager" />
+                        <PropertyColumn Property="x => x.Reason" Title="@UIConstants.PIP.ColumnReason" />
+                        <TemplateColumn Title="@UIConstants.PIP.ColumnStartDate">
+                            <CellTemplate>
+                                @context.Item.StartDate.ToString("dd/MM/yyyy")
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <TemplateColumn Title="@UIConstants.PIP.ColumnEndDate">
+                            <CellTemplate>
+                                @context.Item.EndDate.ToString("dd/MM/yyyy")
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <TemplateColumn Title="@UIConstants.PIP.ColumnStatus">
+                            <CellTemplate>
+                                <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Item.Status)">
+                                    @context.Item.Status
+                                </MudChip>
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <TemplateColumn Title="@UIConstants.Common.Actions" Sortable="false">
+                            <CellTemplate>
+                                <MudStack Row="true" Spacing="0">
+                                    @if (context.Item.Status == PIPStatuses.Draft)
+                                    {
+                                        <MudTooltip Text="Edit" Placement="Placement.Top">
+                                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                           Color="Color.Primary"
+                                                           Size="Size.Small"
+                                                           OnClick="@(() => OpenEditDialog(context.Item))" />
+                                        </MudTooltip>
+                                        <MudTooltip Text="Delete" Placement="Placement.Top">
+                                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                           Color="Color.Error"
+                                                           Size="Size.Small"
+                                                           OnClick="@(() => OpenDeleteConfirm(context.Item))" />
+                                        </MudTooltip>
+                                    }
+                                    @if (context.Item.Status == PIPStatuses.Open || context.Item.Status == PIPStatuses.Active || context.Item.Status == PIPStatuses.Extended)
+                                    {
+                                        <MudTooltip Text="Edit" Placement="Placement.Top">
+                                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                           Color="Color.Primary"
+                                                           Size="Size.Small"
+                                                           OnClick="@(() => OpenEditDialog(context.Item))" />
+                                        </MudTooltip>
+                                        <MudTooltip Text="Objectives" Placement="Placement.Top">
+                                            <MudIconButton Icon="@Icons.Material.Filled.Checklist"
+                                                           Color="Color.Info"
+                                                           Size="Size.Small"
+                                                           OnClick="@(() => OpenObjectivesDialog(context.Item))" />
+                                        </MudTooltip>
+                                        <MudTooltip Text="Conclude" Placement="Placement.Top">
+                                            <MudIconButton Icon="@Icons.Material.Filled.Verified"
+                                                           Color="Color.Success"
+                                                           Size="Size.Small"
+                                                           OnClick="@(() => OpenConcludeDialog(context.Item))" />
+                                        </MudTooltip>
+                                        <MudTooltip Text="Extend" Placement="Placement.Top">
+                                            <MudIconButton Icon="@Icons.Material.Filled.Schedule"
+                                                           Color="Color.Warning"
+                                                           Size="Size.Small"
+                                                           OnClick="@(() => OpenExtendDialog(context.Item))" />
+                                        </MudTooltip>
+                                    }
+                                    @if (context.Item.Status == PIPStatuses.Successful || context.Item.Status == PIPStatuses.Failed || context.Item.Status == PIPStatuses.Completed)
+                                    {
+                                        <MudTooltip Text="View Objectives" Placement="Placement.Top">
+                                            <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                                           Color="Color.Default"
+                                                           Size="Size.Small"
+                                                           OnClick="@(() => OpenObjectivesDialog(context.Item))" />
+                                        </MudTooltip>
+                                    }
+                                    @if (context.Item.Status == PIPStatuses.Cancelled)
+                                    {
+                                        <MudTooltip Text="Delete" Placement="Placement.Top">
+                                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                           Color="Color.Error"
+                                                           Size="Size.Small"
+                                                           OnClick="@(() => OpenDeleteConfirm(context.Item))" />
+                                        </MudTooltip>
+                                    }
+                                </MudStack>
+                            </CellTemplate>
+                        </TemplateColumn>
+                    </Columns>
+                    <NoRecordsContent>
+                        <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
+                            <MudIcon Icon="@Icons.Material.Outlined.Inbox" Style="font-size: 4rem;" Color="Color.Default" />
+                            <MudText Typo="Typo.h6" Color="Color.Default">@UIConstants.Common.NoRecords</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">@UIConstants.PIP.NoDataFound</MudText>
+                        </MudStack>
+                    </NoRecordsContent>
+                    <LoadingContent>
+                        <MudStack Spacing="3" Class="w-100">
+                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                        </MudStack>
+                    </LoadingContent>
+                    <PagerContent>
+                        <MudDataGridPager T="PIPDto" />
+                    </PagerContent>
+                </MudDataGrid>
+            </MudPaper>
+        </MudTabPanel>
+    </MudTabs>
+</MudContainer>
+
+@* Create/Edit Dialog *@
+<MudDialog @bind-Visible="_showCreateEditDialog" Options="@_dialogOptions">
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-4">
+            @(_isEditMode ? UIConstants.PIP.EditDialogTitle : UIConstants.PIP.CreateDialogTitle)
+        </MudText>
+        <MudForm @ref="_form" @bind-IsValid="_formValid" @bind-Errors="_formErrors">
+            @if (!_isEditMode)
+            {
+                <MudSelect T="long?"
+                           Label="@UIConstants.PIP.EmployeeLabel"
+                           @bind-Value="_formEmployeeId"
+                           Variant="Variant.Outlined"
+                           Class="mb-4"
+                           Required="true"
+                           RequiredError="Employee is required">
+                    @if (_formEmployeeId == null)
+                    {
+                        <MudSelectItem Value="@((long?)null)" Disabled="true">@UIConstants.PIP.SelectEmployee</MudSelectItem>
+                    }
+                    @foreach (var emp in _employees)
+                    {
+                        <MudSelectItem Value="@((long?)emp.Id)">@emp.StaffName (@emp.StaffNo)</MudSelectItem>
+                    }
+                </MudSelect>
+                <MudSelect T="long?"
+                           Label="@UIConstants.PIP.ManagerLabel"
+                           @bind-Value="_formManagerId"
+                           Variant="Variant.Outlined"
+                           Class="mb-4"
+                           Required="true"
+                           RequiredError="Manager is required">
+                    @if (_formManagerId == null)
+                    {
+                        <MudSelectItem Value="@((long?)null)" Disabled="true">@UIConstants.PIP.SelectManager</MudSelectItem>
+                    }
+                    @foreach (var emp in _managers)
+                    {
+                        <MudSelectItem Value="@((long?)emp.Id)">@emp.StaffName (@emp.StaffNo)</MudSelectItem>
+                    }
+                </MudSelect>
+            }
+            <MudTextField T="string"
+                          Label="@UIConstants.PIP.ReasonLabel"
+                          @bind-Value="_formReason"
+                          Variant="Variant.Outlined"
+                          Class="mb-4"
+                          Required="true"
+                          RequiredError="Reason is required"
+                          Lines="3"
+                          MaxLength="1000" />
+            <MudDatePicker Label="@UIConstants.PIP.StartDateLabel"
+                           @bind-Date="_formStartDate"
+                           Variant="Variant.Outlined"
+                           Class="mb-4"
+                           Required="true"
+                           RequiredError="Start date is required" />
+            <MudDatePicker Label="@UIConstants.PIP.EndDateLabel"
+                           @bind-Date="_formEndDate"
+                           Variant="Variant.Outlined"
+                           Required="true"
+                           RequiredError="End date is required" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="CancelForm">@UIConstants.Common.Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   Disabled="!_formValid || _isSaving"
+                   OnClick="ConfirmForm">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+            }
+            <span>@(_isEditMode ? UIConstants.Common.Update : UIConstants.Common.Create)</span>
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* Conclude Dialog *@
+<MudDialog @bind-Visible="_showConcludeDialog" Options="@_dialogOptions">
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-4">@UIConstants.PIP.ConcludeDialogTitle</MudText>
+        <MudForm @ref="_concludeForm" @bind-IsValid="_concludeFormValid" @bind-Errors="_concludeFormErrors">
+            <MudRadioGroup @bind-Value="_concludeSuccessful" Class="mb-4">
+                <MudRadio Value="true" Color="Color.Success">@UIConstants.PIP.SuccessfulLabel</MudRadio>
+                <MudRadio Value="false" Color="Color.Error">@UIConstants.PIP.FailedLabel</MudRadio>
+            </MudRadioGroup>
+            <MudTextField T="string"
+                          Label="@UIConstants.PIP.NotesLabel"
+                          @bind-Value="_concludeNotes"
+                          Variant="Variant.Outlined"
+                          Lines="4"
+                          MaxLength="500" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="CancelConclude">@UIConstants.Common.Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Success"
+                   Disabled="_isProcessing"
+                   OnClick="ConfirmConclude">
+            @if (_isProcessing)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+            }
+            <span>@UIConstants.PIP.ConcludeButton</span>
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* Extend Dialog *@
+<MudDialog @bind-Visible="_showExtendDialog" Options="@_dialogOptions">
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-4">@UIConstants.PIP.ExtendDialogTitle</MudText>
+        <MudForm @ref="_extendForm" @bind-IsValid="_extendFormValid" @bind-Errors="_extendFormErrors">
+            <MudDatePicker Label="@UIConstants.PIP.NewEndDateLabel"
+                           @bind-Date="_extendNewEndDate"
+                           Variant="Variant.Outlined"
+                           Class="mb-4"
+                           Required="true"
+                           RequiredError="New end date is required" />
+            <MudTextField T="string"
+                          Label="@UIConstants.PIP.ExtendReasonLabel"
+                          @bind-Value="_extendReason"
+                          Variant="Variant.Outlined"
+                          Lines="3"
+                          Required="true"
+                          RequiredError="Extension reason is required"
+                          MaxLength="500" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="CancelExtend">@UIConstants.Common.Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Warning"
+                   Disabled="_isProcessing"
+                   OnClick="ConfirmExtend">
+            @if (_isProcessing)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+            }
+            <span>@UIConstants.PIP.ExtendButton</span>
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* Objectives Dialog *@
+<MudDialog @bind-Visible="_showObjectivesDialog" Options="@_dialogOptions">
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-4">@UIConstants.PIP.ObjectivesDialogTitle</MudText>
+        <MudText Typo="Typo.body2" Class="mb-4">
+            <strong>@UIConstants.PIP.ColumnEmployee:</strong> @_selectedPIP?.EmployeeName
+        </MudText>
+
+        @if (_objectivesLoading)
+        {
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" Class="mt-2" />
+        }
+        else if (_objectives.Count == 0)
+        {
+            <MudAlert Severity="Severity.Info" Class="mb-4">No objectives added yet.</MudAlert>
+        }
+        else
+        {
+            <div class="mb-4">
+                @foreach (var obj in _objectives)
+                {
+                    <MudPaper Elevation="0" Outlined="true" Class="pa-3 mb-2 rounded-lg">
+                        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                            <div>
+                                <MudText Typo="Typo.subtitle2">@obj.Title</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Default">@obj.SuccessCriteria</MudText>
+                                @if (!string.IsNullOrEmpty(obj.Status))
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="@GetObjectiveStatusColor(obj.Status)" Class="mt-1">@obj.Status</MudChip>
+                                }
+                            </div>
+                            <MudStack Row="true" Spacing="0">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Color="Color.Primary"
+                                               Size="Size.Small"
+                                               OnClick="@(() => OpenObjectiveEditDialog(obj))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Color="Color.Error"
+                                               Size="Size.Small"
+                                               OnClick="@(() => OpenObjectiveDeleteConfirm(obj))" />
+                            </MudStack>
+                        </MudStack>
+                    </MudPaper>
+                }
+            </div>
+        }
+
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="OpenObjectiveCreateDialog"
+                   FullWidth="true">
+            @UIConstants.PIP.CreateObjectiveButton
+        </MudButton>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="CancelObjectives">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* Objective Create/Edit Dialog *@
+<MudDialog @bind-Visible="_showObjectiveDialog" Options="@_dialogOptions">
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-4">
+            @(_isObjectiveEdit ? UIConstants.PositionPIPTemplate.EditDialogTitle : UIConstants.Common.Create)
+        </MudText>
+        <MudForm @ref="_objForm" @bind-IsValid="_objFormValid" @bind-Errors="_objFormErrors">
+            <MudTextField T="string"
+                          Label="@UIConstants.PIP.ObjectiveTitleLabel"
+                          @bind-Value="_objTitle"
+                          Variant="Variant.Outlined"
+                          Class="mb-4"
+                          Required="true"
+                          RequiredError="Title is required"
+                          MaxLength="200" />
+            <MudTextField T="string"
+                          Label="@UIConstants.PIP.ObjectiveSuccessCriteriaLabel"
+                          @bind-Value="_objSuccessCriteria"
+                          Variant="Variant.Outlined"
+                          Class="mb-4"
+                          Required="true"
+                          RequiredError="Success criteria is required"
+                          Lines="3"
+                          MaxLength="1000" />
+            <MudTextField T="string"
+                          Label="@UIConstants.PIP.ObjectiveDescriptionLabel"
+                          @bind-Value="_objDescription"
+                          Variant="Variant.Outlined"
+                          Class="mb-4"
+                          Lines="3"
+                          MaxLength="500" />
+            @if (_isObjectiveEdit)
+            {
+                <MudSelect T="string"
+                           Label="@UIConstants.PIP.ObjectiveStatusLabel"
+                           @bind-Value="_objStatus"
+                           Variant="Variant.Outlined"
+                           Class="mb-4">
+                    <MudSelectItem T="string" Value="@("")">-- Select Status --</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("NOT_STARTED")">Not Started</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("IN_PROGRESS")">In Progress</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("COMPLETED")">Completed</MudSelectItem>
+                </MudSelect>
+                <MudTextField T="string"
+                              Label="@UIConstants.PIP.ObjectiveManagerCommentLabel"
+                              @bind-Value="_objManagerComment"
+                              Variant="Variant.Outlined"
+                              Lines="3"
+                              MaxLength="500" />
+            }
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="CancelObjectiveForm">@UIConstants.Common.Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   Disabled="!_objFormValid || _isProcessing"
+                   OnClick="ConfirmObjectiveForm">
+            @if (_isProcessing)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+            }
+            <span>@(_isObjectiveEdit ? UIConstants.Common.Update : UIConstants.Common.Create)</span>
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* Delete Confirmation *@
+<MudDialog @bind-Visible="_showDeleteDialog">
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-4">@UIConstants.PIP.DeleteDialogTitle</MudText>
+        <MudText Typo="Typo.body2">@UIConstants.PIP.DeleteConfirmFormat</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="CancelAction">@UIConstants.Common.Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error"
+                   Disabled="_isProcessing"
+                   OnClick="ConfirmDelete">
+            @if (_isProcessing)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+            }
+            <span>@UIConstants.Common.Delete</span>
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private bool _loading = true;
+    private int _activeTabIndex;
+    private List<PIPDto> _allPIPs = new();
+    private List<PIPDto> _activePIPs = new();
+    private string _searchString = string.Empty;
+    private List<EmployeeLookupDto> _employees = new();
+    private List<EmployeeLookupDto> _managers = new();
+    private long _currentEmployeeId;
+
+    private bool _showCreateEditDialog;
+    private bool _showConcludeDialog;
+    private bool _showExtendDialog;
+    private bool _showObjectivesDialog;
+    private bool _showObjectiveDialog;
+    private bool _showDeleteDialog;
+    private bool _isEditMode;
+    private bool _isSaving;
+    private bool _isProcessing;
+    private PIPDto? _selectedPIP;
+
+    private MudForm _form = new();
+    private bool _formValid;
+    private string[] _formErrors = { };
+    private long? _formEmployeeId;
+    private long? _formManagerId;
+    private string _formReason = string.Empty;
+    private DateTime? _formStartDate;
+    private DateTime? _formEndDate;
+
+    private MudForm _concludeForm = new();
+    private bool _concludeFormValid;
+    private string[] _concludeFormErrors = { };
+    private bool _concludeSuccessful = true;
+    private string _concludeNotes = string.Empty;
+
+    private MudForm _extendForm = new();
+    private bool _extendFormValid;
+    private string[] _extendFormErrors = { };
+    private DateTime? _extendNewEndDate;
+    private string _extendReason = string.Empty;
+
+    private bool _objectivesLoading;
+    private List<PIPObjectiveDto> _objectives = new();
+
+    private bool _isObjectiveEdit;
+    private PIPObjectiveDto? _selectedObjective;
+    private MudForm _objForm = new();
+    private bool _objFormValid;
+    private string[] _objFormErrors = { };
+    private string _objTitle = string.Empty;
+    private string _objSuccessCriteria = string.Empty;
+    private string _objDescription = string.Empty;
+    private string _objStatus = string.Empty;
+    private string _objManagerComment = string.Empty;
+
+    private readonly DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _loading = true;
+        StateHasChanged();
+        try
+        {
+            var authState = await AuthState.GetAuthenticationStateAsync();
+            var userIdClaim = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            var allTask = PIPApiClient.GetAllAsync();
+            var activeTask = PIPApiClient.GetActiveAsync();
+            var employeesTask = EmployeeApiClient.GetLookupAsync();
+            var profileTask = !string.IsNullOrEmpty(userIdClaim) && long.TryParse(userIdClaim, out var uid)
+                ? EmployeeApiClient.GetByUserIdAsync(uid)
+                : Task.FromResult<SuccessResponse<EmployeeProfileDto>>(null!);
+
+            await Task.WhenAll(allTask, activeTask, employeesTask, profileTask);
+
+            var allResponse = await allTask;
+            if (allResponse.Success && allResponse.Data != null)
+            {
+                _allPIPs = allResponse.Data.ToList();
+            }
+
+            var activeResponse = await activeTask;
+            if (activeResponse.Success && activeResponse.Data != null)
+            {
+                _activePIPs = activeResponse.Data.ToList();
+            }
+
+            var employeesResponse = await employeesTask;
+            if (employeesResponse.Success && employeesResponse.Data != null)
+            {
+                _employees = employeesResponse.Data.ToList();
+                _managers = _employees.Where(e => e.IsManager).ToList();
+            }
+
+            var profileResponse = await profileTask;
+            if (profileResponse?.Success == true && profileResponse.Data != null)
+            {
+                _currentEmployeeId = profileResponse.Data.Id;
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private bool QuickFilter(PIPDto x)
+    {
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+        return x.EmployeeName.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
+            || x.ManagerName.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
+            || x.Reason.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
+            || x.Status.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static Color GetStatusColor(string status) => status switch
+    {
+        PIPStatuses.Draft => Color.Default,
+        PIPStatuses.Open => Color.Info,
+        PIPStatuses.Active => Color.Primary,
+        PIPStatuses.Extended => Color.Warning,
+        PIPStatuses.Successful => Color.Success,
+        PIPStatuses.Failed => Color.Error,
+        PIPStatuses.Completed => Color.Success,
+        PIPStatuses.Cancelled => Color.Default,
+        _ => Color.Default
+    };
+
+    private static Color GetObjectiveStatusColor(string status) => status switch
+    {
+        "COMPLETED" => Color.Success,
+        "IN_PROGRESS" => Color.Warning,
+        _ => Color.Default
+    };
+
+    private void OpenCreateDialog()
+    {
+        _isEditMode = false;
+        _formEmployeeId = null;
+        _formManagerId = _currentEmployeeId > 0 ? _currentEmployeeId : null;
+        _formReason = string.Empty;
+        _formStartDate = DateTime.Today;
+        _formEndDate = DateTime.Today.AddDays(30);
+        _showCreateEditDialog = true;
+    }
+
+    private void OpenEditDialog(PIPDto pip)
+    {
+        _isEditMode = true;
+        _selectedPIP = pip;
+        _formReason = pip.Reason;
+        _formStartDate = pip.StartDate.ToDateTime(TimeOnly.MinValue);
+        _formEndDate = pip.EndDate.ToDateTime(TimeOnly.MinValue);
+        _showCreateEditDialog = true;
+    }
+
+    private void CancelForm()
+    {
+        _showCreateEditDialog = false;
+        _selectedPIP = null;
+    }
+
+    private async Task ConfirmForm()
+    {
+        await _form.Validate();
+        if (!_formValid) return;
+
+        _isSaving = true;
+        try
+        {
+            if (_isEditMode && _selectedPIP != null)
+            {
+                var dto = new UpdatePIPDto
+                {
+                    Id = _selectedPIP.Id,
+                    StartDate = _formStartDate.HasValue ? DateOnly.FromDateTime(_formStartDate.Value) : _selectedPIP.StartDate,
+                    EndDate = _formEndDate.HasValue ? DateOnly.FromDateTime(_formEndDate.Value) : _selectedPIP.EndDate,
+                    Reason = _formReason
+                };
+                var result = await PIPApiClient.UpdateAsync(_selectedPIP.Id, dto);
+                if (result.Success)
+                {
+                    Snackbar.Add(UIConstants.PIP.Updated, Severity.Success);
+                    _showCreateEditDialog = false;
+                    _selectedPIP = null;
+                    await LoadDataAsync();
+                }
+                else
+                {
+                    Snackbar.Add(result.Message ?? UIConstants.Common.UpdateFailed, Severity.Error);
+                }
+            }
+            else
+            {
+                if (_formEmployeeId == null || _formManagerId == null)
+                {
+                    Snackbar.Add("Please select employee and manager.", Severity.Error);
+                    return;
+                }
+                var dto = new CreatePIPDto
+                {
+                    EmployeeId = _formEmployeeId.Value,
+                    ManagerId = _formManagerId.Value,
+                    Reason = _formReason,
+                    StartDate = _formStartDate.HasValue ? DateOnly.FromDateTime(_formStartDate.Value) : DateOnly.FromDateTime(DateTime.Today),
+                    EndDate = _formEndDate.HasValue ? DateOnly.FromDateTime(_formEndDate.Value) : DateOnly.FromDateTime(DateTime.Today.AddDays(30))
+                };
+                var result = await PIPApiClient.CreateAsync(dto);
+                if (result.Success)
+                {
+                    Snackbar.Add(UIConstants.PIP.Created, Severity.Success);
+                    _showCreateEditDialog = false;
+                    await LoadDataAsync();
+                }
+                else
+                {
+                    Snackbar.Add(result.Message ?? UIConstants.Common.CreateFailed, Severity.Error);
+                }
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private void OpenConcludeDialog(PIPDto pip)
+    {
+        _selectedPIP = pip;
+        _concludeSuccessful = true;
+        _concludeNotes = pip.FinalOutcomeNotes ?? string.Empty;
+        _showConcludeDialog = true;
+    }
+
+    private void CancelConclude()
+    {
+        _showConcludeDialog = false;
+        _selectedPIP = null;
+    }
+
+    private async Task ConfirmConclude()
+    {
+        if (_selectedPIP == null) return;
+        _isProcessing = true;
+        try
+        {
+            var dto = new ConcludePIPDto
+            {
+                IsSuccessful = _concludeSuccessful,
+                Notes = string.IsNullOrWhiteSpace(_concludeNotes) ? null : _concludeNotes
+            };
+            var result = await PIPApiClient.ConcludeAsync(_selectedPIP.Id, dto);
+            if (result.Success)
+            {
+                Snackbar.Add(UIConstants.PIP.Concluded, Severity.Success);
+                _showConcludeDialog = false;
+                _selectedPIP = null;
+                await LoadDataAsync();
+            }
+            else
+            {
+                Snackbar.Add(result.Message ?? "Failed to conclude PIP.", Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private void OpenExtendDialog(PIPDto pip)
+    {
+        _selectedPIP = pip;
+        _extendNewEndDate = pip.EndDate.ToDateTime(TimeOnly.MinValue).AddDays(30);
+        _extendReason = string.Empty;
+        _showExtendDialog = true;
+    }
+
+    private void CancelExtend()
+    {
+        _showExtendDialog = false;
+        _selectedPIP = null;
+    }
+
+    private async Task ConfirmExtend()
+    {
+        await _extendForm.Validate();
+        if (!_extendFormValid || _selectedPIP == null) return;
+
+        _isProcessing = true;
+        try
+        {
+            var dto = new ExtendPIPDto
+            {
+                NewEndDate = _extendNewEndDate.HasValue ? DateOnly.FromDateTime(_extendNewEndDate.Value) : _selectedPIP.EndDate,
+                Reason = _extendReason
+            };
+            var result = await PIPApiClient.ExtendAsync(_selectedPIP.Id, dto);
+            if (result.Success)
+            {
+                Snackbar.Add(UIConstants.PIP.Extended, Severity.Success);
+                _showExtendDialog = false;
+                _selectedPIP = null;
+                await LoadDataAsync();
+            }
+            else
+            {
+                Snackbar.Add(result.Message ?? "Failed to extend PIP.", Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private async void OpenObjectivesDialog(PIPDto pip)
+    {
+        _selectedPIP = pip;
+        _showObjectivesDialog = true;
+        await LoadObjectivesAsync(pip.Id);
+    }
+
+    private async Task LoadObjectivesAsync(long pipId)
+    {
+        _objectivesLoading = true;
+        StateHasChanged();
+        try
+        {
+            var response = await ObjectiveApiClient.GetByPIPIdAsync(pipId);
+            if (response.Success && response.Data != null)
+            {
+                _objectives = response.Data.ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _objectivesLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void CancelObjectives()
+    {
+        _showObjectivesDialog = false;
+        _selectedPIP = null;
+        _objectives.Clear();
+    }
+
+    private void OpenObjectiveCreateDialog()
+    {
+        _isObjectiveEdit = false;
+        _objTitle = string.Empty;
+        _objSuccessCriteria = string.Empty;
+        _objDescription = string.Empty;
+        _objStatus = string.Empty;
+        _objManagerComment = string.Empty;
+        _showObjectiveDialog = true;
+    }
+
+    private void OpenObjectiveEditDialog(PIPObjectiveDto obj)
+    {
+        _isObjectiveEdit = true;
+        _selectedObjective = obj;
+        _objTitle = obj.Title;
+        _objSuccessCriteria = obj.SuccessCriteria;
+        _objDescription = obj.Description ?? string.Empty;
+        _objStatus = obj.Status;
+        _objManagerComment = obj.ManagerComment ?? string.Empty;
+        _showObjectiveDialog = true;
+    }
+
+    private void CancelObjectiveForm()
+    {
+        _showObjectiveDialog = false;
+        _selectedObjective = null;
+    }
+
+    private async Task ConfirmObjectiveForm()
+    {
+        await _objForm.Validate();
+        if (!_objFormValid) return;
+
+        _isProcessing = true;
+        try
+        {
+            if (_isObjectiveEdit && _selectedObjective != null)
+            {
+                var dto = new UpdatePIPObjectiveDto
+                {
+                    Title = _objTitle,
+                    SuccessCriteria = _objSuccessCriteria,
+                    Description = string.IsNullOrWhiteSpace(_objDescription) ? null : _objDescription,
+                    Status = string.IsNullOrWhiteSpace(_objStatus) ? null : _objStatus,
+                    ManagerComment = string.IsNullOrWhiteSpace(_objManagerComment) ? null : _objManagerComment
+                };
+                var result = await ObjectiveApiClient.UpdateAsync(_selectedObjective.Id, dto);
+                if (result.Success)
+                {
+                    Snackbar.Add(UIConstants.PIP.ObjectiveUpdated, Severity.Success);
+                    _showObjectiveDialog = false;
+                    _selectedObjective = null;
+                    if (_selectedPIP != null) await LoadObjectivesAsync(_selectedPIP.Id);
+                }
+                else
+                {
+                    Snackbar.Add(result.Message ?? UIConstants.Common.UpdateFailed, Severity.Error);
+                }
+            }
+            else if (_selectedPIP != null)
+            {
+                var dto = new CreatePIPObjectiveDto
+                {
+                    PIPId = _selectedPIP.Id,
+                    Title = _objTitle,
+                    SuccessCriteria = _objSuccessCriteria,
+                    Description = string.IsNullOrWhiteSpace(_objDescription) ? null : _objDescription
+                };
+                var result = await ObjectiveApiClient.CreateAsync(dto);
+                if (result.Success)
+                {
+                    Snackbar.Add(UIConstants.PIP.ObjectiveCreated, Severity.Success);
+                    _showObjectiveDialog = false;
+                    await LoadObjectivesAsync(_selectedPIP.Id);
+                }
+                else
+                {
+                    Snackbar.Add(result.Message ?? UIConstants.Common.CreateFailed, Severity.Error);
+                }
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private void OpenObjectiveDeleteConfirm(PIPObjectiveDto obj)
+    {
+        _selectedObjective = obj;
+    }
+
+    private async Task ConfirmObjectiveDelete()
+    {
+        if (_selectedObjective == null) return;
+        _isProcessing = true;
+        try
+        {
+            var result = await ObjectiveApiClient.DeleteAsync(_selectedObjective.Id);
+            if (result.Success)
+            {
+                Snackbar.Add(UIConstants.PIP.ObjectiveDeleted, Severity.Success);
+                _selectedObjective = null;
+                if (_selectedPIP != null) await LoadObjectivesAsync(_selectedPIP.Id);
+            }
+            else
+            {
+                Snackbar.Add(result.Message ?? UIConstants.Common.DeleteFailed, Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private void OpenDeleteConfirm(PIPDto pip)
+    {
+        _selectedPIP = pip;
+        _showDeleteDialog = true;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (_selectedPIP == null) return;
+        _isProcessing = true;
+        try
+        {
+            var result = await PIPApiClient.DeleteAsync(_selectedPIP.Id);
+            if (result.Success)
+            {
+                Snackbar.Add(UIConstants.PIP.Deleted, Severity.Success);
+                _showDeleteDialog = false;
+                _selectedPIP = null;
+                await LoadDataAsync();
+            }
+            else
+            {
+                Snackbar.Add(result.Message ?? UIConstants.Common.DeleteFailed, Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private void CancelAction()
+    {
+        _showDeleteDialog = false;
+        _selectedPIP = null;
+    }
+}

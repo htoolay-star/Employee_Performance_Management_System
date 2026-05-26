@@ -59,6 +59,9 @@ public static class ServiceCollectionExtensions
         services.AddSecureRefitClient<IEvaluationResponseApiClient>(refitSettings, baseUri);
         services.AddSecureRefitClient<IContinuousFeedbackApiClient>(refitSettings, baseUri);
         services.AddSecureRefitClient<IOneOnOneMeetingApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IPIPApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IPIPObjectiveApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IPositionPIPTemplateApiClient>(refitSettings, baseUri);
 
         // Info
         services.AddSecureRefitClient<IEmployeeProfileApiClient>(refitSettings, baseUri);
