@@ -522,6 +522,59 @@
             public const string NoDataFound = "No feedback entries found.";
         }
 
+        public static class OneOnOneMeeting
+        {
+            public const string PageTitle = "One-on-One Meetings";
+            public const string SearchPlaceholder = "Search by title, employee or manager...";
+            public const string AddButton = "Add Meeting";
+            public const string CreateDialogTitle = "Schedule One-on-One Meeting";
+            public const string EditDialogTitle = "Edit Meeting";
+            public const string DeleteDialogTitle = "Delete Meeting";
+            public const string CancelDialogTitle = "Cancel Meeting";
+            public const string CompleteDialogTitle = "Complete Meeting";
+            public const string AcknowledgeDialogTitle = "Acknowledge Meeting";
+
+            public const string TabUpcoming = "Upcoming";
+            public const string TabAll = "All Meetings";
+
+            public const string EmployeeLabel = "Employee";
+            public const string ManagerLabel = "Manager";
+            public const string TitleLabel = "Meeting Title";
+            public const string ScheduledDateLabel = "Scheduled Date";
+            public const string MeetingTypeLabel = "Meeting Type";
+            public const string SummaryLabel = "Summary";
+            public const string DiscussionNotesLabel = "Discussion Notes";
+            public const string PrivateNotesLabel = "Private Notes";
+            public const string ActionItemsLabel = "Action Items";
+
+            public const string ColumnTitle = "Title";
+            public const string ColumnEmployee = "Employee";
+            public const string ColumnManager = "Manager";
+            public const string ColumnScheduledDate = "Scheduled Date";
+            public const string ColumnType = "Type";
+            public const string ColumnStatus = "Status";
+
+            public const string SelectEmployee = "-- Select Employee --";
+            public const string SelectManager = "-- Select Manager --";
+
+            public const string CompleteButton = "Complete Meeting";
+            public const string CancelButton = "Cancel Meeting";
+            public const string AcknowledgeButton = "Acknowledge";
+
+            public const string Created = "Meeting scheduled successfully.";
+            public const string Updated = "Meeting updated successfully.";
+            public const string Deleted = "Meeting deleted successfully.";
+            public const string Completed = "Meeting completed successfully.";
+            public const string Cancelled = "Meeting cancelled successfully.";
+            public const string Acknowledged = "Meeting acknowledged successfully.";
+
+            public const string CancelConfirmFormat = "Are you sure you want to cancel '{0}'?";
+            public const string AcknowledgeConfirmFormat = "Are you sure you want to acknowledge '{0}'?";
+            public const string DeleteConfirmFormat = "Are you sure you want to delete '{0}'?";
+            public const string NoDataFound = "No meetings found.";
+            public const string NoUpcoming = "No upcoming meetings.";
+        }
+
         public static class Employee
         {
             public const string PageTitle = "Employee Directory";

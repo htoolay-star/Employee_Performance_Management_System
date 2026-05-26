@@ -4,5 +4,7 @@ namespace EPMS.Shared.Constants
     {
         public const string Regular = "REGULAR";
         public const string PIPReview = "PIP-REVIEW";
+
+        public static readonly string[] All = [Regular, PIPReview];
     }
 }

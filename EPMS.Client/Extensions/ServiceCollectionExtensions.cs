@@ -58,6 +58,7 @@ public static class ServiceCollectionExtensions
         services.AddSecureRefitClient<IRecycleBinApiClient>(refitSettings, baseUri);
         services.AddSecureRefitClient<IEvaluationResponseApiClient>(refitSettings, baseUri);
         services.AddSecureRefitClient<IContinuousFeedbackApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IOneOnOneMeetingApiClient>(refitSettings, baseUri);
 
         // Info
         services.AddSecureRefitClient<IEmployeeProfileApiClient>(refitSettings, baseUri);
