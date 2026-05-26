@@ -1,14 +1,9 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Hr;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class PositionPIPTemplate : AuditableEntity , ISoftDeletable
+    public class PositionPIPTemplate : AuditableEntity, ISoftDeletable
     {
         private PositionPIPTemplate() { }
 

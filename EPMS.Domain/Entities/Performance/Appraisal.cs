@@ -5,7 +5,7 @@ using EPMS.Shared.Constants;
 
 namespace EPMS.Domain.Entities.Performance;
 
-public class Appraisal : AuditableEntity , ISoftDeletable
+public class Appraisal : AuditableEntity, ISoftDeletable
 {
     private Appraisal() { }
 

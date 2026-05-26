@@ -13,7 +13,7 @@ public interface IPositionService
     Task<SuccessResponse<long>> CreateAsync(CreatePositionDto dto);
     Task<SuccessResponse> UpdateAsync(long id, UpdatePositionDto dto);
     Task<SuccessResponse> RestoreAsync(long id);
-        Task<SuccessResponse> DeleteAsync(long id);
+    Task<SuccessResponse> DeleteAsync(long id);
     Task<SuccessResponse<PaginatedResponse<PositionGridItemDto>>> GetPagedAsync(PositionQueryParameters parameters);
 
     // Permission management methods

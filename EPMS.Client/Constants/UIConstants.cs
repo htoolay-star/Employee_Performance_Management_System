@@ -175,8 +175,8 @@
             public const string MinScoreLabel = "Min Score";
             public const string MaxScoreLabel = "Max Score";
 
-            public const string ColumnMinScore = "Min Score";
-            public const string ColumnMaxScore = "Max Score";
+            public const string ColumnMinScore = "Score Range";
+            public const string ColumnMaxScore = "Levels";
 
             public const string NoDataFound = "Try adjusting your search or add a new rating scale.";
         }
@@ -520,6 +520,174 @@
             public const string Deleted = "Feedback deleted successfully.";
 
             public const string NoDataFound = "No feedback entries found.";
+        }
+
+        public static class OneOnOneMeeting
+        {
+            public const string PageTitle = "One-on-One Meetings";
+            public const string SearchPlaceholder = "Search by title, employee or manager...";
+            public const string AddButton = "Add Meeting";
+            public const string CreateDialogTitle = "Schedule One-on-One Meeting";
+            public const string EditDialogTitle = "Edit Meeting";
+            public const string DeleteDialogTitle = "Delete Meeting";
+            public const string CancelDialogTitle = "Cancel Meeting";
+            public const string CompleteDialogTitle = "Complete Meeting";
+            public const string AcknowledgeDialogTitle = "Acknowledge Meeting";
+
+            public const string TabUpcoming = "Upcoming";
+            public const string TabAll = "All Meetings";
+
+            public const string EmployeeLabel = "Employee";
+            public const string ManagerLabel = "Manager";
+            public const string TitleLabel = "Meeting Title";
+            public const string ScheduledDateLabel = "Scheduled Date";
+            public const string MeetingTypeLabel = "Meeting Type";
+            public const string SummaryLabel = "Summary";
+            public const string DiscussionNotesLabel = "Discussion Notes";
+            public const string PrivateNotesLabel = "Private Notes";
+            public const string ActionItemsLabel = "Action Items";
+
+            public const string ColumnTitle = "Title";
+            public const string ColumnEmployee = "Employee";
+            public const string ColumnManager = "Manager";
+            public const string ColumnScheduledDate = "Scheduled Date";
+            public const string ColumnType = "Type";
+            public const string ColumnStatus = "Status";
+
+            public const string SelectEmployee = "-- Select Employee --";
+            public const string SelectManager = "-- Select Manager --";
+
+            public const string CompleteButton = "Complete Meeting";
+            public const string CancelButton = "Cancel Meeting";
+            public const string AcknowledgeButton = "Acknowledge";
+
+            public const string Created = "Meeting scheduled successfully.";
+            public const string Updated = "Meeting updated successfully.";
+            public const string Deleted = "Meeting deleted successfully.";
+            public const string Completed = "Meeting completed successfully.";
+            public const string Cancelled = "Meeting cancelled successfully.";
+            public const string Acknowledged = "Meeting acknowledged successfully.";
+
+            public const string CancelConfirmFormat = "Are you sure you want to cancel '{0}'?";
+            public const string AcknowledgeConfirmFormat = "Are you sure you want to acknowledge '{0}'?";
+            public const string DeleteConfirmFormat = "Are you sure you want to delete '{0}'?";
+            public const string NoDataFound = "No meetings found.";
+            public const string NoUpcoming = "No upcoming meetings.";
+        }
+
+        public static class Notifications
+        {
+            public const string PageTitle = "Notifications";
+            public const string TabAll = "All";
+            public const string TabUnread = "Unread";
+            public const string ColumnTitle = "Title";
+            public const string ColumnMessage = "Message";
+            public const string ColumnType = "Type";
+            public const string ColumnDate = "Date";
+            public const string ColumnStatus = "Status";
+            public const string MarkAsRead = "Mark as Read";
+            public const string Read = "Read";
+            public const string Unread = "Unread";
+            public const string MarkedAsRead = "Notification marked as read.";
+            public const string Deleted = "Notification deleted.";
+            public const string DeleteConfirmFormat = "Are you sure you want to delete '{0}'?";
+            public const string NoDataFound = "No notifications found.";
+            public const string NoUnread = "No unread notifications.";
+            public const string ViewAll = "View All";
+            public const string DropdownTitle = "Notifications";
+            public const string AgoFormat = "{0} ago";
+        }
+
+        public static class PIP
+        {
+            public const string PageTitle = "Performance Improvement Plans";
+            public const string SearchPlaceholder = "Search by employee or manager...";
+            public const string AddButton = "Create PIP";
+            public const string CreateDialogTitle = "Create PIP";
+            public const string EditDialogTitle = "Edit PIP";
+            public const string DeleteDialogTitle = "Delete PIP";
+            public const string ConcludeDialogTitle = "Conclude PIP";
+            public const string ExtendDialogTitle = "Extend PIP";
+            public const string ObjectivesDialogTitle = "PIP Objectives";
+
+            public const string TabActive = "Active";
+            public const string TabAll = "All PIPs";
+
+            public const string EmployeeLabel = "Employee";
+            public const string ManagerLabel = "Manager";
+            public const string ReasonLabel = "Reason";
+            public const string StartDateLabel = "Start Date";
+            public const string EndDateLabel = "End Date";
+            public const string NewEndDateLabel = "New End Date";
+            public const string ExtendReasonLabel = "Extension Reason";
+            public const string OutcomeLabel = "Outcome";
+            public const string NotesLabel = "Notes";
+            public const string SuccessfulLabel = "Successful";
+            public const string FailedLabel = "Failed";
+
+            public const string ObjectiveTitleLabel = "Title";
+            public const string ObjectiveSuccessCriteriaLabel = "Success Criteria";
+            public const string ObjectiveDescriptionLabel = "Description";
+            public const string ObjectiveStatusLabel = "Status";
+            public const string ObjectiveManagerCommentLabel = "Manager Comment";
+
+            public const string ColumnEmployee = "Employee";
+            public const string ColumnManager = "Manager";
+            public const string ColumnReason = "Reason";
+            public const string ColumnStartDate = "Start Date";
+            public const string ColumnEndDate = "End Date";
+            public const string ColumnStatus = "Status";
+            public const string ColumnCreatedAt = "Created";
+
+            public const string SelectEmployee = "-- Select Employee --";
+            public const string SelectManager = "-- Select Manager --";
+
+            public const string CreateObjectiveButton = "Add Objective";
+            public const string EditObjectiveButton = "Edit Objective";
+            public const string ConcludeButton = "Conclude";
+            public const string ExtendButton = "Extend";
+            public const string ViewButton = "View";
+
+            public const string Created = "PIP created successfully.";
+            public const string Updated = "PIP updated successfully.";
+            public const string Deleted = "PIP deleted successfully.";
+            public const string Concluded = "PIP concluded successfully.";
+            public const string Extended = "PIP extended successfully.";
+            public const string ObjectiveCreated = "Objective added successfully.";
+            public const string ObjectiveUpdated = "Objective updated successfully.";
+            public const string ObjectiveDeleted = "Objective deleted successfully.";
+
+            public const string DeleteConfirmFormat = "Are you sure you want to delete this PIP?";
+            public const string NoDataActive = "No active PIPs.";
+            public const string NoDataFound = "No PIPs found.";
+        }
+
+        public static class PositionPIPTemplate
+        {
+            public const string PageTitle = "Position PIP Templates";
+            public const string AddButton = "Add Template";
+            public const string CreateDialogTitle = "Create PIP Template";
+            public const string EditDialogTitle = "Edit PIP Template";
+            public const string DeleteDialogTitle = "Delete PIP Template";
+
+            public const string PositionLabel = "Position";
+            public const string TitleLabel = "Title";
+            public const string SuccessCriteriaLabel = "Success Criteria";
+            public const string DescriptionLabel = "Description";
+            public const string ActiveLabel = "Active";
+
+            public const string ColumnPosition = "Position";
+            public const string ColumnTitle = "Title";
+            public const string ColumnSuccessCriteria = "Success Criteria";
+            public const string ColumnActive = "Active";
+
+            public const string SelectPosition = "-- Select Position --";
+
+            public const string Created = "PIP template created successfully.";
+            public const string Updated = "PIP template updated successfully.";
+            public const string Deleted = "PIP template deleted successfully.";
+
+            public const string NoDataFound = "Select a position to see PIP templates.";
         }
 
         public static class Employee

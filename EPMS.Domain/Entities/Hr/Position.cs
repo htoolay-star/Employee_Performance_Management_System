@@ -1,15 +1,10 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Auth;
 using EPMS.Domain.Entities.Performance;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Hr
 {
-    public class Position : AuditableEntity , ISoftDeletable
+    public class Position : AuditableEntity, ISoftDeletable
     {
         private Position() { }
 

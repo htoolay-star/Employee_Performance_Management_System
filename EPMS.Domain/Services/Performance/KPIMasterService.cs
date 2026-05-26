@@ -6,16 +6,15 @@ using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.PerformanceDTOs.KPIMasterDTOs;
 using EPMS.Shared.Enums;
-using static EPMS.Shared.Constants.ServiceResponseMessages;
-
 using Mapster;
+using static EPMS.Shared.Constants.ServiceResponseMessages;
 namespace EPMS.Domain.Services.Performance
 {
     public class KPIMasterService : IKPIMasterService
     {
         private readonly IUnitOfWork _uow;
         private readonly ICacheService _cacheService;
-        
+
         public KPIMasterService(IUnitOfWork uow, ICacheService cacheService)
         {
             _uow = uow;
@@ -86,22 +85,22 @@ namespace EPMS.Domain.Services.Performance
                 return SuccessResponse.Fail(string.Format(KPIMasterMsg.DuplicateCode, dto.Code), ErrorType.Conflict);
             }
 
-        kpi.Update(dto.CategoryId, dto.Code, dto.Name, dto.Description, dto.ScoringDirection);
+            kpi.Update(dto.CategoryId, dto.Code, dto.Name, dto.Description, dto.ScoringDirection);
 
-        if (dto.IsActive.HasValue)
-        {
-            if (dto.IsActive.Value) kpi.Reactivate();
-            else kpi.Deactivate();
+            if (dto.IsActive.HasValue)
+            {
+                if (dto.IsActive.Value) kpi.Reactivate();
+                else kpi.Deactivate();
+            }
+
+            _uow.Perf.KPIMasters.Update(kpi);
+            await _uow.CompleteAsync();
+            await _cacheService.RemoveAsync(CacheKeys.Performance.KPIMasterLookups());
+
+            return SuccessResponse.Ok(KPIMasterMsg.Updated);
         }
 
-        _uow.Perf.KPIMasters.Update(kpi);
-        await _uow.CompleteAsync();
-        await _cacheService.RemoveAsync(CacheKeys.Performance.KPIMasterLookups());
-
-        return SuccessResponse.Ok(KPIMasterMsg.Updated);
-    }
-
-    public async Task<SuccessResponse> DeleteAsync(long id)
+        public async Task<SuccessResponse> DeleteAsync(long id)
         {
             var kpi = await _uow.Perf.KPIMasters.GetByIdAsync(id);
 

@@ -97,7 +97,7 @@ public class EmployeeProfileService : IEmployeeProfileService
         }
 
         var profile = new EmployeeProfile(dto.UserId, dto.StaffNo, dto.StaffName, dto.EmailAddress);
-        
+
         // Set additional properties using entity methods
         if (!string.IsNullOrEmpty(dto.OtherName)) profile.UpdateOtherName(dto.OtherName);
         if (!string.IsNullOrEmpty(dto.NRCNo)) profile.UpdateNRCNo(dto.NRCNo);
@@ -127,7 +127,7 @@ public class EmployeeProfileService : IEmployeeProfileService
             profile.LinkUser(newUser.Id);
             await _uow.CompleteAsync();
         }
-        
+
         return SuccessResponse<long>.Ok(profile.Id, EmployeeProfileMsg.Created);
     }
 
@@ -222,9 +222,9 @@ public class EmployeeProfileService : IEmployeeProfileService
 
         profile.UpdateStaffName(dto.StaffName);
         if (dto.OtherName != null) profile.UpdateOtherName(dto.OtherName);
-        
+
         profile.UpdateDemographics(dto.Gender, dto.DateOfBirth, dto.Nationality);
-        
+
         // Check for duplicate EmailAddress (excluding current profile)
         if (dto.EmailAddress != null && dto.EmailAddress != profile.EmailAddress)
         {
@@ -234,7 +234,7 @@ public class EmployeeProfileService : IEmployeeProfileService
         }
 
         if (dto.EmailAddress != null) profile.UpdateEmail(dto.EmailAddress);
-        
+
         // Sync email change to linked User account
         if (dto.EmailAddress != null && profile.UserId != null)
         {
@@ -251,10 +251,10 @@ public class EmployeeProfileService : IEmployeeProfileService
 
         if (!string.IsNullOrEmpty(dto.WorkPermitNo))
             profile.UpdateWorkPermit(dto.WorkPermitNo, dto.WorkPermitValidDate, dto.WorkPermitExpireDate);
-        
+
         if (!string.IsNullOrEmpty(dto.ProfilePictureUrl))
             profile.UpdateProfilePicture(dto.ProfilePictureUrl, dto.ProfileThumbnailUrl);
-        
+
         if (!string.IsNullOrEmpty(dto.AdditionalData))
             profile.UpdateAdditionalData(dto.AdditionalData);
 
@@ -482,7 +482,7 @@ public class EmployeeProfileService : IEmployeeProfileService
             try
             {
                 var rowErrors = new List<string>();
-            var rowNum = rows.IndexOf(row) + 1;
+                var rowNum = rows.IndexOf(row) + 1;
 
                 if (string.IsNullOrWhiteSpace(row.StaffNo))
                 { rowErrors.Add($"Row {rowNum}: StaffNo is required."); }

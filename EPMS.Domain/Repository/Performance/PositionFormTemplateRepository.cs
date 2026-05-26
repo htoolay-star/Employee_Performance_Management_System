@@ -29,9 +29,9 @@ public class PositionFormTemplateRepository : GenericRepository<PositionFormTemp
 
     public async Task<bool> ExistsAsync(long positionId, long formTemplateId)
     {
-        return await _dbSet.AnyAsync(p => 
-            p.PositionId == positionId && 
-            p.FormTemplateId == formTemplateId && 
+        return await _dbSet.AnyAsync(p =>
+            p.PositionId == positionId &&
+            p.FormTemplateId == formTemplateId &&
             !p.IsDeleted);
     }
 }

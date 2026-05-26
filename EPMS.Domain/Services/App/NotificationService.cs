@@ -4,15 +4,14 @@ using EPMS.Domain.Interface.IService.App;
 using EPMS.Shared.DTOs.AppDTOs;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.Enums;
-using static EPMS.Shared.Constants.ServiceResponseMessages;
-
 using Mapster;
+using static EPMS.Shared.Constants.ServiceResponseMessages;
 namespace EPMS.Domain.Services.App;
 
 public class NotificationService : INotificationService
 {
     private readonly IUnitOfWork _uow;
-        private readonly TimeProvider _timeProvider;
+    private readonly TimeProvider _timeProvider;
 
     public NotificationService(IUnitOfWork uow, TimeProvider timeProvider)
     {

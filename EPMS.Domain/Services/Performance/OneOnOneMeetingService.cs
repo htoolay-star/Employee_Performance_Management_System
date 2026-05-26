@@ -4,16 +4,15 @@ using EPMS.Domain.Interface.IService.Performance;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.PerformanceDTOs.OneOnOneMeetingDTOs;
 using EPMS.Shared.Enums;
-using static EPMS.Shared.Constants.ServiceResponseMessages;
-using static EPMS.Shared.Constants.MeetingStatuses;
-
 using Mapster;
+using static EPMS.Shared.Constants.MeetingStatuses;
+using static EPMS.Shared.Constants.ServiceResponseMessages;
 namespace EPMS.Domain.Services.Performance
 {
     public class OneOnOneMeetingService : IOneOnOneMeetingService
     {
         private readonly IUnitOfWork _uow;
-                private readonly TimeProvider _timeProvider;
+        private readonly TimeProvider _timeProvider;
 
         public OneOnOneMeetingService(IUnitOfWork uow, TimeProvider timeProvider)
         {

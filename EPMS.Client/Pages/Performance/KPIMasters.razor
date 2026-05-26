@@ -8,6 +8,7 @@
    - After every CUD operation, re-calls LoadAllAsync() to refresh the list.
    ═══════════════════════════════════════════════════════════════════════════ *@
 @using EPMS.Client.Constants
+@using EPMS.Client.Services.Auth
 @using EPMS.Client.Services.Performance
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.PerformanceDTOs.KPIMasterDTOs
@@ -16,6 +17,7 @@
 @using static EPMS.Shared.Constants.ServiceResponseMessages
 
 @inject IKPIMasterApiClient KPIMasterApiClient
+@inject LookupStateService LookupState
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
@@ -230,6 +232,7 @@
             if (response.Success)
             {
                 Snackbar.Add(KPIMasterMsg.Deleted, Severity.Success);
+                LookupState.ClearKPIMasterCache();
                 await LoadAllAsync();
             }
             else

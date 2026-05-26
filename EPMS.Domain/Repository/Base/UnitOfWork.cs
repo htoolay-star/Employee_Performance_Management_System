@@ -6,11 +6,6 @@ using EPMS.Domain.Interface.Irepo.Hr;
 using EPMS.Domain.Interface.Irepo.Info;
 using EPMS.Domain.Interface.Irepo.Performance;
 using EPMS.Domain.Interface.Irepo.Shared;
-using EPMS.Domain.Repository.Auth;
-using EPMS.Domain.Repository.Hr;
-using EPMS.Domain.Repository.Info;
-using EPMS.Domain.Repository.Performance;
-using EPMS.Domain.Repository.Shared;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace EPMS.Domain.Repository.Base

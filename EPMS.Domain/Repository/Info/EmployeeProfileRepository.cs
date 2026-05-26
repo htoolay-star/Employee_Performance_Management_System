@@ -41,6 +41,7 @@ namespace EPMS.Domain.Repository.Info
                     StaffNo = p.StaffNo,
                     StaffName = p.StaffName,
                     PositionId = p.Employment != null ? p.Employment.PositionId : null,
+                    IsManager = _context.EmployeeEmployments.Any(e => e.DirectManagerId == p.Id),
                 })
                 .ToListAsync();
         }

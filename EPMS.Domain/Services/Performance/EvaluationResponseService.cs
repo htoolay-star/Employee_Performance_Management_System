@@ -1,15 +1,14 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Performance;
-using EPMS.Shared.Constants;
-using EPMS.Shared.DTOs.FormDTOs;
-using EPMS.Shared.DTOs.Common;
-using EPMS.Shared.Enums;
-using static EPMS.Shared.Constants.ServiceResponseMessages;
-using EPMS.Domain.Interface.IService.Performance;
 using EPMS.Domain.Interface.IService.App;
-using System.Linq.Expressions;
-
+using EPMS.Domain.Interface.IService.Performance;
+using EPMS.Shared.Constants;
+using EPMS.Shared.DTOs.Common;
+using EPMS.Shared.DTOs.FormDTOs;
+using EPMS.Shared.Enums;
 using Mapster;
+using System.Linq.Expressions;
+using static EPMS.Shared.Constants.ServiceResponseMessages;
 namespace EPMS.Domain.Services.Performance;
 
 public class EvaluationResponseService : IEvaluationResponseService
@@ -497,31 +496,31 @@ public class EvaluationResponseService : IEvaluationResponseService
             .GroupBy(r => new { r.AppraisalId, r.EvaluatorRole })
             .ToList();
 
-            var dtos = groups.Select(g =>
+        var dtos = groups.Select(g =>
+        {
+            var first = g.First();
+            var appr = first.Appraisal;
+            return new MyEvaluationFormDto
             {
-                var first = g.First();
-                var appr = first.Appraisal;
-                return new MyEvaluationFormDto
-                {
-                    AppraisalId = g.Key.AppraisalId,
-                    EmployeeId = appr.EmployeeId ?? 0,
-                    EmployeeName = appr.Employee?.StaffName,
-                    PositionName = appr.Employee?.Employment?.Position?.Name,
-                    DepartmentName = appr.Employee?.Employment?.Department?.Name,
-                    CycleId = appr.CycleId,
-                    CycleName = appr.Cycle?.Name,
-                    ManagerName = appr.Employee?.Employment?.DirectManager?.StaffName ?? "Admin Team",
-                    Role = g.Key.EvaluatorRole,
-                    IsSubmitted = g.All(r => r.SubmittedAt.HasValue),
-                    IsLocked = appr.IsLocked,
-                    KpiStatus = appr.KpiStatus ?? AppraisalStatuses.Kpi.Draft,
-                    SelfStatus = appr.SelfStatus ?? AppraisalStatuses.Self.Draft,
-                    ManagerStatus = appr.ManagerStatus ?? AppraisalStatuses.Manager.Draft,
-                    PeerStatus = appr.PeerStatus ?? AppraisalStatuses.Peer.Draft,
-                    SubordinateStatus = appr.SubordinateStatus ?? AppraisalStatuses.Subordinate.Draft,
-                    CommitteeStatus = appr.CommitteeStatus ?? AppraisalStatuses.Committee.Draft
-                };
-            }).OrderBy(d => d.EmployeeName).ThenBy(d => d.Role).ToList();
+                AppraisalId = g.Key.AppraisalId,
+                EmployeeId = appr.EmployeeId ?? 0,
+                EmployeeName = appr.Employee?.StaffName,
+                PositionName = appr.Employee?.Employment?.Position?.Name,
+                DepartmentName = appr.Employee?.Employment?.Department?.Name,
+                CycleId = appr.CycleId,
+                CycleName = appr.Cycle?.Name,
+                ManagerName = appr.Employee?.Employment?.DirectManager?.StaffName ?? "Admin Team",
+                Role = g.Key.EvaluatorRole,
+                IsSubmitted = g.All(r => r.SubmittedAt.HasValue),
+                IsLocked = appr.IsLocked,
+                KpiStatus = appr.KpiStatus ?? AppraisalStatuses.Kpi.Draft,
+                SelfStatus = appr.SelfStatus ?? AppraisalStatuses.Self.Draft,
+                ManagerStatus = appr.ManagerStatus ?? AppraisalStatuses.Manager.Draft,
+                PeerStatus = appr.PeerStatus ?? AppraisalStatuses.Peer.Draft,
+                SubordinateStatus = appr.SubordinateStatus ?? AppraisalStatuses.Subordinate.Draft,
+                CommitteeStatus = appr.CommitteeStatus ?? AppraisalStatuses.Committee.Draft
+            };
+        }).OrderBy(d => d.EmployeeName).ThenBy(d => d.Role).ToList();
 
         return SuccessResponse<IEnumerable<MyEvaluationFormDto>>.Ok(dtos, EvaluationResponseMsg.RetrievedAll);
     }

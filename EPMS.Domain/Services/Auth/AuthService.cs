@@ -11,7 +11,6 @@ using EPMS.Shared.Enums;
 using EPMS.Shared.Models;
 using Microsoft.Extensions.Options;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
-using Microsoft.EntityFrameworkCore; // for ToListAsync in EmailService if needed
 
 namespace EPMS.Domain.Services.Auth
 {

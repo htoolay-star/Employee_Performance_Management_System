@@ -1,7 +1,6 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Auth;
 using EPMS.Shared.Constants;
-using System;
 
 namespace EPMS.Domain.Entities.Shared
 {

@@ -37,15 +37,15 @@
                     <MudTextField Value="@_model.Label" Label="@UIConstants.RatingScale.LabelLabel" Variant="Variant.Outlined" ReadOnly="true" />
                 }
 
-                <MudTextField @bind-Value="_model.MaxScore"
-                             Label="@UIConstants.RatingScale.MaxScoreLabel"
-                             For="@(() => _model.MaxScore)"
-                             Variant="Variant.Outlined"
-                             InputType="InputType.Number" />
-
                 <MudTextField @bind-Value="_model.MinScore"
                              Label="@UIConstants.RatingScale.MinScoreLabel"
                              For="@(() => _model.MinScore)"
+                             Variant="Variant.Outlined"
+                             InputType="InputType.Number" />
+
+                <MudTextField @bind-Value="_model.MaxScore"
+                             Label="@UIConstants.RatingScale.MaxScoreLabel"
+                             For="@(() => _model.MaxScore)"
                              Variant="Variant.Outlined"
                              InputType="InputType.Number" />
 

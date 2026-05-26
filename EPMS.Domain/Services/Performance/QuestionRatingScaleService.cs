@@ -6,16 +6,15 @@ using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.PerformanceDTOs.QuestionRatingScaleDTOs;
 using EPMS.Shared.Enums;
-using static EPMS.Shared.Constants.ServiceResponseMessages;
-
 using Mapster;
+using static EPMS.Shared.Constants.ServiceResponseMessages;
 namespace EPMS.Domain.Services.Performance;
 
 public class QuestionRatingScaleService : IQuestionRatingScaleService
 {
     private readonly IUnitOfWork _uow;
     private readonly ICacheService _cacheService;
-    
+
     public QuestionRatingScaleService(IUnitOfWork uow, ICacheService cacheService)
     {
         _uow = uow;

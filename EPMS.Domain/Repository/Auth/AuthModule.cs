@@ -1,26 +1,18 @@
-﻿using EPMS.Domain.Data;
-using EPMS.Domain.Interface.Irepo.App;
-using EPMS.Domain.Interface.Irepo.Auth;
-using EPMS.Domain.Repository.App;
+﻿using EPMS.Domain.Interface.Irepo.Auth;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EPMS.Domain.Repository.Auth
 {
     public class AuthModule(IServiceProvider serviceProvider) : IAuthModule
     {
-    private IUserRepository? _users;
-    private IUserRefreshTokenRepository? _usersRefreshToken;
-    private IRoleRepository? _roles;
-    private IPermissionRepository? _permissions;
-    private IPositionPermissionRepository? _positionPermissions;
-    private IPositionRoleRepository? _positionRoles;
-    private IPasswordResetOtpRepository? _passwordResetOtps;
-    private IPasswordResetRequestRepository? _passwordResetRequests;
+        private IUserRepository? _users;
+        private IUserRefreshTokenRepository? _usersRefreshToken;
+        private IRoleRepository? _roles;
+        private IPermissionRepository? _permissions;
+        private IPositionPermissionRepository? _positionPermissions;
+        private IPositionRoleRepository? _positionRoles;
+        private IPasswordResetOtpRepository? _passwordResetOtps;
+        private IPasswordResetRequestRepository? _passwordResetRequests;
 
         public IUserRepository Users =>
         _users ??= serviceProvider.GetRequiredService<IUserRepository>();

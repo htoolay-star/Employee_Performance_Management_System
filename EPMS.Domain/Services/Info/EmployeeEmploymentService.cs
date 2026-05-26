@@ -77,10 +77,10 @@ public class EmployeeEmploymentService : IEmployeeEmploymentService
             return SuccessResponse<long>.Fail(PositionMsg.NotFound(dto.PositionId), ErrorType.NotFound);
 
         var employment = new EmployeeEmployment(
-            dto.EmployeeId, 
-            dto.DepartmentId, 
-            dto.ParentDepartmentId, 
-            dto.PositionId, 
+            dto.EmployeeId,
+            dto.DepartmentId,
+            dto.ParentDepartmentId,
+            dto.PositionId,
             dto.EmploymentStatus);
         employment.UpdateDetails(
             dto.DepartmentId, dto.ParentDepartmentId, dto.PositionId,

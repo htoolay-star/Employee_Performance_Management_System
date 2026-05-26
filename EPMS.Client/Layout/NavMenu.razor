@@ -10,6 +10,9 @@
 <div style="display: flex; flex-direction: column; height: 100%;">
 <MudNavMenu>
 
+    <MudTooltip Text="Notifications" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+        <MudNavLink Href="notifications" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Notifications">Notifications</MudNavLink>
+    </MudTooltip>
     @if (_isLoading)
     {
         <div style="padding: 16px;">
@@ -181,6 +184,15 @@
     {
     <MudTooltip Text="Continuous Feedback" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
         <MudNavLink Href="performance/continuous-feedbacks" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Feedback">Continuous Feedback</MudNavLink>
+    </MudTooltip>
+    <MudTooltip Text="One-on-One Meetings" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+        <MudNavLink Href="performance/one-on-one-meetings" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PersonSearch">One-on-One Meetings</MudNavLink>
+    </MudTooltip>
+    <MudTooltip Text="Performance Improvement Plans" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+        <MudNavLink Href="performance/pips" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.TrendingUp">PIPs</MudNavLink>
+    </MudTooltip>
+    <MudTooltip Text="Position PIP Templates" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+        <MudNavLink Href="performance/position-pip-templates" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Assignment">Position PIP Templates</MudNavLink>
     </MudTooltip>
     }
     @if (_isAdmin || _isManager)

@@ -34,7 +34,7 @@ namespace EPMS.Client.Services.Auth
 
             if (!string.IsNullOrEmpty(token))
             {
-                identity = new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt");
+                identity = new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt", "unique_name", ClaimTypes.Role);
                 _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             }
 
@@ -46,7 +46,7 @@ namespace EPMS.Client.Services.Auth
         public void MarkUserAsAuthenticated(string token)
         {
             _navCache.Invalidate();
-            var identity = new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt");
+            var identity = new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt", "unique_name", ClaimTypes.Role);
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             _cachedPrincipal = new ClaimsPrincipal(identity);
             NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_cachedPrincipal)));

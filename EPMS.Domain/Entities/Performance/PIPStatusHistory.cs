@@ -1,6 +1,5 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Auth;
-using System;
 
 namespace EPMS.Domain.Entities.Performance
 {

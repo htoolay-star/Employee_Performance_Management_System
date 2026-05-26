@@ -5,9 +5,8 @@ using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.PerformanceDTOs.AppraisalCycleDTOs;
 using EPMS.Shared.Enums;
-using static EPMS.Shared.Constants.ServiceResponseMessages;
-
 using Mapster;
+using static EPMS.Shared.Constants.ServiceResponseMessages;
 namespace EPMS.Domain.Services.Performance;
 
 public class AppraisalCycleService : IAppraisalCycleService
@@ -351,18 +350,18 @@ public class AppraisalCycleService : IAppraisalCycleService
     }
 
     public async Task<SuccessResponse> RestoreAsync(long id)
-        {
-            var entity = await _uow.Perf.AppraisalCycles.GetByIdAsync(id);
-            if (entity == null)
-                return SuccessResponse.Fail(AppraisalCycleMsg.NotFound(id), ErrorType.NotFound);
-            if (!entity.IsDeleted)
-                return SuccessResponse.Fail("Item is not deleted.", ErrorType.Validation);
-            entity.IsDeleted = false;
-            entity.DeletedAt = null;
-            entity.DeletedBy = null;
-            _uow.Perf.AppraisalCycles.Update(entity);
-            await _uow.CompleteAsync();
-            return SuccessResponse.Ok(AppraisalCycleMsg.Updated);
-        }
+    {
+        var entity = await _uow.Perf.AppraisalCycles.GetByIdAsync(id);
+        if (entity == null)
+            return SuccessResponse.Fail(AppraisalCycleMsg.NotFound(id), ErrorType.NotFound);
+        if (!entity.IsDeleted)
+            return SuccessResponse.Fail("Item is not deleted.", ErrorType.Validation);
+        entity.IsDeleted = false;
+        entity.DeletedAt = null;
+        entity.DeletedBy = null;
+        _uow.Perf.AppraisalCycles.Update(entity);
+        await _uow.CompleteAsync();
+        return SuccessResponse.Ok(AppraisalCycleMsg.Updated);
+    }
 
 }

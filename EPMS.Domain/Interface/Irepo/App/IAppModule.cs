@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace EPMS.Domain.Interface.Irepo.App
+﻿namespace EPMS.Domain.Interface.Irepo.App
 {
-public interface IAppModule
-{
-    ISystemSettingsRepository SystemSettings { get; }
-    INotificationRepository Notifications { get; }
-}
+    public interface IAppModule
+    {
+        ISystemSettingsRepository SystemSettings { get; }
+        INotificationRepository Notifications { get; }
+    }
 }
