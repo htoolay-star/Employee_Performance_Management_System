@@ -44,6 +44,12 @@
                 <MudNavLink Href="hr/employees" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.People">Employee Directory</MudNavLink>
             </MudTooltip>
         }
+                    @if (_isAdmin)
+        {
+            <MudTooltip Text="Categories" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+                <MudNavLink Href="hr/categories" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Category">Categories</MudNavLink>
+            </MudTooltip>
+        }
     </MudNavGroup>
         </MudTooltip>
     }
