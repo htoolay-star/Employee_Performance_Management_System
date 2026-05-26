@@ -89,7 +89,7 @@ namespace EPMS.Api.Controllers.Auth
             return HandleResult(SuccessResponse<List<string>>.Ok(permissions, "Permissions retrieved."));
         }
 
-        [Authorize]
+        [AllowAnonymous]
         [HttpPost("logout")]
         public async Task<ActionResult<SuccessResponse>> Logout([FromBody] LogoutRequest request)
         {
@@ -172,6 +172,14 @@ namespace EPMS.Api.Controllers.Auth
 
             var response = await _authService.ApproveResetRequestAsync(id, adminId, request);
             return HandleResult(response);
+        }
+
+        [Authorize]
+        [HttpGet("is-manager")]
+        public async Task<ActionResult<SuccessResponse<bool>>> IsManager()
+        {
+            var result = await _authService.IsManagerAsync();
+            return HandleResult(result);
         }
 
         [Authorize(Roles = $"{RoleConstants.Admin},{RoleConstants.SystemAdmin}")]

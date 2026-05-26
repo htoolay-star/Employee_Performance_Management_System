@@ -36,7 +36,17 @@
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
     <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.Department.PageTitle</MudText>
 
-    @if (_error)
+    @if (!_initialized)
+    {
+        <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+            <MudStack Spacing="3">
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+            </MudStack>
+        </MudPaper>
+    }
+    else if (_error)
     {
         <MudAlert Severity="Severity.Warning" Class="mt-4">@_errorMessage</MudAlert>
     }
@@ -334,6 +344,7 @@
     private bool _canEdit;
     private bool _canDelete;
     private bool _canViewEntityKpi;
+    private bool _initialized;
     private bool _error;
     private string _errorMessage = string.Empty;
 
@@ -363,25 +374,32 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _canView = await PermService.HasPermissionAsync("DEPARTMENTS.VIEW");
-        _canCreate = await PermService.HasPermissionAsync("DEPARTMENTS.CREATE");
-        _canEdit = await PermService.HasPermissionAsync("DEPARTMENTS.EDIT");
-        _canDelete = await PermService.HasPermissionAsync("DEPARTMENTS.DELETE");
-
-        _teamCanCreate = await PermService.HasPermissionAsync("TEAMS.CREATE");
-        _teamCanEdit = await PermService.HasPermissionAsync("TEAMS.EDIT");
-        _teamCanDelete = await PermService.HasPermissionAsync("TEAMS.DELETE");
-
-        _canViewEntityKpi = await PermService.HasPermissionAsync("ENTITYKPI.VIEW");
-
-        if (!_canView)
+        try
         {
-            _error = true;
-            _errorMessage = "You do not have permission to view departments.";
-            return;
-        }
+            _canView = await PermService.HasPermissionAsync("DEPARTMENTS.VIEW");
+            _canCreate = await PermService.HasPermissionAsync("DEPARTMENTS.CREATE");
+            _canEdit = await PermService.HasPermissionAsync("DEPARTMENTS.EDIT");
+            _canDelete = await PermService.HasPermissionAsync("DEPARTMENTS.DELETE");
 
-        await LoadDepartmentsAsync();
+            _teamCanCreate = await PermService.HasPermissionAsync("TEAMS.CREATE");
+            _teamCanEdit = await PermService.HasPermissionAsync("TEAMS.EDIT");
+            _teamCanDelete = await PermService.HasPermissionAsync("TEAMS.DELETE");
+
+            _canViewEntityKpi = await PermService.HasPermissionAsync("ENTITYKPI.VIEW");
+
+            if (!_canView)
+            {
+                _error = true;
+                _errorMessage = "You do not have permission to view departments.";
+                return;
+            }
+
+            await LoadDepartmentsAsync();
+        }
+        finally
+        {
+            _initialized = true;
+        }
     }
 
     private async Task LoadDepartmentsAsync()

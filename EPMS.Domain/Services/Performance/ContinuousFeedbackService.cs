@@ -1,11 +1,12 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Performance;
+using EPMS.Domain.Interface.IService.App;
 using EPMS.Domain.Interface.IService.Performance;
+using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.PerformanceDTOs.ContinuousFeedbackDTOs;
 using EPMS.Shared.Enums;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
-using static EPMS.Shared.Constants.FeedbackVisibility;
 
 using Mapster;
 namespace EPMS.Domain.Services.Performance
@@ -13,17 +14,37 @@ namespace EPMS.Domain.Services.Performance
     public class ContinuousFeedbackService : IContinuousFeedbackService
     {
         private readonly IUnitOfWork _uow;
-                private readonly TimeProvider _timeProvider;
+        private readonly TimeProvider _timeProvider;
+        private readonly ICurrentEmployeeContextService _currentEmployee;
 
-        public ContinuousFeedbackService(IUnitOfWork uow, TimeProvider timeProvider)
+        public ContinuousFeedbackService(IUnitOfWork uow, TimeProvider timeProvider, ICurrentEmployeeContextService currentEmployee)
         {
             _uow = uow;
             _timeProvider = timeProvider;
+            _currentEmployee = currentEmployee;
         }
 
         public async Task<SuccessResponse<IEnumerable<ContinuousFeedbackDto>>> GetAllAsync()
         {
-            var feedbacks = await _uow.Perf.ContinuousFeedbacks.GetAllAsync();
+            var viewerEmployeeId = await _currentEmployee.GetEmployeeIdAsync();
+            var isAdmin = _currentEmployee.IsAdmin;
+
+            var feedbacks = await _uow.Perf.ContinuousFeedbacks.GetAllWithIncludesAsync();
+
+            if (!isAdmin && viewerEmployeeId.HasValue)
+            {
+                var directReports = await _uow.Info.EmployeeEmployments
+                    .FindAllAsync(e => e.DirectManagerId == viewerEmployeeId.Value && !e.IsDeleted);
+                var directReportIds = directReports.Select(e => e.EmployeeId).ToHashSet();
+
+                feedbacks = feedbacks.Where(f =>
+                    f.GivenById == viewerEmployeeId
+                    || (f.Visibility == FeedbackVisibility.Public && f.EmployeeId == viewerEmployeeId)
+                    || (f.Visibility == FeedbackVisibility.ManagerOnly && directReportIds.Contains(f.EmployeeId))
+                    || (f.Visibility == FeedbackVisibility.AdminOnly && directReportIds.Contains(f.EmployeeId))
+                );
+            }
+
             var dtos = feedbacks.Adapt<IEnumerable<ContinuousFeedbackDto>>();
             return SuccessResponse<IEnumerable<ContinuousFeedbackDto>>.Ok(dtos, ContinuousFeedbackMsg.RetrievedAll);
         }
@@ -55,6 +76,29 @@ namespace EPMS.Domain.Services.Performance
 
         public async Task<SuccessResponse<long>> CreateAsync(CreateContinuousFeedbackDto dto)
         {
+            var isAdmin = _currentEmployee.IsAdmin;
+            var viewerEmployeeId = await _currentEmployee.GetEmployeeIdAsync();
+
+            if (!viewerEmployeeId.HasValue)
+                return SuccessResponse<long>.Fail("User identity not found.", ErrorType.Unauthorized);
+
+            if (isAdmin)
+            {
+                if (dto.Visibility == FeedbackVisibility.AdminOnly)
+                    return SuccessResponse<long>.Fail("Admins cannot set Admin Only visibility.", ErrorType.Validation);
+            }
+            else
+            {
+                var hasDirectReports = await _uow.Info.EmployeeEmployments
+                    .AnyAsync(e => e.DirectManagerId == viewerEmployeeId.Value && !e.IsDeleted);
+
+                if (!hasDirectReports)
+                    return SuccessResponse<long>.Fail("Only admins and managers can create feedback.", ErrorType.Validation);
+
+                if (dto.Visibility == FeedbackVisibility.ManagerOnly)
+                    return SuccessResponse<long>.Fail("Only admins can set Manager Only visibility.", ErrorType.Validation);
+            }
+
             var feedback = new ContinuousFeedback(
                 dto.EmployeeId,
                 dto.GivenById,

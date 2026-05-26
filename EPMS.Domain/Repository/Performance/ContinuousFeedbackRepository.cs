@@ -27,5 +27,15 @@ namespace EPMS.Domain.Repository.Performance
                 .OrderByDescending(x => x.FeedbackDate)
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<ContinuousFeedback>> GetAllWithIncludesAsync()
+        {
+            return await _dbSet
+                .Where(x => !x.IsDeleted)
+                .Include(x => x.Employee)
+                .Include(x => x.GivenBy)
+                .OrderByDescending(x => x.FeedbackDate)
+                .ToListAsync();
+        }
     }
 }

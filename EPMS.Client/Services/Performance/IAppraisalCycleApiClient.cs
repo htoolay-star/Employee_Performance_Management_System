@@ -23,7 +23,4 @@ public interface IAppraisalCycleApiClient
 
     [Delete("/api/performance/appraisal-cycles/{id}")]
     Task<SuccessResponse> DeleteAsync(long id);
-
-    [Post("/api/performance/appraisal-cycles/{id}/lock")]
-    Task<SuccessResponse> LockAsync(long id);
 }

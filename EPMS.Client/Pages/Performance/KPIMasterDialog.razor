@@ -180,6 +180,10 @@
 
             await _form!.Validate();
         }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
         finally
         {
             _saving = false;

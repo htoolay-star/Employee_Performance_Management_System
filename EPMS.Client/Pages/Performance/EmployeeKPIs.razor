@@ -19,7 +19,19 @@
 
 <PageTitle>@UIConstants.EmployeeKPI.PageTitle</PageTitle>
 
-@if (_error)
+@if (!_initialized)
+{
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+        <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+            <MudStack Spacing="3">
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+            </MudStack>
+        </MudPaper>
+    </MudContainer>
+}
+else if (_error)
 {
     <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
         <MudAlert Severity="Severity.Error">@_errorMessage</MudAlert>
@@ -154,6 +166,7 @@ else
     private Dictionary<long, int> _rowNumbers = new();
     private bool _loading = true;
 
+    private bool _initialized;
     private bool _error;
     private string _errorMessage = string.Empty;
     private bool _canView;
@@ -178,23 +191,30 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        _canView = await PermService.HasPermissionAsync("EMPLOYEEKPI.VIEW");
-        if (!_canView)
+        try
         {
-            _error = true;
-            _errorMessage = "You do not have permission to view Employee KPIs.";
-            return;
+            _canView = await PermService.HasPermissionAsync("EMPLOYEEKPI.VIEW");
+            if (!_canView)
+            {
+                _error = true;
+                _errorMessage = "You do not have permission to view Employee KPIs.";
+                return;
+            }
+
+            _canCreate = await PermService.HasPermissionAsync("EMPLOYEEKPI.CREATE");
+            _canEdit = await PermService.HasPermissionAsync("EMPLOYEEKPI.EDIT");
+            _canDelete = await PermService.HasPermissionAsync("EMPLOYEEKPI.DELETE");
+
+            _employees = await LookupState.GetEmployeesAsync();
+            var cycleResponse = await AppraisalCycleApiClient.GetActiveAsync();
+            if (cycleResponse.Success && cycleResponse.Data != null)
+                _cycles = cycleResponse.Data.ToList();
+            await LoadDataAsync();
         }
-
-        _canCreate = await PermService.HasPermissionAsync("EMPLOYEEKPI.CREATE");
-        _canEdit = await PermService.HasPermissionAsync("EMPLOYEEKPI.EDIT");
-        _canDelete = await PermService.HasPermissionAsync("EMPLOYEEKPI.DELETE");
-
-        _employees = await LookupState.GetEmployeesAsync();
-        var cycleResponse = await AppraisalCycleApiClient.GetActiveAsync();
-        if (cycleResponse.Success && cycleResponse.Data != null)
-            _cycles = cycleResponse.Data.ToList();
-        await LoadDataAsync();
+        finally
+        {
+            _initialized = true;
+        }
     }
 
     private async Task LoadDataAsync()
@@ -219,6 +239,11 @@ else
             }
             else
                 Snackbar.Add(response.Message ?? UIConstants.Common.LoadFailed, Severity.Error);
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.LoadFailed, Severity.Error);
         }
         catch (Exception ex)
         {
@@ -307,6 +332,11 @@ else
                 }
                 else
                     Snackbar.Add(response.Message ?? UIConstants.Common.DeleteFailed, Severity.Error);
+            }
+            catch (ApiException ex)
+            {
+                var error = await ex.GetContentAsAsync<SuccessResponse>();
+                Snackbar.Add(error?.Message ?? UIConstants.Common.DeleteFailed, Severity.Error);
             }
             catch (Exception ex)
             {

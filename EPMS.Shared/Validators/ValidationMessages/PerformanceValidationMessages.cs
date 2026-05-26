@@ -138,6 +138,7 @@ namespace EPMS.Shared.Validators.ValidationMessages
             public const string GivenByIdRequired = "Given by user is required.";
             public const string FeedbackTypeRequired = "Feedback type is required.";
             public const string FeedbackTypeMaxLength = "Feedback type cannot exceed 50 characters.";
+            public const string FeedbackTypeInvalid = "Feedback type must be one of: Recognition, Constructive, Guidance, or General Note.";
             public const string ContentRequired = "Content is required.";
             public const string ContentMaxLength = "Content cannot exceed 2000 characters.";
             public const string VisibilityRequired = "Visibility is required.";
@@ -229,7 +230,6 @@ namespace EPMS.Shared.Validators.ValidationMessages
             public const string EvaluatorIdRequired = "Evaluator is required.";
             public const string EvaluatorRoleRequired = "Evaluator role is required.";
             public const string EvaluatorRoleMaxLength = "Evaluator role cannot exceed 50 characters.";
-            public const string RatingValueInvalid = "Rating value must be between 1 and 5.";
             public const string CommentMaxLength = "Comment cannot exceed 1000 characters.";
         }
     }

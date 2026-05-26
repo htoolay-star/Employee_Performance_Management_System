@@ -30,11 +30,6 @@ public class CreateEvaluationResponseValidator : AbstractValidator<CreateEvaluat
             .MaximumLength(50)
             .WithMessage(PerformanceValidationMessages.EvaluationResponse.EvaluatorRoleMaxLength);
 
-        RuleFor(x => x.RatingValue)
-            .InclusiveBetween(1, 5)
-            .When(x => x.RatingValue.HasValue)
-            .WithMessage(PerformanceValidationMessages.EvaluationResponse.RatingValueInvalid);
-
         RuleFor(x => x.Comment)
             .MaximumLength(1000)
             .WithMessage(PerformanceValidationMessages.EvaluationResponse.CommentMaxLength);

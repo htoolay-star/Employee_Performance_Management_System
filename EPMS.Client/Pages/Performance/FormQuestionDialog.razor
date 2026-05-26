@@ -146,6 +146,10 @@
             _serverErrors[nameof(_model.Sequence)] = error?.Message ?? UIConstants.Common.DuplicateEntry;
             await _form!.Validate();
         }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
         finally
         {
             _saving = false;

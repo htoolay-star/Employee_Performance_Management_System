@@ -45,12 +45,6 @@ public interface IAppraisalApiClient
     [Delete("/api/performance/appraisals/{id}")]
     Task<SuccessResponse> DeleteAsync(long id);
 
-    [Put("/api/performance/appraisals/{id}/lock")]
-    Task<SuccessResponse> LockAsync(long id, [Body] UnlockRequestDto request);
-
-    [Put("/api/performance/appraisals/{id}/unlock")]
-    Task<SuccessResponse> UnlockAsync(long id, [Body] UnlockRequestDto request);
-
     [Post("/api/performance/appraisals/generate/{cycleId}")]
     Task<SuccessResponse> GenerateForCycleAsync(long cycleId);
 
@@ -59,4 +53,13 @@ public interface IAppraisalApiClient
 
     [Post("/api/performance/appraisals/{id}/finalize-kpi")]
     Task<SuccessResponse> FinalizeKpiAsync(long id);
+
+    [Post("/api/performance/appraisals/{id}/finalize-evaluation")]
+    Task<SuccessResponse> FinalizeEvaluationAsync(long id, [Query] string role);
+
+    [Get("/api/performance/appraisals/manager-self-pending")]
+    Task<SuccessResponse<IEnumerable<AppraisalDto>>> GetManagerSelfPendingAsync();
+
+    [Put("/api/performance/appraisals/{id}/approve-self")]
+    Task<SuccessResponse> ApproveSelfAssessmentAsync(long id);
 }

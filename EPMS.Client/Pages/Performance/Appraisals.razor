@@ -29,14 +29,13 @@
                 <MudSelect T="string?"
                            Value="@_selectedStatusFilter"
                            ValueChanged="OnStatusFilterChanged"
-                           Label="@UIConstants.AppraisalList.ColumnStatus"
+                           Label="KPI Status"
                            Variant="Variant.Outlined"
                            Style="max-width: 150px;"
                            Clearable="true">
-                    <MudSelectItem Value="@AppraisalStatuses.Draft">Draft</MudSelectItem>
-                    <MudSelectItem Value="@AppraisalStatuses.InProgress">In Progress</MudSelectItem>
-                    <MudSelectItem Value="@AppraisalStatuses.Reviewed">Reviewed</MudSelectItem>
-                    <MudSelectItem Value="@AppraisalStatuses.Finalized">Finalized</MudSelectItem>
+                    <MudSelectItem Value="@AppraisalStatuses.Kpi.Draft">Draft</MudSelectItem>
+                    <MudSelectItem Value="@AppraisalStatuses.Kpi.Reviewed">Reviewed</MudSelectItem>
+                    <MudSelectItem Value="@AppraisalStatuses.Kpi.Finalized">Finalized</MudSelectItem>
                 </MudSelect>
             </MudStack>
         </MudStack>
@@ -57,7 +56,7 @@
                 <PropertyColumn Property="x => x.CycleName" Title="@UIConstants.AppraisalList.ColumnCycle" Sortable="true" />
                 <TemplateColumn Title="@UIConstants.AppraisalList.ColumnStatus" Sortable="false">
                     <CellTemplate>
-                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Item.Status)">@context.Item.Status</MudChip>
+                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Item.KpiStatus)">@context.Item.KpiStatus</MudChip>
                     </CellTemplate>
                 </TemplateColumn>
                 <TemplateColumn Title="Rating" Sortable="true">
@@ -131,6 +130,11 @@
                 Snackbar.Add(response.Message ?? UIConstants.Common.LoadFailed, Severity.Error);
             }
         }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.LoadFailed, Severity.Error);
+        }
         catch (Exception ex)
         {
             Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
@@ -154,7 +158,7 @@
 
         if (!string.IsNullOrWhiteSpace(_selectedStatusFilter))
         {
-            if (!string.Equals(x.Status, _selectedStatusFilter, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(x.KpiStatus, _selectedStatusFilter, StringComparison.OrdinalIgnoreCase))
                 return false;
         }
 
@@ -163,10 +167,10 @@
 
     private static Color GetStatusColor(string status) => status switch
     {
-        AppraisalStatuses.Draft => Color.Warning,
-        AppraisalStatuses.InProgress => Color.Info,
-        AppraisalStatuses.Reviewed => Color.Primary,
-        AppraisalStatuses.Finalized => Color.Success,
+        AppraisalStatuses.Kpi.Draft => Color.Warning,
+        AppraisalStatuses.Kpi.Reviewed => Color.Primary,
+        AppraisalStatuses.Kpi.Finalized => Color.Success,
+        AppraisalStatuses.Self.InProgress => Color.Info,
         _ => Color.Default
     };
 }

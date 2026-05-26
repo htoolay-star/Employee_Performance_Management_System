@@ -132,32 +132,35 @@ public class AppraisalController : ApiControllerBase
         return HandleResult(result);
     }
 
-    [HttpPut("{id:long}/lock")]
-    public async Task<ActionResult<SuccessResponse>> Lock(long id, [FromBody] UnlockRequestDto request)
-    {
-        var result = await _service.LockAsync(id, request.AdminId, request.Reason);
-        return HandleResult(result);
-    }
-
-    [HttpPut("{id:long}/unlock")]
-    public async Task<ActionResult<SuccessResponse>> Unlock(long id, [FromBody] UnlockRequestDto request)
-    {
-        var result = await _service.UnlockAsync(id, request.AdminId, request.Reason);
-        return HandleResult(result);
-    }
-
-    [HttpPost("{id:long}/finalize")]
-    public async Task<ActionResult<SuccessResponse>> Finalize(long id)
-    {
-        var result = await _service.FinalizeAsync(id);
-        return HandleResult(result);
-    }
-
     [Authorize]
     [HttpPost("{id:long}/finalize-kpi")]
     public async Task<ActionResult<SuccessResponse>> FinalizeKpi(long id)
     {
         var result = await _service.FinalizeKpiAsync(id);
+        return HandleResult(result);
+    }
+
+    [Authorize]
+    [HttpPost("{id:long}/finalize-evaluation")]
+    public async Task<ActionResult<SuccessResponse>> FinalizeEvaluation(long id, [FromQuery] string role)
+    {
+        var result = await _service.FinalizeEvaluationAsync(id, role);
+        return HandleResult(result);
+    }
+
+    [Authorize]
+    [HttpPut("{id:long}/approve-self")]
+    public async Task<ActionResult<SuccessResponse>> ApproveSelfAssessment(long id)
+    {
+        var result = await _service.ApproveSelfAssessmentAsync(id);
+        return HandleResult(result);
+    }
+
+    [Authorize]
+    [HttpGet("manager-self-pending")]
+    public async Task<ActionResult<SuccessResponse>> GetManagerSelfPending()
+    {
+        var result = await _service.GetManagerSelfPendingAsync();
         return HandleResult(result);
     }
 

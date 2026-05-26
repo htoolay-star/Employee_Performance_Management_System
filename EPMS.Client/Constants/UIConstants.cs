@@ -140,6 +140,7 @@
             public const string SelfReview = "Self Review";
             public const string ThreeSixtyReview = "360° Review";
             public const string AppraisalReview = "Appraisal Review";
+            public const string KpiReview = "KPI Review";
 
             public const string SelectAppraisalType = "-- Select Type --";
             public const string SelectCalendarType = "-- Select Calendar --";
@@ -400,6 +401,43 @@
             public const string NoData = "No pending approvals.";
         }
 
+        public static class EvaluationPending
+        {
+            public const string PageTitle = "Pending Evaluations";
+            public const string NoData = "No pending evaluations.";
+        }
+
+        public static class MySelfAssessments
+        {
+            public const string PageTitle = "My Self Assessments";
+            public const string NoData = "No self assessment forms found.";
+        }
+
+        public static class My360Forms
+        {
+            public const string PageTitle = "My 360 Forms";
+            public const string NoData = "No 360 forms found.";
+        }
+
+        public static class MyAppraisalForms
+        {
+            public const string PageTitle = "My Appraisal Forms";
+            public const string NoData = "No appraisal forms found.";
+        }
+
+        public static class ManagerSelfPending
+        {
+            public const string PageTitle = "Pending Self Reviews";
+            public const string NoData = "No pending self reviews.";
+        }
+
+        public static class ManagerSelfReview
+        {
+            public const string PageTitle = "Self Assessment Review";
+            public const string ApproveButton = "Approve Self Assessment";
+            public const string Approved = "Self assessment approved successfully.";
+        }
+
         public static class AppraisalView
         {
             public const string PageTitle = "Appraisal View";
@@ -448,6 +486,40 @@
             public const string ConfirmPasswordLabel = "Confirm Password";
             public const string SaveButton = "Update Password";
             public const string SuccessMessage = "Default password updated successfully.";
+        }
+
+        public static class ContinuousFeedback
+        {
+            public const string PageTitle = "Continuous Feedback";
+            public const string SearchPlaceholder = "Search by employee or content...";
+            public const string AddButton = "Add Feedback";
+            public const string CreateDialogTitle = "Give Feedback";
+            public const string EditDialogTitle = "Edit Feedback";
+            public const string DeleteDialogTitle = "Delete Feedback";
+
+            public const string EmployeeLabel = "Employee";
+            public const string GivenByLabel = "Given By";
+            public const string FeedbackTypeLabel = "Feedback Type";
+            public const string ContentLabel = "Content";
+            public const string VisibilityLabel = "Visibility";
+            public const string FeedbackDateLabel = "Feedback Date";
+
+            public const string ColumnEmployee = "Employee";
+            public const string ColumnGivenBy = "Given By";
+            public const string ColumnFeedbackType = "Feedback Type";
+            public const string ColumnContent = "Content";
+            public const string ColumnVisibility = "Visibility";
+            public const string ColumnFeedbackDate = "Feedback Date";
+
+            public const string SelectEmployee = "-- Select Employee --";
+            public const string SelectFeedbackType = "-- Select Type --";
+            public const string SelectVisibility = "-- Select Visibility --";
+
+            public const string Created = "Feedback created successfully.";
+            public const string Updated = "Feedback updated successfully.";
+            public const string Deleted = "Feedback deleted successfully.";
+
+            public const string NoDataFound = "No feedback entries found.";
         }
 
         public static class Employee

@@ -107,6 +107,11 @@
 
             _permissionChecked = _allPermissions.ToDictionary(p => p.Id, p => IsAdminPosition || assignedIds.Contains(p.Id));
         }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Failed to load permissions.", Severity.Error);
+        }
         catch (Exception ex)
         {
             Snackbar.Add($"Failed to load permissions: {ex.Message}", Severity.Error);

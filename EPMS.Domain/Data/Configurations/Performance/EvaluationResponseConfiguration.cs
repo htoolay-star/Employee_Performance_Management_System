@@ -21,6 +21,8 @@ namespace EPMS.Domain.Data.Configurations.Performance
 
             builder.HasIndex(e => new { e.AppraisalId, e.QuestionId, e.EvaluatorId }).IsUnique().HasFilter("[IsDeleted] = 0");
 
+            builder.HasIndex(e => new { e.EvaluatorId, e.EvaluatorRole }).HasFilter("[IsDeleted] = 0");
+
             builder.Property(e => e.EvaluatorRole).HasMaxLength(50).IsRequired();
             builder.Property(e => e.IsAnonymous).HasDefaultValue(false);
             builder.Property(e => e.YesNoAnswer);

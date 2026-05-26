@@ -15,6 +15,12 @@ public class Appraisal : AuditableEntity , ISoftDeletable
         CycleId = cycleId;
         ManagerReviewerId = managerReviewerId;
         Status = AppraisalStatuses.Draft;
+        KpiStatus = AppraisalStatuses.Kpi.Draft;
+        SelfStatus = AppraisalStatuses.Self.Draft;
+        ManagerStatus = AppraisalStatuses.Manager.Draft;
+        PeerStatus = AppraisalStatuses.Peer.Draft;
+        SubordinateStatus = AppraisalStatuses.Subordinate.Draft;
+        CommitteeStatus = AppraisalStatuses.Committee.Draft;
     }
 
     public Appraisal(string entityType, long entityId, long cycleId, long managerReviewerId)
@@ -24,6 +30,12 @@ public class Appraisal : AuditableEntity , ISoftDeletable
         CycleId = cycleId;
         ManagerReviewerId = managerReviewerId;
         Status = AppraisalStatuses.Draft;
+        KpiStatus = AppraisalStatuses.Kpi.Draft;
+        SelfStatus = AppraisalStatuses.Self.Draft;
+        ManagerStatus = AppraisalStatuses.Manager.Draft;
+        PeerStatus = AppraisalStatuses.Peer.Draft;
+        SubordinateStatus = AppraisalStatuses.Subordinate.Draft;
+        CommitteeStatus = AppraisalStatuses.Committee.Draft;
     }
 
     public long? EmployeeId { get; private set; }
@@ -33,6 +45,12 @@ public class Appraisal : AuditableEntity , ISoftDeletable
     public long ManagerReviewerId { get; private set; }
 
     public string Status { get; private set; } = string.Empty;
+    public string KpiStatus { get; private set; } = AppraisalStatuses.Kpi.Draft;
+    public string SelfStatus { get; private set; } = AppraisalStatuses.Self.Draft;
+    public string ManagerStatus { get; private set; } = AppraisalStatuses.Manager.Draft;
+    public string PeerStatus { get; private set; } = AppraisalStatuses.Peer.Draft;
+    public string SubordinateStatus { get; private set; } = AppraisalStatuses.Subordinate.Draft;
+    public string CommitteeStatus { get; private set; } = AppraisalStatuses.Committee.Draft;
     public string? RatingLabel { get; private set; }
 
     public string? EmployeeComment { get; private set; }
@@ -50,6 +68,8 @@ public class Appraisal : AuditableEntity , ISoftDeletable
 
     public bool SelfLocked { get; private set; }
     public bool SelfLockIsDeadline { get; private set; }
+    public bool KpiLocked { get; private set; }
+    public bool KpiLockIsDeadline { get; private set; }
     public bool ThreeSixtyLocked { get; private set; }
     public bool ThreeSixtyLockIsDeadline { get; private set; }
     public bool AppraisalLocked { get; private set; }
@@ -89,14 +109,61 @@ public class Appraisal : AuditableEntity , ISoftDeletable
         _details.Add(detail);
     }
 
-    public void Lock(TimeProvider timeProvider)
+    public void UpdateOverallStatus()
     {
-        if (IsLocked) throw new InvalidOperationException("Appraisal is already locked.");
+        bool allDone = KpiStatus == AppraisalStatuses.Kpi.Finalized
+            && SelfStatus == AppraisalStatuses.Self.Finalized
+            && ManagerStatus == AppraisalStatuses.Manager.Finalized
+            && PeerStatus == AppraisalStatuses.Peer.Finalized
+            && SubordinateStatus == AppraisalStatuses.Subordinate.Finalized
+            && CommitteeStatus == AppraisalStatuses.Committee.Finalized;
 
-        IsLocked = true;
-        LockedAt = timeProvider.GetUtcNow();
-        Status = AppraisalStatuses.Finalized;
-        FinalizedDate = timeProvider.GetUtcNow();
+        IsLocked = allDone;
+        Status = allDone ? AppraisalStatuses.Finalized : AppraisalStatuses.Draft;
+        if (allDone) { LockedAt = null; FinalizedDate = null; }
+    }
+
+    public bool UpdateOverallStatusIfAllDone(TimeProvider? timeProvider = null)
+    {
+        if (IsLocked) return false;
+
+        bool allDone = KpiStatus == AppraisalStatuses.Kpi.Finalized
+            && SelfStatus == AppraisalStatuses.Self.Finalized
+            && ManagerStatus == AppraisalStatuses.Manager.Finalized
+            && PeerStatus == AppraisalStatuses.Peer.Finalized
+            && SubordinateStatus == AppraisalStatuses.Subordinate.Finalized
+            && CommitteeStatus == AppraisalStatuses.Committee.Finalized;
+
+        if (allDone)
+        {
+            IsLocked = true;
+            var now = timeProvider?.GetUtcNow() ?? DateTimeOffset.UtcNow;
+            LockedAt = now;
+            Status = AppraisalStatuses.Finalized;
+            FinalizedDate = now;
+            return true;
+        }
+
+        return false;
+    }
+
+    public void SetComputedScores(
+        decimal kpiScore, decimal selfScore, decimal threeSixtyScore,
+        decimal appraisalScore, decimal kpiWeight, decimal selfWeight,
+        decimal threeSixtyWeight, decimal appraisalWeight,
+        RatingScale matchingScale)
+    {
+        KpiScore = kpiScore;
+        SelfScore = selfScore;
+        ThreeSixtyScore = threeSixtyScore;
+        AppraisalScore = appraisalScore;
+        TotalScore = (kpiScore * kpiWeight / 100m)
+                   + (selfScore * selfWeight / 100m)
+                   + (threeSixtyScore * threeSixtyWeight / 100m)
+                   + (appraisalScore * appraisalWeight / 100m);
+        FormulaWeights = $"{{\"kpi\":{kpiWeight},\"self\":{selfWeight},\"threeSixty\":{threeSixtyWeight},\"appraisal\":{appraisalWeight}}}";
+        FinalRatingId = matchingScale.Id;
+        RatingLabel = matchingScale.Label;
     }
 
     public void FinalizeAppraisal(
@@ -131,12 +198,27 @@ public class Appraisal : AuditableEntity , ISoftDeletable
         IsLocked = true;
         LockedAt = timeProvider.GetUtcNow();
         Status = AppraisalStatuses.Finalized;
+        KpiLocked = true;
+        KpiStatus = AppraisalStatuses.Kpi.Finalized;
+        SelfStatus = AppraisalStatuses.Self.Finalized;
+        ManagerStatus = AppraisalStatuses.Manager.Finalized;
+        PeerStatus = AppraisalStatuses.Peer.Finalized;
+        SubordinateStatus = AppraisalStatuses.Subordinate.Finalized;
+        CommitteeStatus = AppraisalStatuses.Committee.Finalized;
     }
 
     public void LockSelf(bool isDeadline)
     {
         SelfLocked = true;
         SelfLockIsDeadline = isDeadline;
+        if (SelfStatus == AppraisalStatuses.Self.Draft)
+            SelfStatus = AppraisalStatuses.Self.Reviewed;
+    }
+
+    public void LockKpi(bool isDeadline)
+    {
+        KpiLocked = true;
+        KpiLockIsDeadline = isDeadline;
     }
 
     public void LockThreeSixty(bool isDeadline)
@@ -151,6 +233,19 @@ public class Appraisal : AuditableEntity , ISoftDeletable
             SelfLocked = false;
     }
 
+    public void UnlockKpi()
+    {
+        if (!KpiLockIsDeadline)
+            KpiLocked = false;
+    }
+
+    public void ApproveSelf()
+    {
+        if (SelfStatus != AppraisalStatuses.Self.InProgress)
+            throw new InvalidOperationException("Self assessment must be InProgress to approve.");
+        SelfStatus = AppraisalStatuses.Self.Reviewed;
+    }
+
     public void UnlockThreeSixty()
     {
         if (!ThreeSixtyLockIsDeadline)
@@ -161,24 +256,21 @@ public class Appraisal : AuditableEntity , ISoftDeletable
     {
         AppraisalLocked = true;
         AppraisalLockIsDeadline = isDeadline;
+        if (CommitteeStatus == AppraisalStatuses.Committee.Draft)
+            CommitteeStatus = AppraisalStatuses.Committee.Reviewed;
     }
+
+    public void SetKpiStatus(string status) => KpiStatus = status;
+    public void SetSelfStatus(string status) => SelfStatus = status;
+    public void SetManagerStatus(string status) => ManagerStatus = status;
+    public void SetPeerStatus(string status) => PeerStatus = status;
+    public void SetSubordinateStatus(string status) => SubordinateStatus = status;
+    public void SetCommitteeStatus(string status) => CommitteeStatus = status;
 
     public void UnlockAppraisalLock()
     {
         if (!AppraisalLockIsDeadline)
             AppraisalLocked = false;
-    }
-
-    public void UnlockAppraisal(long adminId, string reason, TimeProvider timeProvider)
-    {
-        if (!IsLocked) throw new InvalidOperationException("Appraisal is not locked.");
-        if (string.IsNullOrWhiteSpace(reason)) throw new ArgumentException("An unlock reason is strictly required by compliance.");
-
-        IsLocked = false;
-        Status = AppraisalStatuses.InProgress;
-        UnLockedById = adminId;
-        UnLockedAt = timeProvider.GetUtcNow();
-        UnLockReason = reason.Trim();
     }
 
     public void AddRecommendation(AppraisalRecommendation recommendation)
@@ -198,7 +290,7 @@ public class Appraisal : AuditableEntity , ISoftDeletable
     public void UpdateDetails(string? status, string? employeeComment, string? managerComment, string? ratingLabel)
     {
         if (!string.IsNullOrWhiteSpace(status))
-            Status = status.Trim();
+            KpiStatus = status.Trim();
         if (employeeComment != null)
             EmployeeComment = employeeComment.Trim();
         if (managerComment != null)

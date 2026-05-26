@@ -71,6 +71,13 @@ namespace EPMS.Domain.Repository.Performance
                     ManagerReviewerName = a.ManagerReviewer != null ? a.ManagerReviewer.StaffName : null,
                     Status = a.Status,
                     IsLocked = a.IsLocked,
+                    KpiLocked = a.KpiLocked,
+                    KpiStatus = a.KpiStatus ?? "DRAFT",
+                    SelfStatus = a.SelfStatus ?? "DRAFT",
+                    ManagerStatus = a.ManagerStatus ?? "DRAFT",
+                    PeerStatus = a.PeerStatus ?? "DRAFT",
+                    SubordinateStatus = a.SubordinateStatus ?? "DRAFT",
+                    CommitteeStatus = a.CommitteeStatus ?? "DRAFT",
                     EntityType = a.EntityType,
                     EntityId = a.EntityId,
                     Details = a.Details.Select(d => new AppraisalDetailFillDto

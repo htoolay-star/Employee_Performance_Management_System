@@ -15,6 +15,8 @@ public class UpdateAppraisalCycleDto
     public DateOnly? SelfReviewDeadline { get; set; }
     public DateOnly? AppraisalReviewStartDate { get; set; }
     public DateOnly? AppraisalReviewDeadline { get; set; }
+    public DateOnly? KpiReviewStartDate { get; set; }
+    public DateOnly? KpiReviewDeadline { get; set; }
     public DateOnly? ThreeSixtyReviewStartDate { get; set; }
     public DateOnly? ThreeSixtyReviewDeadline { get; set; }
 

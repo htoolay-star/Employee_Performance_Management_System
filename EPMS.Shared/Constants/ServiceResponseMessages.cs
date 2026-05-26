@@ -216,7 +216,6 @@ public static class ServiceResponseMessages
         public const string Deleted = "Appraisal cycle deleted successfully.";
         public const string Deactivated = "Appraisal cycle deactivated successfully.";
         public const string Reactivated = "Appraisal cycle reactivated successfully.";
-        public const string Locked = "Appraisal cycle locked successfully.";
         public const string Unlocked = "Appraisal cycle unlocked successfully.";
         public const string Retrieved = "Appraisal cycle retrieved successfully.";
         public const string RetrievedAll = "Appraisal cycles retrieved successfully.";
@@ -443,15 +442,13 @@ public static class PIPObjectiveMsg
         public const string Deleted = "Appraisal deleted successfully.";
         public const string Submitted = "Appraisal submitted successfully.";
         public const string Locked = "Appraisal locked successfully.";
-        public const string Unlocked = "Appraisal unlocked successfully.";
+        public const string Finalized = "Appraisal finalized successfully.";
         public const string Retrieved = "Appraisal retrieved successfully.";
         public const string RetrievedAll = "Appraisals retrieved successfully.";
         public const string RetrievedByEmployee = "Appraisals for employee retrieved successfully.";
         public const string DuplicateEntry = "An appraisal with these parameters already exists.";
-        public const string UnlockReasonRequired = "An unlock reason is required.";
-        public static string NotFound(long id) => $"Appraisal with ID '{id}' was not found.";
         public static string AlreadyLocked = "Appraisal is already locked.";
-        public static string AlreadyUnlocked = "Appraisal is not locked.";
+        public static string NotFound(long id) => $"Appraisal with ID '{id}' was not found.";
         public static string NotFoundByEmployee(long employeeId) => $"Appraisal for employee with ID '{employeeId}' was not found.";
     }
 
@@ -482,6 +479,7 @@ public static class PIPObjectiveMsg
         public const string RetrievedByTemplate = "Evaluation responses for template retrieved successfully.";
         public const string RetrievedByQuestion = "Evaluation responses for question retrieved successfully.";
         public const string Submitted = "Evaluation responses submitted successfully.";
+        public const string PendingRetrieved = "Pending evaluations retrieved successfully.";
         public static string NotFound(long id) => $"Evaluation response with ID '{id}' was not found.";
         public static string NotFoundByAppraisal(long appraisalId) => $"Evaluation response for appraisal with ID '{appraisalId}' was not found.";
     }

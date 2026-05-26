@@ -8,11 +8,6 @@ public class UpdateEvaluationResponseValidator : AbstractValidator<UpdateEvaluat
 {
     public UpdateEvaluationResponseValidator()
     {
-        RuleFor(x => x.RatingValue)
-            .InclusiveBetween(1, 5)
-            .When(x => x.RatingValue.HasValue)
-            .WithMessage(PerformanceValidationMessages.EvaluationResponse.RatingValueInvalid);
-
         RuleFor(x => x.Comment)
             .MaximumLength(1000)
             .WithMessage(PerformanceValidationMessages.EvaluationResponse.CommentMaxLength);

@@ -154,6 +154,10 @@
             var error = await ex.GetContentAsAsync<SuccessResponse>();
             Snackbar.Add(error?.Message ?? UIConstants.Common.DuplicateEntry, Severity.Error);
         }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
         finally
         {
             _saving = false;

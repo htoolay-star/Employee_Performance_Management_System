@@ -1,3 +1,4 @@
+using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.PerformanceDTOs.ContinuousFeedbackDTOs;
 using EPMS.Shared.Validators.ValidationMessages;
 using FluentValidation;
@@ -18,7 +19,9 @@ namespace EPMS.Shared.Validators.PerformanceDTOs.ContinuousFeedbackDTOs
 
             RuleFor(x => x.FeedbackType)
                 .NotEmpty().WithMessage(PerformanceValidationMessages.ContinuousFeedback.FeedbackTypeRequired)
-                .MaximumLength(50).WithMessage(PerformanceValidationMessages.ContinuousFeedback.FeedbackTypeMaxLength);
+                .MaximumLength(50).WithMessage(PerformanceValidationMessages.ContinuousFeedback.FeedbackTypeMaxLength)
+                .Must(v => ContinuousFeedbackTypes.All.Contains(v))
+                .WithMessage(PerformanceValidationMessages.ContinuousFeedback.FeedbackTypeInvalid);
 
             RuleFor(x => x.Content)
                 .NotEmpty().WithMessage(PerformanceValidationMessages.ContinuousFeedback.ContentRequired)

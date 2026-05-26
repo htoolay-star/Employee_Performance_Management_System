@@ -7,5 +7,6 @@ namespace EPMS.Domain.Interface.Irepo.Performance
     {
         Task<IEnumerable<ContinuousFeedback>> GetByEmployeeIdAsync(long employeeId);
         Task<IEnumerable<ContinuousFeedback>> GetGivenByUserIdAsync(long userId);
+        Task<IEnumerable<ContinuousFeedback>> GetAllWithIncludesAsync();
     }
 }

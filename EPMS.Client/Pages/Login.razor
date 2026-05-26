@@ -2,6 +2,7 @@
 @layout BlankLayout
 @using EPMS.Client.Services.Auth
 @using EPMS.Shared.DTOs.Auth
+@using EPMS.Shared.DTOs.Common
 @using MudBlazor
 @using Refit
 @inject IAuthApiClient AuthApiClient
@@ -134,9 +135,10 @@
                 _errorMessage = "Too many login attempts. Please try again later.";
                 Snackbar.Add(_errorMessage, Severity.Error);
             }
-            catch (ApiException)
+            catch (ApiException ex)
             {
-                _errorMessage = "Login failed due to a network error. Please try again.";
+                var error = await ex.GetContentAsAsync<SuccessResponse>();
+                _errorMessage = error?.Message ?? "Login failed. Please try again.";
                 Snackbar.Add(_errorMessage, Severity.Error);
             }
         }

@@ -91,12 +91,6 @@
                                                    Size="Size.Small"
                                                    OnClick="@(() => GenerateAppraisals(context.Item))" />
                                 </MudTooltip>
-                                <MudTooltip Text="Lock Cycle" Placement="Placement.Top">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Lock"
-                                                   Color="Color.Warning"
-                                                   Size="Size.Small"
-                                                   OnClick="@(() => OpenLockDialog(context.Item))" />
-                                </MudTooltip>
                                 <MudTooltip Text="Deactivate Cycle" Placement="Placement.Top">
                                     <MudIconButton Icon="@Icons.Material.Filled.Cancel"
                                                    Color="Color.Default"
@@ -302,11 +296,6 @@
             await PerformAction(cycle.Id, id => AppraisalCycleApiClient.DeleteAsync(id), AppraisalCycleMsg.Deleted);
     }
 
-    private Task OpenLockDialog(AppraisalCycleDto cycle)
-        => ShowConfirmAndExecute(cycle, "Lock this cycle? This will finalize and deactivate it.", "Lock",
-                                 Color.Warning, UIConstants.AppraisalCycle.Lock,
-                                 id => AppraisalCycleApiClient.LockAsync(id), AppraisalCycleMsg.Locked);
-
     private async Task GenerateAppraisals(AppraisalCycleDto cycle)
     {
         try
@@ -364,23 +353,5 @@
             var dto = new UpdateAppraisalCycleDto { IsActive = true };
             await PerformAction(cycle.Id, id => AppraisalCycleApiClient.UpdateAsync(id, dto), AppraisalCycleMsg.Reactivated);
         }
-    }
-
-    private async Task ShowConfirmAndExecute(AppraisalCycleDto cycle, string message, string buttonText,
-                                              Color color, string successMsg,
-                                              Func<long, Task<SuccessResponse>> action, string actionSuccessMsg)
-    {
-        var parameters = new DialogParameters<ConfirmDialog>
-        {
-            { x => x.ContentText, message },
-            { x => x.ButtonText, buttonText },
-            { x => x.Color, color }
-        };
-
-        var dialog = await DialogService.ShowAsync<ConfirmDialog>(
-            successMsg, parameters, _confirmDialogOptions);
-
-        if (await dialog.Result is { Canceled: false })
-            await PerformAction(cycle.Id, action, actionSuccessMsg);
     }
 }

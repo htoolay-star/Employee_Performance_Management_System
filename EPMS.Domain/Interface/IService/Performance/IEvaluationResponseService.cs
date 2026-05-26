@@ -13,7 +13,11 @@ public interface IEvaluationResponseService
     Task<SuccessResponse> GetByAppraisalIdAsync(long appraisalId);
     Task<SuccessResponse> GetByTemplateIdAsync(long templateId);
     Task<SuccessResponse> GetByQuestionIdAsync(long questionId);
-    Task<SuccessResponse> SubmitRoleResponsesAsync(long appraisalId, long evaluatorId, string role);
-    Task<SuccessResponse> GetFormFillAsync(long appraisalId, long evaluatorId, string role);
-    Task<SuccessResponse> GetSelfAssessmentAsync(long appraisalId, long managerId);
+    Task<SuccessResponse> SubmitRoleResponsesAsync(long appraisalId, string role);
+    Task<SuccessResponse> GetFormFillAsync(long appraisalId, string role);
+    Task<SuccessResponse> GetSelfAssessmentAsync(long appraisalId);
+    Task<SuccessResponse> GetEvaluationViewAsync(long appraisalId, string role);
+    Task<SuccessResponse> GetMyFormsAsync(string? roleGroup = null);
+    Task<SuccessResponse> GetMyAppraisalFormsAsync();
+    Task<SuccessResponse> GetPendingEvaluationsAsync();
 }

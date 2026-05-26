@@ -52,6 +52,8 @@ namespace EPMS.Domain.Data.Configurations.Performance
             entity.Property(e => e.SelfReviewDeadline);
             entity.Property(e => e.ManagerReviewStartDate);
             entity.Property(e => e.ManagerReviewDeadline);
+            entity.Property(e => e.KpiReviewStartDate);
+            entity.Property(e => e.KpiReviewDeadline);
 
             entity.Property(e => e.FinalClosureDate);
 

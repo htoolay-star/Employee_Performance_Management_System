@@ -19,5 +19,6 @@ namespace EPMS.Domain.Interface.IService.Auth
 
         Task<List<string>> GetUserPermissionsAsync(long userId);
         Task<List<string>> GetAllPermissionCodesAsync();
+        Task<SuccessResponse<bool>> IsManagerAsync();
     }
 }

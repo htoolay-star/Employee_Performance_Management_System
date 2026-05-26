@@ -19,11 +19,12 @@ public interface IAppraisalService
     Task<SuccessResponse> GetMyKpiAsync();
     Task<SuccessResponse> GetPendingAsync();
     Task<SuccessResponse> SubmitAsync(AppraisalSubmissionDto dto);
-    Task<SuccessResponse> LockAsync(long id, long adminId, string reason);
-    Task<SuccessResponse> UnlockAsync(long id, long adminId, string reason);
 
     Task AutoGenerateForCycleAsync(long cycleId);
-    Task<SuccessResponse> FinalizeAsync(long id);
     Task<SuccessResponse> FinalizeKpiAsync(long id);
+    Task<SuccessResponse> FinalizeEvaluationAsync(long appraisalId, string role);
     Task<SuccessResponse> UnlockRoleAsync(long id, string role);
+    Task<SuccessResponse> GetManagerSelfPendingAsync();
+    Task<SuccessResponse> ApproveSelfAssessmentAsync(long appraisalId);
+    Task AutoFinalizeAndCalculateScoreAsync(long appraisalId);
 }

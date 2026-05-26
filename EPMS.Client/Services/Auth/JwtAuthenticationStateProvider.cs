@@ -1,3 +1,4 @@
+using EPMS.Client.Services.App;
 using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -12,11 +13,13 @@ namespace EPMS.Client.Services.Auth
     {
         private readonly ILocalStorageService _localStorageService;
         private readonly HttpClient _httpClient;
+        private readonly NavigationCacheService _navCache;
 
-        public JwtAuthenticationStateProvider(ILocalStorageService localStorageService, HttpClient httpClient)
+        public JwtAuthenticationStateProvider(ILocalStorageService localStorageService, HttpClient httpClient, NavigationCacheService navCache)
         {
             _localStorageService = localStorageService;
             _httpClient = httpClient;
+            _navCache = navCache;
         }
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
@@ -37,6 +40,7 @@ namespace EPMS.Client.Services.Auth
 
         public void MarkUserAsAuthenticated(string token)
         {
+            _navCache.Invalidate();
             var identity = new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt");
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             var user = new ClaimsPrincipal(identity);
@@ -45,6 +49,7 @@ namespace EPMS.Client.Services.Auth
 
         public void MarkUserAsLoggedOut()
         {
+            _navCache.Invalidate();
             var anonymousUser = new ClaimsPrincipal(new ClaimsIdentity());
             var authState = Task.FromResult(new AuthenticationState(anonymousUser));
             NotifyAuthenticationStateChanged(authState);

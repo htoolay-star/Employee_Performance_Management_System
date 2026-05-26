@@ -55,14 +55,7 @@ namespace EPMS.Api.Controllers.Performance
         [HttpDelete("{id:long}")]
         public async Task<ActionResult<SuccessResponse>> Delete(long id)
         {
-            var result = await _appraisalCycleService.DeleteAsync(id);
-            return HandleResult(result);
-        }
-
-    [HttpPost("{id:long}/lock")]
-    public async Task<ActionResult<SuccessResponse>> Lock(long id)
-    {
-        var result = await _appraisalCycleService.LockCycleAsync(id);
+        var result = await _appraisalCycleService.DeleteAsync(id);
         return HandleResult(result);
     }
 

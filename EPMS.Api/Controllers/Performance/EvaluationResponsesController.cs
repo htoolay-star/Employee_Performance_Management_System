@@ -76,26 +76,54 @@ public class EvaluationResponsesController : ApiControllerBase
     [HttpGet("appraisal/{appraisalId:long}/my-responses")]
     public async Task<ActionResult<SuccessResponse>> GetFormFill(
         long appraisalId,
-        [FromQuery] long evaluatorId,
         [FromQuery] string role)
     {
-        var result = await _service.GetFormFillAsync(appraisalId, evaluatorId, role);
+        var result = await _service.GetFormFillAsync(appraisalId, role);
         return HandleResult(result);
     }
 
     [HttpGet("appraisal/{appraisalId:long}/self-assessment")]
     public async Task<ActionResult<SuccessResponse>> GetSelfAssessment(
-        long appraisalId,
-        [FromQuery] long managerId)
+        long appraisalId)
     {
-        var result = await _service.GetSelfAssessmentAsync(appraisalId, managerId);
+        var result = await _service.GetSelfAssessmentAsync(appraisalId);
+        return HandleResult(result);
+    }
+
+    [HttpGet("appraisal/{appraisalId:long}/view")]
+    public async Task<ActionResult<SuccessResponse>> GetEvaluationView(
+        long appraisalId,
+        [FromQuery] string role)
+    {
+        var result = await _service.GetEvaluationViewAsync(appraisalId, role);
         return HandleResult(result);
     }
 
     [HttpPost("submit-role")]
     public async Task<ActionResult<SuccessResponse>> SubmitRoleResponses([FromBody] SubmitRoleRequestDto dto)
     {
-        var result = await _service.SubmitRoleResponsesAsync(dto.AppraisalId, dto.EvaluatorId, dto.Role);
+        var result = await _service.SubmitRoleResponsesAsync(dto.AppraisalId, dto.Role);
+        return HandleResult(result);
+    }
+
+    [HttpGet("my-forms")]
+    public async Task<ActionResult<SuccessResponse>> GetMyForms([FromQuery] string? roleGroup = null)
+    {
+        var result = await _service.GetMyFormsAsync(roleGroup);
+        return HandleResult(result);
+    }
+
+    [HttpGet("my-appraisal-forms")]
+    public async Task<ActionResult<SuccessResponse>> GetMyAppraisalForms()
+    {
+        var result = await _service.GetMyAppraisalFormsAsync();
+        return HandleResult(result);
+    }
+
+    [HttpGet("pending")]
+    public async Task<ActionResult<SuccessResponse>> GetPendingEvaluations()
+    {
+        var result = await _service.GetPendingEvaluationsAsync();
         return HandleResult(result);
     }
 }
