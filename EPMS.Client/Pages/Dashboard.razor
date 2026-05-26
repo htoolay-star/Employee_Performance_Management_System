@@ -1,10 +1,193 @@
 @page "/dashboard"
+@using EPMS.Client.Services.Performance
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.FormDTOs
+@using Refit
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject IAppraisalApiClient AppraisalApiClient
+@inject ISnackbar Snackbar
 
 <PageTitle>Dashboard</PageTitle>
 
-<MudContainer MaxWidth="MaxWidth.Small" Class="d-flex align-center justify-center" Style="height:100vh;">
-    <MudPaper Elevation="25" Class="pa-8" Style="width: 100%; max-width: 500px;">
-        <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4">Welcome to the Dashboard!</MudText>
-        <MudText Align="Align.Center">You have successfully logged in.</MudText>
-    </MudPaper>
+<style>
+    .kpi-card {
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        cursor: default;
+    }
+    .kpi-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.12) !important;
+    }
+    .kpi-card-accent {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        border-radius: 4px 0 0 4px;
+    }
+    .kpi-progress-bar {
+        height: 8px;
+        border-radius: 4px;
+    }
+</style>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-6 mb-8">
+
+    @if (_loading)
+    {
+        <MudSkeleton Width="240px" Height="32px" Class="mb-6" />
+        <MudGrid>
+            <MudItem xs="12" md="6" lg="4">
+                <MudSkeleton Width="100%" Height="220px" Style="border-radius: 12px;" />
+            </MudItem>
+            <MudItem xs="12" md="6" lg="4">
+                <MudSkeleton Width="100%" Height="220px" Style="border-radius: 12px;" />
+            </MudItem>
+            <MudItem xs="12" md="6" lg="4">
+                <MudSkeleton Width="100%" Height="220px" Style="border-radius: 12px;" />
+            </MudItem>
+        </MudGrid>
+    }
+    else if (_appraisal == null)
+    {
+        <MudPaper Elevation="3" Class="pa-12 text-center rounded-lg" Style="max-width: 520px; margin: 80px auto;">
+            <MudIcon Icon="@Icons.Material.Filled.Assignment" Size="Size.Large" Color="Color.Primary" Class="mb-4" />
+            <MudText Typo="Typo.h5" Class="mb-2">No Active Appraisal</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Default">
+                You don't have any active KPI appraisal yet. Please check with your manager or HR.
+            </MudText>
+        </MudPaper>
+    }
+    else if (_appraisal.Details.Count == 0)
+    {
+        <div class="d-flex align-center flex-wrap mb-6">
+            <MudIcon Icon="@Icons.Material.Filled.Assignment" Size="Size.Medium" Color="Color.Primary" Class="mr-2" />
+            <MudText Typo="Typo.h5" Class="mr-4">@_appraisal.CycleName</MudText>
+            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Label="true">@_appraisal.KpiStatus</MudChip>
+        </div>
+        <MudPaper Elevation="2" Class="pa-12 text-center rounded-lg" Style="max-width: 520px; margin: 40px auto;">
+            <MudIcon Icon="@Icons.Material.Filled.TaskAlt" Size="Size.Large" Color="Color.Success" Class="mb-4" />
+            <MudText Typo="Typo.h6" Class="mb-2">All KPIs Finalized</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Default">
+                All your KPIs have been finalized for this cycle. Great work!
+            </MudText>
+        </MudPaper>
+    }
+    else
+    {
+        <div class="d-flex align-center flex-wrap mb-6">
+            <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Size="Size.Medium" Color="Color.Primary" Class="mr-2" />
+            <MudText Typo="Typo.h5" Class="mr-4">@_appraisal.CycleName — My KPIs</MudText>
+            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Label="true">@_appraisal.KpiStatus</MudChip>
+        </div>
+
+        <MudGrid Spacing="4">
+            @foreach (var kpi in _appraisal.Details)
+            {
+                var progress = kpi.TargetValue.HasValue && kpi.TargetValue > 0
+                    ? (int)Math.Clamp((double)((kpi.ActualValue ?? 0) / kpi.TargetValue.Value * 100), 0, 100)
+                    : 0;
+                var accentColor = progress >= 80 ? "#4CAF50" : progress >= 50 ? "#FF9800" : "#F44336";
+                var chipColor = progress >= 80 ? Color.Success : progress >= 50 ? Color.Warning : Color.Error;
+
+                <MudItem xs="12" md="6" lg="4">
+                    <MudCard Elevation="2" Class="kpi-card rounded-lg pa-4">
+                        <div class="kpi-card-accent" style="background: linear-gradient(180deg, @accentColor, @(progress >= 80 ? "#388E3C" : progress >= 50 ? "#F57C00" : "#D32F2F"));"></div>
+
+                        <div class="pl-4">
+                            <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-1">@kpi.KPIName</MudText>
+
+                            @if (!string.IsNullOrEmpty(kpi.CategoryName))
+                            {
+                                <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Label="true" Class="mb-3">@kpi.CategoryName</MudChip>
+                            }
+
+                            <div class="d-flex justify-space-between mb-2">
+                                <MudText Typo="Typo.body2" Color="Color.Default">
+                                    Target: <strong>@FormatValue(kpi.TargetValue)</strong>
+                                </MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Default">
+                                    Actual: <strong>@FormatValue(kpi.ActualValue)</strong>
+                                </MudText>
+                            </div>
+
+                            @if (kpi.TargetValue.HasValue && kpi.TargetValue > 0)
+                            {
+                                <MudProgressBar Value="@progress" Color="@chipColor" Class="kpi-progress-bar mb-1" />
+                                <div class="d-flex justify-space-between">
+                                    <MudText Typo="Typo.caption" Color="Color.Default">Progress</MudText>
+                                    <MudText Typo="Typo.caption" Class="font-weight-bold" Style="@($"color:{accentColor}")">@progress%</MudText>
+                                </div>
+                            }
+
+                            <MudDivider Class="my-3" />
+
+                            <div class="d-flex justify-space-between">
+                                <div>
+                                    <MudText Typo="Typo.caption" Color="Color.Default">Weightage</MudText>
+                                    <MudText Typo="Typo.body2" Class="font-weight-bold">@kpi.Weightage.ToString("F1")%</MudText>
+                                </div>
+                                <div class="text-right">
+                                    <MudText Typo="Typo.caption" Color="Color.Default">Score</MudText>
+                                    <MudText Typo="Typo.body2" Class="font-weight-bold">@kpi.Score.ToString("F2")</MudText>
+                                </div>
+                            </div>
+                        </div>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    }
+
 </MudContainer>
+
+@code {
+    private AppraisalFillDto? _appraisal;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _loading = true;
+        StateHasChanged();
+
+        try
+        {
+            var response = await AppraisalApiClient.GetMyKpiAsync();
+            if (response.Success && response.Data != null)
+            {
+                _appraisal = response.Data.FirstOrDefault();
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? "Failed to load KPI data.", Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "An error occurred.", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private static string FormatValue(decimal? value)
+    {
+        return value?.ToString("F2") ?? "—";
+    }
+}

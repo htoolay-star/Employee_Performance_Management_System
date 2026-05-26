@@ -1,34 +1,56 @@
 @inherits LayoutComponentBase
+@using Microsoft.AspNetCore.Components.Authorization
 @using MudBlazor
 @using EPMS.Client.Themes
 @inject IJSRuntime JS
+@inject NavigationManager Navigation
+@inject IDialogService DialogService
+@inject AuthenticationStateProvider AuthState
 
 <MudThemeProvider Theme="EPMSTheme.GetTheme()" IsDarkMode="@_isDarkMode" />
 
 <MudLayout Class="@(_isDarkMode ? "theme-dark" : "theme-light")">
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="ToggleDrawer" />
-        <MudSpacer />
-        <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.DarkMode : Icons.Material.Filled.LightMode)"
-                       Color="Color.Inherit"
-                       OnClick="ToggleTheme" />
-        <LoginDisplay />
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" Variant="DrawerVariant.Mini" Elevation="2" Width="300px" Style="--mud-drawer-width-mini: 56px;">
-        <MudDrawerHeader Class="@(_drawerOpen ? "" : "drawer-header-collapsed")">
-            <MudLink Href="/dashboard" Underline="Underline.None" Class="d-flex align-center justify-center" Style="width: 100%;">
-                @if (_drawerOpen)
-                {
-                    <img src="@(_isDarkMode ? "ACE-dark.svg" : "ACE.svg")" alt="ACE" class="drawer-logo" />
-                }
-                else
-                {
-                    <img src="@(_isDarkMode ? "ACE-mini-dark.svg" : "ACE-mini.svg")" alt="ACE" class="drawer-logo-collapsed" />
-                }
-            </MudLink>
-        </MudDrawerHeader>
-        <div class="@(_drawerOpen ? "" : "drawer-collapsed")">
-            <NavMenu DrawerCollapsed="@(!_drawerOpen)" />
+        <div style="display: flex; flex-direction: column; height: 100%;">
+            <MudDrawerHeader Class="@(_drawerOpen ? "" : "drawer-header-collapsed")">
+                <MudLink Href="/dashboard" Underline="Underline.None" Class="d-flex align-center justify-center" Style="width: 100%;">
+                    @if (_drawerOpen)
+                    {
+                        <img src="@(_isDarkMode ? "ACE-dark.svg" : "ACE.svg")" alt="ACE" class="drawer-logo" />
+                    }
+                    else
+                    {
+                        <img src="@(_isDarkMode ? "ACE-mini-dark.svg" : "ACE-mini.svg")" alt="ACE" class="drawer-logo-collapsed" />
+                    }
+                </MudLink>
+            </MudDrawerHeader>
+            <div style="flex: 1; overflow-y: auto;" class="@(_drawerOpen ? "" : "drawer-collapsed")">
+                <NavMenu DrawerCollapsed="@(!_drawerOpen)" />
+            </div>
+            <div class="drawer-bottom @(_drawerOpen ? "" : "drawer-bottom-collapsed")">
+                <AuthorizeView>
+                    <Authorized>
+                        @if (_drawerOpen)
+                        {
+                            <MudText Typo="Typo.body2" Class="drawer-user-name">@context.User.Identity?.Name</MudText>
+                            <MudSpacer />
+                        }
+                        <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.DarkMode : Icons.Material.Filled.LightMode)"
+                                       Color="Color.Inherit"
+                                       OnClick="ToggleTheme"
+                                       Size="Size.Small"
+                                       title="@(_isDarkMode ? "Light Mode" : "Dark Mode")" />
+                        <MudIconButton Icon="@Icons.Material.Filled.ExitToApp"
+                                       Color="Color.Inherit"
+                                       OnClick="LogoutAsync"
+                                       Size="Size.Small"
+                                       title="Log out" />
+                    </Authorized>
+                </AuthorizeView>
+            </div>
         </div>
     </MudDrawer>
     <MudMainContent>
@@ -66,10 +88,49 @@
 
         await JS.InvokeVoidAsync("localStorage.setItem", "epms-dark-mode", _isDarkMode.ToString().ToLower());
     }
+
+    private async Task LogoutAsync()
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, "Are you sure you want to log out?" },
+            { x => x.ButtonText, "Log Out" },
+            { x => x.Color, Color.Error }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(
+            "Confirm Logout", parameters);
+
+        if (await dialog.Result is { Canceled: false })
+            Navigation.NavigateTo("logout");
+    }
 }
 
 <style>
     html, body, #app {
         background-color: @(_isDarkMode ? "#252540" : "#FAFAFA") !important;
+    }
+
+    .drawer-bottom {
+        padding: 8px 16px;
+        border-top: 1px solid rgba(128, 128, 128, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .drawer-bottom-collapsed {
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .drawer-user-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 180px;
     }
 </style>

@@ -11,6 +11,14 @@ namespace EPMS.Domain.Repository.Performance
     {
         public KPIMasterRepository(AppDbContext context) : base(context) { }
 
+        public override async Task<IEnumerable<KPIMaster>> GetAllAsync(CancellationToken cancellationToken = default)
+        {
+            return await _dbSet
+                .AsNoTracking()
+                .Include(x => x.Category)
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task<IEnumerable<KPIMaster>> GetActiveAsync()
         {
             return await _dbSet

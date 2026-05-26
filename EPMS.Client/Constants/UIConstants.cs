@@ -175,8 +175,8 @@
             public const string MinScoreLabel = "Min Score";
             public const string MaxScoreLabel = "Max Score";
 
-            public const string ColumnMinScore = "Min Score";
-            public const string ColumnMaxScore = "Max Score";
+            public const string ColumnMinScore = "Score Range";
+            public const string ColumnMaxScore = "Levels";
 
             public const string NoDataFound = "Try adjusting your search or add a new rating scale.";
         }
