@@ -5,9 +5,9 @@
                Label="Sort By"
                Value="@SortBy"
                ValueChanged="OnSortByChanged"
-               Variant="Variant.Outlined"
-               Margin="Margin.Dense"
-               Style="width: 150px;">
+                Variant="Variant.Outlined"
+                Dense="true"
+                FullWidth="true">
         @foreach (var col in SortColumns)
         {
             <MudSelectItem Value="@col.Key">@col.Value</MudSelectItem>
@@ -17,7 +17,7 @@
     <MudIconButton Icon="@(SortDirection == "asc" ? Icons.Material.Filled.ArrowUpward : Icons.Material.Filled.ArrowDownward)"
                    Color="Color.Primary"
                    Variant="Variant.Outlined"
-                   Size="Size.Small"
+                   Size="Size.Medium"
                    OnClick="ToggleDirection" />
 </MudStack>
 

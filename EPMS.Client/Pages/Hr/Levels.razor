@@ -62,36 +62,40 @@
 
             @* ── Toolbar Section (bordered) ───────────────────────────────── *@
             <MudPaper Elevation="0" Outlined="true" Class="ma-4 pa-4 rounded-lg">
-                <MudStack Row="true" Justify="Justify.FlexStart" AlignItems="AlignItems.Center" Spacing="2">
-                    <MudTextField @bind-Value="_searchString"
-                                  Placeholder="@UIConstants.Level.SearchPlaceholder"
-                                  Adornment="Adornment.Start"
-                                  AdornmentIcon="@Icons.Material.Filled.Search"
-                                  IconSize="Size.Medium"
-                                  Variant="Variant.Outlined"
-                                  Clearable="true"
-                                  Immediate="true"
-                                  DebounceInterval="500"
-                                  Dense="true"
-                                  Style="max-width: 260px;" />
-
-                    <MudSelect T="bool"
-                               Value="@_statusFilter"
-                               ValueChanged="OnStatusFilterChanged"
-                               Variant="Variant.Outlined"
-                               Dense="true"
-                               Style="min-width: 130px;">
-                        <MudSelectItem T="bool" Value="@(true)">@UIConstants.Common.Active</MudSelectItem>
-                        <MudSelectItem T="bool" Value="@(false)">@UIConstants.Common.Inactive</MudSelectItem>
-                    </MudSelect>
-
-                    <MudSpacer />
-
-                    <TableSortControl SortBy="@_sortBy"
-                                      SortDirection="@_sortDirection"
-                                      SortColumns="@_sortableColumns"
-                                      OnSortChanged="HandleSortChanged" />
-                </MudStack>
+                <MudGrid>
+                    <MudItem xs="4">
+                        <MudTextField @bind-Value="_searchString"
+                                      Placeholder="@UIConstants.Level.SearchPlaceholder"
+                                      Label="Search"
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Filled.Search"
+                                      IconSize="Size.Medium"
+                                      Variant="Variant.Outlined"
+                                      Clearable="true"
+                                      Immediate="true"
+                                      DebounceInterval="500"
+                                      Dense="true"
+                                      FullWidth="true" />
+                    </MudItem>
+                    <MudItem xs="4">
+                        <MudSelect T="bool"
+                                   Value="@_statusFilter"
+                                   ValueChanged="OnStatusFilterChanged"
+                                   Variant="Variant.Outlined"
+                                    Label="Status"
+                                    Dense="true"
+                                    FullWidth="true">
+                            <MudSelectItem T="bool" Value="@(true)">@UIConstants.Common.Active</MudSelectItem>
+                            <MudSelectItem T="bool" Value="@(false)">@UIConstants.Common.Inactive</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="4">
+                        <TableSortControl SortBy="@_sortBy"
+                                          SortDirection="@_sortDirection"
+                                          SortColumns="@_sortableColumns"
+                                          OnSortChanged="HandleSortChanged" />
+                    </MudItem>
+                </MudGrid>
             </MudPaper>
 
             @* ── Data Grid Section (bordered) ─────────────────────────────── *@
