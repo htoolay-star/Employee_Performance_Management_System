@@ -96,13 +96,6 @@ public class AppraisalController : ApiControllerBase
         return HandleResult(result);
     }
 
-    [HttpPost("generate/{cycleId:long}")]
-    public async Task<ActionResult<SuccessResponse>> GenerateForCycle(long cycleId)
-    {
-        await _service.AutoGenerateForCycleAsync(cycleId);
-        return Ok(SuccessResponse.Ok("Appraisals generated successfully."));
-    }
-
     [HttpPost]
     public async Task<ActionResult<SuccessResponse>> Create([FromBody] CreateAppraisalDto dto)
     {
