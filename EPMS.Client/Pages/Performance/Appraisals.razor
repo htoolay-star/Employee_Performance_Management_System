@@ -52,7 +52,19 @@
                         <span style="display: block; text-align: left; padding-right: 12px;">@_rowNumbers.GetValueOrDefault(context.Item.Id)</span>
                     </CellTemplate>
                 </TemplateColumn>
-                <PropertyColumn Property="x => x.EmployeeName" Title="@UIConstants.AppraisalList.ColumnEmployee" Sortable="true" />
+                <TemplateColumn Title="@UIConstants.AppraisalList.ColumnEmployee"
+                                 Sortable="true"
+                                 SortBy="@(x => x.EmployeeName ?? x.EntityName ?? "")">
+                    <CellTemplate>
+                        <MudText>
+                            @(context.Item.EmployeeName ?? context.Item.EntityName ?? context.Item.EntityType ?? "")
+                        </MudText>
+                        @if (!string.IsNullOrEmpty(context.Item.EntityName) && string.IsNullOrEmpty(context.Item.EmployeeName))
+                        {
+                            <MudChip Size="Size.Small" Color="Color.Primary">@context.Item.EntityType</MudChip>
+                        }
+                    </CellTemplate>
+                </TemplateColumn>
                 <PropertyColumn Property="x => x.CycleName" Title="@UIConstants.AppraisalList.ColumnCycle" Sortable="true" />
                 <TemplateColumn Title="@UIConstants.AppraisalList.ColumnStatus" Sortable="false">
                     <CellTemplate>
@@ -151,8 +163,11 @@
         if (!string.IsNullOrWhiteSpace(_searchString))
         {
             var search = _searchString.Trim();
-            if (string.IsNullOrWhiteSpace(x.EmployeeName) ||
-                !x.EmployeeName.Contains(search, StringComparison.OrdinalIgnoreCase))
+            var nameMatch = (!string.IsNullOrWhiteSpace(x.EmployeeName) &&
+                             x.EmployeeName.Contains(search, StringComparison.OrdinalIgnoreCase))
+                         || (!string.IsNullOrWhiteSpace(x.EntityName) &&
+                             x.EntityName.Contains(search, StringComparison.OrdinalIgnoreCase));
+            if (!nameMatch)
                 return false;
         }
 
