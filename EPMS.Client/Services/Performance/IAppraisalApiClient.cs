@@ -33,6 +33,9 @@ public interface IAppraisalApiClient
     [Get("/api/performance/appraisals/entity/{entityType}/cycle/{cycleId}")]
     Task<SuccessResponse<IEnumerable<AppraisalDto>>> GetByEntityTypeAndCycleAsync(string entityType, long cycleId);
 
+    [Get("/api/performance/appraisals/entity/{entityType}")]
+    Task<SuccessResponse<IEnumerable<AppraisalDto>>> GetByEntityTypeAsync(string entityType);
+
     [Post("/api/performance/appraisals")]
     Task<SuccessResponse> CreateAsync([Body] CreateAppraisalDto dto);
 

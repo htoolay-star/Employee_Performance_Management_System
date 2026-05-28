@@ -9,7 +9,7 @@
 
 @inject IDialogService DialogService
 @inject IEmployeeKPIApiClient EmployeeKPIApiClient
-@inject IAppraisalCycleApiClient AppraisalCycleApiClient
+@inject LookupStateService LookupState
 @inject ISnackbar Snackbar
 @inject CurrentUserPermissionService PermService
 
@@ -145,8 +145,8 @@
         StateHasChanged();
         try
         {
-            var cycleResponse = await AppraisalCycleApiClient.GetActiveAsync();
-            var cycle = cycleResponse?.Data?.FirstOrDefault();
+            var cycles = await LookupState.GetActiveCyclesAsync();
+            var cycle = cycles.FirstOrDefault();
             if (cycle == null)
             {
                 Snackbar.Add("No active appraisal cycle found.", Severity.Warning);

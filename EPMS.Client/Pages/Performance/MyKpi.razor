@@ -45,12 +45,12 @@
                 </TemplateColumn>
                 <TemplateColumn Title="Actions" Sortable="false">
                     <CellTemplate>
-                        <MudButton Variant="Variant.Outlined"
-                                   Color="Color.Primary"
-                                   Size="Size.Small"
-                                   OnClick="@(() => Navigation.NavigateTo($"/performance/appraisals/{context.Item.Id}/view?from=my-kpi"))">
-                            View
-                        </MudButton>
+                        <MudTooltip Text="View KPI" Placement="Placement.Top">
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                           Color="Color.Info"
+                                           Size="Size.Small"
+                                           OnClick="@(() => Navigation.NavigateTo($"/performance/appraisals/{context.Item.Id}/view?from=my-kpi"))" />
+                        </MudTooltip>
                     </CellTemplate>
                 </TemplateColumn>
             </Columns>

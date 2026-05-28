@@ -13,6 +13,7 @@ public interface IAppraisalService
     Task<SuccessResponse> GetByEmployeeIdAsync(long employeeId);
     Task<SuccessResponse> GetMyEvaluationsAsync();
     Task<SuccessResponse> GetByEntityTypeAndCycleAsync(string entityType, long cycleId);
+    Task<SuccessResponse> GetByEntityTypeAsync(string entityType);
     Task<SuccessResponse> UpdateDetailActualValuesAsync(long appraisalId, List<AppraisalDetailDto> details);
     Task<SuccessResponse> GetAppraisalFillAsync(long id);
     Task<SuccessResponse> GetAppraisalViewAsync(long id);

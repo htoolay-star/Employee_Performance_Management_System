@@ -50,7 +50,7 @@
                 </TemplateColumn>
                 <TemplateColumn Title="Actions" Sortable="false">
                     <CellTemplate>
-                        @if (context.Item.KpiStatus is AppraisalStatuses.Kpi.Draft or null)
+                        @if (context.Item.KpiStatus is AppraisalStatuses.Kpi.Draft or null && !context.Item.IsLocked)
                         {
                             <MudTooltip Text="KPI Evaluation" Placement="Placement.Top">
                                 <MudIconButton Icon="@Icons.Material.Filled.EditNote"

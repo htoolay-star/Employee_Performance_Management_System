@@ -120,14 +120,15 @@
                                     </td>
                                     <td>
                                         <MudTextField T="decimal?"
-                                                      Value="detail.ActualValue"
-                                                      ValueChanged="value => OnActualValueChanged(detail, value)"
-                                                      Variant="Variant.Outlined"
-                                                      Placeholder="Enter value"
-                                                      Margin="Margin.Dense"
-                                                      Immediate="false"
-                                                      Validation="ValidateNegativeValue"
-                                                      InputType="InputType.Number" />
+                                                       Value="detail.ActualValue"
+                                                       ValueChanged="value => OnActualValueChanged(detail, value)"
+                                                       Variant="Variant.Outlined"
+                                                       Placeholder="Enter value"
+                                                       Margin="Margin.Dense"
+                                                       Immediate="false"
+                                                       Validation="ValidateNegativeValue"
+                                                       InputType="InputType.Number"
+                                                       Disabled="@(_model.KpiLocked || _model.IsLocked || _model.KpiStatus != AppraisalStatuses.Kpi.Draft)" />
                                     </td>
                                     <td>
                                         <MudText Typo="Typo.body2" Align="Align.Right">@detail.Score.ToString("F2")</MudText>
@@ -141,7 +142,8 @@
                                                       Variant="Variant.Outlined"
                                                       Placeholder="Notes"
                                                       Margin="Margin.Dense"
-                                                      Lines="2" />
+                                                      Lines="2"
+                                                      Disabled="@(_model.KpiLocked || _model.IsLocked || _model.KpiStatus != AppraisalStatuses.Kpi.Draft)" />
                                     </td>
                                 </tr>
                             }

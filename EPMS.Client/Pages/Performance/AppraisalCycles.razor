@@ -1,5 +1,6 @@
 @page "/performance/appraisal-cycles"
 @using EPMS.Client.Constants
+@using EPMS.Client.Services.Auth
 @using EPMS.Client.Services.Performance
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.PerformanceDTOs.AppraisalCycleDTOs
@@ -8,6 +9,7 @@
 @using static EPMS.Shared.Constants.ServiceResponseMessages
 
 @inject IAppraisalCycleApiClient AppraisalCycleApiClient
+@inject LookupStateService LookupState
 
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
@@ -172,6 +174,7 @@
 
     private async Task LoadCyclesAsync()
     {
+        LookupState.ClearCycleCache();
         _loading = true;
         StateHasChanged();
         try

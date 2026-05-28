@@ -11,7 +11,6 @@
 @using Refit
 
 @inject IEmployeeKPIApiClient EmployeeKPIApiClient
-@inject IAppraisalCycleApiClient AppraisalCycleApiClient
 @inject LookupStateService LookupState
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
@@ -206,9 +205,7 @@ else
             _canDelete = await PermService.HasPermissionAsync("EMPLOYEEKPI.DELETE");
 
             _employees = await LookupState.GetEmployeesAsync();
-            var cycleResponse = await AppraisalCycleApiClient.GetActiveAsync();
-            if (cycleResponse.Success && cycleResponse.Data != null)
-                _cycles = cycleResponse.Data.ToList();
+            _cycles = await LookupState.GetActiveCyclesAsync();
             await LoadDataAsync();
         }
         finally

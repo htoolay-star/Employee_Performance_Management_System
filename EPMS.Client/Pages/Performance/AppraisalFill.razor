@@ -3,6 +3,7 @@
 @implements IDisposable
 @using EPMS.Client.Constants
 @using EPMS.Client.Models.Performance
+@using EPMS.Client.Services.App
 @using EPMS.Client.Services.Performance
 @using EPMS.Shared.Constants
 @using EPMS.Shared.DTOs.Common
@@ -15,6 +16,7 @@
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@inject NavigationCacheService NavCache
 
 <PageTitle>@UIConstants.AppraisalFill.PageTitle</PageTitle>
 
@@ -312,6 +314,7 @@
             if (response.Success)
             {
                 Snackbar.Add(UIConstants.AppraisalFill.SubmitSuccess, Severity.Success);
+                NavCache.KpiForms = null;
                 Navigation.NavigateTo("/performance/my-evaluations");
             }
             else

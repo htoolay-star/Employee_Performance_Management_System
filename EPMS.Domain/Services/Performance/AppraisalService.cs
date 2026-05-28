@@ -167,7 +167,7 @@ public class AppraisalService : IAppraisalService
             return SuccessResponse.Fail("User identity not found.", ErrorType.Forbidden);
 
         var myAppraisals = await _uow.Perf.Appraisals.FindAllAsync(
-            a => a.ManagerReviewerId == currentEmployeeId.Value && !a.IsDeleted,
+            a => a.ManagerReviewerId == currentEmployeeId.Value && a.EmployeeId != null && !a.IsDeleted,
             includes: new Expression<Func<Appraisal, object>>[]
             {
                 a => a.Employee,
@@ -210,11 +210,95 @@ public class AppraisalService : IAppraisalService
 
         var appraisals = await _uow.Perf.Appraisals.FindAllAsync(
             a => a.EntityType == entityType && a.CycleId == cycleId && !a.IsDeleted,
-            includes: a => a.Details);
+            false, default, a => a.Details, a => a.Cycle);
 
-        var dtos = (await Task.WhenAll(
-            appraisals.Select(a => ResolveEntityNameAsync(MapToDto(a)))))
-            .AsEnumerable();
+        var entities = appraisals.ToList();
+        var dtos = entities.Select(MapToDto).ToList();
+
+        var entityIds = entities
+            .Where(a => a.EntityId.HasValue && a.EntityType == entityType)
+            .Select(a => a.EntityId!.Value)
+            .Distinct()
+            .ToList();
+
+        if (entityIds.Count != 0)
+        {
+            if (entityType == AppraisalConstants.EntityTypes.Department)
+            {
+                var depts = await _uow.HR.Departments.FindAllAsync(
+                    d => entityIds.Contains(d.Id),
+                    includes: d => d.DeptHead);
+                var deptDict = depts.ToDictionary(d => d.Id);
+                for (var i = 0; i < dtos.Count; i++)
+                {
+                    var dto = dtos[i];
+                    if (dto.EntityId.HasValue && deptDict.TryGetValue(dto.EntityId.Value, out var dept))
+                        dtos[i] = dto with { EntityName = dept.Name, EntityHeadName = dept.DeptHead?.StaffName };
+                }
+            }
+            else if (entityType == AppraisalConstants.EntityTypes.Team)
+            {
+                var teams = await _uow.HR.Teams.FindAllAsync(
+                    t => entityIds.Contains(t.Id),
+                    includes: t => t.LeadTeam);
+                var teamDict = teams.ToDictionary(t => t.Id);
+                for (var i = 0; i < dtos.Count; i++)
+                {
+                    var dto = dtos[i];
+                    if (dto.EntityId.HasValue && teamDict.TryGetValue(dto.EntityId.Value, out var team))
+                        dtos[i] = dto with { EntityName = team.Name, EntityHeadName = team.LeadTeam?.StaffName };
+                }
+            }
+        }
+
+        return SuccessResponse<IEnumerable<AppraisalDto>>.Ok(dtos, AppraisalMsg.RetrievedAll);
+    }
+
+    public async Task<SuccessResponse> GetByEntityTypeAsync(string entityType)
+    {
+        var appraisals = await _uow.Perf.Appraisals.FindAllAsync(
+            a => a.EntityType == entityType && !a.IsDeleted,
+            false, default, a => a.Details, a => a.Cycle);
+
+        var entities = appraisals.ToList();
+        var dtos = entities.Select(MapToDto).ToList();
+
+        var entityIds = entities
+            .Where(a => a.EntityId.HasValue && a.EntityType == entityType)
+            .Select(a => a.EntityId!.Value)
+            .Distinct()
+            .ToList();
+
+        if (entityIds.Count != 0)
+        {
+            if (entityType == AppraisalConstants.EntityTypes.Department)
+            {
+                var depts = await _uow.HR.Departments.FindAllAsync(
+                    d => entityIds.Contains(d.Id),
+                    includes: d => d.DeptHead);
+                var deptDict = depts.ToDictionary(d => d.Id);
+                for (var i = 0; i < dtos.Count; i++)
+                {
+                    var dto = dtos[i];
+                    if (dto.EntityId.HasValue && deptDict.TryGetValue(dto.EntityId.Value, out var dept))
+                        dtos[i] = dto with { EntityName = dept.Name, EntityHeadName = dept.DeptHead?.StaffName };
+                }
+            }
+            else if (entityType == AppraisalConstants.EntityTypes.Team)
+            {
+                var teams = await _uow.HR.Teams.FindAllAsync(
+                    t => entityIds.Contains(t.Id),
+                    includes: t => t.LeadTeam);
+                var teamDict = teams.ToDictionary(t => t.Id);
+                for (var i = 0; i < dtos.Count; i++)
+                {
+                    var dto = dtos[i];
+                    if (dto.EntityId.HasValue && teamDict.TryGetValue(dto.EntityId.Value, out var team))
+                        dtos[i] = dto with { EntityName = team.Name, EntityHeadName = team.LeadTeam?.StaffName };
+                }
+            }
+        }
+
         return SuccessResponse<IEnumerable<AppraisalDto>>.Ok(dtos, AppraisalMsg.RetrievedAll);
     }
 
@@ -640,7 +724,7 @@ public class AppraisalService : IAppraisalService
             created++;
         }
 
-        // 4. Generate entity appraisals for Departments with EntityKPIs
+        // 5. Generate entity appraisals for Departments with EntityKPIs
         var departmentKPIs = (await _uow.Perf.EntityKPIs
             .GetByEntityTypeAsync(AppraisalConstants.EntityTypes.Department))
             .Where(e => !e.IsDeleted)
@@ -658,7 +742,7 @@ public class AppraisalService : IAppraisalService
             var department = await _uow.HR.Departments.GetByIdAsync(deptId);
             if (department == null) { skipped++; continue; }
 
-            var managerId = department.DeptHeadId ?? await GetDefaultReviewerIdAsync();
+            var managerId = await GetDefaultReviewerIdAsync();
             if (managerId == null) { skipped++; continue; }
 
             var appraisal = new Appraisal(
@@ -671,7 +755,7 @@ public class AppraisalService : IAppraisalService
             created++;
         }
 
-        // 5. Generate entity appraisals for Teams with EntityKPIs
+        // 6. Generate entity appraisals for Teams with EntityKPIs
         var teamKPIs = (await _uow.Perf.EntityKPIs
             .GetByEntityTypeAsync(AppraisalConstants.EntityTypes.Team))
             .Where(e => !e.IsDeleted)
@@ -689,7 +773,7 @@ public class AppraisalService : IAppraisalService
             var team = await _uow.HR.Teams.GetByIdAsync(teamId);
             if (team == null) { skipped++; continue; }
 
-            var managerId = team.LeadTeamId ?? await GetDefaultReviewerIdAsync();
+            var managerId = await GetDefaultReviewerIdAsync();
             if (managerId == null) { skipped++; continue; }
 
             var appraisal = new Appraisal(

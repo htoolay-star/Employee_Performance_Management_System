@@ -38,12 +38,24 @@
                 </TemplateColumn>
                 <TemplateColumn Title="Actions" Sortable="false">
                     <CellTemplate>
-                        <MudButton Variant="Variant.Filled"
-                                   Color="@(context.Item.IsSubmitted ? Color.Info : Color.Primary)"
-                                   Size="Size.Small"
-                                   OnClick="@(() => NavigateToForm(context.Item))">
-                            @(context.Item.IsSubmitted ? "View" : "Fill")
-                        </MudButton>
+                        @if (context.Item.IsSubmitted)
+                        {
+                            <MudTooltip Text="View 360 Form" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                               Color="Color.Info"
+                                               Size="Size.Small"
+                                               OnClick="@(() => NavigateToForm(context.Item))" />
+                            </MudTooltip>
+                        }
+                        else
+                        {
+                            <MudTooltip Text="Fill 360 Form" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.EditNote"
+                                               Color="Color.Primary"
+                                               Size="Size.Small"
+                                               OnClick="@(() => NavigateToForm(context.Item))" />
+                            </MudTooltip>
+                        }
                     </CellTemplate>
                 </TemplateColumn>
             </Columns>

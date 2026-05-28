@@ -89,6 +89,13 @@ public class AppraisalController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HttpGet("entity/{entityType}")]
+    public async Task<ActionResult<SuccessResponse>> GetByEntityType(string entityType)
+    {
+        var result = await _service.GetByEntityTypeAsync(entityType);
+        return HandleResult(result);
+    }
+
     [HttpPut("{id:long}/details")]
     public async Task<ActionResult<SuccessResponse>> UpdateDetailActualValues(long id, [FromBody] List<AppraisalDetailDto> details)
     {
