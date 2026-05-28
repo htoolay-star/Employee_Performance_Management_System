@@ -467,7 +467,7 @@ public class EmployeeProfileService : IEmployeeProfileService
 
         var departments = (await _uow.HR.Departments.GetAllAsync()).ToDictionary(d => d.Name, StringComparer.OrdinalIgnoreCase);
         var positions = (await _uow.HR.Positions.GetAllAsync()).ToDictionary(p => p.Name, StringComparer.OrdinalIgnoreCase);
-        var teams = (await _uow.HR.Teams.GetAllAsync()).ToDictionary(t => t.Name, StringComparer.OrdinalIgnoreCase);
+        var teams = (await _uow.HR.Teams.GetAllAsync()).ToDictionary(t => (t.DepartmentId, t.Name), t => t);
 
         var allProfiles = (await _uow.Info.EmployeeProfiles.GetAllAsync()).ToList();
         var existingStaffNos = new HashSet<string>(allProfiles.Select(p => p.StaffNo), StringComparer.OrdinalIgnoreCase);
@@ -509,8 +509,11 @@ public class EmployeeProfileService : IEmployeeProfileService
 
                 if (!string.IsNullOrWhiteSpace(row.TeamName))
                 {
-                    if (!teams.TryGetValue(row.TeamName, out var team))
-                        rowErrors.Add($"Row {rowNum}: Team '{row.TeamName}' not found.");
+                    var teamDeptId = departments.GetValueOrDefault(row.DepartmentName ?? "")?.Id ?? 0;
+                    if (teamDeptId == 0)
+                        rowErrors.Add($"Row {rowNum}: Department must be specified for team '{row.TeamName}'.");
+                    else if (!teams.TryGetValue((teamDeptId, row.TeamName), out _))
+                        rowErrors.Add($"Row {rowNum}: Team '{row.TeamName}' not found in department '{row.DepartmentName}'.");
                 }
 
                 if (rowErrors.Count > 0)
@@ -525,7 +528,9 @@ public class EmployeeProfileService : IEmployeeProfileService
                     parentDeptId = parentDept.Id;
 
                 var posId = positions.GetValueOrDefault(row.PositionName ?? "")?.Id ?? 0;
-                var teamId = teams.GetValueOrDefault(row.TeamName ?? "")?.Id;
+                var teamId = !string.IsNullOrWhiteSpace(row.TeamName) && deptId > 0
+                    ? teams.GetValueOrDefault((deptId, row.TeamName))?.Id
+                    : null;
 
                 long? managerId = null;
                 if (!string.IsNullOrWhiteSpace(row.DirectManagerStaffNo) &&
@@ -640,7 +645,7 @@ public class EmployeeProfileService : IEmployeeProfileService
         var positions = (await _uow.HR.Positions.GetAllAsync())
             .ToDictionary(p => p.Name, StringComparer.OrdinalIgnoreCase);
         var teams = (await _uow.HR.Teams.GetAllAsync())
-            .ToDictionary(t => t.Name, StringComparer.OrdinalIgnoreCase);
+            .ToDictionary(t => (t.DepartmentId, t.Name), t => t);
 
         var allProfiles = (await _uow.Info.EmployeeProfiles.GetAllAsync()).ToList();
         var existingStaffNos = new HashSet<string>(allProfiles.Select(p => p.StaffNo), StringComparer.OrdinalIgnoreCase);
@@ -682,9 +687,14 @@ public class EmployeeProfileService : IEmployeeProfileService
                 !positions.ContainsKey(row.PositionName))
                 rowErrors.Add($"Position '{row.PositionName}' not found.");
 
-            if (!string.IsNullOrWhiteSpace(row.TeamName) &&
-                !teams.ContainsKey(row.TeamName))
-                rowErrors.Add($"Team '{row.TeamName}' not found.");
+            if (!string.IsNullOrWhiteSpace(row.TeamName))
+            {
+                var deptId = departments.GetValueOrDefault(row.DepartmentName ?? "")?.Id ?? 0;
+                if (deptId == 0)
+                    rowErrors.Add($"Department must be specified for team '{row.TeamName}'.");
+                else if (!teams.ContainsKey((deptId, row.TeamName)))
+                    rowErrors.Add($"Team '{row.TeamName}' not found in department '{row.DepartmentName}'.");
+            }
 
             previewRows.Add(new ImportPreviewRow
             {

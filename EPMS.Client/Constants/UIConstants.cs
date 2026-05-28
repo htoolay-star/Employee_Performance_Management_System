@@ -51,7 +51,7 @@
 
         public static class Level
         {
-            public const string PageTitle = "Level Management";
+            public const string PageTitle = "Levels";
             public const string SearchPlaceholder = "Search by name...";
             public const string AddButton = "Add Level";
             public const string CreateDialogTitle = "Create Level";

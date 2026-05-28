@@ -95,18 +95,18 @@
                     <Authorized>
                         @if (_drawerOpen)
                         {
-                            <MudText Typo="Typo.body2" Class="drawer-user-name">@context.User.Identity?.Name</MudText>
+                            <MudText Typo="Typo.body1" Class="drawer-user-name">@context.User.Identity?.Name</MudText>
                             <MudSpacer />
                         }
                         <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.DarkMode : Icons.Material.Filled.LightMode)"
                                        Color="Color.Inherit"
                                        OnClick="ToggleTheme"
-                                       Size="Size.Small"
-                                       title="@(_isDarkMode ? "Light Mode" : "Dark Mode")" />
+                                        Size="Size.Medium"
+                                        title="@(_isDarkMode ? "Light Mode" : "Dark Mode")" />
                         <MudIconButton Icon="@Icons.Material.Filled.ExitToApp"
                                        Color="Color.Inherit"
                                        OnClick="LogoutAsync"
-                                       Size="Size.Small"
+                                       Size="Size.Medium"
                                        title="Log out" />
                     </Authorized>
                 </AuthorizeView>
