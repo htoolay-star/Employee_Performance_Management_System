@@ -14,5 +14,6 @@ namespace EPMS.Shared.DTOs.PerformanceDTOs.PIPDTOs
         public string Status { get; set; } = string.Empty;
         public string? FinalOutcomeNotes { get; set; }
         public DateTimeOffset CreatedAt { get; set; }
+        public bool IsCurrentUserEmployee { get; set; }
     }
 }

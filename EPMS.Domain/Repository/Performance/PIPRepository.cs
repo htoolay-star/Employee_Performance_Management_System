@@ -11,6 +11,16 @@ namespace EPMS.Domain.Repository.Performance
     {
         public PIPRepository(AppDbContext context) : base(context) { }
 
+        public override async Task<IEnumerable<PIP>> GetAllAsync(CancellationToken cancellationToken = default)
+        {
+            return await _dbSet
+                .AsNoTracking()
+                .Include(x => x.Employee)
+                .Include(x => x.Manager)
+                .OrderByDescending(x => x.StartDate)
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task<IEnumerable<PIP>> GetByEmployeeIdAsync(long employeeId)
         {
             return await _dbSet

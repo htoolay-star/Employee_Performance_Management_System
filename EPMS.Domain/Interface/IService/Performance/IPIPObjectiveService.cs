@@ -10,5 +10,6 @@ public interface IPIPObjectiveService
     Task<SuccessResponse<IEnumerable<PIPObjectiveDto>>> GetByPIPIdAsync(long pipId);
     Task<SuccessResponse<long>> CreateAsync(CreatePIPObjectiveDto dto);
     Task<SuccessResponse> UpdateAsync(long id, UpdatePIPObjectiveDto dto);
+    Task<SuccessResponse> MarkCompleteAsync(long id);
     Task<SuccessResponse> DeleteAsync(long id);
 }

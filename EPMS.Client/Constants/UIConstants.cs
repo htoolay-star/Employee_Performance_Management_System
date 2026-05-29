@@ -612,6 +612,7 @@
         public static class PIP
         {
             public const string PageTitle = "Performance Improvement Plans";
+            public const string MyPIPsPageTitle = "My PIPs";
             public const string SearchPlaceholder = "Search by employee or manager...";
             public const string AddButton = "Create PIP";
             public const string CreateDialogTitle = "Create PIP";

@@ -1,0 +1,520 @@
+@page "/performance/my-pips"
+@using EPMS.Client.Constants
+@using EPMS.Client.Services.Performance
+@using EPMS.Shared.Constants
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.PerformanceDTOs.PIPDTOs
+@using EPMS.Shared.DTOs.PerformanceDTOs.PIPObjectiveDTOs
+@using MudBlazor
+@using Refit
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@inject IPIPApiClient PIPApiClient
+@inject IPIPObjectiveApiClient ObjectiveApiClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<PageTitle>@UIConstants.PIP.MyPIPsPageTitle</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.PIP.MyPIPsPageTitle</MudText>
+
+    <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+        <MudDataGrid Items="@_items"
+                     Loading="@_loading"
+                     Hover="true"
+                     Elevation="0"
+                     SortMode="SortMode.None">
+            <Columns>
+                <TemplateColumn Title="#" Sortable="false" Style="width: 60px;">
+                    <CellTemplate>
+                        <span style="display: block; text-align: left; padding-right: 12px;">@(_items.IndexOf(context.Item) + 1)</span>
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.EmployeeName" Title="@UIConstants.PIP.ColumnEmployee" Sortable="true" />
+                <PropertyColumn Property="x => x.ManagerName" Title="@UIConstants.PIP.ColumnManager" Sortable="true" />
+                <PropertyColumn Property="x => x.Reason" Title="@UIConstants.PIP.ColumnReason" Sortable="true" />
+                <TemplateColumn Title="@UIConstants.PIP.ColumnStartDate" Sortable="true">
+                    <CellTemplate>
+                        @context.Item.StartDate.ToString("dd/MM/yyyy")
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="@UIConstants.PIP.ColumnEndDate" Sortable="true">
+                    <CellTemplate>
+                        @context.Item.EndDate.ToString("dd/MM/yyyy")
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="@UIConstants.PIP.ColumnStatus" Sortable="true">
+                    <CellTemplate>
+                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Item.Status)">@context.Item.Status</MudChip>
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="Actions" Sortable="false">
+                    <CellTemplate>
+                        <MudTooltip Text="@UIConstants.PIP.ObjectivesDialogTitle" Placement="Placement.Top">
+                            <MudIconButton Icon="@Icons.Material.Filled.Checklist"
+                                           Color="Color.Info"
+                                           Size="Size.Small"
+                                           OnClick="@(() => OpenObjectivesDialog(context.Item))" />
+                        </MudTooltip>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+            <NoRecordsContent>
+                <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
+                    <MudIcon Icon="@Icons.Material.Outlined.CheckCircle" Style="font-size: 4rem;" Color="Color.Success" />
+                    <MudText Typo="Typo.h6" Color="Color.Default">No PIPs found.</MudText>
+                </MudStack>
+            </NoRecordsContent>
+            <LoadingContent>
+                <MudStack Spacing="3" Class="w-100">
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                </MudStack>
+            </LoadingContent>
+        </MudDataGrid>
+    </MudPaper>
+</MudContainer>
+
+@* Objectives Dialog *@
+<MudDialog @bind-Visible="_showObjectivesDialog" Options="@_dialogOptions">
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-4">@UIConstants.PIP.ObjectivesDialogTitle</MudText>
+        @if (_selectedPip != null)
+        {
+            <MudSimpleTable Class="mb-4">
+                <tbody>
+                    <tr>
+                        <td><strong>Employee:</strong> @_selectedPip.EmployeeName</td>
+                        <td><strong>Manager:</strong> @_selectedPip.ManagerName</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Start:</strong> @_selectedPip.StartDate.ToString("dd/MM/yyyy")</td>
+                        <td><strong>End:</strong> @_selectedPip.EndDate.ToString("dd/MM/yyyy")</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"><strong>Reason:</strong> @_selectedPip.Reason</td>
+                    </tr>
+                </tbody>
+            </MudSimpleTable>
+
+            @if (_selectedPip is { IsCurrentUserEmployee: false })
+            {
+                <MudTooltip Text="Add Objective" Placement="Placement.Top">
+                    <MudIconButton Icon="@Icons.Material.Filled.AddCircle"
+                                   Color="Color.Primary"
+                                   Size="Size.Small"
+                                   Class="mb-2"
+                                   OnClick="ShowAddObjectiveDialog" />
+                </MudTooltip>
+            }
+
+            @if (_objectives != null && _objectives.Count != 0)
+            {
+                <MudTable Items="@_objectives" Dense="true" Hover="true" Elevation="0" Outlined="true">
+                    <ColGroup>
+                        <col style="width: 40px;" />
+                        <col />
+                        <col />
+                        <col style="width: 120px;" />
+                        <col style="width: 140px;" />
+                    </ColGroup>
+                    <HeaderContent>
+                        <MudTh>#</MudTh>
+                        <MudTh>Title</MudTh>
+                        <MudTh>Success Criteria</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="#">@(_objectives.IndexOf(context) + 1)</MudTd>
+                        <MudTd DataLabel="Title">@context.Title</MudTd>
+                        <MudTd DataLabel="Success Criteria">@context.SuccessCriteria</MudTd>
+                        <MudTd DataLabel="Status">
+                            <MudChip T="string" Size="Size.Small" Color="@GetObjectiveStatusColor(context.Status)">@context.Status</MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Actions">
+                            @if (_selectedPip!.IsCurrentUserEmployee)
+                            {
+                                @* Employee: only Mark Complete *@
+                                @if (context.Status == ObjectiveStatuses.InProgress)
+                                {
+                                    <MudTooltip Text="Mark Complete" Placement="Placement.Top">
+                                        <MudIconButton Icon="@Icons.Material.Filled.CheckCircle"
+                                                       Color="Color.Success"
+                                                       Size="Size.Small"
+                                                       OnClick="@(() => MarkObjectiveComplete(context))" />
+                                    </MudTooltip>
+                                }
+                            }
+                            else
+                            {
+                                @* Manager: Edit + Delete *@
+                                <MudTooltip Text="Edit" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                   Color="Color.Primary"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => EditObjective(context))" />
+                                </MudTooltip>
+                                <MudTooltip Text="Delete" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   Color="Color.Error"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => DeleteObjective(context))" />
+                                </MudTooltip>
+                            }
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+            else
+            {
+                <MudText Typo="Typo.body2" Color="Color.Default" Class="py-4">No objectives found.</MudText>
+            }
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="CloseObjectivesDialog">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@* Objective Edit Dialog (Manager only) *@
+<MudDialog @bind-Visible="_showObjectiveEditDialog" Options="@_dialogOptions">
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-4">@(_isCreatingNewObjective ? "Add Objective" : UIConstants.PIP.EditObjectiveButton)</MudText>
+        <MudForm @ref="_objectiveForm" @bind-IsValid="_objectiveFormValid">
+            <MudTextField T="string"
+                          Label="@UIConstants.PIP.ObjectiveTitleLabel"
+                          @bind-Value="_editObjectiveTitle"
+                          Variant="Variant.Outlined"
+                          Class="mb-4"
+                          Required="true"
+                          RequiredError="Title is required" />
+            <MudTextField T="string"
+                          Label="@UIConstants.PIP.ObjectiveSuccessCriteriaLabel"
+                          @bind-Value="_editObjectiveSuccessCriteria"
+                          Variant="Variant.Outlined"
+                          Class="mb-4"
+                          Required="true"
+                          RequiredError="Success criteria is required" />
+            <MudTextField T="string"
+                          Label="@UIConstants.PIP.ObjectiveDescriptionLabel"
+                          @bind-Value="_editObjectiveDescription"
+                          Variant="Variant.Outlined"
+                          Class="mb-4"
+                          Lines="3" />
+            @if (!_isCreatingNewObjective)
+            {
+                <MudSelect T="string"
+                           Label="@UIConstants.PIP.ObjectiveStatusLabel"
+                           @bind-Value="_editObjectiveStatus"
+                           Variant="Variant.Outlined"
+                           Class="mb-4"
+                           Required="true">
+                     <MudSelectItem Value="@ObjectiveStatuses.InProgress">IN-PROGRESS</MudSelectItem>
+                    <MudSelectItem Value="@ObjectiveStatuses.Completed">COMPLETED</MudSelectItem>
+                    <MudSelectItem Value="@ObjectiveStatuses.Cancelled">CANCELLED</MudSelectItem>
+                </MudSelect>
+                <MudTextField T="string"
+                              Label="@UIConstants.PIP.ObjectiveManagerCommentLabel"
+                              @bind-Value="_editObjectiveManagerComment"
+                              Variant="Variant.Outlined"
+                              Lines="3" />
+            }
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="CancelObjectiveEdit">@UIConstants.Common.Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   Disabled="!_objectiveFormValid || _isSaving"
+                   OnClick="ConfirmObjectiveEdit">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+            }
+            <span>@(_isCreatingNewObjective ? UIConstants.Common.Create : UIConstants.Common.Update)</span>
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<PIPDto> _items = new();
+    private bool _loading = true;
+
+    private PIPDto? _selectedPip;
+    private List<PIPObjectiveDto> _objectives = new();
+    private bool _showObjectivesDialog;
+
+    private bool _showObjectiveEditDialog;
+    private bool _isCreatingNewObjective;
+    private long _editObjectiveId;
+    private string _editObjectiveTitle = string.Empty;
+    private string _editObjectiveSuccessCriteria = string.Empty;
+    private string? _editObjectiveDescription;
+    private string _editObjectiveStatus = "IN-PROGRESS";
+    private string? _editObjectiveManagerComment;
+    private MudForm? _objectiveForm;
+    private bool _objectiveFormValid;
+    private bool _isSaving;
+
+    private readonly DialogOptions _dialogOptions = new()
+    {
+        CloseOnEscapeKey = true,
+        MaxWidth = MaxWidth.Medium,
+        FullWidth = true
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _loading = true;
+        StateHasChanged();
+        try
+        {
+            var response = await PIPApiClient.GetMyPIPsAsync();
+            if (response.Success && response.Data != null)
+            {
+                _items = response.Data.ToList();
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? "Failed to load PIPs.", Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "An error occurred.", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OpenObjectivesDialog(PIPDto pip)
+    {
+        _selectedPip = pip;
+        _objectives = new();
+        _showObjectivesDialog = true;
+
+        try
+        {
+            var response = await ObjectiveApiClient.GetByPIPIdAsync(pip.Id);
+            if (response.Success && response.Data != null)
+            {
+                _objectives = response.Data.ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading objectives: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void CloseObjectivesDialog()
+    {
+        _showObjectivesDialog = false;
+        _selectedPip = null;
+        _objectives = new();
+    }
+
+    private async Task MarkObjectiveComplete(PIPObjectiveDto objective)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, "Are you sure you want to mark this objective as completed?" },
+            { x => x.Color, Color.Primary }
+        };
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("", parameters, options);
+        var result = await dialog.Result;
+        if (result is { Canceled: true }) return;
+
+        try
+        {
+            var response = await ObjectiveApiClient.MarkCompleteAsync(objective.Id);
+            if (response.Success)
+            {
+                Snackbar.Add(UIConstants.PIP.ObjectiveUpdated, Severity.Success);
+                await OpenObjectivesDialog(_selectedPip!);
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "An error occurred.", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void ShowAddObjectiveDialog()
+    {
+        _isCreatingNewObjective = true;
+        _editObjectiveId = 0;
+        _editObjectiveTitle = string.Empty;
+        _editObjectiveSuccessCriteria = string.Empty;
+        _editObjectiveDescription = null;
+        _editObjectiveStatus = ObjectiveStatuses.InProgress;
+        _editObjectiveManagerComment = null;
+        _showObjectiveEditDialog = true;
+    }
+
+    private void EditObjective(PIPObjectiveDto objective)
+    {
+        _isCreatingNewObjective = false;
+        _editObjectiveId = objective.Id;
+        _editObjectiveTitle = objective.Title;
+        _editObjectiveSuccessCriteria = objective.SuccessCriteria;
+        _editObjectiveDescription = objective.Description;
+        _editObjectiveStatus = objective.Status;
+        _editObjectiveManagerComment = objective.ManagerComment;
+        _showObjectiveEditDialog = true;
+    }
+
+    private void CancelObjectiveEdit()
+    {
+        _showObjectiveEditDialog = false;
+        _isCreatingNewObjective = false;
+    }
+
+    private async Task ConfirmObjectiveEdit()
+    {
+        _isSaving = true;
+        StateHasChanged();
+        try
+        {
+            if (_isCreatingNewObjective)
+            {
+                var dto = new CreatePIPObjectiveDto
+                {
+                    PIPId = _selectedPip!.Id,
+                    Title = _editObjectiveTitle,
+                    SuccessCriteria = _editObjectiveSuccessCriteria,
+                    Description = _editObjectiveDescription
+                };
+                var response = await ObjectiveApiClient.CreateAsync(dto);
+                if (response.Success)
+                {
+                    Snackbar.Add(UIConstants.PIP.ObjectiveCreated, Severity.Success);
+                    _showObjectiveEditDialog = false;
+                    _isCreatingNewObjective = false;
+                    await OpenObjectivesDialog(_selectedPip);
+                }
+                else
+                {
+                    Snackbar.Add(response.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+                }
+            }
+            else
+            {
+                var dto = new UpdatePIPObjectiveDto
+                {
+                    Title = _editObjectiveTitle,
+                    SuccessCriteria = _editObjectiveSuccessCriteria,
+                    Description = _editObjectiveDescription,
+                    Status = _editObjectiveStatus,
+                    ManagerComment = _editObjectiveManagerComment
+                };
+                var response = await ObjectiveApiClient.UpdateAsync(_editObjectiveId, dto);
+                if (response.Success)
+                {
+                    Snackbar.Add(UIConstants.PIP.ObjectiveUpdated, Severity.Success);
+                    _showObjectiveEditDialog = false;
+                    await OpenObjectivesDialog(_selectedPip!);
+                }
+                else
+                {
+                    Snackbar.Add(response.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+                }
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "An error occurred.", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DeleteObjective(PIPObjectiveDto objective)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, "Are you sure you want to delete this objective?" },
+            { x => x.Color, Color.Error }
+        };
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("", parameters, options);
+        var result = await dialog.Result;
+        if (result is { Canceled: true }) return;
+
+        try
+        {
+            var response = await ObjectiveApiClient.DeleteAsync(objective.Id);
+            if (response.Success)
+            {
+                Snackbar.Add(UIConstants.PIP.ObjectiveDeleted, Severity.Success);
+                await OpenObjectivesDialog(_selectedPip!);
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "An error occurred.", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        PIPStatuses.Draft => Color.Default,
+        PIPStatuses.Open => Color.Info,
+        PIPStatuses.Active => Color.Primary,
+        PIPStatuses.Extended => Color.Warning,
+        PIPStatuses.Successful => Color.Success,
+        PIPStatuses.Failed => Color.Error,
+        PIPStatuses.Completed => Color.Success,
+        PIPStatuses.Cancelled => Color.Default,
+        _ => Color.Default
+    };
+
+    private Color GetObjectiveStatusColor(string status) => status switch
+    {
+        ObjectiveStatuses.InProgress => Color.Info,
+        ObjectiveStatuses.Completed => Color.Success,
+        ObjectiveStatuses.Cancelled => Color.Default,
+        _ => Color.Default
+    };
+}

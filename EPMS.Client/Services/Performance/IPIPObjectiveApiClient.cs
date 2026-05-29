@@ -18,6 +18,9 @@ public interface IPIPObjectiveApiClient
     [Post("/api/PIPObjectives")]
     Task<SuccessResponse<long>> CreateAsync([Body] CreatePIPObjectiveDto dto);
 
+    [Post("/api/PIPObjectives/{id}/complete")]
+    Task<SuccessResponse> MarkCompleteAsync(long id);
+
     [Put("/api/PIPObjectives/{id}")]
     Task<SuccessResponse> UpdateAsync(long id, [Body] UpdatePIPObjectiveDto dto);
 
