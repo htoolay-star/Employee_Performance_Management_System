@@ -446,6 +446,7 @@
             public const string PageTitle = "Self Assessment Review";
             public const string ApproveButton = "Approve Self Assessment";
             public const string Approved = "Self assessment approved successfully.";
+            public const string FinalizeButton = "Finalize Self Assessment";
         }
 
         public static class AppraisalView

@@ -981,7 +981,37 @@ public class AppraisalService : IAppraisalService
                  && !a.IsDeleted,
             includes: new Expression<Func<Appraisal, object>>[] { a => a.Employee, a => a.Employee.Employment, a => a.Cycle });
 
-        var dtos = appraisals.Select(MapToDto).ToList();
+        var allAppraisals = appraisals.ToList();
+
+        if (await IsCurrentUserAdminAsync())
+        {
+            var noManagerPending = await _uow.Perf.Appraisals.FindAllAsync(
+                a => a.Employee != null && a.Employee.Employment != null
+                     && a.Employee.Employment.DirectManagerId == null
+                     && a.SelfStatus == AppraisalStatuses.Self.InProgress
+                     && !a.IsDeleted,
+                includes: new Expression<Func<Appraisal, object>>[] { a => a.Employee, a => a.Employee.Employment, a => a.Cycle });
+
+            foreach (var a in noManagerPending)
+            {
+                if (!allAppraisals.Any(x => x.Id == a.Id))
+                    allAppraisals.Add(a);
+            }
+
+            var reviewed = await _uow.Perf.Appraisals.FindAllAsync(
+                a => a.Employee != null && a.Employee.Employment != null
+                     && a.SelfStatus == AppraisalStatuses.Self.Reviewed
+                     && !a.IsDeleted,
+                includes: new Expression<Func<Appraisal, object>>[] { a => a.Employee, a => a.Employee.Employment, a => a.Cycle });
+
+            foreach (var a in reviewed)
+            {
+                if (!allAppraisals.Any(x => x.Id == a.Id))
+                    allAppraisals.Add(a);
+            }
+        }
+
+        var dtos = allAppraisals.Select(MapToDto).ToList();
         return SuccessResponse<IEnumerable<AppraisalDto>>.Ok(dtos, "Pending self assessments retrieved.");
     }
 
@@ -999,7 +1029,11 @@ public class AppraisalService : IAppraisalService
             return SuccessResponse.Fail(AppraisalMsg.NotFound(appraisalId), ErrorType.NotFound);
 
         if (tracked.Employee?.Employment?.DirectManagerId != currentEmployeeId.Value)
-            return SuccessResponse.Fail("Only the direct manager can approve the self assessment.", ErrorType.Forbidden);
+        {
+            var hasNoManager = tracked.Employee?.Employment?.DirectManagerId == null;
+            if (!(hasNoManager && await IsCurrentUserAdminAsync()))
+                return SuccessResponse.Fail("Only the direct manager can approve the self assessment.", ErrorType.Forbidden);
+        }
 
         if (tracked.SelfStatus != AppraisalStatuses.Self.InProgress)
             return SuccessResponse.Fail("Self assessment must be InProgress to approve.", ErrorType.Validation);

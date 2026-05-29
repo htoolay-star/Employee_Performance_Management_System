@@ -204,7 +204,7 @@
     {
     <MudTooltip Text="Pending Forms" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
     <MudNavGroup Title="Pending Forms" Icon="@Icons.Material.Filled.PendingActions" Expanded="false">
-        @if (_isManager)
+        @if (_isAdmin || _isManager)
         {
         <MudTooltip Text="Pending Self Reviews" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
             <MudNavLink Href="performance/manager-self-pending" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.RateReview">Pending Self Reviews</MudNavLink>
