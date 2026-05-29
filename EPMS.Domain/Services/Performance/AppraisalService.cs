@@ -1011,6 +1011,125 @@ public class AppraisalService : IAppraisalService
         return SuccessResponse.Ok("Self assessment approved successfully.");
     }
 
+    public async Task<SuccessResponse> GetEmployeeFormsOverviewAsync(long appraisalId)
+    {
+        var appraisal = await _uow.Perf.Appraisals.FindAsync(
+            a => a.Id == appraisalId && !a.IsDeleted,
+            false, default,
+            a => a.Cycle,
+            a => a.Employee.Employment.Position,
+            a => a.Employee.Employment.Department,
+            a => a.Employee.Employment.Team,
+            a => a.Employee.Employment.DirectManager,
+            a => a.ManagerReviewer);
+
+        if (appraisal == null)
+            return SuccessResponse.Fail(AppraisalMsg.NotFound(appraisalId), ErrorType.NotFound);
+
+        var dto = new EmployeeFormsOverviewDto
+        {
+            AppraisalId = appraisal.Id,
+            EmployeeId = appraisal.EmployeeId,
+            EmployeeName = appraisal.Employee?.StaffName,
+            CycleName = appraisal.Cycle?.Name,
+            PositionName = appraisal.Employee?.Employment?.Position?.Name,
+            DepartmentName = appraisal.Employee?.Employment?.Department?.Name,
+            TeamName = appraisal.Employee?.Employment?.Team?.Name,
+            ManagerName = appraisal.ManagerReviewer?.StaffName,
+        };
+
+        var hasManager = appraisal.Employee?.Employment?.DirectManager != null;
+
+        dto.Forms.Add(new FormEntryDto
+        {
+            FormType = "KPI",
+            DisplayName = "KPI",
+            Status = appraisal.KpiStatus ?? AppraisalStatuses.Kpi.Draft,
+            IsSubmitted = appraisal.KpiStatus != null && appraisal.KpiStatus != AppraisalStatuses.Kpi.Draft,
+            IsLocked = appraisal.KpiLocked,
+            CanFill = !hasManager && appraisal.KpiStatus == AppraisalStatuses.Kpi.Draft && !appraisal.KpiLocked,
+            Score = appraisal.KpiScore,
+        });
+
+        dto.Forms.Add(new FormEntryDto
+        {
+            FormType = EvaluatorRoles.Self,
+            DisplayName = "Self Assessment",
+            Status = appraisal.SelfStatus ?? AppraisalStatuses.Self.Draft,
+            IsSubmitted = appraisal.SelfStatus != null && appraisal.SelfStatus != AppraisalStatuses.Self.Draft,
+            IsLocked = appraisal.SelfLocked,
+            Score = appraisal.SelfScore,
+        });
+
+        dto.Forms.Add(new FormEntryDto
+        {
+            FormType = EvaluatorRoles.Manager,
+            DisplayName = "Manager Review",
+            Status = appraisal.ManagerStatus ?? AppraisalStatuses.Manager.Draft,
+            IsSubmitted = appraisal.ManagerStatus != null && appraisal.ManagerStatus != AppraisalStatuses.Manager.Draft,
+            IsLocked = appraisal.ThreeSixtyLocked,
+        });
+
+        var peerResponses = (await _uow.Perf.EvaluationResponses
+            .FindAllAsync(r => r.AppraisalId == appraisalId && r.EvaluatorRole == EvaluatorRoles.Peer && !r.IsDeleted,
+                          trackChanges: false,
+                          includes: r => r.Evaluator))
+            .GroupBy(r => r.EvaluatorId)
+            .ToList();
+
+        if (peerResponses.Count != 0)
+        {
+            foreach (var group in peerResponses)
+            {
+                var evaluator = group.First().Evaluator;
+                var anySubmitted = group.Any(r => r.SubmittedAt != null);
+                dto.Forms.Add(new FormEntryDto
+                {
+                    FormType = EvaluatorRoles.Peer,
+                    DisplayName = $"Peer Review - {evaluator?.StaffName ?? $"Employee #{group.Key}"}",
+                    Status = anySubmitted ? AppraisalStatuses.Peer.Finalized : AppraisalStatuses.Peer.Draft,
+                    IsSubmitted = anySubmitted,
+                    IsLocked = appraisal.ThreeSixtyLocked,
+                    EvaluatorId = group.Key,
+                    EvaluatorName = evaluator?.StaffName,
+                });
+            }
+        }
+        else
+        {
+            dto.Forms.Add(new FormEntryDto
+            {
+                FormType = EvaluatorRoles.Peer,
+                DisplayName = "Peer Review",
+                Status = appraisal.PeerStatus ?? AppraisalStatuses.Peer.Draft,
+                IsSubmitted = appraisal.PeerStatus != null && appraisal.PeerStatus != AppraisalStatuses.Peer.Draft,
+                IsLocked = appraisal.ThreeSixtyLocked,
+            });
+        }
+
+        dto.Forms.Add(new FormEntryDto
+        {
+            FormType = EvaluatorRoles.Subordinate,
+            DisplayName = "Subordinate Review",
+            Status = appraisal.SubordinateStatus ?? AppraisalStatuses.Subordinate.Draft,
+            IsSubmitted = appraisal.SubordinateStatus != null && appraisal.SubordinateStatus != AppraisalStatuses.Subordinate.Draft,
+            IsLocked = appraisal.ThreeSixtyLocked,
+        });
+
+        dto.Forms.Add(new FormEntryDto
+        {
+            FormType = EvaluatorRoles.Appraisal,
+            DisplayName = "Appraisal Review",
+            Status = appraisal.CommitteeStatus ?? AppraisalStatuses.Committee.Draft,
+            IsSubmitted = appraisal.CommitteeStatus != null && appraisal.CommitteeStatus != AppraisalStatuses.Committee.Draft,
+            IsLocked = appraisal.AppraisalLocked,
+            CanFill = !hasManager && appraisal.CommitteeStatus == AppraisalStatuses.Committee.Draft && !appraisal.AppraisalLocked,
+            Score = appraisal.AppraisalScore,
+        });
+
+        return SuccessResponse<EmployeeFormsOverviewDto>.Ok(dto, AppraisalMsg.Retrieved);
+    }
+
     private async Task<List<(long EvaluatorId, string Role)>> ResolveEvaluatorEntriesAsync(
         Entities.EmployeeInfo.EmployeeEmployment employment, string formType,
         long employeeId, long managerReviewerId, AppraisalCycle? cycle)

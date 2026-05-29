@@ -16,7 +16,7 @@ public interface IEvaluationResponseService
     Task<SuccessResponse> SubmitRoleResponsesAsync(long appraisalId, string role);
     Task<SuccessResponse> GetFormFillAsync(long appraisalId, string role);
     Task<SuccessResponse> GetSelfAssessmentAsync(long appraisalId);
-    Task<SuccessResponse> GetEvaluationViewAsync(long appraisalId, string role);
+    Task<SuccessResponse> GetEvaluationViewAsync(long appraisalId, string role, long? evaluatorId = null);
     Task<SuccessResponse> GetMyFormsAsync(string? roleGroup = null);
     Task<SuccessResponse> GetMyAppraisalFormsAsync();
     Task<SuccessResponse> GetPendingEvaluationsAsync();

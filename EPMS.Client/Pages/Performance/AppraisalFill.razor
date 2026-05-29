@@ -48,7 +48,7 @@
                         <tbody>
                             <tr>
                                 <td style="width: 48px;">
-                                    <BackButton Href="/performance/my-evaluations" />
+                                    <BackButton Href="@_backUrl" />
                                 </td>
                                 <td style="text-align: center;">
                                     <MudText Typo="Typo.h5">@UIConstants.AppraisalFill.PageTitle</MudText>
@@ -204,9 +204,11 @@
 @code {
 
     [Parameter] public long AppraisalId { get; set; }
+    [SupplyParameterFromQuery] public string? From { get; set; }
 
     private MudForm? _form;
     private AppraisalFillFormModel _model = new();
+    private string _backUrl = "/performance/my-evaluations";
     private bool _loading = true;
     private bool _error;
     private string _errorMessage = string.Empty;
@@ -221,6 +223,11 @@
     protected override async Task OnInitializedAsync()
     {
         _cts = new CancellationTokenSource();
+        _backUrl = From switch
+        {
+            "forms" => "/performance/appraisals",
+            _ => "/performance/my-evaluations"
+        };
         await LoadAsync();
     }
 
@@ -315,7 +322,7 @@
             {
                 Snackbar.Add(UIConstants.AppraisalFill.SubmitSuccess, Severity.Success);
                 NavCache.KpiForms = null;
-                Navigation.NavigateTo("/performance/my-evaluations");
+                Navigation.NavigateTo(_backUrl);
             }
             else
             {

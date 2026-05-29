@@ -28,4 +28,5 @@ public interface IAppraisalService
     Task<SuccessResponse> GetManagerSelfPendingAsync();
     Task<SuccessResponse> ApproveSelfAssessmentAsync(long appraisalId);
     Task AutoFinalizeAndCalculateScoreAsync(long appraisalId);
+    Task<SuccessResponse> GetEmployeeFormsOverviewAsync(long appraisalId);
 }

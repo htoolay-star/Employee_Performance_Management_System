@@ -7,6 +7,7 @@
 @using MudBlazor
 @using Refit
 @inject IAppraisalApiClient AppraisalApiClient
+@inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 
 <PageTitle>@UIConstants.AppraisalList.PageTitle</PageTitle>
@@ -33,9 +34,8 @@
                            Variant="Variant.Outlined"
                            Style="max-width: 150px;"
                            Clearable="true">
-                    <MudSelectItem Value="@AppraisalStatuses.Kpi.Draft">Draft</MudSelectItem>
-                    <MudSelectItem Value="@AppraisalStatuses.Kpi.Reviewed">Reviewed</MudSelectItem>
-                    <MudSelectItem Value="@AppraisalStatuses.Kpi.Finalized">Finalized</MudSelectItem>
+                    <MudSelectItem Value="@AppraisalStatuses.Draft">Draft</MudSelectItem>
+                    <MudSelectItem Value="@AppraisalStatuses.Finalized">Finalized</MudSelectItem>
                 </MudSelect>
             </MudStack>
         </MudStack>
@@ -68,7 +68,7 @@
                 <PropertyColumn Property="x => x.CycleName" Title="@UIConstants.AppraisalList.ColumnCycle" Sortable="true" />
                 <TemplateColumn Title="@UIConstants.AppraisalList.ColumnStatus" Sortable="false">
                     <CellTemplate>
-                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Item.KpiStatus)">@context.Item.KpiStatus</MudChip>
+                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Item.Status)">@context.Item.Status</MudChip>
                     </CellTemplate>
                 </TemplateColumn>
                 <TemplateColumn Title="Rating" Sortable="true">
@@ -81,6 +81,16 @@
                         <MudIcon Icon="@(context.Item.IsLocked ? Icons.Material.Filled.Lock : Icons.Material.Filled.LockOpen)"
                                  Color="@(context.Item.IsLocked ? Color.Error : Color.Default)"
                                  Size="Size.Small" />
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="Actions" Sortable="false" Style="width: 80px;">
+                    <CellTemplate>
+                        <MudTooltip Text="All Forms" Placement="Placement.Top">
+                            <MudIconButton Icon="@Icons.Material.Filled.Description"
+                                           Color="Color.Default"
+                                           Size="Size.Small"
+                                           OnClick="@(() => Navigation.NavigateTo($"/performance/appraisals/{context.Item.Id}/forms"))" />
+                        </MudTooltip>
                     </CellTemplate>
                 </TemplateColumn>
 
@@ -173,7 +183,7 @@
 
         if (!string.IsNullOrWhiteSpace(_selectedStatusFilter))
         {
-            if (!string.Equals(x.KpiStatus, _selectedStatusFilter, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(x.Status, _selectedStatusFilter, StringComparison.OrdinalIgnoreCase))
                 return false;
         }
 
@@ -182,10 +192,8 @@
 
     private static Color GetStatusColor(string status) => status switch
     {
-        AppraisalStatuses.Kpi.Draft => Color.Warning,
-        AppraisalStatuses.Kpi.Reviewed => Color.Primary,
-        AppraisalStatuses.Kpi.Finalized => Color.Success,
-        AppraisalStatuses.Self.InProgress => Color.Info,
+        AppraisalStatuses.Draft => Color.Warning,
+        AppraisalStatuses.Finalized => Color.Success,
         _ => Color.Default
     };
 }

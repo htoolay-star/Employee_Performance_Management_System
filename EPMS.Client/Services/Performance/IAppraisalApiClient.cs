@@ -57,6 +57,9 @@ public interface IAppraisalApiClient
     [Post("/api/performance/appraisals/{id}/finalize-evaluation")]
     Task<SuccessResponse> FinalizeEvaluationAsync(long id, [Query] string role);
 
+    [Get("/api/performance/appraisals/{appraisalId}/forms")]
+    Task<SuccessResponse<EmployeeFormsOverviewDto>> GetEmployeeFormsAsync(long appraisalId);
+
     [Get("/api/performance/appraisals/manager-self-pending")]
     Task<SuccessResponse<IEnumerable<AppraisalDto>>> GetManagerSelfPendingAsync();
 

@@ -156,6 +156,13 @@ public class AppraisalController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HttpGet("{id:long}/forms")]
+    public async Task<ActionResult<SuccessResponse>> GetEmployeeForms(long id)
+    {
+        var result = await _service.GetEmployeeFormsOverviewAsync(id);
+        return HandleResult(result);
+    }
+
     [Authorize]
     [HttpGet("manager-self-pending")]
     public async Task<ActionResult<SuccessResponse>> GetManagerSelfPending()

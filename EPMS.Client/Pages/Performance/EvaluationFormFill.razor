@@ -318,6 +318,7 @@
     [Parameter] public long AppraisalId { get; set; }
     [SupplyParameterFromQuery(Name = "role")] public string? ExplicitRole { get; set; }
     [SupplyParameterFromQuery(Name = "viewonly")] public bool ViewOnly { get; set; }
+    [SupplyParameterFromQuery(Name = "evaluatorId")] public long? EvaluatorId { get; set; }
     [SupplyParameterFromQuery(Name = "from")] public string? From { get; set; }
 
     private string BackHref => From switch
@@ -398,7 +399,7 @@
             _currentRole = ExplicitRole;
 
             var formResponse = ViewOnly
-                ? await EvalResponseApiClient.GetEvaluationViewAsync(AppraisalId, _currentRole)
+                ? await EvalResponseApiClient.GetEvaluationViewAsync(AppraisalId, _currentRole, EvaluatorId)
                 : await EvalResponseApiClient.GetFormFillAsync(AppraisalId, _currentRole);
 
             if (formResponse.Success && formResponse.Data != null)

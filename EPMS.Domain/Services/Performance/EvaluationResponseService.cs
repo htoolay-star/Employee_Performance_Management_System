@@ -339,7 +339,7 @@ public class EvaluationResponseService : IEvaluationResponseService
         return await GetFormFillCoreAsync(appraisalId, appraisal.EmployeeId ?? 0, EvaluatorRoles.Self);
     }
 
-    public async Task<SuccessResponse> GetEvaluationViewAsync(long appraisalId, string role)
+    public async Task<SuccessResponse> GetEvaluationViewAsync(long appraisalId, string role, long? evaluatorId = null)
     {
         var currentEmployeeId = await _currentEmployee.GetEmployeeIdAsync();
         if (!currentEmployeeId.HasValue)
@@ -349,10 +349,14 @@ public class EvaluationResponseService : IEvaluationResponseService
         if (appraisal == null)
             return SuccessResponse.Fail(AppraisalMsg.NotFound(appraisalId), ErrorType.NotFound);
 
-        long evaluatorId;
-        if (role == EvaluatorRoles.Self)
+        long resolvedEvaluatorId;
+        if (evaluatorId.HasValue)
         {
-            evaluatorId = appraisal.EmployeeId ?? 0;
+            resolvedEvaluatorId = evaluatorId.Value;
+        }
+        else if (role == EvaluatorRoles.Self)
+        {
+            resolvedEvaluatorId = appraisal.EmployeeId ?? 0;
         }
         else
         {
@@ -361,10 +365,10 @@ public class EvaluationResponseService : IEvaluationResponseService
                               trackChanges: false)).FirstOrDefault();
             if (response == null)
                 return SuccessResponse.Fail($"No responses found for role '{role}'.", ErrorType.NotFound);
-            evaluatorId = response.EvaluatorId;
+            resolvedEvaluatorId = response.EvaluatorId;
         }
 
-        return await GetFormFillCoreAsync(appraisalId, evaluatorId, role);
+        return await GetFormFillCoreAsync(appraisalId, resolvedEvaluatorId, role);
     }
 
     public async Task<SuccessResponse> SubmitRoleResponsesAsync(long appraisalId, string role)
