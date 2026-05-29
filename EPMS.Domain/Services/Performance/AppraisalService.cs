@@ -972,6 +972,45 @@ public class AppraisalService : IAppraisalService
             appraisal.Cycle.KpiWeight, appraisal.Cycle.SelfWeight,
             appraisal.Cycle.ThreeSixtyWeight, appraisal.Cycle.AppraisalWeight,
             matchingScale);
+
+        await TryAutoCreatePipForLowScoreAsync(appraisal);
+    }
+
+    private async Task TryAutoCreatePipForLowScoreAsync(Appraisal appraisal)
+    {
+        if (appraisal.TotalScore >= 60)
+            return;
+
+        if (appraisal.EmployeeId == null)
+            return;
+
+        var existingPip = await _uow.Perf.PIPs.FindAsync(p => p.AppraisalId == appraisal.Id && !p.IsDeleted);
+        if (existingPip != null)
+            return;
+
+        long managerId;
+        var directManagerId = appraisal.Employee?.Employment?.DirectManagerId;
+        if (directManagerId.HasValue)
+        {
+            managerId = directManagerId.Value;
+        }
+        else
+        {
+            var adminId = await GetDefaultReviewerIdAsync();
+            if (!adminId.HasValue)
+                return;
+            managerId = adminId.Value;
+        }
+
+        var pip = new PIP(
+            appraisal.EmployeeId.Value,
+            managerId,
+            DateOnly.FromDateTime(DateTime.Today),
+            DateOnly.FromDateTime(DateTime.Today.AddDays(30)),
+            $"Auto-created due to low appraisal score ({appraisal.TotalScore:F1}).",
+            appraisal.Id);
+
+        _uow.Perf.PIPs.Add(pip);
     }
 
     public async Task<SuccessResponse> GetManagerSelfPendingAsync()

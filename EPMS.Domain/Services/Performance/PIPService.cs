@@ -67,7 +67,12 @@ namespace EPMS.Domain.Services.Performance
 
             var dtos = all.Adapt<IEnumerable<PIPDto>>().ToList();
             foreach (var dto in dtos)
+            {
                 dto.IsCurrentUserEmployee = dto.EmployeeId == employeeId.Value;
+                var objectives = (await _uow.Perf.PIPObjectives.GetByPIPIdAsync(dto.Id)).ToList();
+                dto.TotalObjectives = objectives.Count;
+                dto.CompletedObjectives = objectives.Count(o => o.Status == EPMS.Shared.Constants.ObjectiveStatuses.Completed);
+            }
 
             return SuccessResponse<IEnumerable<PIPDto>>.Ok(dtos, PIPMsg.RetrievedAll);
         }
@@ -118,7 +123,7 @@ namespace EPMS.Domain.Services.Performance
             if (pip.Status == Successful || pip.Status == Failed)
                 return SuccessResponse.Fail(PIPMsg.AlreadyConcluded, ErrorType.Validation);
 
-            pip.ExtendPIP(dto.EndDate, dto.Reason);
+            pip.EditPIP(dto.StartDate, dto.EndDate, dto.Reason);
 
             _uow.Perf.PIPs.Update(pip);
             await _uow.CompleteAsync();

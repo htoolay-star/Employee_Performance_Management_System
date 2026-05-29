@@ -49,8 +49,23 @@
                         <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Item.Status)">@context.Item.Status</MudChip>
                     </CellTemplate>
                 </TemplateColumn>
+                <TemplateColumn Title="Progress" Sortable="false">
+                    <CellTemplate>
+                        <MudProgressLinear Value="@GetObjectiveProgress(context.Item)" Color="Color.Primary" Class="mb-1" Style="height: 6px;" />
+                        <MudText Typo="Typo.caption">@context.Item.CompletedObjectives/@context.Item.TotalObjectives</MudText>
+                    </CellTemplate>
+                </TemplateColumn>
                 <TemplateColumn Title="Actions" Sortable="false">
                     <CellTemplate>
+                        @if (!context.Item.IsCurrentUserEmployee && IsPipEditable(context.Item.Status))
+                        {
+                            <MudTooltip Text="Edit PIP" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Color="Color.Primary"
+                                               Size="Size.Small"
+                                               OnClick="@(() => OpenEditPipDialog(context.Item))" />
+                            </MudTooltip>
+                        }
                         <MudTooltip Text="@UIConstants.PIP.ObjectivesDialogTitle" Placement="Placement.Top">
                             <MudIconButton Icon="@Icons.Material.Filled.Checklist"
                                            Color="Color.Info"
@@ -97,6 +112,9 @@
                     </tr>
                 </tbody>
             </MudSimpleTable>
+
+            <MudText Typo="Typo.body2" Class="mb-1">Progress: @_selectedPip.CompletedObjectives of @_selectedPip.TotalObjectives objectives completed</MudText>
+            <MudProgressLinear Value="@GetObjectiveProgress(_selectedPip)" Color="Color.Primary" Class="mb-4" Style="height: 6px;" />
 
             @if (_selectedPip is { IsCurrentUserEmployee: false })
             {
@@ -237,11 +255,60 @@
     </DialogActions>
 </MudDialog>
 
+@* PIP Edit Dialog (Manager only) *@
+<MudDialog @bind-Visible="_showEditPipDialog" Options="@_dialogOptions">
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-4">Edit PIP</MudText>
+        <MudForm @ref="_pipForm" @bind-IsValid="_pipFormValid">
+            <MudDatePicker Label="Start Date"
+                           @bind-Date="_formStartDate"
+                           Variant="Variant.Outlined"
+                           Class="mb-4"
+                           Required="true"
+                           RequiredError="Start date is required" />
+            <MudDatePicker Label="End Date"
+                           @bind-Date="_formEndDate"
+                           Variant="Variant.Outlined"
+                           Class="mb-4"
+                           Required="true"
+                           RequiredError="End date is required" />
+            <MudTextField T="string"
+                          Label="Reason"
+                          @bind-Value="_formReason"
+                          Variant="Variant.Outlined"
+                          Class="mb-4"
+                          Required="true"
+                          RequiredError="Reason is required"
+                          Lines="3" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="CloseEditPipDialog">@UIConstants.Common.Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   Disabled="!_pipFormValid || _isSaving"
+                   OnClick="ConfirmEditPip">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+            }
+            <span>@UIConstants.Common.Update</span>
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
 @code {
     private List<PIPDto> _items = new();
     private bool _loading = true;
 
     private PIPDto? _selectedPip;
+
+    private bool _showEditPipDialog;
+    private PIPDto? _editPipTarget;
+    private DateTime? _formStartDate;
+    private DateTime? _formEndDate;
+    private string _formReason = string.Empty;
+    private MudForm? _pipForm;
+    private bool _pipFormValid;
     private List<PIPObjectiveDto> _objectives = new();
     private bool _showObjectivesDialog;
 
@@ -313,6 +380,8 @@
             if (response.Success && response.Data != null)
             {
                 _objectives = response.Data.ToList();
+                pip.TotalObjectives = _objectives.Count;
+                pip.CompletedObjectives = _objectives.Count(o => o.Status == ObjectiveStatuses.Completed);
             }
         }
         catch (Exception ex)
@@ -517,4 +586,71 @@
         ObjectiveStatuses.Cancelled => Color.Default,
         _ => Color.Default
     };
+
+    private double GetObjectiveProgress(PIPDto pip)
+        => pip.TotalObjectives > 0 ? (pip.CompletedObjectives * 100.0 / pip.TotalObjectives) : 0;
+
+    private static bool IsPipEditable(string status) => status switch
+    {
+        PIPStatuses.Draft or PIPStatuses.Open or PIPStatuses.Active or PIPStatuses.Extended => true,
+        _ => false
+    };
+
+    private void OpenEditPipDialog(PIPDto pip)
+    {
+        _editPipTarget = pip;
+        _formStartDate = pip.StartDate.ToDateTime(TimeOnly.MinValue);
+        _formEndDate = pip.EndDate.ToDateTime(TimeOnly.MinValue);
+        _formReason = pip.Reason;
+        _showEditPipDialog = true;
+    }
+
+    private void CloseEditPipDialog()
+    {
+        _showEditPipDialog = false;
+        _editPipTarget = null;
+    }
+
+    private async Task ConfirmEditPip()
+    {
+        if (_editPipTarget == null) return;
+        _isSaving = true;
+        StateHasChanged();
+        try
+        {
+            var dto = new UpdatePIPDto
+            {
+                Id = _editPipTarget.Id,
+                StartDate = DateOnly.FromDateTime(_formStartDate!.Value),
+                EndDate = DateOnly.FromDateTime(_formEndDate!.Value),
+                Reason = _formReason
+            };
+            var response = await PIPApiClient.UpdateAsync(_editPipTarget.Id, dto);
+            if (response.Success)
+            {
+                Snackbar.Add("PIP updated successfully.", Severity.Success);
+                _showEditPipDialog = false;
+                _editPipTarget = null;
+                await LoadDataAsync();
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "An error occurred.", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+            StateHasChanged();
+        }
+    }
 }
