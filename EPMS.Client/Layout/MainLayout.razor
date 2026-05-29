@@ -1,16 +1,13 @@
 @inherits LayoutComponentBase
-@using Microsoft.AspNetCore.Components.Authorization
 @using MudBlazor
 @using EPMS.Client.Constants
 @using EPMS.Client.Services.App
 @using EPMS.Client.Themes
 @using EPMS.Shared.DTOs.AppDTOs
-@using System.Security.Claims
 @implements IDisposable
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
 @inject IDialogService DialogService
-@inject AuthenticationStateProvider AuthState
 @inject INotificationApiClient NotifClient
 @inject ISnackbar Snackbar
 
@@ -141,7 +138,6 @@
             _isDarkMode = false;
         }
 
-        await LoadUserIdAsync();
         await LoadUnreadCountAsync();
         StartPolling();
     }
@@ -173,13 +169,6 @@
             Navigation.NavigateTo("logout");
     }
 
-    private async Task LoadUserIdAsync()
-    {
-        var authState = await AuthState.GetAuthenticationStateAsync();
-        var idClaim = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        _userId = long.TryParse(idClaim, out var id) ? id : 0;
-    }
-
     private void StartPolling()
     {
         _pollCts?.Cancel();
@@ -206,10 +195,9 @@
 
     private async Task LoadUnreadCountAsync()
     {
-        if (_userId == 0) return;
         try
         {
-            var result = await NotifClient.GetUnreadAsync(_userId);
+            var result = await NotifClient.GetMyUnreadAsync();
             if (result.Success)
             {
                 _unreadNotifications = result.Data?.ToList() ?? new();
@@ -224,10 +212,9 @@
 
     private async Task LoadDropdownNotificationsAsync()
     {
-        if (_userId == 0) return;
         try
         {
-            var result = await NotifClient.GetUnreadAsync(_userId);
+            var result = await NotifClient.GetMyUnreadAsync();
             if (result.Success)
             {
                 _unreadNotifications = result.Data?.ToList() ?? new();

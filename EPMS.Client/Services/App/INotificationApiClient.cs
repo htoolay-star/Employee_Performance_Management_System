@@ -6,11 +6,11 @@ namespace EPMS.Client.Services.App;
 
 public interface INotificationApiClient
 {
-    [Get("/api/Notifications/user/{userId}")]
-    Task<SuccessResponse<IEnumerable<NotificationDto>>> GetByUserIdAsync(long userId);
+    [Get("/api/Notifications/list")]
+    Task<SuccessResponse<IEnumerable<NotificationDto>>> GetMyNotificationsAsync();
 
-    [Get("/api/Notifications/unread/{userId}")]
-    Task<SuccessResponse<IEnumerable<NotificationDto>>> GetUnreadAsync(long userId);
+    [Get("/api/Notifications/unread")]
+    Task<SuccessResponse<IEnumerable<NotificationDto>>> GetMyUnreadAsync();
 
     [Put("/api/Notifications/{id}/read")]
     Task<SuccessResponse> MarkAsReadAsync(long id);

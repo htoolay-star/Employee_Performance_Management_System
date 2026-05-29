@@ -4,12 +4,10 @@
 @using EPMS.Client.Services.App
 @using EPMS.Shared.DTOs.AppDTOs
 @using MudBlazor
-@using System.Security.Claims
 @inject INotificationApiClient NotifClient
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
-@inject AuthenticationStateProvider AuthState
 
 <PageTitle>@UIConstants.Notifications.PageTitle</PageTitle>
 
@@ -158,19 +156,10 @@
     private List<NotificationDto> _unreadNotifications = new();
     private bool _loading;
     private int _activeTab;
-    private long _userId;
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadUserIdAsync();
         await LoadDataAsync();
-    }
-
-    private async Task LoadUserIdAsync()
-    {
-        var authState = await AuthState.GetAuthenticationStateAsync();
-        var idClaim = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        _userId = long.TryParse(idClaim, out var id) ? id : 0;
     }
 
     private async Task LoadDataAsync()
@@ -180,8 +169,8 @@
 
         try
         {
-            var allTask = NotifClient.GetByUserIdAsync(_userId);
-            var unreadTask = NotifClient.GetUnreadAsync(_userId);
+            var allTask = NotifClient.GetMyNotificationsAsync();
+            var unreadTask = NotifClient.GetMyUnreadAsync();
             await Task.WhenAll(allTask, unreadTask);
 
             var allResult = await allTask;
