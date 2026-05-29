@@ -175,7 +175,8 @@ public class AppraisalService : IAppraisalService
                 a => a.Employee,
                 a => a.Employee.Employment,
                 a => a.Cycle,
-                a => a.ManagerReviewer
+                a => a.ManagerReviewer,
+                a => a.Details
             }
         );
 
@@ -190,7 +191,8 @@ public class AppraisalService : IAppraisalService
                 {
                     a => a.Employee,
                     a => a.Cycle,
-                    a => a.ManagerReviewer
+                    a => a.ManagerReviewer,
+                    a => a.Details
                 }
             );
 
@@ -348,7 +350,10 @@ public class AppraisalService : IAppraisalService
             CommitteeStatus: appraisal.CommitteeStatus ?? AppraisalStatuses.Committee.Draft,
             RatingLabel: appraisal.RatingLabel,
             TotalScore: appraisal.TotalScore,
-            KpiScore: appraisal.KpiScore,
+            KpiScore: appraisal.Details != null
+                ? appraisal.Details.Where(d => d.KPIId.HasValue && d.Score > 0)
+                      .Select(d => d.WeightedScore).DefaultIfEmpty(0).Sum()
+                : appraisal.KpiScore,
             EmployeeComment: appraisal.EmployeeComment,
             ManagerComment: appraisal.ManagerComment,
             ReviewDate: appraisal.ReviewDate,
@@ -564,7 +569,8 @@ public class AppraisalService : IAppraisalService
             includes: new Expression<Func<Appraisal, object>>[]
             {
                 a => a.Employee,
-                a => a.Cycle
+                a => a.Cycle,
+                a => a.Details
             }
         );
 
@@ -908,7 +914,7 @@ public class AppraisalService : IAppraisalService
             .Where(d => d.KPIId.HasValue && d.Score > 0)
             .Select(d => d.WeightedScore)
             .DefaultIfEmpty(0)
-            .Average();
+            .Sum();
 
         var responses = await _uow.Perf.EvaluationResponses
             .FindAllAsync(r => r.AppraisalId == appraisal.Id && !r.IsDeleted,
