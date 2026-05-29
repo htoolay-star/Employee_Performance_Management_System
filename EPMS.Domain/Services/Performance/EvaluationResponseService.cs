@@ -355,8 +355,9 @@ public class EvaluationResponseService : IEvaluationResponseService
         if (appraisal == null)
             return SuccessResponse.Fail(AppraisalMsg.NotFound(appraisalId), ErrorType.NotFound);
 
-        if (currentEmployeeId.Value != appraisal.ManagerReviewerId)
-            return SuccessResponse.Fail("Only the manager reviewer can view the self-assessment.", ErrorType.Forbidden);
+        var directManagerId = appraisal.Employee?.Employment?.DirectManagerId;
+        if (currentEmployeeId.Value != directManagerId)
+            return SuccessResponse.Fail("Only the direct manager can view the self-assessment.", ErrorType.Forbidden);
 
         return await GetFormFillCoreAsync(appraisalId, appraisal.EmployeeId ?? 0, EvaluatorRoles.Self);
     }

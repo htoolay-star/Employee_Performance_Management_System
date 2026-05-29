@@ -167,10 +167,13 @@ public class AppraisalService : IAppraisalService
             return SuccessResponse.Fail("User identity not found.", ErrorType.Forbidden);
 
         var myAppraisals = await _uow.Perf.Appraisals.FindAllAsync(
-            a => a.ManagerReviewerId == currentEmployeeId.Value && a.EmployeeId != null && !a.IsDeleted,
+            a => a.Employee != null && a.Employee.Employment != null
+                 && a.Employee.Employment.DirectManagerId == currentEmployeeId.Value
+                 && a.EmployeeId != null && !a.IsDeleted,
             includes: new Expression<Func<Appraisal, object>>[]
             {
                 a => a.Employee,
+                a => a.Employee.Employment,
                 a => a.Cycle,
                 a => a.ManagerReviewer
             }
@@ -395,13 +398,13 @@ public class AppraisalService : IAppraisalService
         if (!currentEmployeeId.HasValue)
             return SuccessResponse.Fail("User identity not found.", ErrorType.Forbidden);
 
-        var isReviewer = currentEmployeeId.Value == dto.ManagerReviewerId;
-        var hasNoManager = dto.ManagerName == "Admin Team";
+        var isDirectManager = currentEmployeeId.Value == dto.DirectManagerId;
+        var hasNoManager = dto.DirectManagerId == null;
 
-        bool isAuthorized = isReviewer || (hasNoManager && await IsCurrentUserAdminAsync());
+        bool isAuthorized = isDirectManager || (hasNoManager && await IsCurrentUserAdminAsync());
 
         if (!isAuthorized)
-            return SuccessResponse.Fail("Only the manager reviewer can evaluate KPI.", ErrorType.Forbidden);
+            return SuccessResponse.Fail("Only the direct manager can evaluate KPI.", ErrorType.Forbidden);
 
         return SuccessResponse<AppraisalFillDto>.Ok(dto, AppraisalMsg.Retrieved);
     }
@@ -430,8 +433,9 @@ public class AppraisalService : IAppraisalService
 
         var hasNoManager = validationAppraisal.Employee?.Employment?.DirectManagerId == null;
         var isAdmin = await IsCurrentUserAdminAsync();
+        var directManagerId = validationAppraisal.Employee?.Employment?.DirectManagerId;
 
-        if (currentEmployeeId != validationAppraisal.ManagerReviewerId)
+        if (currentEmployeeId != directManagerId)
         {
             if (!(hasNoManager && isAdmin))
                 return SuccessResponse.Fail("You are not authorized to submit this appraisal.", ErrorType.Forbidden);
@@ -702,7 +706,7 @@ public class AppraisalService : IAppraisalService
                 var template = pt.FormTemplate;
                 if (template?.Questions == null || !template.IsActive) continue;
 
-                var entries = await ResolveEvaluatorEntriesAsync(employment, template.FormType, employeeId, managerReviewerId, cycle);
+                var entries = await ResolveEvaluatorEntriesAsync(employment, template.FormType, employeeId, cycle);
 
                 foreach (var (evaluatorId, role) in entries)
                 {
@@ -971,10 +975,11 @@ public class AppraisalService : IAppraisalService
             return SuccessResponse.Fail("User identity not found.", ErrorType.Forbidden);
 
         var appraisals = await _uow.Perf.Appraisals.FindAllAsync(
-            a => a.ManagerReviewerId == currentEmployeeId.Value
-              && a.SelfStatus == AppraisalStatuses.Self.InProgress
-              && !a.IsDeleted,
-            includes: new Expression<Func<Appraisal, object>>[] { a => a.Employee, a => a.Cycle });
+            a => a.Employee != null && a.Employee.Employment != null
+                 && a.Employee.Employment.DirectManagerId == currentEmployeeId.Value
+                 && a.SelfStatus == AppraisalStatuses.Self.InProgress
+                 && !a.IsDeleted,
+            includes: new Expression<Func<Appraisal, object>>[] { a => a.Employee, a => a.Employee.Employment, a => a.Cycle });
 
         var dtos = appraisals.Select(MapToDto).ToList();
         return SuccessResponse<IEnumerable<AppraisalDto>>.Ok(dtos, "Pending self assessments retrieved.");
@@ -988,12 +993,12 @@ public class AppraisalService : IAppraisalService
 
         var appraisal = await _uow.Perf.Appraisals.FindAllAsync(
             a => a.Id == appraisalId, trackChanges: true,
-            includes: new Expression<Func<Appraisal, object>>[] { a => a.Employee, a => a.Cycle });
+            includes: new Expression<Func<Appraisal, object>>[] { a => a.Employee, a => a.Employee.Employment, a => a.Cycle });
         var tracked = appraisal.FirstOrDefault();
         if (tracked == null)
             return SuccessResponse.Fail(AppraisalMsg.NotFound(appraisalId), ErrorType.NotFound);
 
-        if (tracked.ManagerReviewerId != currentEmployeeId.Value)
+        if (tracked.Employee?.Employment?.DirectManagerId != currentEmployeeId.Value)
             return SuccessResponse.Fail("Only the direct manager can approve the self assessment.", ErrorType.Forbidden);
 
         if (tracked.SelfStatus != AppraisalStatuses.Self.InProgress)
@@ -1132,7 +1137,7 @@ public class AppraisalService : IAppraisalService
 
     private async Task<List<(long EvaluatorId, string Role)>> ResolveEvaluatorEntriesAsync(
         Entities.EmployeeInfo.EmployeeEmployment employment, string formType,
-        long employeeId, long managerReviewerId, AppraisalCycle? cycle)
+        long employeeId, AppraisalCycle? cycle)
     {
         var entries = new List<(long, string)>();
 
@@ -1143,7 +1148,8 @@ public class AppraisalService : IAppraisalService
                 break;
 
             case AppraisalConstants.FormTypes.Manager:
-                entries.Add((managerReviewerId, EvaluatorRoles.Manager));
+                if (employment.DirectManagerId.HasValue)
+                    entries.Add((employment.DirectManagerId.Value, EvaluatorRoles.Manager));
                 break;
 
             case AppraisalConstants.FormTypes.Peer:
@@ -1157,7 +1163,8 @@ public class AppraisalService : IAppraisalService
                 break;
 
             case AppraisalConstants.FormTypes.Appraisal:
-                entries.Add((managerReviewerId, EvaluatorRoles.Appraisal));
+                if (employment.DirectManagerId.HasValue)
+                    entries.Add((employment.DirectManagerId.Value, EvaluatorRoles.Appraisal));
                 break;
         }
 
@@ -1319,7 +1326,7 @@ public class AppraisalService : IAppraisalService
                 IsSubmitted = appraisal.ManagerStatus != null && appraisal.ManagerStatus != AppraisalStatuses.Manager.Draft,
                 IsLocked = appraisal.ThreeSixtyLocked,
                 CanFill = false,
-                EvaluatorId = appraisal.ManagerReviewerId,
+                EvaluatorId = appraisal.Employee?.Employment?.DirectManagerId,
             });
 
             var peerResponses = (await _uow.Perf.EvaluationResponses
@@ -1386,7 +1393,7 @@ public class AppraisalService : IAppraisalService
                 IsSubmitted = appraisal.ManagerStatus != null && appraisal.ManagerStatus != AppraisalStatuses.Manager.Draft,
                 IsLocked = appraisal.ThreeSixtyLocked,
                 CanFill = false,
-                EvaluatorId = appraisal.ManagerReviewerId,
+                EvaluatorId = appraisal.Employee?.Employment?.DirectManagerId,
                 EvaluatorName = "Anonymous",
             });
 

@@ -69,6 +69,8 @@ namespace EPMS.Domain.Repository.Performance
                     CycleName = a.Cycle != null ? a.Cycle.Name : null,
                     ManagerReviewerId = a.ManagerReviewerId,
                     ManagerReviewerName = a.ManagerReviewer != null ? a.ManagerReviewer.StaffName : null,
+                    DirectManagerId = a.Employee != null && a.Employee.Employment != null
+                        ? a.Employee.Employment.DirectManagerId : null,
                     Status = a.Status,
                     IsLocked = a.IsLocked,
                     KpiLocked = a.KpiLocked,
