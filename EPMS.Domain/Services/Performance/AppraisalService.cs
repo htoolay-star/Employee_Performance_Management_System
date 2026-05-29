@@ -1270,6 +1270,187 @@ public class AppraisalService : IAppraisalService
         }
     }
 
+    public async Task<SuccessResponse> GetMy360FeedbackAsync(long appraisalId)
+    {
+        var currentEmployeeId = await _currentEmployee.GetEmployeeIdAsync();
+        if (!currentEmployeeId.HasValue)
+            return SuccessResponse.Fail("User identity not found.", ErrorType.Forbidden);
+
+        var isAdmin = _currentEmployee.IsAdmin;
+
+        var appraisal = await _uow.Perf.Appraisals.FindAsync(
+            a => a.Id == appraisalId && !a.IsDeleted,
+            false, default,
+            a => a.Cycle,
+            a => a.Employee.Employment.Position,
+            a => a.Employee.Employment.Department,
+            a => a.Employee.Employment.Team,
+            a => a.Employee.Employment.DirectManager,
+            a => a.ManagerReviewer);
+
+        if (appraisal == null)
+            return SuccessResponse.Fail(AppraisalMsg.NotFound(appraisalId), ErrorType.NotFound);
+
+        var isEvaluee = appraisal.EmployeeId == currentEmployeeId.Value;
+        var isManager = appraisal.Employee?.Employment?.DirectManagerId == currentEmployeeId.Value;
+
+        if (!isAdmin && !isEvaluee && !isManager)
+            return SuccessResponse.Fail("Access denied.", ErrorType.Forbidden);
+
+        var dto = new EmployeeFormsOverviewDto
+        {
+            AppraisalId = appraisal.Id,
+            EmployeeId = appraisal.EmployeeId,
+            EmployeeName = appraisal.Employee?.StaffName,
+            CycleName = appraisal.Cycle?.Name,
+            PositionName = appraisal.Employee?.Employment?.Position?.Name,
+            DepartmentName = appraisal.Employee?.Employment?.Department?.Name,
+            TeamName = appraisal.Employee?.Employment?.Team?.Name,
+            ManagerName = appraisal.ManagerReviewer?.StaffName,
+        };
+
+        if (isAdmin)
+        {
+            dto.Forms.Add(new FormEntryDto
+            {
+                FormType = EvaluatorRoles.Manager,
+                DisplayName = "Manager Review",
+                Status = appraisal.ManagerStatus ?? AppraisalStatuses.Manager.Draft,
+                IsSubmitted = appraisal.ManagerStatus != null && appraisal.ManagerStatus != AppraisalStatuses.Manager.Draft,
+                IsLocked = appraisal.ThreeSixtyLocked,
+                CanFill = false,
+                EvaluatorId = appraisal.ManagerReviewerId,
+            });
+
+            var peerResponses = (await _uow.Perf.EvaluationResponses
+                .FindAllAsync(r => r.AppraisalId == appraisalId && r.EvaluatorRole == EvaluatorRoles.Peer && !r.IsDeleted,
+                              trackChanges: false,
+                              includes: r => r.Evaluator))
+                .GroupBy(r => r.EvaluatorId)
+                .ToList();
+
+            if (peerResponses.Count != 0)
+            {
+                foreach (var group in peerResponses)
+                {
+                    var evaluator = group.First().Evaluator;
+                    var anySubmitted = group.Any(r => r.SubmittedAt != null);
+                    dto.Forms.Add(new FormEntryDto
+                    {
+                        FormType = EvaluatorRoles.Peer,
+                        DisplayName = $"Peer Review - {evaluator?.StaffName ?? $"Employee #{group.Key}"}",
+                        Status = anySubmitted ? AppraisalStatuses.Peer.Finalized : AppraisalStatuses.Peer.Draft,
+                        IsSubmitted = anySubmitted,
+                        IsLocked = appraisal.ThreeSixtyLocked,
+                        CanFill = false,
+                        EvaluatorId = group.Key,
+                        EvaluatorName = evaluator?.StaffName,
+                    });
+                }
+            }
+
+            var subordinateGroups = (await _uow.Perf.EvaluationResponses
+                .FindAllAsync(r => r.AppraisalId == appraisalId && r.EvaluatorRole == EvaluatorRoles.Subordinate && !r.IsDeleted,
+                              trackChanges: false,
+                              includes: r => r.Evaluator))
+                .GroupBy(r => r.EvaluatorId)
+                .ToList();
+
+            if (subordinateGroups.Count != 0)
+            {
+                foreach (var group in subordinateGroups)
+                {
+                    var evaluator = group.First().Evaluator;
+                    var anySubmitted = group.Any(r => r.SubmittedAt != null);
+                    dto.Forms.Add(new FormEntryDto
+                    {
+                        FormType = EvaluatorRoles.Subordinate,
+                        DisplayName = $"Subordinate Review - {evaluator?.StaffName ?? $"Employee #{group.Key}"}",
+                        Status = anySubmitted ? AppraisalStatuses.Subordinate.Finalized : AppraisalStatuses.Subordinate.Draft,
+                        IsSubmitted = anySubmitted,
+                        IsLocked = appraisal.ThreeSixtyLocked,
+                        CanFill = false,
+                        EvaluatorId = group.Key,
+                        EvaluatorName = evaluator?.StaffName,
+                    });
+                }
+            }
+        }
+        else if (isEvaluee)
+        {
+            dto.Forms.Add(new FormEntryDto
+            {
+                FormType = EvaluatorRoles.Manager,
+                DisplayName = "Manager Review",
+                Status = appraisal.ManagerStatus ?? AppraisalStatuses.Manager.Draft,
+                IsSubmitted = appraisal.ManagerStatus != null && appraisal.ManagerStatus != AppraisalStatuses.Manager.Draft,
+                IsLocked = appraisal.ThreeSixtyLocked,
+                CanFill = false,
+                EvaluatorId = appraisal.ManagerReviewerId,
+                EvaluatorName = "Anonymous",
+            });
+
+            var peerResponses = (await _uow.Perf.EvaluationResponses
+                .FindAllAsync(r => r.AppraisalId == appraisalId && r.EvaluatorRole == EvaluatorRoles.Peer && !r.IsDeleted,
+                              trackChanges: false,
+                              includes: r => r.Evaluator))
+                .GroupBy(r => r.EvaluatorId)
+                .ToList();
+
+            if (peerResponses.Count != 0)
+            {
+                foreach (var group in peerResponses)
+                {
+                    var anySubmitted = group.Any(r => r.SubmittedAt != null);
+                    dto.Forms.Add(new FormEntryDto
+                    {
+                        FormType = EvaluatorRoles.Peer,
+                        DisplayName = "Peer Review",
+                        Status = anySubmitted ? AppraisalStatuses.Peer.Finalized : AppraisalStatuses.Peer.Draft,
+                        IsSubmitted = anySubmitted,
+                        IsLocked = appraisal.ThreeSixtyLocked,
+                        CanFill = false,
+                        EvaluatorId = group.Key,
+                        EvaluatorName = "Anonymous",
+                    });
+                }
+            }
+        }
+        else if (isManager)
+        {
+            var subordinateGroups = (await _uow.Perf.EvaluationResponses
+                .FindAllAsync(r => r.AppraisalId == appraisalId && r.EvaluatorRole == EvaluatorRoles.Subordinate && !r.IsDeleted,
+                              trackChanges: false,
+                              includes: r => r.Evaluator))
+                .GroupBy(r => r.EvaluatorId)
+                .ToList();
+
+            if (subordinateGroups.Count != 0)
+            {
+                foreach (var group in subordinateGroups)
+                {
+                    var anySubmitted = group.Any(r => r.SubmittedAt != null);
+                    dto.Forms.Add(new FormEntryDto
+                    {
+                        FormType = EvaluatorRoles.Subordinate,
+                        DisplayName = "Subordinate Review",
+                        Status = anySubmitted ? AppraisalStatuses.Subordinate.Finalized : AppraisalStatuses.Subordinate.Draft,
+                        IsSubmitted = anySubmitted,
+                        IsLocked = appraisal.ThreeSixtyLocked,
+                        CanFill = false,
+                        EvaluatorId = group.Key,
+                        EvaluatorName = "Anonymous",
+                    });
+                }
+            }
+        }
+
+        if (dto.Forms.Count == 0)
+            return SuccessResponse.Fail("No 360 feedback available.", ErrorType.NotFound);
+
+        return SuccessResponse<EmployeeFormsOverviewDto>.Ok(dto, "360 feedback retrieved.");
+    }
+
     private Task<bool> IsCurrentUserAdminAsync()
     {
         return Task.FromResult(_currentEmployee.IsAdmin);

@@ -1,0 +1,209 @@
+@page "/performance/my-360-feedback"
+@using EPMS.Client.Constants
+@using EPMS.Client.Models.Performance
+@using EPMS.Client.Services.Performance
+@using EPMS.Shared.Constants
+@using EPMS.Shared.DTOs.FormDTOs
+@using Mapster
+@using MudBlazor
+@using Refit
+@inject IAppraisalApiClient AppraisalApiClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>@UIConstants.My360Feedback.PageTitle</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.My360Feedback.PageTitle</MudText>
+
+    <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+
+        <MudDataGrid Items="@_items"
+                     Loading="@_loading"
+                     Hover="true"
+                     Elevation="0"
+                     SortMode="SortMode.None">
+            <Columns>
+                <TemplateColumn Title="#" Sortable="false" Style="width: 50px;">
+                    <CellTemplate>
+                        <span>@(_items.IndexOf(context.Item) + 1)</span>
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.AppraisalCycle" Title="Cycle" Sortable="true" />
+                <TemplateColumn Title="Feedback" Sortable="false">
+                    <CellTemplate>
+                        <span>360 Feedback</span>
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="Evaluator" Sortable="false">
+                    <CellTemplate>
+                        @if (context.Item.EvaluatorName == UIConstants.My360Feedback.AnonymousLabel)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Default">@UIConstants.My360Feedback.AnonymousLabel</MudChip>
+                        }
+                        else if (!string.IsNullOrEmpty(context.Item.EvaluatorName))
+                        {
+                            @context.Item.EvaluatorName
+                        }
+                        else
+                        {
+                            <span>-</span>
+                        }
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="Status" Sortable="false" Style="width: 140px;">
+                    <CellTemplate>
+                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Item.Status)">
+                            @context.Item.Status
+                        </MudChip>
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="Actions" Sortable="false" Style="width: 80px;">
+                    <CellTemplate>
+                        <MudTooltip Text="View Feedback" Placement="Placement.Top">
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                           Color="Color.Info"
+                                           Size="Size.Small"
+                                           OnClick="@(() => NavigateToForm(context.Item))" />
+                        </MudTooltip>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+            <NoRecordsContent>
+                <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
+                    <MudIcon Icon="@Icons.Material.Outlined.Inbox" Style="font-size: 4rem;" Color="Color.Default" />
+                    <MudText Typo="Typo.h6" Color="Color.Default">@UIConstants.My360Feedback.NoData</MudText>
+                </MudStack>
+            </NoRecordsContent>
+            <LoadingContent>
+                <MudStack Spacing="3" Class="w-100">
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                </MudStack>
+            </LoadingContent>
+            <PagerContent>
+                <MudDataGridPager T="FlatFeedbackEntry" />
+            </PagerContent>
+        </MudDataGrid>
+
+    </MudPaper>
+</MudContainer>
+
+@code {
+
+    private List<FlatFeedbackEntry> _items = new();
+    private bool _loading = true;
+    private CancellationTokenSource? _cts;
+
+    private class FlatFeedbackEntry
+    {
+        public long AppraisalId { get; set; }
+        public string? AppraisalCycle { get; set; }
+        public string FormType { get; set; } = string.Empty;
+        public long? EvaluatorId { get; set; }
+        public string? EvaluatorName { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public bool IsSubmitted { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _cts = new CancellationTokenSource();
+        await LoadAsync();
+    }
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        StateHasChanged();
+
+        try
+        {
+            var response = await AppraisalApiClient.GetMyKpiAsync();
+            if (response.Success && response.Data != null)
+            {
+                var appraisals = response.Data.Adapt<List<AppraisalFillFormModel>>();
+                var filtered = appraisals.Where(a => HasSubmitted360(a)).ToList();
+
+                var entries = new List<FlatFeedbackEntry>();
+                foreach (var app in filtered)
+                {
+                    var fbResponse = await AppraisalApiClient.GetMy360FeedbackAsync(app.Id);
+                    if (fbResponse.Success && fbResponse.Data != null)
+                    {
+                        foreach (var form in fbResponse.Data.Forms)
+                        {
+                            if (form.IsSubmitted)
+                            {
+                                entries.Add(new FlatFeedbackEntry
+                                {
+                                    AppraisalId = app.Id,
+                                    AppraisalCycle = app.CycleName,
+                                    FormType = form.FormType,
+                                    EvaluatorId = form.EvaluatorId,
+                                    EvaluatorName = form.EvaluatorName,
+                                    Status = form.Status,
+                                    IsSubmitted = form.IsSubmitted,
+                                });
+                            }
+                        }
+                    }
+                }
+
+                _items = entries;
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? UIConstants.Common.LoadFailed, Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.LoadFailed, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void NavigateToForm(FlatFeedbackEntry entry)
+    {
+        var evalId = entry.EvaluatorId.HasValue ? $"&evaluatorId={entry.EvaluatorId.Value}" : "";
+        Navigation.NavigateTo(
+            $"/performance/appraisals/{entry.AppraisalId}/evaluate?role={entry.FormType}{evalId}&viewonly=true&from=my-360-feedback");
+    }
+
+    private static bool HasSubmitted360(AppraisalFillFormModel item)
+    {
+        var managerSubmitted = item.ManagerStatus != AppraisalStatuses.Manager.Draft;
+        var peerSubmitted = item.PeerStatus != AppraisalStatuses.Peer.Draft;
+        var subordinateSubmitted = item.SubordinateStatus != AppraisalStatuses.Subordinate.Draft;
+        return managerSubmitted || peerSubmitted || subordinateSubmitted;
+    }
+
+    private static Color GetStatusColor(string status)
+    {
+        if (status is AppraisalStatuses.Manager.Draft or AppraisalStatuses.Peer.Draft
+            or AppraisalStatuses.Subordinate.Draft)
+            return Color.Warning;
+
+        if (status is AppraisalStatuses.Manager.Finalized or AppraisalStatuses.Peer.Finalized
+            or AppraisalStatuses.Subordinate.Finalized)
+            return Color.Success;
+
+        return Color.Default;
+    }
+}

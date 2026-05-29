@@ -60,6 +60,9 @@ public interface IAppraisalApiClient
     [Get("/api/performance/appraisals/{appraisalId}/forms")]
     Task<SuccessResponse<EmployeeFormsOverviewDto>> GetEmployeeFormsAsync(long appraisalId);
 
+    [Get("/api/performance/appraisals/{appraisalId}/my-360-feedback")]
+    Task<SuccessResponse<EmployeeFormsOverviewDto>> GetMy360FeedbackAsync(long appraisalId);
+
     [Get("/api/performance/appraisals/manager-self-pending")]
     Task<SuccessResponse<IEnumerable<AppraisalDto>>> GetManagerSelfPendingAsync();
 

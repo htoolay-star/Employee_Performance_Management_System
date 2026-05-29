@@ -167,6 +167,9 @@
         <MudTooltip Text="My 360 Forms" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
             <MudNavLink Href="performance/my-forms/360" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Groups">360 Forms</MudNavLink>
         </MudTooltip>
+        <MudTooltip Text="My 360 Feedback" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+            <MudNavLink Href="performance/my-360-feedback" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Feedback">My 360 Feedback</MudNavLink>
+        </MudTooltip>
     </MudNavGroup>
     </MudTooltip>
     @if (_isAdmin || _isManager)

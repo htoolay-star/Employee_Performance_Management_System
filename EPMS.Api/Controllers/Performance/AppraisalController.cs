@@ -163,6 +163,13 @@ public class AppraisalController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HttpGet("{id:long}/my-360-feedback")]
+    public async Task<ActionResult<SuccessResponse>> GetMy360Feedback(long id)
+    {
+        var result = await _service.GetMy360FeedbackAsync(id);
+        return HandleResult(result);
+    }
+
     [Authorize]
     [HttpGet("manager-self-pending")]
     public async Task<ActionResult<SuccessResponse>> GetManagerSelfPending()

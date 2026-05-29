@@ -419,6 +419,16 @@
             public const string NoData = "No 360 forms found.";
         }
 
+        public static class My360Feedback
+        {
+            public const string PageTitle = "My 360 Feedback";
+            public const string NoData = "No 360 feedback available.";
+            public const string DetailTitle = "360 Feedback Detail";
+            public const string AnonymousLabel = "Anonymous";
+            public const string AnonymousChip = "Responses shown anonymously";
+            public const string ViewFeedback = "View Feedback";
+        }
+
         public static class MyAppraisalForms
         {
             public const string PageTitle = "My Appraisal Forms";
