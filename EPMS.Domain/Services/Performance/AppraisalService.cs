@@ -3,6 +3,7 @@ using EPMS.Domain.Entities.Performance;
 using EPMS.Domain.Interface.IService.App;
 using EPMS.Domain.Interface.IService.Performance;
 using EPMS.Shared.Constants;
+using EPMS.Shared.DTOs.AppDTOs;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.FormDTOs;
 using EPMS.Shared.Enums;
@@ -16,15 +17,18 @@ public class AppraisalService : IAppraisalService
     private readonly IUnitOfWork _uow;
     private readonly TimeProvider _timeProvider;
     private readonly ICurrentEmployeeContextService _currentEmployee;
+    private readonly INotificationService _notificationService;
 
     public AppraisalService(
         IUnitOfWork uow,
         TimeProvider timeProvider,
-        ICurrentEmployeeContextService currentEmployee)
+        ICurrentEmployeeContextService currentEmployee,
+        INotificationService notificationService)
     {
         _uow = uow;
         _timeProvider = timeProvider;
         _currentEmployee = currentEmployee;
+        _notificationService = notificationService;
     }
 
     public async Task<SuccessResponse> CreateAsync(CreateAppraisalDto dto)
@@ -594,7 +598,10 @@ public class AppraisalService : IAppraisalService
             case "KPI":
                 if (appraisal.KpiLockIsDeadline)
                     return SuccessResponse.Fail("Cannot unlock deadline-locked KPI.", ErrorType.Conflict);
+                if (!_currentEmployee.IsAdmin)
+                    return SuccessResponse.Fail("Only admins can unlock KPI.", ErrorType.Forbidden);
                 appraisal.UnlockKpi();
+                appraisal.SetKpiStatus(AppraisalStatuses.Kpi.Draft);
                 break;
             case EvaluatorRoles.Manager:
             case EvaluatorRoles.Peer:
@@ -622,6 +629,50 @@ public class AppraisalService : IAppraisalService
         await _uow.CompleteAsync();
 
         return SuccessResponse.Ok($"{role} evaluation unlocked successfully.");
+    }
+
+    public async Task<SuccessResponse> RequestKpiUnlockAsync(long id)
+    {
+        var appraisal = await _uow.Perf.Appraisals.GetAppraisalWithDetailsAsync(id);
+        if (appraisal == null)
+            return SuccessResponse.Fail(AppraisalMsg.NotFound(id), ErrorType.NotFound);
+
+        if (!appraisal.KpiLocked)
+            return SuccessResponse.Fail("KPI is not locked.", ErrorType.Conflict);
+
+        if (appraisal.KpiLockIsDeadline)
+            return SuccessResponse.Fail("Cannot request unlock for deadline-locked KPI.", ErrorType.Conflict);
+
+        if (appraisal.KpiStatus != AppraisalStatuses.Kpi.Reviewed)
+            return SuccessResponse.Fail("KPI must be in Reviewed status to request unlock.", ErrorType.Conflict);
+
+        var adminPositionSetting = await _uow.App.SystemSettings.GetByKeyAsync(SettingKeys.AdminPositionId);
+        if (adminPositionSetting == null || !long.TryParse(adminPositionSetting.Value, out var adminPositionId))
+            return SuccessResponse.Fail("Admin position not configured. Cannot send unlock request.", ErrorType.NotFound);
+
+        var admins = await _uow.Info.EmployeeEmployments
+            .FindAllAsync(e => e.PositionId == adminPositionId && !e.IsDeleted, trackChanges: false);
+
+        var viewerEmployeeId = await _currentEmployee.GetEmployeeIdAsync();
+        var employeeName = appraisal.Employee?.StaffName ?? "Unknown";
+
+        foreach (var admin in admins)
+        {
+            var profile = await _uow.Info.EmployeeProfiles.GetByIdAsync(admin.EmployeeId);
+            if (profile?.UserId.HasValue == true)
+            {
+                await _notificationService.CreateAsync(new CreateNotificationDto
+                {
+                    ToUserId = profile.UserId.Value,
+                    Title = "KPI Unlock Requested",
+                    Message = $"A KPI unlock has been requested for {employeeName}.",
+                    Type = "KPI_UNLOCK",
+                    RedirectUrl = $"/performance/appraisals/{id}/fill"
+                });
+            }
+        }
+
+        return SuccessResponse.Ok("Unlock request sent to admin.");
     }
 
     public async Task AutoGenerateForCycleAsync(long cycleId)

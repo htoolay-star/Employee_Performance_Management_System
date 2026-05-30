@@ -25,6 +25,7 @@ public interface IAppraisalService
     Task<SuccessResponse> FinalizeKpiAsync(long id);
     Task<SuccessResponse> FinalizeEvaluationAsync(long appraisalId, string role);
     Task<SuccessResponse> UnlockRoleAsync(long id, string role);
+    Task<SuccessResponse> RequestKpiUnlockAsync(long id);
     Task<SuccessResponse> GetManagerSelfPendingAsync();
     Task<SuccessResponse> ApproveSelfAssessmentAsync(long appraisalId);
     Task AutoFinalizeAndCalculateScoreAsync(long appraisalId);

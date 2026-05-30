@@ -74,6 +74,7 @@ namespace EPMS.Domain.Repository.Performance
                     Status = a.Status,
                     IsLocked = a.IsLocked,
                     KpiLocked = a.KpiLocked,
+                    KpiLockIsDeadline = a.KpiLockIsDeadline,
                     KpiStatus = a.KpiStatus ?? "DRAFT",
                     SelfStatus = a.SelfStatus ?? "DRAFT",
                     ManagerStatus = a.ManagerStatus ?? "DRAFT",

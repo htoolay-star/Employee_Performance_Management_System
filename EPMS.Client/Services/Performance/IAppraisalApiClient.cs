@@ -48,6 +48,12 @@ public interface IAppraisalApiClient
     [Delete("/api/performance/appraisals/{id}")]
     Task<SuccessResponse> DeleteAsync(long id);
 
+    [Post("/api/performance/appraisals/{id}/request-kpi-unlock")]
+    Task<SuccessResponse> RequestKpiUnlockAsync(long id);
+
+    [Post("/api/performance/appraisals/{id}/unlock-kpi")]
+    Task<SuccessResponse> UnlockKpiAsync(long id);
+
     [Post("/api/performance/appraisals/{id}/finalize")]
     Task<SuccessResponse> FinalizeAsync(long id);
 

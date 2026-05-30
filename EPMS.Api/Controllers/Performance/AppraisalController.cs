@@ -184,5 +184,19 @@ public class AppraisalController : ApiControllerBase
         var result = await _service.UnlockRoleAsync(id, dto.Role);
         return HandleResult(result);
     }
+
+    [HttpPost("{id:long}/request-kpi-unlock")]
+    public async Task<ActionResult<SuccessResponse>> RequestKpiUnlock(long id)
+    {
+        var result = await _service.RequestKpiUnlockAsync(id);
+        return HandleResult(result);
+    }
+
+    [HttpPost("{id:long}/unlock-kpi")]
+    public async Task<ActionResult<SuccessResponse>> UnlockKpi(long id)
+    {
+        var result = await _service.UnlockRoleAsync(id, "KPI");
+        return HandleResult(result);
+    }
 }
 
