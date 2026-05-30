@@ -4,9 +4,11 @@
 @using EPMS.Shared.Constants
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.FormDTOs
+@using EPMS.Shared.DTOs.PerformanceDTOs.AppraisalCycleDTOs
 @using MudBlazor
 @using Refit
 @inject IEvaluationResponseApiClient EvalResponseApiClient
+@inject IAppraisalCycleApiClient AppraisalCycleApiClient
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 
@@ -16,6 +18,21 @@
     <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.My360Forms.PageTitle</MudText>
 
     <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+
+        <MudStack Row="true" Class="mb-4" Wrap="Wrap.Wrap">
+            <MudSelect T="long?"
+                       Value="@_selectedCycleId"
+                       ValueChanged="OnCycleChanged"
+                       Label="Cycle"
+                       Variant="Variant.Outlined"
+                       Style="max-width: 200px;"
+                       Clearable="true">
+                @foreach (var cycle in _cycles)
+                {
+                    <MudSelectItem Value="@((long?)cycle.Id)">@cycle.Name</MudSelectItem>
+                }
+            </MudSelect>
+        </MudStack>
 
         <MudDataGrid Items="@_items"
                      Loading="@_loading"
@@ -83,11 +100,38 @@
 @code {
 
     private List<MyEvaluationFormDto> _items = new();
+    private List<MyEvaluationFormDto> _allItems = new();
+    private List<AppraisalCycleDto> _cycles = new();
+    private long? _selectedCycleId;
     private bool _loading = true;
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadCyclesAsync();
         await LoadDataAsync();
+    }
+
+    private void OnCycleChanged(long? v)
+    {
+        _selectedCycleId = v;
+        ApplyFilter();
+    }
+
+    private void ApplyFilter()
+    {
+        _items = _allItems.Where(x => _selectedCycleId == null || x.CycleId == _selectedCycleId).ToList();
+        StateHasChanged();
+    }
+
+    private async Task LoadCyclesAsync()
+    {
+        try
+        {
+            var response = await AppraisalCycleApiClient.GetAllAsync();
+            if (response.Success && response.Data != null)
+                _cycles = response.Data.ToList();
+        }
+        catch { }
     }
 
     private async Task LoadDataAsync()
@@ -99,7 +143,8 @@
             var response = await EvalResponseApiClient.GetMyFormsAsync("360");
             if (response.Success && response.Data != null)
             {
-                _items = response.Data.ToList();
+                _allItems = response.Data.ToList();
+                ApplyFilter();
             }
             else
             {

@@ -13,10 +13,6 @@ namespace EPMS.Shared.Validators.PerformanceDTOs.ContinuousFeedbackDTOs
                 .GreaterThan(0)
                 .WithMessage(PerformanceValidationMessages.ContinuousFeedback.EmployeeIdRequired);
 
-            RuleFor(x => x.GivenById)
-                .GreaterThan(0)
-                .WithMessage(PerformanceValidationMessages.ContinuousFeedback.GivenByIdRequired);
-
             RuleFor(x => x.FeedbackType)
                 .NotEmpty().WithMessage(PerformanceValidationMessages.ContinuousFeedback.FeedbackTypeRequired)
                 .MaximumLength(50).WithMessage(PerformanceValidationMessages.ContinuousFeedback.FeedbackTypeMaxLength)

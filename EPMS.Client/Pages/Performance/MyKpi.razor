@@ -4,10 +4,12 @@
 @using EPMS.Client.Models.Performance
 @using EPMS.Client.Services.Performance
 @using EPMS.Shared.Constants
+@using EPMS.Shared.DTOs.PerformanceDTOs.AppraisalCycleDTOs
 @using Mapster
 @using MudBlazor
 @using Refit
 @inject IAppraisalApiClient AppraisalApiClient
+@inject IAppraisalCycleApiClient AppraisalCycleApiClient
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 
@@ -17,6 +19,21 @@
     <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.MyKpi.PageTitle</MudText>
 
     <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+
+        <MudStack Row="true" Class="mb-4" Wrap="Wrap.Wrap">
+            <MudSelect T="long?"
+                       Value="@_selectedCycleId"
+                       ValueChanged="OnCycleChanged"
+                       Label="Cycle"
+                       Variant="Variant.Outlined"
+                       Style="max-width: 200px;"
+                       Clearable="true">
+                @foreach (var cycle in _cycles)
+                {
+                    <MudSelectItem Value="@((long?)cycle.Id)">@cycle.Name</MudSelectItem>
+                }
+            </MudSelect>
+        </MudStack>
 
         <MudDataGrid Items="@_items"
                      Loading="@_loading"
@@ -77,12 +94,16 @@
 @code {
 
     private List<AppraisalFillFormModel> _items = new();
+    private List<AppraisalFillFormModel> _allItems = new();
+    private List<AppraisalCycleDto> _cycles = new();
+    private long? _selectedCycleId;
     private bool _loading = true;
     private CancellationTokenSource? _cts;
 
     protected override async Task OnInitializedAsync()
     {
         _cts = new CancellationTokenSource();
+        await LoadCyclesAsync();
         await LoadAsync();
     }
 
@@ -90,6 +111,29 @@
     {
         _cts?.Cancel();
         _cts?.Dispose();
+    }
+
+    private void OnCycleChanged(long? v)
+    {
+        _selectedCycleId = v;
+        ApplyFilter();
+    }
+
+    private void ApplyFilter()
+    {
+        _items = _allItems.Where(x => _selectedCycleId == null || x.CycleId == _selectedCycleId).ToList();
+        StateHasChanged();
+    }
+
+    private async Task LoadCyclesAsync()
+    {
+        try
+        {
+            var response = await AppraisalCycleApiClient.GetAllAsync();
+            if (response.Success && response.Data != null)
+                _cycles = response.Data.ToList();
+        }
+        catch { }
     }
 
     private async Task LoadAsync()
@@ -102,7 +146,8 @@
             var response = await AppraisalApiClient.GetMyKpiAsync();
             if (response.Success && response.Data != null)
             {
-                _items = response.Data.Adapt<List<AppraisalFillFormModel>>();
+                _allItems = response.Data.Adapt<List<AppraisalFillFormModel>>();
+                ApplyFilter();
             }
             else
             {

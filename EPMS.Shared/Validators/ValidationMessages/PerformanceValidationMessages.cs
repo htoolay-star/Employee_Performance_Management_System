@@ -135,7 +135,6 @@ namespace EPMS.Shared.Validators.ValidationMessages
         {
             public const string IdRequired = "Feedback ID is required.";
             public const string EmployeeIdRequired = "Employee is required.";
-            public const string GivenByIdRequired = "Given by user is required.";
             public const string FeedbackTypeRequired = "Feedback type is required.";
             public const string FeedbackTypeMaxLength = "Feedback type cannot exceed 50 characters.";
             public const string FeedbackTypeInvalid = "Feedback type must be one of: Recognition, Constructive, Guidance, or General Note.";

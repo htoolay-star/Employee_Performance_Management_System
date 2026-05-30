@@ -17,6 +17,20 @@ namespace EPMS.Api.Controllers.Performance
             _feedbackService = feedbackService;
         }
 
+        [HttpGet("received")]
+        public async Task<ActionResult<SuccessResponse<IEnumerable<ContinuousFeedbackDto>>>> GetReceived()
+        {
+            var result = await _feedbackService.GetReceivedFeedbackAsync();
+            return HandleResult(result);
+        }
+
+        [HttpGet("given")]
+        public async Task<ActionResult<SuccessResponse<IEnumerable<ContinuousFeedbackDto>>>> GetGiven()
+        {
+            var result = await _feedbackService.GetGivenFeedbackAsync();
+            return HandleResult(result);
+        }
+
         [HttpGet]
         public async Task<ActionResult<SuccessResponse<IEnumerable<ContinuousFeedbackDto>>>> GetAll()
         {

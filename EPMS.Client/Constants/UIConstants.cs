@@ -429,6 +429,28 @@
             public const string ViewFeedback = "View Feedback";
         }
 
+        public static class ReceivedFeedback
+        {
+            public const string PageTitle = "Received Feedback";
+            public const string NoData = "No feedback received yet.";
+            public const string ColumnGivenBy = "Given By";
+            public const string ColumnFeedbackType = "Feedback Type";
+            public const string ColumnContent = "Content";
+            public const string ColumnVisibility = "Visibility";
+            public const string ColumnDate = "Date";
+        }
+
+        public static class GivenFeedback
+        {
+            public const string PageTitle = "Given Feedback";
+            public const string NoData = "No feedback given yet.";
+            public const string ColumnEmployee = "Employee";
+            public const string ColumnFeedbackType = "Feedback Type";
+            public const string ColumnContent = "Content";
+            public const string ColumnVisibility = "Visibility";
+            public const string ColumnDate = "Date";
+        }
+
         public static class MyAppraisalForms
         {
             public const string PageTitle = "My Appraisal Forms";

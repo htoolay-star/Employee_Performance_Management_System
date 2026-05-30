@@ -164,6 +164,15 @@
         <MudTooltip Text="My 360 Feedback" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
             <MudNavLink Href="performance/my-360-feedback" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Feedback">My 360 Feedback</MudNavLink>
         </MudTooltip>
+        <MudTooltip Text="Received Feedback" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+            <MudNavLink Href="performance/my-received-feedback" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Inbox">Received Feedback</MudNavLink>
+        </MudTooltip>
+        @if (_isAdmin || _isManager)
+        {
+        <MudTooltip Text="Given Feedback" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+            <MudNavLink Href="performance/my-given-feedback" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Outbox">Given Feedback</MudNavLink>
+        </MudTooltip>
+        }
         <MudTooltip Text="My PIPs" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
             <MudNavLink Href="performance/my-pips" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.TrendingUp">My PIPs</MudNavLink>
         </MudTooltip>
@@ -179,12 +188,15 @@
         <MudTooltip Text="Appraisal Forms" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
             <MudNavLink Href="performance/my-forms/appraisal" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.RateReview">Appraisal Forms</MudNavLink>
         </MudTooltip>
+        @if (_isAdmin)
+        {
         <MudTooltip Text="Department KPIs" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
             <MudNavLink Href="performance/department-appraisals" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Assessment">Department KPIs</MudNavLink>
         </MudTooltip>
         <MudTooltip Text="Team KPIs" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
             <MudNavLink Href="performance/team-appraisals" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Assessment">Team KPIs</MudNavLink>
         </MudTooltip>
+        }
     </MudNavGroup>
     </MudTooltip>
     }

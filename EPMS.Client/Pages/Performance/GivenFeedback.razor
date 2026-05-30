@@ -1,0 +1,150 @@
+@page "/performance/my-given-feedback"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using EPMS.Client.Constants
+@using EPMS.Client.Services.Performance
+@using EPMS.Shared.Constants
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.PerformanceDTOs.ContinuousFeedbackDTOs
+@using MudBlazor
+@using Refit
+@inject IContinuousFeedbackApiClient FeedbackApiClient
+@inject ISnackbar Snackbar
+
+<PageTitle>@UIConstants.GivenFeedback.PageTitle</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.GivenFeedback.PageTitle</MudText>
+
+    <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+        <MudDataGrid Items="@_feedbacks"
+                     Loading="@_loading"
+                     Hover="true"
+                     Elevation="0"
+                     SortMode="SortMode.None">
+            <Columns>
+                <TemplateColumn Title="#" Sortable="false" Style="width: 50px;">
+                    <CellTemplate>
+                        <span>@(_feedbacks.IndexOf(context.Item) + 1)</span>
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.EmployeeName" Title="@UIConstants.GivenFeedback.ColumnEmployee" Sortable="true" />
+                <TemplateColumn Title="@UIConstants.GivenFeedback.ColumnFeedbackType">
+                    <CellTemplate>
+                        <MudChip Size="Size.Small" Color="@GetTypeColor(context.Item.FeedbackType)">
+                            @FormatType(context.Item.FeedbackType)
+                        </MudChip>
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="@UIConstants.GivenFeedback.ColumnContent">
+                    <CellTemplate>
+                        @Truncate(context.Item.Content, 100)
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="@UIConstants.GivenFeedback.ColumnVisibility">
+                    <CellTemplate>
+                        <MudChip Size="Size.Small" Color="@GetVisibilityColor(context.Item.Visibility)">
+                            @context.Item.Visibility
+                        </MudChip>
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="@UIConstants.GivenFeedback.ColumnDate" Sortable="true">
+                    <CellTemplate>
+                        @context.Item.FeedbackDate.ToOffset(TimeSpan.FromHours(6.5)).ToString("dd/MM/yyyy HH:mm")
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+            <NoRecordsContent>
+                <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
+                    <MudIcon Icon="@Icons.Material.Outlined.Send" Style="font-size: 4rem;" Color="Color.Default" />
+                    <MudText Typo="Typo.h6" Color="Color.Default">@UIConstants.GivenFeedback.NoData</MudText>
+                </MudStack>
+            </NoRecordsContent>
+            <LoadingContent>
+                <MudStack Spacing="3" Class="w-100">
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                </MudStack>
+            </LoadingContent>
+            <PagerContent>
+                <MudDataGridPager T="ContinuousFeedbackDto" />
+            </PagerContent>
+        </MudDataGrid>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private bool _loading = true;
+    private List<ContinuousFeedbackDto> _feedbacks = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _loading = true;
+        StateHasChanged();
+        try
+        {
+            var response = await FeedbackApiClient.GetGivenAsync();
+
+            if (response.Success && response.Data != null)
+            {
+                _feedbacks = response.Data.ToList();
+            }
+            else
+            {
+                Snackbar.Add(response?.Message ?? UIConstants.Common.LoadFailed, Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private static string Truncate(string value, int maxLength)
+    {
+        if (string.IsNullOrEmpty(value)) return string.Empty;
+        return value.Length <= maxLength ? value : value[..maxLength] + "...";
+    }
+
+    private static Color GetTypeColor(string type) => type switch
+    {
+        ContinuousFeedbackTypes.Recognition => Color.Success,
+        ContinuousFeedbackTypes.Constructive => Color.Warning,
+        ContinuousFeedbackTypes.Guidance => Color.Info,
+        ContinuousFeedbackTypes.GeneralNote => Color.Default,
+        _ => Color.Default
+    };
+
+    private static Color GetVisibilityColor(string visibility) => visibility switch
+    {
+        FeedbackVisibility.Public => Color.Success,
+        FeedbackVisibility.Private => Color.Error,
+        FeedbackVisibility.ManagerOnly => Color.Warning,
+        FeedbackVisibility.AdminOnly => Color.Secondary,
+        _ => Color.Default
+    };
+
+    private static string FormatType(string type) => type switch
+    {
+        ContinuousFeedbackTypes.Recognition => "Recognition",
+        ContinuousFeedbackTypes.Constructive => "Constructive",
+        ContinuousFeedbackTypes.Guidance => "Guidance",
+        ContinuousFeedbackTypes.GeneralNote => "General Note",
+        _ => type
+    };
+}

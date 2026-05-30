@@ -4,9 +4,11 @@
 @using EPMS.Shared.Constants
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.FormDTOs
+@using EPMS.Shared.DTOs.PerformanceDTOs.AppraisalCycleDTOs
 @using MudBlazor
 @using Refit
 @inject IAppraisalApiClient AppraisalApiClient
+@inject IAppraisalCycleApiClient AppraisalCycleApiClient
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 
@@ -36,6 +38,18 @@
                            Clearable="true">
                     <MudSelectItem Value="@AppraisalStatuses.Draft">Draft</MudSelectItem>
                     <MudSelectItem Value="@AppraisalStatuses.Finalized">Finalized</MudSelectItem>
+                </MudSelect>
+                <MudSelect T="long?"
+                           Value="@_selectedCycleId"
+                           ValueChanged="OnCycleChanged"
+                           Label="Cycle"
+                           Variant="Variant.Outlined"
+                           Style="max-width: 200px;"
+                           Clearable="true">
+                    @foreach (var cycle in _cycles)
+                    {
+                        <MudSelectItem Value="@((long?)cycle.Id)">@cycle.Name</MudSelectItem>
+                    }
                 </MudSelect>
             </MudStack>
         </MudStack>
@@ -121,18 +135,38 @@
 
     private string? _searchString;
     private string? _selectedStatusFilter;
+    private long? _selectedCycleId;
+    private List<AppraisalDto> _allItems = new();
     private List<AppraisalDto> _items = new();
+    private List<AppraisalCycleDto> _cycles = new();
     private Dictionary<long, int> _rowNumbers = new();
     private bool _loading = true;
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadCyclesAsync();
         await LoadDataAsync();
     }
 
     private void OnStatusFilterChanged(string? v)
     {
         _selectedStatusFilter = v;
+    }
+
+    private void OnCycleChanged(long? v)
+    {
+        _selectedCycleId = v;
+    }
+
+    private async Task LoadCyclesAsync()
+    {
+        try
+        {
+            var response = await AppraisalCycleApiClient.GetAllAsync();
+            if (response.Success && response.Data != null)
+                _cycles = response.Data.ToList();
+        }
+        catch { }
     }
 
     private async Task LoadDataAsync()
@@ -144,7 +178,8 @@
             var response = await AppraisalApiClient.GetAllAsync();
             if (response.Success && response.Data != null)
             {
-                _items = response.Data.ToList();
+                _allItems = response.Data.ToList();
+                _items = _allItems;
                 _rowNumbers = _items.Select((x, i) => (x.Id, Index: i + 1)).ToDictionary(x => x.Id, x => x.Index);
             }
             else
@@ -186,6 +221,9 @@
             if (!string.Equals(x.Status, _selectedStatusFilter, StringComparison.OrdinalIgnoreCase))
                 return false;
         }
+
+        if (_selectedCycleId.HasValue && x.CycleId != _selectedCycleId.Value)
+            return false;
 
         return true;
     }

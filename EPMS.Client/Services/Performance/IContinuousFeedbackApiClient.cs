@@ -6,6 +6,12 @@ namespace EPMS.Client.Services.Performance;
 
 public interface IContinuousFeedbackApiClient
 {
+    [Get("/api/performance/continuous-feedbacks/received")]
+    Task<SuccessResponse<IEnumerable<ContinuousFeedbackDto>>> GetReceivedAsync();
+
+    [Get("/api/performance/continuous-feedbacks/given")]
+    Task<SuccessResponse<IEnumerable<ContinuousFeedbackDto>>> GetGivenAsync();
+
     [Get("/api/performance/continuous-feedbacks")]
     Task<SuccessResponse<IEnumerable<ContinuousFeedbackDto>>> GetAllAsync();
 

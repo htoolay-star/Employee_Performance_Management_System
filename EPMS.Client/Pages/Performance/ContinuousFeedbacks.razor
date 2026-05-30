@@ -10,11 +10,10 @@
 @using MudBlazor
 @using Refit
 @using Microsoft.AspNetCore.Components.Authorization
-@using System.Security.Claims
 @inject IContinuousFeedbackApiClient FeedbackApiClient
-@inject IEmployeeProfileApiClient EmployeeApiClient
-@inject ISnackbar Snackbar
-@inject AuthenticationStateProvider AuthState
+    @inject IEmployeeProfileApiClient EmployeeApiClient
+    @inject ISnackbar Snackbar
+    @inject AuthenticationStateProvider AuthState
 
 <PageTitle>@UIConstants.ContinuousFeedback.PageTitle</PageTitle>
 
@@ -258,7 +257,6 @@
     private Dictionary<long, int> _rowNumbers = new();
     private string _searchString = string.Empty;
     private List<EmployeeLookupDto> _employees = new();
-    private long _currentEmployeeId;
     private long? _selectedEmployeeId;
     private bool _isAdmin;
     private bool _isManager;
@@ -299,17 +297,13 @@
         try
         {
             var authState = await AuthState.GetAuthenticationStateAsync();
-            var userIdClaim = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             _isAdmin = authState.User.IsInRole("Admin") || authState.User.IsInRole("SystemAdmin");
             _isManager = !_isAdmin;
 
             var feedbacksTask = FeedbackApiClient.GetAllAsync();
             var employeesTask = EmployeeApiClient.GetLookupAsync();
-            var profileTask = !string.IsNullOrEmpty(userIdClaim) && long.TryParse(userIdClaim, out var uid)
-                ? EmployeeApiClient.GetByUserIdAsync(uid)
-                : Task.FromResult<SuccessResponse<EmployeeProfileDto>>(null!);
 
-            await Task.WhenAll(feedbacksTask, employeesTask, profileTask);
+            await Task.WhenAll(feedbacksTask, employeesTask);
 
             var feedbacksResponse = await feedbacksTask;
             if (feedbacksResponse.Success && feedbacksResponse.Data != null)
@@ -328,12 +322,6 @@
             if (employeesResponse.Success && employeesResponse.Data != null)
             {
                 _employees = employeesResponse.Data.ToList();
-            }
-
-            var profileResponse = await profileTask;
-            if (profileResponse?.Success == true && profileResponse.Data != null)
-            {
-                _currentEmployeeId = profileResponse.Data.Id;
             }
         }
         catch (ApiException ex)
@@ -424,7 +412,6 @@
         try
         {
             _createDto.EmployeeId = _selectedEmployeeId.Value;
-            _createDto.GivenById = _currentEmployeeId;
 
             var result = await FeedbackApiClient.CreateAsync(_createDto);
             if (result.Success)

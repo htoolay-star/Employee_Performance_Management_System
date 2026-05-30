@@ -48,6 +48,56 @@ namespace EPMS.Domain.Services.Performance
             return SuccessResponse<IEnumerable<ContinuousFeedbackDto>>.Ok(dtos, ContinuousFeedbackMsg.RetrievedAll);
         }
 
+        public async Task<SuccessResponse<IEnumerable<ContinuousFeedbackDto>>> GetReceivedFeedbackAsync()
+        {
+            var viewerEmployeeId = await _currentEmployee.GetEmployeeIdAsync();
+            var isAdmin = _currentEmployee.IsAdmin;
+
+            if (!viewerEmployeeId.HasValue)
+                return SuccessResponse<IEnumerable<ContinuousFeedbackDto>>.Ok(
+                    Enumerable.Empty<ContinuousFeedbackDto>(), ContinuousFeedbackMsg.RetrievedAll);
+
+            var feedbacks = await _uow.Perf.ContinuousFeedbacks.GetAllWithIncludesAsync();
+
+            if (isAdmin)
+            {
+                feedbacks = feedbacks.Where(f =>
+                    (f.EmployeeId == viewerEmployeeId.Value && f.Visibility == FeedbackVisibility.Public)
+                    || f.Visibility == FeedbackVisibility.AdminOnly
+                );
+            }
+            else
+            {
+                var directReports = await _uow.Info.EmployeeEmployments
+                    .FindAllAsync(e => e.DirectManagerId == viewerEmployeeId.Value && !e.IsDeleted);
+                var directReportIds = directReports.Select(e => e.EmployeeId).ToHashSet();
+
+                feedbacks = feedbacks.Where(f =>
+                    (f.EmployeeId == viewerEmployeeId.Value && f.Visibility == FeedbackVisibility.Public)
+                    || (directReportIds.Contains(f.EmployeeId) && f.Visibility == FeedbackVisibility.ManagerOnly)
+                );
+            }
+
+            var dtos = feedbacks.Adapt<IEnumerable<ContinuousFeedbackDto>>();
+            return SuccessResponse<IEnumerable<ContinuousFeedbackDto>>.Ok(dtos, ContinuousFeedbackMsg.RetrievedAll);
+        }
+
+        public async Task<SuccessResponse<IEnumerable<ContinuousFeedbackDto>>> GetGivenFeedbackAsync()
+        {
+            var viewerEmployeeId = await _currentEmployee.GetEmployeeIdAsync();
+
+            if (!viewerEmployeeId.HasValue)
+                return SuccessResponse<IEnumerable<ContinuousFeedbackDto>>.Ok(
+                    Enumerable.Empty<ContinuousFeedbackDto>(), ContinuousFeedbackMsg.RetrievedAll);
+
+            var feedbacks = await _uow.Perf.ContinuousFeedbacks.GetAllWithIncludesAsync();
+
+            feedbacks = feedbacks.Where(f => f.GivenById == viewerEmployeeId.Value);
+
+            var dtos = feedbacks.Adapt<IEnumerable<ContinuousFeedbackDto>>();
+            return SuccessResponse<IEnumerable<ContinuousFeedbackDto>>.Ok(dtos, ContinuousFeedbackMsg.RetrievedAll);
+        }
+
         public async Task<SuccessResponse<ContinuousFeedbackDto>> GetByIdAsync(long id)
         {
             var feedback = await _uow.Perf.ContinuousFeedbacks.GetByIdAsync(id);
@@ -100,7 +150,7 @@ namespace EPMS.Domain.Services.Performance
 
             var feedback = new ContinuousFeedback(
                 dto.EmployeeId,
-                dto.GivenById,
+                viewerEmployeeId.Value,
                 dto.FeedbackType,
                 dto.Content,
                 _timeProvider,
