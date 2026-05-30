@@ -89,7 +89,37 @@ namespace EPMS.Domain.Services.Performance
 
         public async Task<SuccessResponse<IEnumerable<ContinuousFeedbackDto>>> GetByEmployeeIdAsync(long employeeId)
         {
-            var feedbacks = await _uow.Perf.ContinuousFeedbacks.GetByEmployeeIdAsync(employeeId);
+            var viewerEmployeeId = await _currentEmployee.GetEmployeeIdAsync();
+            var isAdmin = _currentEmployee.IsAdmin;
+
+            if (!viewerEmployeeId.HasValue)
+                return SuccessResponse<IEnumerable<ContinuousFeedbackDto>>.Ok(
+                    Enumerable.Empty<ContinuousFeedbackDto>(), ContinuousFeedbackMsg.RetrievedAll);
+
+            var feedbacks = (await _uow.Perf.ContinuousFeedbacks.GetByEmployeeIdAsync(employeeId)).ToList();
+
+            if (isAdmin)
+            {
+                feedbacks = feedbacks.Where(f =>
+                    f.Visibility == FeedbackVisibility.Public
+                    || f.Visibility == FeedbackVisibility.AdminOnly
+                    || f.Visibility == FeedbackVisibility.ManagerOnly
+                    || (f.Visibility == FeedbackVisibility.Private && f.GivenById == viewerEmployeeId.Value)
+                ).ToList();
+            }
+            else
+            {
+                var isDirectReport = await _uow.Info.EmployeeEmployments
+                    .AnyAsync(e => e.EmployeeId == employeeId && e.DirectManagerId == viewerEmployeeId.Value && !e.IsDeleted);
+
+                feedbacks = feedbacks.Where(f =>
+                    f.Visibility == FeedbackVisibility.Public
+                    || f.Visibility == FeedbackVisibility.AdminOnly
+                    || (isDirectReport && f.Visibility == FeedbackVisibility.ManagerOnly)
+                    || (f.Visibility == FeedbackVisibility.Private && f.GivenById == viewerEmployeeId.Value)
+                ).ToList();
+            }
+
             var dtos = feedbacks.Adapt<IEnumerable<ContinuousFeedbackDto>>();
             return SuccessResponse<IEnumerable<ContinuousFeedbackDto>>.Ok(dtos, ContinuousFeedbackMsg.RetrievedAll);
         }

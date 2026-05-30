@@ -271,6 +271,12 @@
                     </MudStack>
                 </MudPaper>
 
+                @* Feedback History (Appraisal Review only) *@
+                @if (_currentRole == EvaluatorRoles.Appraisal)
+                {
+                    <FeedbackHistoryPanel EmployeeId="@_model.EmployeeId" />
+                }
+
                 @* Submit Button *@
                 @if (!ViewOnly)
                 {

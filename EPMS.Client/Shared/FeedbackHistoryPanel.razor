@@ -1,0 +1,100 @@
+@using EPMS.Client.Services.Performance
+@using EPMS.Shared.DTOs.PerformanceDTOs.ContinuousFeedbackDTOs
+@using EPMS.Shared.Constants
+@inject IContinuousFeedbackApiClient FeedbackApiClient
+
+<MudPaper Elevation="0" Outlined="true" Class="pa-4 mb-4 rounded-lg">
+    <MudExpansionPanel Text="@($"Feedback History ({_feedbacks.Count})")" Class="feedback-panel">
+        @if (_loading)
+        {
+            <div class="d-flex justify-center pa-4">
+                <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+            </div>
+        }
+        else if (_error)
+        {
+            <MudText Color="Color.Secondary" Align="Align.Center">Unable to load feedback history.</MudText>
+        }
+        else if (_feedbacks.Count == 0)
+        {
+            <MudText Color="Color.Secondary" Align="Align.Center">No feedback history.</MudText>
+        }
+        else
+        {
+            <MudSimpleTable Class="w-100">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Feedback</th>
+                        <th>Given By</th>
+                        <th>Date</th>
+                        <th>Visibility</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var fb in _feedbacks)
+                    {
+                        <tr>
+                            <td>
+                                <MudChip T="string" Size="Size.Small" Color="Color.Primary">@fb.FeedbackType</MudChip>
+                            </td>
+                            <td>@fb.Content</td>
+                            <td>@fb.GivenByName</td>
+                            <td>@fb.FeedbackDate.ToLocalTime().ToString("dd/MM/yyyy hh:mm tt")</td>
+                            <td>
+                                <MudChip T="string" Size="Size.Small" Color="@GetVisibilityColor(fb.Visibility)">@fb.Visibility</MudChip>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </MudSimpleTable>
+        }
+    </MudExpansionPanel>
+</MudPaper>
+
+@code {
+    [Parameter] public long EmployeeId { get; set; }
+
+    private List<ContinuousFeedbackDto> _feedbacks = new();
+    private bool _loading = true;
+    private bool _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _error = false;
+        StateHasChanged();
+
+        try
+        {
+            var response = await FeedbackApiClient.GetByEmployeeIdAsync(EmployeeId);
+            if (response.Success && response.Data != null)
+            {
+                _feedbacks = response.Data.ToList();
+            }
+        }
+        catch
+        {
+            _error = true;
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private Color GetVisibilityColor(string visibility) => visibility switch
+    {
+        FeedbackVisibility.Public => Color.Success,
+        FeedbackVisibility.Private => Color.Default,
+        FeedbackVisibility.ManagerOnly => Color.Warning,
+        FeedbackVisibility.AdminOnly => Color.Error,
+        _ => Color.Default
+    };
+}
