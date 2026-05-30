@@ -17,18 +17,15 @@
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="ToggleDrawer" />
         <MudSpacer />
-        <div style="position: relative;">
-            <MudBadge Content="@_unreadCount.ToString()"
-                      Color="Color.Error"
-                      Max="99"
-                      Placement="Placement.TopEnd"
-                      Visible="@(_unreadCount > 0)"
-                      Class="notif-badge">
-                <MudIconButton Icon="@Icons.Material.Filled.Notifications"
-                               Color="Color.Inherit"
-                               OnClick="ToggleNotifDropdown"
-                               title="@UIConstants.Notifications.DropdownTitle" />
-            </MudBadge>
+        <div style="position: relative; display: flex; align-items: center;">
+            <MudIconButton Color="Color.Inherit" OnClick="ToggleNotifDropdown" title="@UIConstants.Notifications.DropdownTitle">
+                <MudBadge Content="@_unreadCount.ToString()"
+                          Color="Color.Error"
+                          Overlap="true"
+                          Visible="@(_unreadCount > 0)">
+                    <MudIcon Icon="@Icons.Material.Filled.Notifications" />
+                </MudBadge>
+            </MudIconButton>
             @if (_notifDropdownOpen)
             {
                 <MudOverlay Visible="@_notifDropdownOpen" OnClick="CloseNotifDropdown" Absolute="true" />
@@ -407,10 +404,5 @@
     .notif-item-time {
         font-size: 0.75rem;
         color: #aaa;
-    }
-
-    .notif-badge .mud-badge-badge {
-        top: 2px !important;
-        right: 2px !important;
     }
 </style>

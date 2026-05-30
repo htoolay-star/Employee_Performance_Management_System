@@ -199,8 +199,18 @@
                             Request Unlock
                         </MudButton>
                     }
-                    @if (_isAdmin)
+                    @if (_isAdmin && _model.KpiUnlockRequested)
                     {
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Error"
+                                   OnClick="DeclineKpiUnlock"
+                                   Disabled="@(_declining)">
+                            @if (_declining)
+                            {
+                                <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
+                            }
+                            Decline
+                        </MudButton>
                         <MudButton Variant="Variant.Filled"
                                    Color="Color.Warning"
                                    OnClick="UnlockKpi"
@@ -228,6 +238,7 @@
     private bool _isAdmin;
     private bool _unlockRequested;
     private bool _unlockRequesting;
+    private bool _declining;
     private bool _loading = true;
     private bool _error;
     private string _errorMessage = string.Empty;
@@ -435,6 +446,34 @@
         finally
         {
             _unlockRequesting = false;
+        }
+    }
+
+    private async Task DeclineKpiUnlock()
+    {
+        _declining = true;
+        StateHasChanged();
+
+        try
+        {
+            var response = await AppraisalApiClient.DeclineKpiUnlockAsync(AppraisalId);
+            if (response.Success)
+            {
+                Snackbar.Add("KPI unlock request declined.", Severity.Success);
+                await LoadAsync();
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? "Failed to decline unlock request.", Severity.Error);
+            }
+        }
+        catch
+        {
+            Snackbar.Add("An error occurred while declining unlock request.", Severity.Error);
+        }
+        finally
+        {
+            _declining = false;
         }
     }
 }

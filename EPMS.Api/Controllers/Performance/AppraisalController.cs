@@ -198,5 +198,12 @@ public class AppraisalController : ApiControllerBase
         var result = await _service.UnlockRoleAsync(id, "KPI");
         return HandleResult(result);
     }
+
+    [HttpPost("{id:long}/decline-kpi-unlock")]
+    public async Task<ActionResult<SuccessResponse>> DeclineKpiUnlock(long id)
+    {
+        var result = await _service.DeclineKpiUnlockAsync(id);
+        return HandleResult(result);
+    }
 }
 

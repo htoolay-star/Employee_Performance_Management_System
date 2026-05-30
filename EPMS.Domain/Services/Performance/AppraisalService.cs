@@ -8,6 +8,7 @@ using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.FormDTOs;
 using EPMS.Shared.Enums;
 using Mapster;
+using Microsoft.Extensions.Caching.Distributed;
 using System.Linq.Expressions;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 namespace EPMS.Domain.Services.Performance;
@@ -17,17 +18,20 @@ public class AppraisalService : IAppraisalService
     private readonly IUnitOfWork _uow;
     private readonly TimeProvider _timeProvider;
     private readonly ICurrentEmployeeContextService _currentEmployee;
+    private readonly IDistributedCache _cache;
     private readonly INotificationService _notificationService;
 
     public AppraisalService(
         IUnitOfWork uow,
         TimeProvider timeProvider,
         ICurrentEmployeeContextService currentEmployee,
+        IDistributedCache cache,
         INotificationService notificationService)
     {
         _uow = uow;
         _timeProvider = timeProvider;
         _currentEmployee = currentEmployee;
+        _cache = cache;
         _notificationService = notificationService;
     }
 
@@ -415,6 +419,8 @@ public class AppraisalService : IAppraisalService
         if (!isAuthorized)
             return SuccessResponse.Fail("Only the direct manager can evaluate KPI.", ErrorType.Forbidden);
 
+        dto.KpiUnlockRequested = await _cache.GetStringAsync($"kpi-unlock-req-{id}") != null;
+
         return SuccessResponse<AppraisalFillDto>.Ok(dto, AppraisalMsg.Retrieved);
     }
 
@@ -423,6 +429,8 @@ public class AppraisalService : IAppraisalService
         var dto = await _uow.Perf.Appraisals.GetAppraisalFillDtoAsync(id);
         if (dto == null)
             return SuccessResponse.Fail(AppraisalMsg.NotFound(id), ErrorType.NotFound);
+
+        dto.KpiUnlockRequested = await _cache.GetStringAsync($"kpi-unlock-req-{id}") != null;
 
         return SuccessResponse<AppraisalFillDto>.Ok(dto, AppraisalMsg.Retrieved);
     }
@@ -602,6 +610,7 @@ public class AppraisalService : IAppraisalService
                     return SuccessResponse.Fail("Only admins can unlock KPI.", ErrorType.Forbidden);
                 appraisal.UnlockKpi();
                 appraisal.SetKpiStatus(AppraisalStatuses.Kpi.Draft);
+                await _cache.RemoveAsync($"kpi-unlock-req-{id}");
                 break;
             case EvaluatorRoles.Manager:
             case EvaluatorRoles.Peer:
@@ -646,33 +655,105 @@ public class AppraisalService : IAppraisalService
         if (appraisal.KpiStatus != AppraisalStatuses.Kpi.Reviewed)
             return SuccessResponse.Fail("KPI must be in Reviewed status to request unlock.", ErrorType.Conflict);
 
-        var adminPositionSetting = await _uow.App.SystemSettings.GetByKeyAsync(SettingKeys.AdminPositionId);
-        if (adminPositionSetting == null || !long.TryParse(adminPositionSetting.Value, out var adminPositionId))
-            return SuccessResponse.Fail("Admin position not configured. Cannot send unlock request.", ErrorType.NotFound);
-
-        var admins = await _uow.Info.EmployeeEmployments
-            .FindAllAsync(e => e.PositionId == adminPositionId && !e.IsDeleted, trackChanges: false);
-
-        var viewerEmployeeId = await _currentEmployee.GetEmployeeIdAsync();
-        var employeeName = appraisal.Employee?.StaffName ?? "Unknown";
-
-        foreach (var admin in admins)
+        await _cache.SetStringAsync($"kpi-unlock-req-{id}", "true", new DistributedCacheEntryOptions
         {
-            var profile = await _uow.Info.EmployeeProfiles.GetByIdAsync(admin.EmployeeId);
-            if (profile?.UserId.HasValue == true)
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24)
+        });
+
+        try
+        {
+            var employeeName = appraisal.Employee?.StaffName ?? "Unknown";
+            var notifiedUserIds = new HashSet<long>();
+
+            // 1. Notify SystemAdmin users (by role — always works)
+            var saUsers = await _uow.Auth.Users
+                .FindAllAsync(u => u.RoleId == (long)UserRole.SystemAdmin && !u.IsDeleted,
+                              includes: u => u.Profile);
+            foreach (var saUser in saUsers)
             {
-                await _notificationService.CreateAsync(new CreateNotificationDto
+                if (notifiedUserIds.Add(saUser.Id))
                 {
-                    ToUserId = profile.UserId.Value,
-                    Title = "KPI Unlock Requested",
-                    Message = $"A KPI unlock has been requested for {employeeName}.",
-                    Type = "KPI_UNLOCK",
-                    RedirectUrl = $"/performance/appraisals/{id}/fill"
-                });
+                    await _notificationService.CreateAsync(new CreateNotificationDto
+                    {
+                        ToUserId = saUser.Id,
+                        Title = "KPI Unlock Requested",
+                        Message = $"A KPI unlock has been requested for {employeeName}.",
+                        Type = "KPI_UNLOCK",
+                        RedirectUrl = $"/performance/appraisals/{id}/view"
+                    });
+                }
             }
+
+            // 2. Notify position-based admins (existing logic)
+            var adminPositionSetting = await _uow.App.SystemSettings.GetByKeyAsync(SettingKeys.AdminPositionId);
+            if (adminPositionSetting != null && long.TryParse(adminPositionSetting.Value, out var adminPositionId))
+            {
+                var admins = await _uow.Info.EmployeeEmployments
+                    .FindAllAsync(e => e.PositionId == adminPositionId && !e.IsDeleted, trackChanges: false);
+                foreach (var admin in admins)
+                {
+                    var profile = await _uow.Info.EmployeeProfiles.GetByIdAsync(admin.EmployeeId);
+                    if (profile?.UserId.HasValue == true && notifiedUserIds.Add(profile.UserId.Value))
+                    {
+                        await _notificationService.CreateAsync(new CreateNotificationDto
+                        {
+                            ToUserId = profile.UserId.Value,
+                            Title = "KPI Unlock Requested",
+                            Message = $"A KPI unlock has been requested for {employeeName}.",
+                            Type = "KPI_UNLOCK",
+                            RedirectUrl = $"/performance/appraisals/{id}/view"
+                        });
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // Notification failure doesn't block the unlock request
         }
 
         return SuccessResponse.Ok("Unlock request sent to admin.");
+    }
+
+    public async Task<SuccessResponse> DeclineKpiUnlockAsync(long id)
+    {
+        var appraisal = await _uow.Perf.Appraisals.GetAppraisalWithDetailsAsync(id);
+        if (appraisal == null)
+            return SuccessResponse.Fail(AppraisalMsg.NotFound(id), ErrorType.NotFound);
+
+        if (!appraisal.KpiLocked)
+            return SuccessResponse.Fail("KPI is not locked.", ErrorType.Conflict);
+
+        if (!await IsCurrentUserAdminAsync())
+            return SuccessResponse.Fail("Only admins can decline unlock requests.", ErrorType.Forbidden);
+
+        await _cache.RemoveAsync($"kpi-unlock-req-{id}");
+
+        try
+        {
+            var directManagerId = appraisal.Employee?.Employment?.DirectManagerId;
+            if (directManagerId.HasValue)
+            {
+                var profile = await _uow.Info.EmployeeProfiles.GetByIdAsync(directManagerId.Value);
+                if (profile?.UserId.HasValue == true)
+                {
+                    await _notificationService.CreateAsync(new CreateNotificationDto
+                    {
+                        ToUserId = profile.UserId.Value,
+                        Title = "KPI Unlock Declined",
+                        Message = $"The KPI unlock request for {appraisal.Employee?.StaffName ?? "Unknown"} has been declined.",
+                        Type = "KPI_UNLOCK_DECLINED",
+                        RedirectUrl = $"/performance/appraisals/{id}/view"
+                    });
+                }
+            }
+        }
+        catch
+        {
+            // Notification failure doesn't block the decline
+        }
+
+        return SuccessResponse.Ok("KPI unlock request declined.");
     }
 
     public async Task AutoGenerateForCycleAsync(long cycleId)

@@ -54,6 +54,9 @@ public interface IAppraisalApiClient
     [Post("/api/performance/appraisals/{id}/unlock-kpi")]
     Task<SuccessResponse> UnlockKpiAsync(long id);
 
+    [Post("/api/performance/appraisals/{id}/decline-kpi-unlock")]
+    Task<SuccessResponse> DeclineKpiUnlockAsync(long id);
+
     [Post("/api/performance/appraisals/{id}/finalize")]
     Task<SuccessResponse> FinalizeAsync(long id);
 
