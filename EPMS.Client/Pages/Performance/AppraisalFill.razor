@@ -17,8 +17,6 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 @inject NavigationCacheService NavCache
-@inject AuthenticationStateProvider AuthState
-
 <PageTitle>@UIConstants.AppraisalFill.PageTitle</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
@@ -200,38 +198,6 @@
                         @UIConstants.AppraisalFill.SubmitButton
                     </MudButton>
                 </MudStack>
-
-                @if (_model.KpiLocked && _model.KpiStatus is AppraisalStatuses.Kpi.Reviewed)
-                {
-                    <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
-                        @if (!_isAdmin && !_unlockRequested)
-                        {
-                            <MudButton Variant="Variant.Outlined"
-                                       Color="Color.Warning"
-                                       OnClick="RequestUnlock"
-                                       Disabled="@(_unlockRequesting)">
-                                @if (_unlockRequesting)
-                                {
-                                    <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
-                                }
-                                Request Unlock
-                            </MudButton>
-                        }
-                        @if (_isAdmin)
-                        {
-                            <MudButton Variant="Variant.Filled"
-                                       Color="Color.Warning"
-                                       OnClick="UnlockKpi"
-                                       Disabled="@(_unlockRequesting)">
-                                @if (_unlockRequesting)
-                                {
-                                    <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
-                                }
-                                Unlock KPI
-                            </MudButton>
-                        }
-                    </MudStack>
-                }
             </MudForm>
         </MudPaper>
     }
@@ -249,9 +215,6 @@
     private bool _error;
     private string _errorMessage = string.Empty;
     private bool _submitting;
-    private bool _isAdmin;
-    private bool _unlockRequested;
-    private bool _unlockRequesting;
     private CancellationTokenSource? _cts;
 
     private static readonly DialogOptions _confirmDialogOptions = new()
@@ -262,8 +225,6 @@
     protected override async Task OnInitializedAsync()
     {
         _cts = new CancellationTokenSource();
-        var authState = await AuthState.GetAuthenticationStateAsync();
-        _isAdmin = authState.User.IsInRole("Admin") || authState.User.IsInRole("SystemAdmin");
         _backUrl = From switch
         {
             "forms" => "/performance/appraisals",
@@ -432,60 +393,4 @@
         return v < 0 ? UIConstants.AppraisalFill.NegativeValueError : null;
     }
 
-    private async Task RequestUnlock()
-    {
-        _unlockRequesting = true;
-        StateHasChanged();
-
-        try
-        {
-            var response = await AppraisalApiClient.RequestKpiUnlockAsync(AppraisalId);
-            if (response.Success)
-            {
-                _unlockRequested = true;
-                Snackbar.Add("Unlock request sent to admin.", Severity.Success);
-            }
-            else
-            {
-                Snackbar.Add(response.Message ?? "Failed to send unlock request.", Severity.Error);
-            }
-        }
-        catch
-        {
-            Snackbar.Add("An error occurred while requesting unlock.", Severity.Error);
-        }
-        finally
-        {
-            _unlockRequesting = false;
-            StateHasChanged();
-        }
-    }
-
-    private async Task UnlockKpi()
-    {
-        _unlockRequesting = true;
-        StateHasChanged();
-
-        try
-        {
-            var response = await AppraisalApiClient.UnlockKpiAsync(AppraisalId);
-            if (response.Success)
-            {
-                Snackbar.Add("KPI unlocked successfully.", Severity.Success);
-                await LoadAsync();
-            }
-            else
-            {
-                Snackbar.Add(response.Message ?? "Failed to unlock KPI.", Severity.Error);
-            }
-        }
-        catch
-        {
-            Snackbar.Add("An error occurred while unlocking KPI.", Severity.Error);
-        }
-        finally
-        {
-            _unlockRequesting = false;
-        }
-    }
 }
