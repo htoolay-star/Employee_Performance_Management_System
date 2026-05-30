@@ -61,6 +61,16 @@ public class NotificationsController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HttpPut("mark-all-read")]
+    public async Task<ActionResult<SuccessResponse>> MarkAllAsRead()
+    {
+        var userId = GetCurrentUserId();
+        if (userId == null)
+            return Unauthorized();
+        var result = await _notificationService.MarkAllAsReadAsync(userId.Value);
+        return HandleResult(result);
+    }
+
     [HttpDelete("{id}")]
     public async Task<ActionResult<SuccessResponse>> Delete(long id)
     {

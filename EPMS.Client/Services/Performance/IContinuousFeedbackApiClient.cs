@@ -12,9 +12,6 @@ public interface IContinuousFeedbackApiClient
     [Get("/api/performance/continuous-feedbacks/given")]
     Task<SuccessResponse<IEnumerable<ContinuousFeedbackDto>>> GetGivenAsync();
 
-    [Get("/api/performance/continuous-feedbacks")]
-    Task<SuccessResponse<IEnumerable<ContinuousFeedbackDto>>> GetAllAsync();
-
     [Get("/api/performance/continuous-feedbacks/{id}")]
     Task<SuccessResponse<ContinuousFeedbackDto>> GetByIdAsync(long id);
 

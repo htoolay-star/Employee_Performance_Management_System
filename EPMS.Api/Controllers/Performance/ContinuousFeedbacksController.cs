@@ -31,13 +31,6 @@ namespace EPMS.Api.Controllers.Performance
             return HandleResult(result);
         }
 
-        [HttpGet]
-        public async Task<ActionResult<SuccessResponse<IEnumerable<ContinuousFeedbackDto>>>> GetAll()
-        {
-            var result = await _feedbackService.GetAllAsync();
-            return HandleResult(result);
-        }
-
         [HttpGet("{id:long}")]
         public async Task<ActionResult<SuccessResponse<ContinuousFeedbackDto>>> GetById(long id)
         {

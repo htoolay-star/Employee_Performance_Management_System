@@ -351,6 +351,7 @@ public static string AlreadyCompleted = "Meeting is already completed.";
         public const string Updated = "Notification updated successfully.";
         public const string Deleted = "Notification deleted successfully.";
         public const string MarkedAsRead = "Notification marked as read.";
+        public const string MarkedAllAsRead = "All notifications marked as read.";
         public const string Retrieved = "Notification retrieved successfully.";
         public const string RetrievedAll = "Notifications retrieved successfully.";
         public static string NotFound(long id) => $"Notification with ID '{id}' was not found.";

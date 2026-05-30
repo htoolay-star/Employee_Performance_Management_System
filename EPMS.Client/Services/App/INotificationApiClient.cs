@@ -15,6 +15,9 @@ public interface INotificationApiClient
     [Put("/api/Notifications/{id}/read")]
     Task<SuccessResponse> MarkAsReadAsync(long id);
 
+    [Put("/api/Notifications/mark-all-read")]
+    Task<SuccessResponse> MarkAllAsReadAsync();
+
     [Delete("/api/Notifications/{id}")]
     Task<SuccessResponse> DeleteAsync(long id);
 }

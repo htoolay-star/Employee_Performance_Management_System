@@ -27,6 +27,7 @@
                         <span>@(_feedbacks.IndexOf(context.Item) + 1)</span>
                     </CellTemplate>
                 </TemplateColumn>
+                <PropertyColumn Property="x => x.EmployeeName" Title="@UIConstants.ReceivedFeedback.ColumnEmployee" Sortable="true" />
                 <PropertyColumn Property="x => x.GivenByName" Title="@UIConstants.ReceivedFeedback.ColumnGivenBy" Sortable="true" />
                 <TemplateColumn Title="@UIConstants.ReceivedFeedback.ColumnFeedbackType">
                     <CellTemplate>
@@ -49,7 +50,7 @@
                 </TemplateColumn>
                 <TemplateColumn Title="@UIConstants.ReceivedFeedback.ColumnDate" Sortable="true">
                     <CellTemplate>
-                        @context.Item.FeedbackDate.ToOffset(TimeSpan.FromHours(6.5)).ToString("dd/MM/yyyy HH:mm")
+                        @context.Item.FeedbackDate.ToOffset(TimeSpan.FromHours(6.5)).ToString("dd/MM/yyyy hh:mm tt")
                     </CellTemplate>
                 </TemplateColumn>
             </Columns>

@@ -85,4 +85,11 @@ public class NotificationService : INotificationService
 
         return SuccessResponse.Ok(NotificationMsg.Deleted);
     }
+
+    public async Task<SuccessResponse> MarkAllAsReadAsync(long userId)
+    {
+        await _uow.App.Notifications.MarkAllAsReadAsync(userId);
+        await _uow.CompleteAsync();
+        return SuccessResponse.Ok(NotificationMsg.MarkedAllAsRead);
+    }
 }

@@ -433,6 +433,7 @@
         {
             public const string PageTitle = "Received Feedback";
             public const string NoData = "No feedback received yet.";
+            public const string ColumnEmployee = "Given To";
             public const string ColumnGivenBy = "Given By";
             public const string ColumnFeedbackType = "Feedback Type";
             public const string ColumnContent = "Content";
@@ -443,12 +444,26 @@
         public static class GivenFeedback
         {
             public const string PageTitle = "Given Feedback";
-            public const string NoData = "No feedback given yet.";
+            public const string SearchPlaceholder = "Search by employee or content...";
+            public const string AddButton = "Give Feedback";
+            public const string CreateDialogTitle = "Give Feedback";
+            public const string EditDialogTitle = "Edit Feedback";
+            public const string DeleteDialogTitle = "Delete Feedback";
+            public const string EmployeeLabel = "Employee";
+            public const string FeedbackTypeLabel = "Feedback Type";
+            public const string ContentLabel = "Content";
+            public const string VisibilityLabel = "Visibility";
             public const string ColumnEmployee = "Employee";
             public const string ColumnFeedbackType = "Feedback Type";
             public const string ColumnContent = "Content";
             public const string ColumnVisibility = "Visibility";
             public const string ColumnDate = "Date";
+            public const string SelectEmployee = "-- Select Employee --";
+            public const string Created = "Feedback created successfully.";
+            public const string Updated = "Feedback updated successfully.";
+            public const string Deleted = "Feedback deleted successfully.";
+            public const string NoData = "No feedback given yet.";
+            public const string NoDataFound = "No feedback entries found.";
         }
 
         public static class MyAppraisalForms
@@ -521,40 +536,6 @@
             public const string SuccessMessage = "Default password updated successfully.";
         }
 
-        public static class ContinuousFeedback
-        {
-            public const string PageTitle = "Continuous Feedback";
-            public const string SearchPlaceholder = "Search by employee or content...";
-            public const string AddButton = "Add Feedback";
-            public const string CreateDialogTitle = "Give Feedback";
-            public const string EditDialogTitle = "Edit Feedback";
-            public const string DeleteDialogTitle = "Delete Feedback";
-
-            public const string EmployeeLabel = "Employee";
-            public const string GivenByLabel = "Given By";
-            public const string FeedbackTypeLabel = "Feedback Type";
-            public const string ContentLabel = "Content";
-            public const string VisibilityLabel = "Visibility";
-            public const string FeedbackDateLabel = "Feedback Date";
-
-            public const string ColumnEmployee = "Employee";
-            public const string ColumnGivenBy = "Given By";
-            public const string ColumnFeedbackType = "Feedback Type";
-            public const string ColumnContent = "Content";
-            public const string ColumnVisibility = "Visibility";
-            public const string ColumnFeedbackDate = "Feedback Date";
-
-            public const string SelectEmployee = "-- Select Employee --";
-            public const string SelectFeedbackType = "-- Select Type --";
-            public const string SelectVisibility = "-- Select Visibility --";
-
-            public const string Created = "Feedback created successfully.";
-            public const string Updated = "Feedback updated successfully.";
-            public const string Deleted = "Feedback deleted successfully.";
-
-            public const string NoDataFound = "No feedback entries found.";
-        }
-
         public static class OneOnOneMeeting
         {
             public const string PageTitle = "One-on-One Meetings";
@@ -622,6 +603,7 @@
             public const string Read = "Read";
             public const string Unread = "Unread";
             public const string MarkedAsRead = "Notification marked as read.";
+            public const string MarkedAllAsRead = "All notifications marked as read.";
             public const string Deleted = "Notification deleted.";
             public const string DeleteConfirmFormat = "Are you sure you want to delete '{0}'?";
             public const string NoDataFound = "No notifications found.";
@@ -629,6 +611,8 @@
             public const string ViewAll = "View All";
             public const string DropdownTitle = "Notifications";
             public const string AgoFormat = "{0} ago";
+            public const string MarkAllAsRead = "Mark All as Read";
+            public const string Close = "Close";
         }
 
         public static class PIP

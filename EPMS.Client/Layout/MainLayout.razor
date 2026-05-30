@@ -22,7 +22,8 @@
                       Color="Color.Error"
                       Max="99"
                       Placement="Placement.TopEnd"
-                      Visible="@(_unreadCount > 0)">
+                      Visible="@(_unreadCount > 0)"
+                      Class="notif-badge">
                 <MudIconButton Icon="@Icons.Material.Filled.Notifications"
                                Color="Color.Inherit"
                                OnClick="ToggleNotifDropdown"
@@ -32,10 +33,17 @@
             {
                 <MudOverlay Visible="@_notifDropdownOpen" OnClick="CloseNotifDropdown" Absolute="true" />
                 <MudPaper Elevation="8" Class="notif-dropdown">
-                    <MudText Typo="Typo.subtitle1" Class="pa-4 pb-2 notif-dropdown-header">
-                        <MudIcon Icon="@Icons.Material.Filled.Notifications" Size="Size.Small" Class="mr-1" />
-                        @UIConstants.Notifications.DropdownTitle
-                    </MudText>
+                    <div class="notif-dropdown-header pa-4 pb-2">
+                        <MudText Typo="Typo.subtitle1" Class="d-flex align-center" Style="flex: 1;">
+                            <MudIcon Icon="@Icons.Material.Filled.Notifications" Size="Size.Small" Class="mr-1" />
+                            @UIConstants.Notifications.DropdownTitle
+                        </MudText>
+                        <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                       Size="Size.Small"
+                                       Color="Color.Inherit"
+                                       OnClick="CloseNotifDropdown"
+                                       title="@UIConstants.Notifications.Close" />
+                    </div>
                     <MudDivider />
                     @if (_unreadNotifications.Any())
                     {
@@ -49,6 +57,16 @@
                                     <div class="notif-item-time">@TimeAgo(notif.CreatedAt)</div>
                                 </div>
                             }
+                        </div>
+                        <div class="pa-2 pt-0">
+                            <MudButton Variant="Variant.Text"
+                                       Color="Color.Error"
+                                       FullWidth="true"
+                                       OnClick="MarkAllNotificationsAsRead"
+                                       disabled="@(!_unreadNotifications.Any())">
+                                <MudIcon Icon="@Icons.Material.Filled.DoneAll" Size="Size.Small" Class="mr-1" />
+                                @UIConstants.Notifications.MarkAllAsRead
+                            </MudButton>
                         </div>
                     }
                     else
@@ -262,6 +280,22 @@
             Navigation.NavigateTo(notif.RedirectUrl);
     }
 
+    private async Task MarkAllNotificationsAsRead()
+    {
+        try
+        {
+            await NotifClient.MarkAllAsReadAsync();
+            _unreadCount = 0;
+            _unreadNotifications.Clear();
+            _notifDropdownOpen = false;
+            Snackbar.Add(UIConstants.Notifications.MarkedAllAsRead, Severity.Success);
+            StateHasChanged();
+        }
+        catch
+        {
+        }
+    }
+
     private void NavigateToNotifications()
     {
         _notifDropdownOpen = false;
@@ -373,5 +407,10 @@
     .notif-item-time {
         font-size: 0.75rem;
         color: #aaa;
+    }
+
+    .notif-badge .mud-badge-badge {
+        top: 2px !important;
+        right: 2px !important;
     }
 </style>

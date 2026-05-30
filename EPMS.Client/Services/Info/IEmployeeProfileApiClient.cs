@@ -10,6 +10,9 @@ public interface IEmployeeProfileApiClient
     [Get("/api/employee-profiles/lookup")]
     Task<SuccessResponse<IEnumerable<EmployeeLookupDto>>> GetLookupAsync();
 
+    [Get("/api/employee-profiles/direct-reports/lookup")]
+    Task<SuccessResponse<IEnumerable<EmployeeLookupDto>>> GetDirectReportsLookupAsync();
+
     [Get("/api/employee-profiles")]
     Task<SuccessResponse<IEnumerable<EmployeeProfileDto>>> GetAllAsync();
 

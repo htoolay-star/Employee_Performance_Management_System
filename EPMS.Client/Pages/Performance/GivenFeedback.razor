@@ -1,14 +1,19 @@
 @page "/performance/my-given-feedback"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @using EPMS.Client.Constants
+@using EPMS.Client.Services.Info
 @using EPMS.Client.Services.Performance
 @using EPMS.Shared.Constants
 @using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.EmployeeInfoDTOs
 @using EPMS.Shared.DTOs.PerformanceDTOs.ContinuousFeedbackDTOs
 @using MudBlazor
 @using Refit
+@using Microsoft.AspNetCore.Components.Authorization
 @inject IContinuousFeedbackApiClient FeedbackApiClient
+@inject IEmployeeProfileApiClient EmployeeApiClient
 @inject ISnackbar Snackbar
+@inject AuthenticationStateProvider AuthState
 
 <PageTitle>@UIConstants.GivenFeedback.PageTitle</PageTitle>
 
@@ -16,13 +21,33 @@
     <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.GivenFeedback.PageTitle</MudText>
 
     <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+            <MudTextField @bind-Value="_searchString"
+                          Placeholder="@UIConstants.GivenFeedback.SearchPlaceholder"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          IconSize="Size.Medium"
+                          Variant="Variant.Outlined"
+                          Clearable="true"
+                          Immediate="true"
+                          DebounceInterval="500"
+                          Style="max-width: 350px;" />
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenCreateDialog">
+                @UIConstants.GivenFeedback.AddButton
+            </MudButton>
+        </MudStack>
+
         <MudDataGrid Items="@_feedbacks"
+                     QuickFilter="@QuickFilter"
                      Loading="@_loading"
                      Hover="true"
                      Elevation="0"
                      SortMode="SortMode.None">
             <Columns>
-                <TemplateColumn Title="#" Sortable="false" Style="width: 50px;">
+                <TemplateColumn Title="@UIConstants.Common.ColumnNo" Sortable="false">
                     <CellTemplate>
                         <span>@(_feedbacks.IndexOf(context.Item) + 1)</span>
                     </CellTemplate>
@@ -49,7 +74,25 @@
                 </TemplateColumn>
                 <TemplateColumn Title="@UIConstants.GivenFeedback.ColumnDate" Sortable="true">
                     <CellTemplate>
-                        @context.Item.FeedbackDate.ToOffset(TimeSpan.FromHours(6.5)).ToString("dd/MM/yyyy HH:mm")
+                        @context.Item.FeedbackDate.ToOffset(TimeSpan.FromHours(6.5)).ToString("dd/MM/yyyy hh:mm tt")
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="@UIConstants.Common.Actions" Sortable="false">
+                    <CellTemplate>
+                        <MudStack Row="true" Spacing="0">
+                            <MudTooltip Text="Edit" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Color="Color.Primary"
+                                               Size="Size.Small"
+                                               OnClick="@(() => OpenEditDialog(context.Item))" />
+                            </MudTooltip>
+                            <MudTooltip Text="Delete" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Color="Color.Error"
+                                               Size="Size.Small"
+                                               OnClick="@(() => OpenDeleteConfirm(context.Item))" />
+                            </MudTooltip>
+                        </MudStack>
                     </CellTemplate>
                 </TemplateColumn>
             </Columns>
@@ -73,9 +116,171 @@
     </MudPaper>
 </MudContainer>
 
+<MudDialog @bind-Visible="_showCreateDialog" Options="@_dialogOptions">
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-4">@UIConstants.GivenFeedback.CreateDialogTitle</MudText>
+        <MudForm @ref="_createForm" @bind-IsValid="_createFormValid" @bind-Errors="_createFormErrors">
+            <MudSelect T="long?"
+                       Label="@UIConstants.GivenFeedback.EmployeeLabel"
+                       @bind-Value="_selectedEmployeeId"
+                       Variant="Variant.Outlined"
+                       Class="mb-4"
+                       Required="true"
+                       RequiredError="Employee is required">
+                @if (_selectedEmployeeId == null)
+                {
+                    <MudSelectItem Value="@((long?)null)" Disabled="true">@UIConstants.GivenFeedback.SelectEmployee</MudSelectItem>
+                }
+                @foreach (var emp in _employees)
+                {
+                    <MudSelectItem Value="@((long?)emp.Id)">@emp.StaffName (@emp.StaffNo)</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="string"
+                       Label="@UIConstants.GivenFeedback.FeedbackTypeLabel"
+                       @bind-Value="_createDto.FeedbackType"
+                       Variant="Variant.Outlined"
+                       Class="mb-4"
+                       Required="true"
+                       RequiredError="Feedback type is required">
+                @foreach (var type in ContinuousFeedbackTypes.All)
+                {
+                    <MudSelectItem T="string" Value="@type">@FormatType(type)</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="string"
+                       Label="@UIConstants.GivenFeedback.VisibilityLabel"
+                       @bind-Value="_createDto.Visibility"
+                       Variant="Variant.Outlined"
+                       Class="mb-4"
+                       Required="true"
+                       RequiredError="Visibility is required">
+                <MudSelectItem T="string" Value="@FeedbackVisibility.Public">Public</MudSelectItem>
+                <MudSelectItem T="string" Value="@FeedbackVisibility.Private">Private</MudSelectItem>
+                @if (_isAdmin)
+                {
+                    <MudSelectItem T="string" Value="@FeedbackVisibility.ManagerOnly">Manager Only</MudSelectItem>
+                }
+                @if (_isManager)
+                {
+                    <MudSelectItem T="string" Value="@FeedbackVisibility.AdminOnly">Admin Only</MudSelectItem>
+                }
+            </MudSelect>
+            <MudTextField T="string"
+                          Label="@UIConstants.GivenFeedback.ContentLabel"
+                          @bind-Value="_createDto.Content"
+                          Variant="Variant.Outlined"
+                          Lines="5"
+                          MaxLength="1000"
+                          Required="true"
+                          RequiredError="Content is required" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="CancelCreate">@UIConstants.Common.Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   Disabled="!_createFormValid || _isSaving"
+                   OnClick="ConfirmCreate">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+            }
+            <span>@UIConstants.Common.Create</span>
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+<MudDialog @bind-Visible="_showEditDialog" Options="@_dialogOptions">
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-4">@UIConstants.GivenFeedback.EditDialogTitle</MudText>
+        <MudForm @ref="_editForm" @bind-IsValid="_editFormValid" @bind-Errors="_editFormErrors">
+            <MudTextField T="string"
+                          Label="@UIConstants.GivenFeedback.ContentLabel"
+                          @bind-Value="_editContent"
+                          Variant="Variant.Outlined"
+                          Lines="5"
+                          MaxLength="1000"
+                          Required="true"
+                          RequiredError="Content is required" />
+            <MudSelect T="string"
+                       Label="@UIConstants.GivenFeedback.VisibilityLabel"
+                       @bind-Value="_editVisibility"
+                       Variant="Variant.Outlined"
+                       Required="true"
+                       RequiredError="Visibility is required">
+                <MudSelectItem T="string" Value="@FeedbackVisibility.Public">Public</MudSelectItem>
+                <MudSelectItem T="string" Value="@FeedbackVisibility.Private">Private</MudSelectItem>
+                <MudSelectItem T="string" Value="@FeedbackVisibility.ManagerOnly">Manager Only</MudSelectItem>
+            </MudSelect>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="CancelEdit">@UIConstants.Common.Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   Disabled="!_editFormValid || _isSaving"
+                   OnClick="ConfirmEdit">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+            }
+            <span>@UIConstants.Common.Update</span>
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+<MudDialog @bind-Visible="_showDeleteDialog">
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-4">@UIConstants.GivenFeedback.DeleteDialogTitle</MudText>
+        <MudText Typo="Typo.body2">
+            Are you sure you want to delete this feedback to <strong>@_selectedFeedback?.EmployeeName</strong>?
+        </MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="CancelDelete">@UIConstants.Common.Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error"
+                   Disabled="_isDeleting"
+                   OnClick="ConfirmDelete">
+            @if (_isDeleting)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="me-2" />
+            }
+            <span>@UIConstants.Common.Delete</span>
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
 @code {
     private bool _loading = true;
     private List<ContinuousFeedbackDto> _feedbacks = new();
+    private string _searchString = string.Empty;
+    private List<EmployeeLookupDto> _employees = new();
+    private long? _selectedEmployeeId;
+    private bool _isAdmin;
+    private bool _isManager;
+
+    private bool _showCreateDialog;
+    private bool _showEditDialog;
+    private bool _showDeleteDialog;
+    private bool _isSaving;
+    private bool _isDeleting;
+    private ContinuousFeedbackDto? _selectedFeedback;
+
+    private MudForm _createForm = new();
+    private bool _createFormValid;
+    private string[] _createFormErrors = { };
+    private readonly CreateContinuousFeedbackDto _createDto = new()
+    {
+        FeedbackType = "",
+        Visibility = FeedbackVisibility.Public,
+        Content = ""
+    };
+
+    private MudForm _editForm = new();
+    private bool _editFormValid;
+    private string[] _editFormErrors = { };
+    private string _editContent = string.Empty;
+    private string _editVisibility = string.Empty;
+    private readonly DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
 
     protected override async Task OnInitializedAsync()
     {
@@ -88,6 +293,10 @@
         StateHasChanged();
         try
         {
+            var authState = await AuthState.GetAuthenticationStateAsync();
+            _isAdmin = authState.User.IsInRole("Admin") || authState.User.IsInRole("SystemAdmin");
+            _isManager = !_isAdmin;
+
             var response = await FeedbackApiClient.GetGivenAsync();
 
             if (response.Success && response.Data != null)
@@ -113,6 +322,41 @@
             _loading = false;
             StateHasChanged();
         }
+    }
+
+    private async Task LoadEmployeesAsync()
+    {
+        try
+        {
+            SuccessResponse<IEnumerable<EmployeeLookupDto>> response;
+            if (_isAdmin)
+            {
+                response = await EmployeeApiClient.GetLookupAsync();
+            }
+            else
+            {
+                response = await EmployeeApiClient.GetDirectReportsLookupAsync();
+            }
+
+            if (response.Success && response.Data != null)
+            {
+                _employees = response.Data.ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+    }
+
+    private bool QuickFilter(ContinuousFeedbackDto x)
+    {
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+
+        return x.EmployeeName.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
+            || x.Content.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
+            || x.FeedbackType.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
     }
 
     private static string Truncate(string value, int maxLength)
@@ -147,4 +391,166 @@
         ContinuousFeedbackTypes.GeneralNote => "General Note",
         _ => type
     };
+
+    private async void OpenCreateDialog()
+    {
+        _selectedEmployeeId = null;
+        _createDto.FeedbackType = ContinuousFeedbackTypes.All[0];
+        _createDto.Content = "";
+        _createDto.Visibility = FeedbackVisibility.Public;
+        await LoadEmployeesAsync();
+        _showCreateDialog = true;
+    }
+
+    private void CancelCreate()
+    {
+        _showCreateDialog = false;
+    }
+
+    private async Task ConfirmCreate()
+    {
+        await _createForm.Validate();
+        if (!_createFormValid) return;
+
+        if (_selectedEmployeeId == null)
+        {
+            Snackbar.Add("Please select an employee.", Severity.Error);
+            return;
+        }
+
+        _isSaving = true;
+        try
+        {
+            _createDto.EmployeeId = _selectedEmployeeId.Value;
+
+            var result = await FeedbackApiClient.CreateAsync(_createDto);
+            if (result.Success)
+            {
+                Snackbar.Add(UIConstants.GivenFeedback.Created, Severity.Success);
+                _showCreateDialog = false;
+                await LoadDataAsync();
+            }
+            else
+            {
+                Snackbar.Add(result.Message ?? UIConstants.Common.CreateFailed, Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private void OpenEditDialog(ContinuousFeedbackDto feedback)
+    {
+        _selectedFeedback = feedback;
+        _editContent = feedback.Content;
+        _editVisibility = feedback.Visibility;
+        _showEditDialog = true;
+    }
+
+    private void CancelEdit()
+    {
+        _showEditDialog = false;
+        _selectedFeedback = null;
+    }
+
+    private async Task ConfirmEdit()
+    {
+        await _editForm.Validate();
+        if (!_editFormValid || _selectedFeedback == null) return;
+
+        _isSaving = true;
+        try
+        {
+            var dto = new UpdateContinuousFeedbackDto
+            {
+                Id = _selectedFeedback.Id,
+                Content = _editContent,
+                Visibility = _editVisibility
+            };
+
+            var result = await FeedbackApiClient.UpdateAsync(_selectedFeedback.Id, dto);
+            if (result.Success)
+            {
+                Snackbar.Add(UIConstants.GivenFeedback.Updated, Severity.Success);
+                _showEditDialog = false;
+                _selectedFeedback = null;
+                await LoadDataAsync();
+            }
+            else
+            {
+                Snackbar.Add(result.Message ?? UIConstants.Common.UpdateFailed, Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private void OpenDeleteConfirm(ContinuousFeedbackDto feedback)
+    {
+        _selectedFeedback = feedback;
+        _showDeleteDialog = true;
+    }
+
+    private void CancelDelete()
+    {
+        _showDeleteDialog = false;
+        _selectedFeedback = null;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (_selectedFeedback == null) return;
+
+        _isDeleting = true;
+        try
+        {
+            var result = await FeedbackApiClient.DeleteAsync(_selectedFeedback.Id);
+            if (result.Success)
+            {
+                Snackbar.Add(UIConstants.GivenFeedback.Deleted, Severity.Success);
+                _showDeleteDialog = false;
+                _selectedFeedback = null;
+                await LoadDataAsync();
+            }
+            else
+            {
+                Snackbar.Add(result.Message ?? UIConstants.Common.DeleteFailed, Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _isDeleting = false;
+        }
+    }
 }

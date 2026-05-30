@@ -5,7 +5,6 @@ namespace EPMS.Domain.Interface.IService.Performance
 {
     public interface IContinuousFeedbackService
     {
-        Task<SuccessResponse<IEnumerable<ContinuousFeedbackDto>>> GetAllAsync();
         Task<SuccessResponse<IEnumerable<ContinuousFeedbackDto>>> GetReceivedFeedbackAsync();
         Task<SuccessResponse<IEnumerable<ContinuousFeedbackDto>>> GetGivenFeedbackAsync();
         Task<SuccessResponse<ContinuousFeedbackDto>> GetByIdAsync(long id);

@@ -25,4 +25,14 @@ public class NotificationRepository : GenericRepository<Notification>, INotifica
             .OrderByDescending(n => n.CreatedAt)
             .ToListAsync();
     }
+
+    public async Task MarkAllAsReadAsync(long userId)
+    {
+        var now = DateTimeOffset.UtcNow;
+        await _dbSet
+            .Where(n => n.ToUserId == userId && !n.IsRead)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(n => n.IsRead, true)
+                .SetProperty(n => n.ReadAt, now));
+    }
 }
