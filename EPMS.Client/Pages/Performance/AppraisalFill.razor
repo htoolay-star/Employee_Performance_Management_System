@@ -201,9 +201,6 @@
                     </MudButton>
                 </MudStack>
 
-                <MudAlert Severity="@(_model.KpiLocked ? Severity.Success : Severity.Error)">
-                    KpiLocked=@_model.KpiLocked | KpiStatus="@_model.KpiStatus" | IsAdmin=@_isAdmin | UnlockRequested=@_unlockRequested
-                </MudAlert>
                 @if (_model.KpiLocked && _model.KpiStatus is AppraisalStatuses.Kpi.Reviewed)
                 {
                     <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
