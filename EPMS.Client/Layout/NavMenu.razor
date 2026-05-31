@@ -205,6 +205,25 @@
     </MudTooltip>
     @if (_isAdmin || _isManager)
     {
+    <MudTooltip Text="Reports & Analytics" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+    <MudNavGroup Title="Reports & Analytics" Icon="@Icons.Material.Filled.Analytics" Expanded="false">
+        <MudTooltip Text="Employee Summary" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+            <MudNavLink Href="performance/reports/employee-summary" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Summarize">Employee Summary</MudNavLink>
+        </MudTooltip>
+        <MudTooltip Text="Department Comparison" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+            <MudNavLink Href="performance/reports/department-comparison" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Compare">Department Comparison</MudNavLink>
+        </MudTooltip>
+        <MudTooltip Text="High & Low Performers" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+            <MudNavLink Href="performance/reports/high-low-performers" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Leaderboard">High & Low Performers</MudNavLink>
+        </MudTooltip>
+        <MudTooltip Text="Promotion Recommendations" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+            <MudNavLink Href="performance/reports/promotion-recommendations" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Recommend">Promotion Recommendations</MudNavLink>
+        </MudTooltip>
+    </MudNavGroup>
+    </MudTooltip>
+    }
+    @if (_isAdmin || _isManager)
+    {
     <MudTooltip Text="Pending Forms" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
     <MudNavGroup Title="Pending Forms" Icon="@Icons.Material.Filled.PendingActions" Expanded="false">
         @if (_isAdmin || _isManager)

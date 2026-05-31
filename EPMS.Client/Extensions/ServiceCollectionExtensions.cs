@@ -63,6 +63,7 @@ public static class ServiceCollectionExtensions
         services.AddSecureRefitClient<IPIPApiClient>(refitSettings, baseUri);
         services.AddSecureRefitClient<IPIPObjectiveApiClient>(refitSettings, baseUri);
         services.AddSecureRefitClient<IPositionPIPTemplateApiClient>(refitSettings, baseUri);
+        services.AddSecureRefitClient<IPerformanceReportsApiClient>(refitSettings, baseUri);
 
         // App
         services.AddSecureRefitClient<INotificationApiClient>(refitSettings, baseUri);

@@ -1,0 +1,202 @@
+@page "/performance/reports/promotion-recommendations"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using EPMS.Client.Services.Performance
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.ReportDTOs
+@using EPMS.Shared.DTOs.PerformanceDTOs.AppraisalCycleDTOs
+@using MudBlazor
+@using Refit
+@using Microsoft.JSInterop
+@inject IPerformanceReportsApiClient ReportApiClient
+@inject IAppraisalCycleApiClient AppraisalCycleApiClient
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+
+<PageTitle>Promotion Recommendations</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">Promotion / Increment Recommendations</MudText>
+
+    <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-4">
+            <MudSelect T="long?"
+                       @bind-Value="_selectedCycleId"
+                       Label="Appraisal Cycle"
+                       Variant="Variant.Outlined"
+                       Style="max-width: 250px;"
+                       Clearable="true"
+                       @bind-Value:after="LoadDataAsync">
+                @foreach (var cycle in _cycles)
+                {
+                    <MudSelectItem Value="@((long?)cycle.Id)">@cycle.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Leave empty for latest cycle</MudText>
+            <MudSpacer />
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.FileDownload"
+                       OnClick="ExportToExcelAsync"
+                       Disabled="_loading">
+                Export to Excel
+            </MudButton>
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Secondary"
+                       StartIcon="@Icons.Material.Filled.Print"
+                       OnClick="PrintAsync"
+                       Disabled="_loading">
+                Print / PDF
+            </MudButton>
+        </MudStack>
+
+        <MudDataGrid Items="@_items"
+                     Loading="@_loading"
+                     Hover="true"
+                     Elevation="0"
+                     SortMode="SortMode.None">
+            <Columns>
+                <TemplateColumn Title="#" Sortable="false" Style="width: 50px;">
+                    <CellTemplate>
+                        @(_items.IndexOf(context.Item) + 1)
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.StaffNo" Title="Staff No" Sortable="true" />
+                <PropertyColumn Property="x => x.StaffName" Title="Name" Sortable="true" />
+                <PropertyColumn Property="x => x.DepartmentName" Title="Department" Sortable="true" />
+                <PropertyColumn Property="x => x.PositionName" Title="Position" Sortable="true" />
+                <PropertyColumn Property="x => x.LevelName" Title="Current Level" Sortable="true" />
+                <TemplateColumn Title="Total Score" Sortable="true" SortBy="@(x => x.TotalScore)">
+                    <CellTemplate>
+                        <MudChip Size="Size.Small" Color="@GetScoreColor(context.Item.TotalScore)">
+                            @(context.Item.TotalScore?.ToString("F1") ?? "-")
+                        </MudChip>
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.RatingLabel" Title="Rating" Sortable="true" />
+                <TemplateColumn Title="Promotion Eligibility" Sortable="true" SortBy="@(x => x.PromotionEligibility)">
+                    <CellTemplate>
+                        <MudChip Size="Size.Small" Color="Color.Primary">@context.Item.PromotionEligibility</MudChip>
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="Tenure" Sortable="true" SortBy="@(x => x.TenureMonths)">
+                    <CellTemplate>
+                        @FormatTenure(context.Item.TenureMonths)
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.CycleName" Title="Cycle" Sortable="true" />
+            </Columns>
+            <NoRecordsContent>
+                <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
+                    <MudIcon Icon="@Icons.Material.Outlined.Inbox" Style="font-size: 4rem;" Color="Color.Default" />
+                    <MudText Typo="Typo.h6" Color="Color.Default">No recommendations</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">No employees eligible for promotion in the selected cycle.</MudText>
+                </MudStack>
+            </NoRecordsContent>
+            <LoadingContent>
+                <MudStack Spacing="3" Class="w-100">
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                </MudStack>
+            </LoadingContent>
+            <PagerContent>
+                <MudDataGridPager T="PromotionRecommendationDto" />
+            </PagerContent>
+        </MudDataGrid>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private long? _selectedCycleId;
+    private List<PromotionRecommendationDto> _items = new();
+    private List<AppraisalCycleDto> _cycles = new();
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCyclesAsync();
+        await LoadDataAsync();
+    }
+
+    private async Task LoadCyclesAsync()
+    {
+        try
+        {
+            var response = await AppraisalCycleApiClient.GetAllAsync();
+            if (response.Success && response.Data != null)
+                _cycles = response.Data.ToList();
+        }
+        catch { }
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _loading = true;
+        StateHasChanged();
+        try
+        {
+            var response = await ReportApiClient.GetPromotionRecommendationsAsync(_selectedCycleId);
+            if (response.Success && response.Data != null)
+                _items = response.Data;
+            else
+                Snackbar.Add(response.Message ?? "Failed to load data.", Severity.Error);
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Failed to load data.", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ExportToExcelAsync()
+    {
+        try
+        {
+            var response = await ReportApiClient.GetPromotionRecommendationsExcelAsync(_selectedCycleId);
+            if (response.IsSuccessStatusCode)
+            {
+                var bytes = await response.Content.ReadAsByteArrayAsync();
+                var base64 = Convert.ToBase64String(bytes);
+                await JS.InvokeVoidAsync("downloadFile", $"PromotionRecommendations_{DateTime.Now:yyyyMMdd}.xlsx", base64);
+                Snackbar.Add("Export completed.", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Export failed.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Export error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task PrintAsync()
+    {
+        await JS.InvokeVoidAsync("window.print");
+    }
+
+    private static string FormatTenure(int? months) => months switch
+    {
+        null => "-",
+        < 12 => $"{months} months",
+        _ => $"{months / 12}y {months % 12}m"
+    };
+
+    private static Color GetScoreColor(decimal? score) => score switch
+    {
+        >= 80 => Color.Success,
+        >= 60 => Color.Warning,
+        >= 0 => Color.Error,
+        _ => Color.Default
+    };
+}
