@@ -30,4 +30,16 @@ public interface IPerformanceReportsApiClient
 
     [Get("/api/performance-reports/promotion-recommendations-excel")]
     Task<HttpResponseMessage> GetPromotionRecommendationsExcelAsync(long? cycleId);
+
+    [Get("/api/performance-reports/department-comparison-pdf")]
+    Task<HttpResponseMessage> GetDepartmentComparisonPdfAsync(long? cycleId);
+
+    [Get("/api/performance-reports/high-low-performers-pdf")]
+    Task<HttpResponseMessage> GetHighLowPerformersPdfAsync(long? cycleId, int topCount, bool isHigh);
+
+    [Get("/api/performance-reports/promotion-recommendations-pdf")]
+    Task<HttpResponseMessage> GetPromotionRecommendationsPdfAsync(long? cycleId);
+
+    [Get("/api/performance-reports/employee-summary-pdf")]
+    Task<HttpResponseMessage> GetEmployeeSummaryPdfAsync(long? cycleId, long? employeeId);
 }

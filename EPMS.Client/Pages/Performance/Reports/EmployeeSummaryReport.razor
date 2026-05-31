@@ -56,12 +56,12 @@
                        Disabled="_loading">
                 Export to Excel
             </MudButton>
-            <MudButton Variant="Variant.Outlined"
-                       Color="Color.Secondary"
-                       StartIcon="@Icons.Material.Filled.Print"
-                       OnClick="PrintAsync"
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Error"
+                       StartIcon="@Icons.Material.Filled.PictureAsPdf"
+                       OnClick="ExportToPdfAsync"
                        Disabled="_loading">
-                Print / PDF
+                Export to PDF
             </MudButton>
         </MudStack>
 
@@ -232,9 +232,27 @@
         }
     }
 
-    private async Task PrintAsync()
+    private async Task ExportToPdfAsync()
     {
-        await JS.InvokeVoidAsync("window.print");
+        try
+        {
+            var response = await ReportApiClient.GetEmployeeSummaryPdfAsync(_selectedCycleId, _selectedEmployeeId);
+            if (response.IsSuccessStatusCode)
+            {
+                var bytes = await response.Content.ReadAsByteArrayAsync();
+                var base64 = Convert.ToBase64String(bytes);
+                await JS.InvokeVoidAsync("downloadFile", $"EmployeeSummary_{DateTime.Now:yyyyMMdd}.pdf", base64);
+                Snackbar.Add("PDF export completed.", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("PDF export failed.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"PDF error: {ex.Message}", Severity.Error);
+        }
     }
 
     private static Color GetScoreColor(decimal? score) => score switch

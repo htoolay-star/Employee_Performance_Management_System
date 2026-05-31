@@ -51,12 +51,12 @@
                        Disabled="_loadingHigh || _loadingLow">
                 Export to Excel
             </MudButton>
-            <MudButton Variant="Variant.Outlined"
-                       Color="Color.Secondary"
-                       StartIcon="@Icons.Material.Filled.Print"
-                       OnClick="PrintAsync"
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Error"
+                       StartIcon="@Icons.Material.Filled.PictureAsPdf"
+                       OnClick="ExportToPdfAsync"
                        Disabled="_loadingHigh || _loadingLow">
-                Print / PDF
+                Export to PDF
             </MudButton>
         </MudStack>
 
@@ -296,9 +296,29 @@
         }
     }
 
-    private async Task PrintAsync()
+    private async Task ExportToPdfAsync()
     {
-        await JS.InvokeVoidAsync("window.print");
+        try
+        {
+            var isHigh = _activeTab == 0;
+            var response = await ReportApiClient.GetHighLowPerformersPdfAsync(_selectedCycleId, _topCount, isHigh);
+            if (response.IsSuccessStatusCode)
+            {
+                var bytes = await response.Content.ReadAsByteArrayAsync();
+                var base64 = Convert.ToBase64String(bytes);
+                var prefix = isHigh ? "HighPerformers" : "LowPerformers";
+                await JS.InvokeVoidAsync("downloadFile", $"{prefix}_{DateTime.Now:yyyyMMdd}.pdf", base64);
+                Snackbar.Add("PDF export completed.", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("PDF export failed.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"PDF error: {ex.Message}", Severity.Error);
+        }
     }
 
     private static Color GetScoreColor(decimal? score) => score switch

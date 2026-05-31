@@ -3,6 +3,7 @@ using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.ReportDTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Reporting.NETCore;
 
 namespace EPMS.Api.Controllers.Performance;
 
@@ -12,10 +13,12 @@ namespace EPMS.Api.Controllers.Performance;
 public class PerformanceReportsController : ControllerBase
 {
     private readonly IReportService _reportService;
+    private readonly IWebHostEnvironment _webHostEnvironment;
 
-    public PerformanceReportsController(IReportService reportService)
+    public PerformanceReportsController(IReportService reportService, IWebHostEnvironment webHostEnvironment)
     {
         _reportService = reportService;
+        _webHostEnvironment = webHostEnvironment;
     }
 
     [HttpGet("department-comparison")]
@@ -97,5 +100,68 @@ public class PerformanceReportsController : ControllerBase
         return File(result.Data,
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             $"PromotionRecommendations_{DateTime.UtcNow:yyyyMMdd}.xlsx");
+    }
+
+    [HttpGet("department-comparison-pdf")]
+    public async Task<IActionResult> GetDepartmentComparisonPdf([FromQuery] long? cycleId)
+    {
+        var data = await _reportService.GetDepartmentPerformanceAsync(cycleId);
+        string reportPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Reports", "DepartmentComparison.rdlc");
+        if (!System.IO.File.Exists(reportPath))
+            return NotFound("RDLC template not found.");
+
+        LocalReport report = new LocalReport();
+        report.ReportPath = reportPath;
+        report.DataSources.Add(new ReportDataSource("DataSet1", data));
+        byte[] pdfBytes = report.Render("PDF");
+        return File(pdfBytes, "application/pdf", $"DepartmentComparison_{DateTime.UtcNow:yyyyMMdd}.pdf");
+    }
+
+    [HttpGet("high-low-performers-pdf")]
+    public async Task<IActionResult> GetHighLowPerformersPdf(
+        [FromQuery] long? cycleId, [FromQuery] int topCount = 10, [FromQuery] bool isHigh = true)
+    {
+        var data = await _reportService.GetHighLowPerformersAsync(cycleId, topCount, isHigh);
+        string reportPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Reports", "HighLowPerformers.rdlc");
+        if (!System.IO.File.Exists(reportPath))
+            return NotFound("RDLC template not found.");
+
+        LocalReport report = new LocalReport();
+        report.ReportPath = reportPath;
+        report.DataSources.Add(new ReportDataSource("DataSet1", data));
+        byte[] pdfBytes = report.Render("PDF");
+        var prefix = isHigh ? "HighPerformers" : "LowPerformers";
+        return File(pdfBytes, "application/pdf", $"{prefix}_{DateTime.UtcNow:yyyyMMdd}.pdf");
+    }
+
+    [HttpGet("promotion-recommendations-pdf")]
+    public async Task<IActionResult> GetPromotionRecommendationsPdf([FromQuery] long? cycleId)
+    {
+        var data = await _reportService.GetPromotionRecommendationsAsync(cycleId);
+        string reportPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Reports", "PromotionRecommendations.rdlc");
+        if (!System.IO.File.Exists(reportPath))
+            return NotFound("RDLC template not found.");
+
+        LocalReport report = new LocalReport();
+        report.ReportPath = reportPath;
+        report.DataSources.Add(new ReportDataSource("DataSet1", data));
+        byte[] pdfBytes = report.Render("PDF");
+        return File(pdfBytes, "application/pdf", $"PromotionRecommendations_{DateTime.UtcNow:yyyyMMdd}.pdf");
+    }
+
+    [HttpGet("employee-summary-pdf")]
+    public async Task<IActionResult> GetEmployeeSummaryPdf(
+        [FromQuery] long? cycleId, [FromQuery] long? employeeId)
+    {
+        var data = await _reportService.GetEmployeeSummaryReportAsync(cycleId, employeeId);
+        string reportPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Reports", "EmployeeSummaryReport.rdlc");
+        if (!System.IO.File.Exists(reportPath))
+            return NotFound("RDLC template not found.");
+
+        LocalReport report = new LocalReport();
+        report.ReportPath = reportPath;
+        report.DataSources.Add(new ReportDataSource("DataSet1", data));
+        byte[] pdfBytes = report.Render("PDF");
+        return File(pdfBytes, "application/pdf", $"EmployeeSummary_{DateTime.UtcNow:yyyyMMdd}.pdf");
     }
 }
