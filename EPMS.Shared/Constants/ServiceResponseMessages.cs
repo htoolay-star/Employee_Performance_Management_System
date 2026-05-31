@@ -295,8 +295,9 @@ public static class ServiceResponseMessages
         public const string RetrievedAll = "Meetings retrieved successfully.";
         public const string RetrievedUpcoming = "Upcoming meetings retrieved successfully.";
         public static string NotFound(long id) => $"Meeting with ID '{id}' was not found.";
-public static string AlreadyCompleted = "Meeting is already completed.";
+        public static string AlreadyCompleted = "Meeting is already completed.";
         public static string AlreadyCancelled = "Meeting is already cancelled.";
+        public const string Unauthorized = "You are not authorized to perform this action.";
     }
 
     public static class EntityKPIMsg

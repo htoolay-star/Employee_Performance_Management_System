@@ -1,5 +1,6 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Performance;
+using EPMS.Domain.Interface.IService.App;
 using EPMS.Domain.Interface.IService.Performance;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.PerformanceDTOs.OneOnOneMeetingDTOs;
@@ -13,11 +14,25 @@ namespace EPMS.Domain.Services.Performance
     {
         private readonly IUnitOfWork _uow;
         private readonly TimeProvider _timeProvider;
+        private readonly ICurrentEmployeeContextService _currentEmployeeContext;
 
-        public OneOnOneMeetingService(IUnitOfWork uow, TimeProvider timeProvider)
+        public OneOnOneMeetingService(IUnitOfWork uow, TimeProvider timeProvider, ICurrentEmployeeContextService currentEmployeeContext)
         {
             _uow = uow;
             _timeProvider = timeProvider;
+            _currentEmployeeContext = currentEmployeeContext;
+        }
+
+        private async Task<bool> IsManagerOrAdminAsync(long managerId)
+        {
+            var employeeId = await _currentEmployeeContext.GetEmployeeIdAsync();
+            return _currentEmployeeContext.IsAdmin || employeeId == managerId;
+        }
+
+        private async Task<bool> IsOwnerAsync(long employeeId)
+        {
+            var currentEmployeeId = await _currentEmployeeContext.GetEmployeeIdAsync();
+            return currentEmployeeId == employeeId;
         }
 
         public async Task<SuccessResponse<IEnumerable<OneOnOneMeetingDto>>> GetAllAsync()
@@ -65,7 +80,8 @@ namespace EPMS.Domain.Services.Performance
                 dto.EmployeeId,
                 dto.ManagerId,
                 dto.Title,
-                dto.ScheduledDate);
+                dto.ScheduledDate,
+                dto.ScheduledEndTime);
 
             if (dto.RelatedPIPId.HasValue)
             {
@@ -88,7 +104,10 @@ namespace EPMS.Domain.Services.Performance
             if (meeting.Status == Completed || meeting.Status == Cancelled)
                 return SuccessResponse.Fail(OneOnOneMeetingMsg.AlreadyCompleted, ErrorType.Validation);
 
-            meeting.Update(dto.Title, dto.ScheduledDate);
+            if (!await IsManagerOrAdminAsync(meeting.ManagerId) && !await IsOwnerAsync(meeting.EmployeeId))
+                return SuccessResponse.Fail(OneOnOneMeetingMsg.Unauthorized, ErrorType.Forbidden);
+
+            meeting.Update(dto.Title, dto.ScheduledDate, dto.ScheduledEndTime);
 
             _uow.Perf.OneOnOneMeetings.Update(meeting);
             await _uow.CompleteAsync();
@@ -103,6 +122,9 @@ namespace EPMS.Domain.Services.Performance
             if (meeting == null)
                 return SuccessResponse.Fail(OneOnOneMeetingMsg.NotFound(id), ErrorType.NotFound);
 
+            if (!await IsManagerOrAdminAsync(meeting.ManagerId))
+                return SuccessResponse.Fail(OneOnOneMeetingMsg.Unauthorized, ErrorType.Forbidden);
+
             _uow.Perf.OneOnOneMeetings.Delete(meeting);
             await _uow.CompleteAsync();
 
@@ -115,6 +137,9 @@ namespace EPMS.Domain.Services.Performance
 
             if (meeting == null)
                 return SuccessResponse.Fail(OneOnOneMeetingMsg.NotFound(id), ErrorType.NotFound);
+
+            if (!await IsManagerOrAdminAsync(meeting.ManagerId))
+                return SuccessResponse.Fail(OneOnOneMeetingMsg.Unauthorized, ErrorType.Forbidden);
 
             meeting.CompleteMeeting(dto.Summary, dto.DiscussionNotes, dto.PrivateNotes, dto.ActionItems, _timeProvider);
 
@@ -131,6 +156,9 @@ namespace EPMS.Domain.Services.Performance
             if (meeting == null)
                 return SuccessResponse.Fail(OneOnOneMeetingMsg.NotFound(id), ErrorType.NotFound);
 
+            if (!await IsManagerOrAdminAsync(meeting.ManagerId))
+                return SuccessResponse.Fail(OneOnOneMeetingMsg.Unauthorized, ErrorType.Forbidden);
+
             meeting.Cancel();
 
             _uow.Perf.OneOnOneMeetings.Update(meeting);
@@ -145,6 +173,9 @@ namespace EPMS.Domain.Services.Performance
 
             if (meeting == null)
                 return SuccessResponse.Fail(OneOnOneMeetingMsg.NotFound(id), ErrorType.NotFound);
+
+            if (!await IsOwnerAsync(meeting.EmployeeId))
+                return SuccessResponse.Fail(OneOnOneMeetingMsg.Unauthorized, ErrorType.Forbidden);
 
             meeting.AcknowledgeByEmployee(_timeProvider);
 

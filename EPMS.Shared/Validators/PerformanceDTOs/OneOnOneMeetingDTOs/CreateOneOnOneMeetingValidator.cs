@@ -23,6 +23,12 @@ namespace EPMS.Shared.Validators.PerformanceDTOs.OneOnOneMeetingDTOs
             RuleFor(x => x.ScheduledDate)
                 .NotEmpty()
                 .WithMessage(PerformanceValidationMessages.OneOnOneMeeting.ScheduledDateRequired);
+
+            RuleFor(x => x.ScheduledEndTime)
+                .NotEmpty()
+                .WithMessage(PerformanceValidationMessages.OneOnOneMeeting.ScheduledEndTimeRequired)
+                .GreaterThan(x => x.ScheduledDate)
+                .WithMessage(PerformanceValidationMessages.OneOnOneMeeting.EndTimeAfterStartTime);
         }
     }
 }

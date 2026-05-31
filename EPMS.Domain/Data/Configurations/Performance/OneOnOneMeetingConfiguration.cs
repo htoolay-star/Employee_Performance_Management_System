@@ -16,6 +16,7 @@ namespace EPMS.Domain.Data.Configurations.Performance
 
             builder.Property(e => e.Title).HasMaxLength(200).IsRequired();
             builder.Property(e => e.ScheduledDate).IsRequired();
+            builder.Property(e => e.ScheduledEndTime).IsRequired();
             builder.Property(e => e.ActualDate);
             builder.Property(e => e.Summary).HasMaxLength(500);
             builder.Property(e => e.DiscussionNotes).HasMaxLength(2000);

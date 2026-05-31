@@ -2,6 +2,7 @@
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @using EPMS.Client.Constants
 @using EPMS.Client.Services.Info
+@using EPMS.Client.Services.Auth
 @using EPMS.Client.Services.Performance
 @using EPMS.Shared.Constants
 @using EPMS.Shared.DTOs.Common
@@ -15,6 +16,7 @@
 @inject IEmployeeProfileApiClient EmployeeApiClient
 @inject ISnackbar Snackbar
 @inject AuthenticationStateProvider AuthState
+@inject IAuthApiClient AuthApiClient
 
 <PageTitle>@UIConstants.OneOnOneMeeting.PageTitle</PageTitle>
 
@@ -40,7 +42,12 @@
                         <PropertyColumn Property="x => x.ManagerName" Title="@UIConstants.OneOnOneMeeting.ColumnManager" />
                         <TemplateColumn Title="@UIConstants.OneOnOneMeeting.ColumnScheduledDate">
                             <CellTemplate>
-                                @context.Item.ScheduledDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                @context.Item.ScheduledDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm") - @context.Item.ScheduledEndTime.ToLocalTime().ToString("HH:mm")
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <TemplateColumn Title="Duration">
+                            <CellTemplate>
+                                @{ var d = context.Item.ScheduledEndTime - context.Item.ScheduledDate; var th = (int)d.TotalHours; <span>@($"{th}h {d.Minutes}m")</span> }
                             </CellTemplate>
                         </TemplateColumn>
                         <PropertyColumn Property="x => x.MeetingType" Title="@UIConstants.OneOnOneMeeting.ColumnType" />
@@ -56,33 +63,48 @@
                                 <MudStack Row="true" Spacing="0">
                                     @if (context.Item.Status == MeetingStatuses.Scheduled)
                                     {
-                                        <MudTooltip Text="Edit" Placement="Placement.Top">
-                                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                                           Color="Color.Primary"
-                                                           Size="Size.Small"
-                                                           OnClick="@(() => OpenEditDialog(context.Item))" />
-                                        </MudTooltip>
-                                        <MudTooltip Text="Complete" Placement="Placement.Top">
-                                            <MudIconButton Icon="@Icons.Material.Filled.CheckCircle"
-                                                           Color="Color.Success"
-                                                           Size="Size.Small"
-                                                           OnClick="@(() => OpenCompleteDialog(context.Item))" />
-                                        </MudTooltip>
-                                        <MudTooltip Text="Cancel" Placement="Placement.Top">
-                                            <MudIconButton Icon="@Icons.Material.Filled.Cancel"
-                                                           Color="Color.Warning"
-                                                           Size="Size.Small"
-                                                           OnClick="@(() => OpenCancelConfirm(context.Item))" />
-                                        </MudTooltip>
+                                        @if (context.Item.ManagerId == _currentEmployeeId || context.Item.EmployeeId == _currentEmployeeId || _isAdmin)
+                                        {
+                                            <MudTooltip Text="Edit" Placement="Placement.Top">
+                                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                               Color="Color.Primary"
+                                                               Size="Size.Small"
+                                                               OnClick="@(() => OpenEditDialog(context.Item))" />
+                                            </MudTooltip>
+                                        }
+                                        @if (context.Item.ManagerId == _currentEmployeeId || _isAdmin)
+                                        {
+                                            <MudTooltip Text="Complete" Placement="Placement.Top">
+                                                <MudIconButton Icon="@Icons.Material.Filled.CheckCircle"
+                                                               Color="Color.Success"
+                                                               Size="Size.Small"
+                                                               OnClick="@(() => OpenCompleteDialog(context.Item))" />
+                                            </MudTooltip>
+                                            <MudTooltip Text="Cancel" Placement="Placement.Top">
+                                                <MudIconButton Icon="@Icons.Material.Filled.Cancel"
+                                                               Color="Color.Warning"
+                                                               Size="Size.Small"
+                                                               OnClick="@(() => OpenCancelConfirm(context.Item))" />
+                                            </MudTooltip>
+                                        }
                                     }
-                                    @if (context.Item.Status == MeetingStatuses.Completed && !context.Item.IsAcknowledgedByEmployee)
+                                    @if (context.Item.Status == MeetingStatuses.Completed)
                                     {
-                                        <MudTooltip Text="Acknowledge" Placement="Placement.Top">
-                                            <MudIconButton Icon="@Icons.Material.Filled.Verified"
-                                                           Color="Color.Success"
+                                        <MudTooltip Text="View Details" Placement="Placement.Top">
+                                            <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                                           Color="Color.Info"
                                                            Size="Size.Small"
-                                                           OnClick="@(() => OpenAcknowledgeConfirm(context.Item))" />
+                                                           OnClick="@(() => OpenViewDialog(context.Item))" />
                                         </MudTooltip>
+                                        @if (!context.Item.IsAcknowledgedByEmployee && context.Item.EmployeeId == _currentEmployeeId)
+                                        {
+                                            <MudTooltip Text="Acknowledge" Placement="Placement.Top">
+                                                <MudIconButton Icon="@Icons.Material.Filled.Verified"
+                                                               Color="Color.Success"
+                                                               Size="Size.Small"
+                                                               OnClick="@(() => OpenAcknowledgeConfirm(context.Item))" />
+                                            </MudTooltip>
+                                        }
                                     }
                                     @if (context.Item.Status == MeetingStatuses.Cancelled)
                                     {
@@ -125,12 +147,15 @@
                                   Immediate="true"
                                   DebounceInterval="500"
                                   Style="max-width: 350px;" />
-                    <MudButton Variant="Variant.Filled"
-                               Color="Color.Primary"
-                               StartIcon="@Icons.Material.Filled.Add"
-                               OnClick="OpenCreateDialog">
-                        @UIConstants.OneOnOneMeeting.AddButton
-                    </MudButton>
+                    @if (_isAdmin || _isManager)
+                    {
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Add"
+                                   OnClick="OpenCreateDialog">
+                            @UIConstants.OneOnOneMeeting.AddButton
+                        </MudButton>
+                    }
                 </MudStack>
 
                 <MudDataGrid Items="@_allMeetings"
@@ -150,7 +175,12 @@
                         <PropertyColumn Property="x => x.ManagerName" Title="@UIConstants.OneOnOneMeeting.ColumnManager" />
                         <TemplateColumn Title="@UIConstants.OneOnOneMeeting.ColumnScheduledDate">
                             <CellTemplate>
-                                @context.Item.ScheduledDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                @context.Item.ScheduledDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm") - @context.Item.ScheduledEndTime.ToLocalTime().ToString("HH:mm")
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <TemplateColumn Title="Duration">
+                            <CellTemplate>
+                                @{ var d = context.Item.ScheduledEndTime - context.Item.ScheduledDate; var th = (int)d.TotalHours; <span>@($"{th}h {d.Minutes}m")</span> }
                             </CellTemplate>
                         </TemplateColumn>
                         <PropertyColumn Property="x => x.MeetingType" Title="@UIConstants.OneOnOneMeeting.ColumnType" />
@@ -166,33 +196,48 @@
                                 <MudStack Row="true" Spacing="0">
                                     @if (context.Item.Status == MeetingStatuses.Scheduled)
                                     {
-                                        <MudTooltip Text="Edit" Placement="Placement.Top">
-                                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                                           Color="Color.Primary"
-                                                           Size="Size.Small"
-                                                           OnClick="@(() => OpenEditDialog(context.Item))" />
-                                        </MudTooltip>
-                                        <MudTooltip Text="Complete" Placement="Placement.Top">
-                                            <MudIconButton Icon="@Icons.Material.Filled.CheckCircle"
-                                                           Color="Color.Success"
-                                                           Size="Size.Small"
-                                                           OnClick="@(() => OpenCompleteDialog(context.Item))" />
-                                        </MudTooltip>
-                                        <MudTooltip Text="Cancel" Placement="Placement.Top">
-                                            <MudIconButton Icon="@Icons.Material.Filled.Cancel"
-                                                           Color="Color.Warning"
-                                                           Size="Size.Small"
-                                                           OnClick="@(() => OpenCancelConfirm(context.Item))" />
-                                        </MudTooltip>
+                                        @if (context.Item.ManagerId == _currentEmployeeId || context.Item.EmployeeId == _currentEmployeeId || _isAdmin)
+                                        {
+                                            <MudTooltip Text="Edit" Placement="Placement.Top">
+                                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                               Color="Color.Primary"
+                                                               Size="Size.Small"
+                                                               OnClick="@(() => OpenEditDialog(context.Item))" />
+                                            </MudTooltip>
+                                        }
+                                        @if (context.Item.ManagerId == _currentEmployeeId || _isAdmin)
+                                        {
+                                            <MudTooltip Text="Complete" Placement="Placement.Top">
+                                                <MudIconButton Icon="@Icons.Material.Filled.CheckCircle"
+                                                               Color="Color.Success"
+                                                               Size="Size.Small"
+                                                               OnClick="@(() => OpenCompleteDialog(context.Item))" />
+                                            </MudTooltip>
+                                            <MudTooltip Text="Cancel" Placement="Placement.Top">
+                                                <MudIconButton Icon="@Icons.Material.Filled.Cancel"
+                                                               Color="Color.Warning"
+                                                               Size="Size.Small"
+                                                               OnClick="@(() => OpenCancelConfirm(context.Item))" />
+                                            </MudTooltip>
+                                        }
                                     }
-                                    @if (context.Item.Status == MeetingStatuses.Completed && !context.Item.IsAcknowledgedByEmployee)
+                                    @if (context.Item.Status == MeetingStatuses.Completed)
                                     {
-                                        <MudTooltip Text="Acknowledge" Placement="Placement.Top">
-                                            <MudIconButton Icon="@Icons.Material.Filled.Verified"
-                                                           Color="Color.Success"
+                                        <MudTooltip Text="View Details" Placement="Placement.Top">
+                                            <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                                           Color="Color.Info"
                                                            Size="Size.Small"
-                                                           OnClick="@(() => OpenAcknowledgeConfirm(context.Item))" />
+                                                           OnClick="@(() => OpenViewDialog(context.Item))" />
                                         </MudTooltip>
+                                        @if (!context.Item.IsAcknowledgedByEmployee && context.Item.EmployeeId == _currentEmployeeId)
+                                        {
+                                            <MudTooltip Text="Acknowledge" Placement="Placement.Top">
+                                                <MudIconButton Icon="@Icons.Material.Filled.Verified"
+                                                               Color="Color.Success"
+                                                               Size="Size.Small"
+                                                               OnClick="@(() => OpenAcknowledgeConfirm(context.Item))" />
+                                            </MudTooltip>
+                                        }
                                     }
                                     @if (context.Item.Status == MeetingStatuses.Cancelled)
                                     {
@@ -250,23 +295,7 @@
                     {
                         <MudSelectItem Value="@((long?)null)" Disabled="true">@UIConstants.OneOnOneMeeting.SelectEmployee</MudSelectItem>
                     }
-                    @foreach (var emp in _employees)
-                    {
-                        <MudSelectItem Value="@((long?)emp.Id)">@emp.StaffName (@emp.StaffNo)</MudSelectItem>
-                    }
-                </MudSelect>
-                <MudSelect T="long?"
-                           Label="@UIConstants.OneOnOneMeeting.ManagerLabel"
-                           @bind-Value="_formManagerId"
-                           Variant="Variant.Outlined"
-                           Class="mb-4"
-                           Required="true"
-                           RequiredError="Manager is required">
-                    @if (_formManagerId == null)
-                    {
-                        <MudSelectItem Value="@((long?)null)" Disabled="true">@UIConstants.OneOnOneMeeting.SelectManager</MudSelectItem>
-                    }
-                    @foreach (var emp in _managers)
+                    @foreach (var emp in _employees.Where(e => e.Id != _currentEmployeeId))
                     {
                         <MudSelectItem Value="@((long?)emp.Id)">@emp.StaffName (@emp.StaffNo)</MudSelectItem>
                     }
@@ -286,6 +315,26 @@
                            Class="mb-4"
                            Required="true"
                            RequiredError="Scheduled date is required" />
+            <MudStack Row="true" Spacing="2">
+                <MudTimePicker Label="Start Time"
+                               @bind-Time="_formStartTime"
+                               Variant="Variant.Outlined"
+                               Class="flex-grow-1"
+                               Required="true"
+                               RequiredError="Start time is required" />
+                <MudTimePicker Label="End Time"
+                               @bind-Time="_formEndTime"
+                               Variant="Variant.Outlined"
+                               Class="flex-grow-1"
+                               Required="true"
+                               RequiredError="End time is required" />
+            </MudStack>
+            @if (ScheduledDuration.HasValue)
+            {
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4">
+                    Duration: @FormatDuration(ScheduledDuration)
+                </MudText>
+            }
             @if (!_isEditMode)
             {
                 <MudSelect T="string"
@@ -426,6 +475,68 @@
     </DialogActions>
 </MudDialog>
 
+@* View Details Dialog *@
+<MudDialog @bind-Visible="_showViewDialog" Options="@_dialogOptions">
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-4">@_selectedMeeting?.Title</MudText>
+        <MudSimpleTable Class="w-100 mb-4">
+            <tbody>
+                <tr>
+                    <td><strong>@UIConstants.OneOnOneMeeting.ColumnEmployee</strong></td>
+                    <td>@_selectedMeeting?.EmployeeName</td>
+                </tr>
+                <tr>
+                    <td><strong>@UIConstants.OneOnOneMeeting.ColumnManager</strong></td>
+                    <td>@_selectedMeeting?.ManagerName</td>
+                </tr>
+                <tr>
+                    <td><strong>@UIConstants.OneOnOneMeeting.ColumnScheduledDate</strong></td>
+                    <td>
+                        @if (_selectedMeeting != null)
+                        {
+                            var endTime = _selectedMeeting.ScheduledEndTime.ToLocalTime().ToString("HH:mm");
+                            var d = _selectedMeeting.ScheduledEndTime - _selectedMeeting.ScheduledDate;
+                            var th = (int)d.TotalHours;
+                            @($"{_selectedMeeting.ScheduledDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")} - {endTime}  ({th}h {d.Minutes}m)")
+                        }
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>@UIConstants.OneOnOneMeeting.ColumnType</strong></td>
+                    <td>@FormatMeetingType(_selectedMeeting?.MeetingType ?? "")</td>
+                </tr>
+                <tr>
+                    <td><strong>@UIConstants.OneOnOneMeeting.ColumnStatus</strong></td>
+                    <td>@_selectedMeeting?.Status</td>
+                </tr>
+            </tbody>
+        </MudSimpleTable>
+        @if (!string.IsNullOrEmpty(_selectedMeeting?.Summary))
+        {
+            <MudText Typo="Typo.subtitle2" Class="mt-2">@UIConstants.OneOnOneMeeting.SummaryLabel</MudText>
+            <MudText Typo="Typo.body2">@_selectedMeeting.Summary</MudText>
+        }
+        @if (!string.IsNullOrEmpty(_selectedMeeting?.DiscussionNotes))
+        {
+            <MudText Typo="Typo.subtitle2" Class="mt-2">@UIConstants.OneOnOneMeeting.DiscussionNotesLabel</MudText>
+            <MudText Typo="Typo.body2">@_selectedMeeting.DiscussionNotes</MudText>
+        }
+        @if (!string.IsNullOrEmpty(_selectedMeeting?.PrivateNotes))
+        {
+            <MudText Typo="Typo.subtitle2" Class="mt-2">@UIConstants.OneOnOneMeeting.PrivateNotesLabel</MudText>
+            <MudText Typo="Typo.body2">@_selectedMeeting.PrivateNotes</MudText>
+        }
+        @if (!string.IsNullOrEmpty(_selectedMeeting?.ActionItems))
+        {
+            <MudText Typo="Typo.subtitle2" Class="mt-2">@UIConstants.OneOnOneMeeting.ActionItemsLabel</MudText>
+            <MudText Typo="Typo.body2">@_selectedMeeting.ActionItems</MudText>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="CloseViewDialog">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
 @code {
     private bool _loading = true;
     private int _activeTabIndex;
@@ -433,14 +544,16 @@
     private List<OneOnOneMeetingDto> _upcomingMeetings = new();
     private string _searchString = string.Empty;
     private List<EmployeeLookupDto> _employees = new();
-    private List<EmployeeLookupDto> _managers = new();
     private long _currentEmployeeId;
+    private bool _isAdmin;
+    private bool _isManager;
 
     private bool _showCreateEditDialog;
     private bool _showCompleteDialog;
     private bool _showCancelDialog;
     private bool _showAcknowledgeDialog;
     private bool _showDeleteDialog;
+    private bool _showViewDialog;
     private bool _isEditMode;
     private bool _isSaving;
     private bool _isProcessing;
@@ -450,9 +563,10 @@
     private bool _formValid;
     private string[] _formErrors = { };
     private long? _formEmployeeId;
-    private long? _formManagerId;
     private string _formTitle = string.Empty;
     private DateTime? _formScheduledDate;
+    private TimeSpan? _formStartTime;
+    private TimeSpan? _formEndTime;
     private string _formMeetingType = MeetingTypes.Regular;
 
     private MudForm _completeForm = new();
@@ -464,6 +578,25 @@
     private string _formActionItems = string.Empty;
 
     private readonly DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    private TimeSpan? ScheduledDuration
+    {
+        get
+        {
+            if (_formScheduledDate == null || _formStartTime == null || _formEndTime == null)
+                return null;
+            var start = _formScheduledDate.Value.Date + _formStartTime.Value;
+            var end = _formScheduledDate.Value.Date + _formEndTime.Value;
+            return end > start ? end - start : null;
+        }
+    }
+
+    private static string FormatDuration(TimeSpan? duration)
+    {
+        if (duration == null) return "";
+        var d = duration.Value;
+        return $"{(int)d.TotalHours}h {d.Minutes}m";
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -477,15 +610,19 @@
         try
         {
             var authState = await AuthState.GetAuthenticationStateAsync();
-            var userIdClaim = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var user = authState.User;
+            var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            _isAdmin = user.IsInRole("Admin") || user.IsInRole("SystemAdmin");
 
             var meetingsTask = MeetingApiClient.GetAllAsync();
             var employeesTask = EmployeeApiClient.GetLookupAsync();
             var profileTask = !string.IsNullOrEmpty(userIdClaim) && long.TryParse(userIdClaim, out var uid)
                 ? EmployeeApiClient.GetByUserIdAsync(uid)
                 : Task.FromResult<SuccessResponse<EmployeeProfileDto>>(null!);
+            var managerTask = AuthApiClient.IsManagerAsync();
+            var directReportsTask = EmployeeApiClient.GetDirectReportsLookupAsync();
 
-            await Task.WhenAll(meetingsTask, employeesTask, profileTask);
+            await Task.WhenAll(meetingsTask, employeesTask, profileTask, managerTask, directReportsTask);
 
             var meetingsResponse = await meetingsTask;
             if (meetingsResponse.Success && meetingsResponse.Data != null)
@@ -501,17 +638,26 @@
                 Snackbar.Add(meetingsResponse?.Message ?? UIConstants.Common.LoadFailed, Severity.Error);
             }
 
-            var employeesResponse = await employeesTask;
-            if (employeesResponse.Success && employeesResponse.Data != null)
-            {
-                _employees = employeesResponse.Data.ToList();
-                _managers = _employees.Where(e => e.IsManager).ToList();
-            }
+            var managerResponse = await managerTask;
+            _isManager = managerResponse?.Success == true && managerResponse.Data;
 
             var profileResponse = await profileTask;
             if (profileResponse?.Success == true && profileResponse.Data != null)
             {
                 _currentEmployeeId = profileResponse.Data.Id;
+            }
+
+            if (_isAdmin)
+            {
+                var employeesResponse = await employeesTask;
+                if (employeesResponse.Success && employeesResponse.Data != null)
+                    _employees = employeesResponse.Data.ToList();
+            }
+            else if (_isManager)
+            {
+                var directReportsResponse = await directReportsTask;
+                if (directReportsResponse.Success && directReportsResponse.Data != null)
+                    _employees = directReportsResponse.Data.ToList();
             }
         }
         catch (ApiException ex)
@@ -559,9 +705,10 @@
     {
         _isEditMode = false;
         _formEmployeeId = null;
-        _formManagerId = _currentEmployeeId > 0 ? _currentEmployeeId : null;
         _formTitle = string.Empty;
         _formScheduledDate = DateTime.Today.AddDays(1);
+        _formStartTime = new TimeSpan(9, 0, 0);
+        _formEndTime = new TimeSpan(10, 0, 0);
         _formMeetingType = MeetingTypes.Regular;
         _showCreateEditDialog = true;
     }
@@ -572,6 +719,8 @@
         _selectedMeeting = meeting;
         _formTitle = meeting.Title;
         _formScheduledDate = meeting.ScheduledDate.LocalDateTime;
+        _formStartTime = meeting.ScheduledDate.LocalDateTime.TimeOfDay;
+        _formEndTime = meeting.ScheduledEndTime.LocalDateTime.TimeOfDay;
         _showCreateEditDialog = true;
     }
 
@@ -591,13 +740,17 @@
         {
             if (_isEditMode && _selectedMeeting != null)
             {
+                var date = _formScheduledDate?.Date ?? _selectedMeeting.ScheduledDate.Date;
+                var startTime = _formStartTime ?? _selectedMeeting.ScheduledDate.LocalDateTime.TimeOfDay;
+                var endTime = _formEndTime ?? _selectedMeeting.ScheduledEndTime.LocalDateTime.TimeOfDay;
+                var offset = TimeSpan.FromHours(6.5);
+
                 var dto = new UpdateOneOnOneMeetingDto
                 {
                     Id = _selectedMeeting.Id,
                     Title = _formTitle,
-                    ScheduledDate = _formScheduledDate.HasValue
-                        ? new DateTimeOffset(_formScheduledDate.Value, TimeSpan.FromHours(6.5))
-                        : _selectedMeeting.ScheduledDate
+                    ScheduledDate = new DateTimeOffset(date + startTime, offset),
+                    ScheduledEndTime = new DateTimeOffset(date + endTime, offset)
                 };
                 var result = await MeetingApiClient.UpdateAsync(_selectedMeeting.Id, dto);
                 if (result.Success)
@@ -614,19 +767,23 @@
             }
             else
             {
-                if (_formEmployeeId == null || _formManagerId == null)
+                if (_formEmployeeId == null)
                 {
-                    Snackbar.Add("Please select employee and manager.", Severity.Error);
+                    Snackbar.Add("Please select employee.", Severity.Error);
                     return;
                 }
+                var date = _formScheduledDate?.Date ?? DateTime.Today;
+                var startTime = _formStartTime ?? new TimeSpan(9, 0, 0);
+                var endTime = _formEndTime ?? new TimeSpan(10, 0, 0);
+                var offset = TimeSpan.FromHours(6.5);
+
                 var dto = new CreateOneOnOneMeetingDto
                 {
                     EmployeeId = _formEmployeeId.Value,
-                    ManagerId = _formManagerId.Value,
+                    ManagerId = _currentEmployeeId,
                     Title = _formTitle,
-                    ScheduledDate = _formScheduledDate.HasValue
-                        ? new DateTimeOffset(_formScheduledDate.Value, TimeSpan.FromHours(6.5))
-                        : DateTimeOffset.UtcNow
+                    ScheduledDate = new DateTimeOffset(date + startTime, offset),
+                    ScheduledEndTime = new DateTimeOffset(date + endTime, offset)
                 };
                 var result = await MeetingApiClient.CreateAsync(dto);
                 if (result.Success)
@@ -717,6 +874,18 @@
     {
         _selectedMeeting = meeting;
         _showCancelDialog = true;
+    }
+
+    private void OpenViewDialog(OneOnOneMeetingDto meeting)
+    {
+        _selectedMeeting = meeting;
+        _showViewDialog = true;
+    }
+
+    private void CloseViewDialog()
+    {
+        _showViewDialog = false;
+        _selectedMeeting = null;
     }
 
     private async Task ConfirmCancel()

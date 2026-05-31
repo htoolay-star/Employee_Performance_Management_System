@@ -9,6 +9,7 @@ namespace EPMS.Shared.DTOs.PerformanceDTOs.OneOnOneMeetingDTOs
         public string ManagerName { get; set; } = string.Empty;
         public string Title { get; set; } = string.Empty;
         public DateTimeOffset ScheduledDate { get; set; }
+        public DateTimeOffset ScheduledEndTime { get; set; }
         public DateTimeOffset? ActualDate { get; set; }
         public string? Summary { get; set; }
         public string? DiscussionNotes { get; set; }

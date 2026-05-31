@@ -13,7 +13,7 @@ namespace EPMS.Domain.Entities.Performance
     {
         private OneOnOneMeeting() { }
 
-        public OneOnOneMeeting(long employeeId, long managerId, string title, DateTimeOffset scheduledDate)
+        public OneOnOneMeeting(long employeeId, long managerId, string title, DateTimeOffset scheduledDate, DateTimeOffset scheduledEndTime)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(title);
 
@@ -23,6 +23,7 @@ namespace EPMS.Domain.Entities.Performance
             Title = title.Trim();
 
             ScheduledDate = scheduledDate;
+            ScheduledEndTime = scheduledEndTime;
             Status = MeetingStatuses.Scheduled;
         }
 
@@ -30,6 +31,7 @@ namespace EPMS.Domain.Entities.Performance
         public long ManagerId { get; private set; }
 
         public DateTimeOffset ScheduledDate { get; private set; }
+        public DateTimeOffset ScheduledEndTime { get; private set; }
         public DateTimeOffset? ActualDate { get; private set; }
 
         public string Title { get; private set; } = string.Empty;
@@ -55,11 +57,12 @@ namespace EPMS.Domain.Entities.Performance
         public virtual EmployeeProfile Employee { get; private set; } = null!;
         public virtual EmployeeProfile Manager { get; private set; } = null!;
 
-        public void Update(string title, DateTimeOffset scheduledDate)
+        public void Update(string title, DateTimeOffset scheduledDate, DateTimeOffset scheduledEndTime)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(title);
             Title = title.Trim();
             ScheduledDate = scheduledDate;
+            ScheduledEndTime = scheduledEndTime;
         }
 
         public void CompleteMeeting(string? summary, string? sharedNotes, string? privateNotes, string? actionItems, TimeProvider timeProvider)

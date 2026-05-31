@@ -5,6 +5,7 @@ namespace EPMS.Shared.DTOs.PerformanceDTOs.OneOnOneMeetingDTOs
         public long Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public DateTimeOffset ScheduledDate { get; set; }
+        public DateTimeOffset ScheduledEndTime { get; set; }
     }
 }
 
