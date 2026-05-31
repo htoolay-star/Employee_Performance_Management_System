@@ -65,6 +65,38 @@ namespace EPMS.Domain.Entities.Performance
             ScheduledEndTime = scheduledEndTime;
         }
 
+        public void ConfirmByEmployee()
+        {
+            if (Status != MeetingStatuses.PendingEmployee && Status != MeetingStatuses.Scheduled)
+                throw new InvalidOperationException("Only meetings pending employee confirmation can be confirmed.");
+            Status = MeetingStatuses.Confirmed;
+        }
+
+        public void RescheduleByEmployee(DateTimeOffset newDate, DateTimeOffset newEndTime)
+        {
+            if (Status != MeetingStatuses.PendingEmployee && Status != MeetingStatuses.Scheduled)
+                throw new InvalidOperationException("Only meetings pending employee confirmation can be rescheduled.");
+            ScheduledDate = newDate;
+            ScheduledEndTime = newEndTime;
+            Status = MeetingStatuses.PendingManager;
+        }
+
+        public void AcceptRescheduleByManager()
+        {
+            if (Status != MeetingStatuses.PendingManager)
+                throw new InvalidOperationException("Only meetings pending manager confirmation can be accepted.");
+            Status = MeetingStatuses.Confirmed;
+        }
+
+        public void RescheduleByManager(DateTimeOffset newDate, DateTimeOffset newEndTime)
+        {
+            if (Status != MeetingStatuses.PendingManager)
+                throw new InvalidOperationException("Only meetings pending manager confirmation can be re-rescheduled.");
+            ScheduledDate = newDate;
+            ScheduledEndTime = newEndTime;
+            Status = MeetingStatuses.PendingEmployee;
+        }
+
         public void CompleteMeeting(string? summary, string? sharedNotes, string? privateNotes, string? actionItems, TimeProvider timeProvider)
         {
             Status = MeetingStatuses.Completed;
@@ -90,6 +122,8 @@ namespace EPMS.Domain.Entities.Performance
             if (Status == MeetingStatuses.Cancelled) throw new InvalidOperationException("Meeting is already cancelled.");
             Status = MeetingStatuses.Cancelled;
         }
+
+        public bool CanBeCancelled => Status != MeetingStatuses.Completed && Status != MeetingStatuses.Cancelled;
 
         public void LinkToPIP(long pipId)
         {

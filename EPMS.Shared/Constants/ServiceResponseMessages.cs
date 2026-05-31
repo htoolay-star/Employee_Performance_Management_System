@@ -291,6 +291,8 @@ public static class ServiceResponseMessages
         public const string Completed = "Meeting completed successfully.";
         public const string Cancelled = "Meeting cancelled successfully.";
         public const string Acknowledged = "Meeting acknowledged successfully.";
+        public const string Confirmed = "Meeting confirmed successfully.";
+        public const string Rescheduled = "Meeting rescheduled successfully.";
         public const string Retrieved = "Meeting retrieved successfully.";
         public const string RetrievedAll = "Meetings retrieved successfully.";
         public const string RetrievedUpcoming = "Upcoming meetings retrieved successfully.";

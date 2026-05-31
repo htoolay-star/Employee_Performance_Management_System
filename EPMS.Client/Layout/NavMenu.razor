@@ -200,12 +200,9 @@
     </MudNavGroup>
     </MudTooltip>
     }
-    @if (_isAdmin || _isManager)
-    {
     <MudTooltip Text="One-on-One Meetings" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
         <MudNavLink Href="performance/one-on-one-meetings" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PersonSearch">One-on-One Meetings</MudNavLink>
     </MudTooltip>
-    }
     @if (_isAdmin || _isManager)
     {
     <MudTooltip Text="Pending Forms" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">

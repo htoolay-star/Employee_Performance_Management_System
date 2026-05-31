@@ -16,3 +16,9 @@ public class CompleteMeetingDto
     public string? PrivateNotes { get; set; }
     public string? ActionItems { get; set; }
 }
+
+public class RescheduleMeetingDto
+{
+    public DateTimeOffset ScheduledDate { get; set; }
+    public DateTimeOffset ScheduledEndTime { get; set; }
+}

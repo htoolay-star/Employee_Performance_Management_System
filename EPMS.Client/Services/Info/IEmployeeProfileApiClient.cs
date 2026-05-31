@@ -28,6 +28,9 @@ public interface IEmployeeProfileApiClient
     [Get("/api/employee-profiles/by-user/{userId}")]
     Task<SuccessResponse<EmployeeProfileDto>> GetByUserIdAsync(long userId);
 
+    [Get("/api/employee-profiles/my-profile")]
+    Task<SuccessResponse<EmployeeProfileDto>> GetMyProfileAsync();
+
     [Post("/api/employee-profiles")]
     Task<SuccessResponse<long>> CreateAsync([Body] CreateEmployeeProfileDto dto);
 

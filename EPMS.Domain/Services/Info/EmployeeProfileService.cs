@@ -298,6 +298,20 @@ public class EmployeeProfileService : IEmployeeProfileService
         return SuccessResponse<EmployeeProfileDto>.Ok(dto, EmployeeProfileMsg.Retrieved);
     }
 
+    public async Task<SuccessResponse<EmployeeProfileDto>> GetMyProfileAsync()
+    {
+        var employeeId = await _currentEmployee.GetEmployeeIdAsync();
+        if (!employeeId.HasValue)
+            return SuccessResponse<EmployeeProfileDto>.Fail(EmployeeProfileMsg.NotFound(0), ErrorType.NotFound);
+
+        var profile = await _uow.Info.EmployeeProfiles.GetByIdAsync(employeeId.Value);
+        if (profile == null)
+            return SuccessResponse<EmployeeProfileDto>.Fail(EmployeeProfileMsg.NotFound(0), ErrorType.NotFound);
+
+        var dto = profile.Adapt<EmployeeProfileDto>();
+        return SuccessResponse<EmployeeProfileDto>.Ok(dto, EmployeeProfileMsg.Retrieved);
+    }
+
     public async Task<SuccessResponse<IEnumerable<EmployeeLookupDto>>> GetLookupAsync()
     {
         var dtos = await _cacheService.GetOrCreateAsync(

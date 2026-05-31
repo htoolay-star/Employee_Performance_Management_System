@@ -547,6 +547,8 @@
             public const string CancelDialogTitle = "Cancel Meeting";
             public const string CompleteDialogTitle = "Complete Meeting";
             public const string AcknowledgeDialogTitle = "Acknowledge Meeting";
+            public const string ConfirmDialogTitle = "Confirm Meeting";
+            public const string RescheduleDialogTitle = "Reschedule Meeting";
 
             public const string TabUpcoming = "Upcoming";
             public const string TabAll = "All Meetings";
@@ -574,6 +576,9 @@
             public const string CompleteButton = "Complete Meeting";
             public const string CancelButton = "Cancel Meeting";
             public const string AcknowledgeButton = "Acknowledge";
+            public const string ConfirmButton = "Confirm";
+            public const string RescheduleButton = "Reschedule";
+            public const string AcceptRescheduleButton = "Accept Reschedule";
 
             public const string Created = "Meeting scheduled successfully.";
             public const string Updated = "Meeting updated successfully.";
@@ -581,10 +586,13 @@
             public const string Completed = "Meeting completed successfully.";
             public const string Cancelled = "Meeting cancelled successfully.";
             public const string Acknowledged = "Meeting acknowledged successfully.";
+            public const string Confirmed = "Meeting confirmed successfully.";
+            public const string Rescheduled = "Meeting rescheduled successfully.";
 
             public const string CancelConfirmFormat = "Are you sure you want to cancel '{0}'?";
             public const string AcknowledgeConfirmFormat = "Are you sure you want to acknowledge '{0}'?";
             public const string DeleteConfirmFormat = "Are you sure you want to delete '{0}'?";
+            public const string ConfirmFormat = "Are you sure you want to confirm '{0}'?";
             public const string NoDataFound = "No meetings found.";
             public const string NoUpcoming = "No upcoming meetings.";
         }

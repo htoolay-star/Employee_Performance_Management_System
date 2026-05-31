@@ -92,6 +92,13 @@ public class EmployeeProfilesController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HttpGet("my-profile")]
+    public async Task<ActionResult<SuccessResponse<EmployeeProfileDto>>> GetMyProfile()
+    {
+        var result = await _profileService.GetMyProfileAsync();
+        return HandleResult(result);
+    }
+
     [HttpPost]
     public async Task<ActionResult<SuccessResponse<long>>> Create(CreateEmployeeProfileDto dto)
     {

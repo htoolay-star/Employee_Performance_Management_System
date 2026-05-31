@@ -16,5 +16,9 @@ namespace EPMS.Domain.Interface.IService.Performance
         Task<SuccessResponse> CompleteAsync(long id, CompleteMeetingDto dto);
         Task<SuccessResponse> CancelAsync(long id);
         Task<SuccessResponse> AcknowledgeAsync(long id);
+        Task<SuccessResponse> ConfirmAsync(long id);
+        Task<SuccessResponse> RescheduleByEmployeeAsync(long id, RescheduleMeetingDto dto);
+        Task<SuccessResponse> AcceptRescheduleAsync(long id);
+        Task<SuccessResponse> RescheduleByManagerAsync(long id, RescheduleMeetingDto dto);
     }
 }
