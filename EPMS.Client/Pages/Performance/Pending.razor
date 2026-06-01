@@ -38,12 +38,12 @@
                 </TemplateColumn>
                 <TemplateColumn Title="Actions" Sortable="false">
                     <CellTemplate>
-                        <MudButton Variant="Variant.Filled"
-                                   Color="Color.Primary"
-                                   Size="Size.Small"
-                                   OnClick="@(() => Navigation.NavigateTo($"/performance/appraisals/{context.Item.Id}/view?from=pending"))">
-                            View
-                        </MudButton>
+                        <MudTooltip Text="View Evaluation" Placement="Placement.Top">
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                           Color="Color.Info"
+                                           Size="Size.Small"
+                                           OnClick="@(() => Navigation.NavigateTo($"/performance/appraisals/{context.Item.Id}/view?from=pending"))" />
+                        </MudTooltip>
                     </CellTemplate>
                 </TemplateColumn>
             </Columns>

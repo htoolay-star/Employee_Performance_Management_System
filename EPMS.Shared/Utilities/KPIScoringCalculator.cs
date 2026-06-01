@@ -16,12 +16,7 @@ public static class KPIScoringCalculator
 
         if (scoringDirection == AppraisalConstants.ScoringDirections.LowerIsBetter)
         {
-            if (actual == 0m)
-            {
-                return 100m;
-            }
-
-            return Math.Min(target / actual, 1m) * 100;
+            return Math.Max(0m, (1m - actual / target)) * 100;
         }
         else
         {

@@ -10,6 +10,9 @@ public interface IEmployeeProfileApiClient
     [Get("/api/employee-profiles/lookup")]
     Task<SuccessResponse<IEnumerable<EmployeeLookupDto>>> GetLookupAsync();
 
+    [Get("/api/employee-profiles/direct-reports/lookup")]
+    Task<SuccessResponse<IEnumerable<EmployeeLookupDto>>> GetDirectReportsLookupAsync();
+
     [Get("/api/employee-profiles")]
     Task<SuccessResponse<IEnumerable<EmployeeProfileDto>>> GetAllAsync();
 
@@ -24,6 +27,9 @@ public interface IEmployeeProfileApiClient
 
     [Get("/api/employee-profiles/by-user/{userId}")]
     Task<SuccessResponse<EmployeeProfileDto>> GetByUserIdAsync(long userId);
+
+    [Get("/api/employee-profiles/my-profile")]
+    Task<SuccessResponse<EmployeeProfileDto>> GetMyProfileAsync();
 
     [Post("/api/employee-profiles")]
     Task<SuccessResponse<long>> CreateAsync([Body] CreateEmployeeProfileDto dto);

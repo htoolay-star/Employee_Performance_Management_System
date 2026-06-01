@@ -419,6 +419,53 @@
             public const string NoData = "No 360 forms found.";
         }
 
+        public static class My360Feedback
+        {
+            public const string PageTitle = "My 360 Feedback";
+            public const string NoData = "No 360 feedback available.";
+            public const string DetailTitle = "360 Feedback Detail";
+            public const string AnonymousLabel = "Anonymous";
+            public const string AnonymousChip = "Responses shown anonymously";
+            public const string ViewFeedback = "View Feedback";
+        }
+
+        public static class ReceivedFeedback
+        {
+            public const string PageTitle = "Received Feedback";
+            public const string NoData = "No feedback received yet.";
+            public const string ColumnEmployee = "Given To";
+            public const string ColumnGivenBy = "Given By";
+            public const string ColumnFeedbackType = "Feedback Type";
+            public const string ColumnContent = "Content";
+            public const string ColumnVisibility = "Visibility";
+            public const string ColumnDate = "Date";
+        }
+
+        public static class GivenFeedback
+        {
+            public const string PageTitle = "Given Feedback";
+            public const string SearchPlaceholder = "Search by employee or content...";
+            public const string AddButton = "Give Feedback";
+            public const string CreateDialogTitle = "Give Feedback";
+            public const string EditDialogTitle = "Edit Feedback";
+            public const string DeleteDialogTitle = "Delete Feedback";
+            public const string EmployeeLabel = "Employee";
+            public const string FeedbackTypeLabel = "Feedback Type";
+            public const string ContentLabel = "Content";
+            public const string VisibilityLabel = "Visibility";
+            public const string ColumnEmployee = "Employee";
+            public const string ColumnFeedbackType = "Feedback Type";
+            public const string ColumnContent = "Content";
+            public const string ColumnVisibility = "Visibility";
+            public const string ColumnDate = "Date";
+            public const string SelectEmployee = "-- Select Employee --";
+            public const string Created = "Feedback created successfully.";
+            public const string Updated = "Feedback updated successfully.";
+            public const string Deleted = "Feedback deleted successfully.";
+            public const string NoData = "No feedback given yet.";
+            public const string NoDataFound = "No feedback entries found.";
+        }
+
         public static class MyAppraisalForms
         {
             public const string PageTitle = "My Appraisal Forms";
@@ -436,6 +483,7 @@
             public const string PageTitle = "Self Assessment Review";
             public const string ApproveButton = "Approve Self Assessment";
             public const string Approved = "Self assessment approved successfully.";
+            public const string FinalizeButton = "Finalize Self Assessment";
         }
 
         public static class AppraisalView
@@ -488,40 +536,6 @@
             public const string SuccessMessage = "Default password updated successfully.";
         }
 
-        public static class ContinuousFeedback
-        {
-            public const string PageTitle = "Continuous Feedback";
-            public const string SearchPlaceholder = "Search by employee or content...";
-            public const string AddButton = "Add Feedback";
-            public const string CreateDialogTitle = "Give Feedback";
-            public const string EditDialogTitle = "Edit Feedback";
-            public const string DeleteDialogTitle = "Delete Feedback";
-
-            public const string EmployeeLabel = "Employee";
-            public const string GivenByLabel = "Given By";
-            public const string FeedbackTypeLabel = "Feedback Type";
-            public const string ContentLabel = "Content";
-            public const string VisibilityLabel = "Visibility";
-            public const string FeedbackDateLabel = "Feedback Date";
-
-            public const string ColumnEmployee = "Employee";
-            public const string ColumnGivenBy = "Given By";
-            public const string ColumnFeedbackType = "Feedback Type";
-            public const string ColumnContent = "Content";
-            public const string ColumnVisibility = "Visibility";
-            public const string ColumnFeedbackDate = "Feedback Date";
-
-            public const string SelectEmployee = "-- Select Employee --";
-            public const string SelectFeedbackType = "-- Select Type --";
-            public const string SelectVisibility = "-- Select Visibility --";
-
-            public const string Created = "Feedback created successfully.";
-            public const string Updated = "Feedback updated successfully.";
-            public const string Deleted = "Feedback deleted successfully.";
-
-            public const string NoDataFound = "No feedback entries found.";
-        }
-
         public static class OneOnOneMeeting
         {
             public const string PageTitle = "One-on-One Meetings";
@@ -533,6 +547,8 @@
             public const string CancelDialogTitle = "Cancel Meeting";
             public const string CompleteDialogTitle = "Complete Meeting";
             public const string AcknowledgeDialogTitle = "Acknowledge Meeting";
+            public const string ConfirmDialogTitle = "Confirm Meeting";
+            public const string RescheduleDialogTitle = "Reschedule Meeting";
 
             public const string TabUpcoming = "Upcoming";
             public const string TabAll = "All Meetings";
@@ -560,6 +576,9 @@
             public const string CompleteButton = "Complete Meeting";
             public const string CancelButton = "Cancel Meeting";
             public const string AcknowledgeButton = "Acknowledge";
+            public const string ConfirmButton = "Confirm";
+            public const string RescheduleButton = "Reschedule";
+            public const string AcceptRescheduleButton = "Accept Reschedule";
 
             public const string Created = "Meeting scheduled successfully.";
             public const string Updated = "Meeting updated successfully.";
@@ -567,10 +586,13 @@
             public const string Completed = "Meeting completed successfully.";
             public const string Cancelled = "Meeting cancelled successfully.";
             public const string Acknowledged = "Meeting acknowledged successfully.";
+            public const string Confirmed = "Meeting confirmed successfully.";
+            public const string Rescheduled = "Meeting rescheduled successfully.";
 
             public const string CancelConfirmFormat = "Are you sure you want to cancel '{0}'?";
             public const string AcknowledgeConfirmFormat = "Are you sure you want to acknowledge '{0}'?";
             public const string DeleteConfirmFormat = "Are you sure you want to delete '{0}'?";
+            public const string ConfirmFormat = "Are you sure you want to confirm '{0}'?";
             public const string NoDataFound = "No meetings found.";
             public const string NoUpcoming = "No upcoming meetings.";
         }
@@ -589,6 +611,7 @@
             public const string Read = "Read";
             public const string Unread = "Unread";
             public const string MarkedAsRead = "Notification marked as read.";
+            public const string MarkedAllAsRead = "All notifications marked as read.";
             public const string Deleted = "Notification deleted.";
             public const string DeleteConfirmFormat = "Are you sure you want to delete '{0}'?";
             public const string NoDataFound = "No notifications found.";
@@ -596,11 +619,14 @@
             public const string ViewAll = "View All";
             public const string DropdownTitle = "Notifications";
             public const string AgoFormat = "{0} ago";
+            public const string MarkAllAsRead = "Mark All as Read";
+            public const string Close = "Close";
         }
 
         public static class PIP
         {
             public const string PageTitle = "Performance Improvement Plans";
+            public const string MyPIPsPageTitle = "My PIPs";
             public const string SearchPlaceholder = "Search by employee or manager...";
             public const string AddButton = "Create PIP";
             public const string CreateDialogTitle = "Create PIP";

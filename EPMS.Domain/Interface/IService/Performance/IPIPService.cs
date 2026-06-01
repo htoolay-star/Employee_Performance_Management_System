@@ -9,6 +9,7 @@ namespace EPMS.Domain.Interface.IService.Performance
         Task<SuccessResponse<IEnumerable<PIPDto>>> GetActivePIPsAsync();
         Task<SuccessResponse<IEnumerable<PIPDto>>> GetByEmployeeIdAsync(long employeeId);
         Task<SuccessResponse<IEnumerable<PIPDto>>> GetByManagerIdAsync(long managerId);
+        Task<SuccessResponse<IEnumerable<PIPDto>>> GetMyPIPsAsync();
         Task<SuccessResponse<PIPDto>> GetByIdAsync(long id);
         Task<SuccessResponse<long>> CreateAsync(CreatePIPDto dto);
         Task<SuccessResponse> UpdateAsync(long id, UpdatePIPDto dto);

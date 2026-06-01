@@ -156,6 +156,9 @@
                 </MudStack>
             </MudPaper>
 
+            @* Feedback History *@
+            <FeedbackHistoryPanel EmployeeId="@_model.EmployeeId" />
+
             @* Finalize Button (admin only on KPI REVIEWED) *@
             @if (_isAdmin && _model.KpiStatus == AppraisalStatuses.Kpi.Reviewed)
             {
@@ -178,6 +181,49 @@
                     <MudChip T="string" Color="Color.Success">KPI Finalized</MudChip>
                 </MudStack>
             }
+
+            @* Unlock KPI buttons *@
+            @if (_model.KpiLocked && _model.KpiStatus is AppraisalStatuses.Kpi.Reviewed)
+            {
+                <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
+                    @if (!_isAdmin && !_unlockRequested)
+                    {
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Warning"
+                                   OnClick="RequestUnlock"
+                                   Disabled="@(_unlockRequesting)">
+                            @if (_unlockRequesting)
+                            {
+                                <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
+                            }
+                            Request Unlock
+                        </MudButton>
+                    }
+                    @if (_isAdmin && _model.KpiUnlockRequested)
+                    {
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Error"
+                                   OnClick="DeclineKpiUnlock"
+                                   Disabled="@(_declining)">
+                            @if (_declining)
+                            {
+                                <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
+                            }
+                            Decline
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Warning"
+                                   OnClick="UnlockKpi"
+                                   Disabled="@(_unlockRequesting)">
+                            @if (_unlockRequesting)
+                            {
+                                <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
+                            }
+                            Unlock KPI
+                        </MudButton>
+                    }
+                </MudStack>
+            }
         </MudPaper>
     }
 </MudContainer>
@@ -190,6 +236,9 @@
     private AppraisalFillFormModel _model = new();
     private string _backUrl = "/performance/my-kpi";
     private bool _isAdmin;
+    private bool _unlockRequested;
+    private bool _unlockRequesting;
+    private bool _declining;
     private bool _loading = true;
     private bool _error;
     private string _errorMessage = string.Empty;
@@ -208,6 +257,8 @@
         _backUrl = From switch
         {
             "pending" => "/performance/pending",
+            "my-evaluations" => "/performance/my-evaluations",
+            "forms" => "/performance/appraisals",
             _ => "/performance/my-kpi"
         };
 
@@ -340,4 +391,89 @@
         direction == AppraisalConstants.ScoringDirections.LowerIsBetter
             ? Icons.Material.Filled.TrendingDown
             : Icons.Material.Filled.TrendingUp;
+
+    private async Task RequestUnlock()
+    {
+        _unlockRequesting = true;
+        StateHasChanged();
+
+        try
+        {
+            var response = await AppraisalApiClient.RequestKpiUnlockAsync(AppraisalId);
+            if (response.Success)
+            {
+                _unlockRequested = true;
+                Snackbar.Add("Unlock request sent to admin.", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? "Failed to send unlock request.", Severity.Error);
+            }
+        }
+        catch
+        {
+            Snackbar.Add("An error occurred while requesting unlock.", Severity.Error);
+        }
+        finally
+        {
+            _unlockRequesting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task UnlockKpi()
+    {
+        _unlockRequesting = true;
+        StateHasChanged();
+
+        try
+        {
+            var response = await AppraisalApiClient.UnlockKpiAsync(AppraisalId);
+            if (response.Success)
+            {
+                Snackbar.Add("KPI unlocked successfully.", Severity.Success);
+                await LoadAsync();
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? "Failed to unlock KPI.", Severity.Error);
+            }
+        }
+        catch
+        {
+            Snackbar.Add("An error occurred while unlocking KPI.", Severity.Error);
+        }
+        finally
+        {
+            _unlockRequesting = false;
+        }
+    }
+
+    private async Task DeclineKpiUnlock()
+    {
+        _declining = true;
+        StateHasChanged();
+
+        try
+        {
+            var response = await AppraisalApiClient.DeclineKpiUnlockAsync(AppraisalId);
+            if (response.Success)
+            {
+                Snackbar.Add("KPI unlock request declined.", Severity.Success);
+                await LoadAsync();
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? "Failed to decline unlock request.", Severity.Error);
+            }
+        }
+        catch
+        {
+            Snackbar.Add("An error occurred while declining unlock request.", Severity.Error);
+        }
+        finally
+        {
+            _declining = false;
+        }
+    }
 }

@@ -1,0 +1,185 @@
+@page "/performance/appraisals/{AppraisalId:long}/forms"
+@using EPMS.Client.Constants
+@using EPMS.Client.Services.Performance
+@using EPMS.Shared.Constants
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.FormDTOs
+@using MudBlazor
+@using Refit
+
+@inject IAppraisalApiClient AppraisalApiClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Employee Forms Overview</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">Employee Forms Overview</MudText>
+
+    @if (_overview != null)
+    {
+        <MudPaper Elevation="0" Outlined="true" Class="pa-4 mb-4">
+            <MudStack>
+                <MudText Typo="Typo.body1"><strong>Employee:</strong> @_overview.EmployeeName</MudText>
+                <MudText Typo="Typo.body1"><strong>Position:</strong> @_overview.PositionName</MudText>
+                <MudText Typo="Typo.body1"><strong>Department:</strong> @_overview.DepartmentName</MudText>
+                @if (!string.IsNullOrEmpty(_overview.TeamName))
+                {
+                    <MudText Typo="Typo.body1"><strong>Team:</strong> @_overview.TeamName</MudText>
+                }
+                <MudText Typo="Typo.body1"><strong>Manager:</strong> @_overview.ManagerName</MudText>
+                <MudText Typo="Typo.body1"><strong>Cycle:</strong> @_overview.CycleName</MudText>
+            </MudStack>
+        </MudPaper>
+
+        <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+            <MudDataGrid Items="@_overview.Forms"
+                         Loading="@_loading"
+                         Hover="true"
+                         Elevation="0"
+                         SortMode="SortMode.None">
+                <Columns>
+                    <TemplateColumn Title="#" Sortable="false" Style="width: 50px;">
+                        <CellTemplate>
+                            <span>@(_overview.Forms.IndexOf(context.Item) + 1)</span>
+                        </CellTemplate>
+                    </TemplateColumn>
+                    <PropertyColumn Property="x => x.DisplayName" Title="Form Type" />
+                    <TemplateColumn Title="Status" Sortable="false">
+                        <CellTemplate>
+                            <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Item.FormType, context.Item.Status)">
+                                @context.Item.Status
+                            </MudChip>
+                        </CellTemplate>
+                    </TemplateColumn>
+                    <TemplateColumn Title="Score" Sortable="false">
+                        <CellTemplate>
+                            <MudText Typo="Typo.body2" Align="Align.Right">@(context.Item.Score?.ToString("F2") ?? "-")</MudText>
+                        </CellTemplate>
+                    </TemplateColumn>
+                    <TemplateColumn Title="Actions" Sortable="false">
+                        <CellTemplate>
+                            @{
+                                var url = GetFormUrl(context.Item);
+                                if (context.Item.CanFill)
+                                {
+                                    <MudTooltip Text="Fill" Placement="Placement.Top">
+                                        <MudIconButton Icon="@Icons.Material.Filled.EditNote"
+                                                       Color="Color.Primary"
+                                                       Size="Size.Small"
+                                                       OnClick="@(() => Navigation.NavigateTo(url))" />
+                                    </MudTooltip>
+                                }
+                                else
+                                {
+                                    <MudTooltip Text="View" Placement="Placement.Top">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                                       Color="Color.Info"
+                                                       Size="Size.Small"
+                                                       OnClick="@(() => Navigation.NavigateTo(url))" />
+                                    </MudTooltip>
+                                }
+                            }
+                        </CellTemplate>
+                    </TemplateColumn>
+                </Columns>
+                <NoRecordsContent>
+                    <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
+                        <MudIcon Icon="@Icons.Material.Outlined.Inbox" Style="font-size: 4rem;" Color="Color.Default" />
+                        <MudText Typo="Typo.h6" Color="Color.Default">No forms found</MudText>
+                    </MudStack>
+                </NoRecordsContent>
+                <LoadingContent>
+                    <MudStack Spacing="3" Class="w-100">
+                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                    </MudStack>
+                </LoadingContent>
+            </MudDataGrid>
+        </MudPaper>
+    }
+
+    <MudButton Variant="Variant.Outlined" Class="mt-4" OnClick="@GoBack">Back</MudButton>
+</MudContainer>
+
+@code {
+    [Parameter] public long AppraisalId { get; set; }
+
+    private EmployeeFormsOverviewDto? _overview;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        StateHasChanged();
+        try
+        {
+            var response = await AppraisalApiClient.GetEmployeeFormsAsync(AppraisalId);
+            if (response.Success && response.Data != null)
+            {
+                _overview = response.Data;
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? "Failed to load forms.", Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Failed to load forms.", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private string GetFormUrl(FormEntryDto form)
+    {
+        if (form.FormType == "KPI")
+        {
+            return form.CanFill
+                ? $"/performance/appraisals/{AppraisalId}/fill?from=forms"
+                : $"/performance/appraisals/{AppraisalId}/view?from=forms";
+        }
+
+        var viewOnly = !form.CanFill ? "&viewonly=true" : "";
+        var evalId = form.EvaluatorId.HasValue ? $"&evaluatorId={form.EvaluatorId.Value}" : "";
+        return $"/performance/appraisals/{AppraisalId}/evaluate?role={form.FormType}{evalId}{viewOnly}&from=forms";
+    }
+
+    private void GoBack() => Navigation.NavigateTo("/performance/appraisals");
+
+    private static Color GetStatusColor(string formType, string status)
+    {
+        if (status is AppraisalStatuses.Kpi.Draft or AppraisalStatuses.Self.Draft
+            or AppraisalStatuses.Manager.Draft or AppraisalStatuses.Peer.Draft
+            or AppraisalStatuses.Subordinate.Draft or AppraisalStatuses.Committee.Draft)
+            return Color.Warning;
+
+        if (status == AppraisalStatuses.Self.InProgress)
+            return Color.Info;
+
+        if (status is AppraisalStatuses.Kpi.Finalized or AppraisalStatuses.Self.Finalized
+            or AppraisalStatuses.Manager.Finalized or AppraisalStatuses.Peer.Finalized
+            or AppraisalStatuses.Subordinate.Finalized or AppraisalStatuses.Committee.Finalized)
+            return Color.Success;
+
+        if (status is AppraisalStatuses.Kpi.Reviewed or AppraisalStatuses.Committee.Reviewed)
+            return Color.Primary;
+
+        return Color.Default;
+    }
+}

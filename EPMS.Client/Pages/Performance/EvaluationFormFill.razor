@@ -271,6 +271,12 @@
                     </MudStack>
                 </MudPaper>
 
+                @* Feedback History (Appraisal Review only) *@
+                @if (_currentRole == EvaluatorRoles.Appraisal)
+                {
+                    <FeedbackHistoryPanel EmployeeId="@_model.EmployeeId" />
+                }
+
                 @* Submit Button *@
                 @if (!ViewOnly)
                 {
@@ -287,7 +293,7 @@
                         </MudButton>
                     </MudStack>
                 }
-                @if (_isAdmin && ViewOnly && RoleStatus != GetRoleFinalizedStatus())
+                @if (_isAdmin && ViewOnly && RoleStatus == GetRoleReviewedStatus())
                 {
                     <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
                         <MudButton Variant="Variant.Filled"
@@ -318,6 +324,7 @@
     [Parameter] public long AppraisalId { get; set; }
     [SupplyParameterFromQuery(Name = "role")] public string? ExplicitRole { get; set; }
     [SupplyParameterFromQuery(Name = "viewonly")] public bool ViewOnly { get; set; }
+    [SupplyParameterFromQuery(Name = "evaluatorId")] public long? EvaluatorId { get; set; }
     [SupplyParameterFromQuery(Name = "from")] public string? From { get; set; }
 
     private string BackHref => From switch
@@ -325,6 +332,7 @@
         "my-forms/self" => "/performance/my-forms/self",
         "my-forms/360" => "/performance/my-forms/360",
         "my-forms/appraisal" => "/performance/my-forms/appraisal",
+        "my-360-feedback" => "/performance/my-360-feedback",
         "evaluation-pending" => "/performance/evaluations/pending",
         _ => "/performance/appraisals"
     };
@@ -398,7 +406,7 @@
             _currentRole = ExplicitRole;
 
             var formResponse = ViewOnly
-                ? await EvalResponseApiClient.GetEvaluationViewAsync(AppraisalId, _currentRole)
+                ? await EvalResponseApiClient.GetEvaluationViewAsync(AppraisalId, _currentRole, EvaluatorId)
                 : await EvalResponseApiClient.GetFormFillAsync(AppraisalId, _currentRole);
 
             if (formResponse.Success && formResponse.Data != null)

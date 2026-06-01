@@ -5,9 +5,11 @@
 @using EPMS.Shared.Constants
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.FormDTOs
+@using EPMS.Shared.DTOs.PerformanceDTOs.AppraisalCycleDTOs
 @using MudBlazor
 @using Refit
 @inject IEvaluationResponseApiClient EvalResponseApiClient
+@inject IAppraisalCycleApiClient AppraisalCycleApiClient
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject NavigationCacheService NavCache
@@ -18,6 +20,21 @@
     <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.MyAppraisalForms.PageTitle</MudText>
 
     <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+
+        <MudStack Row="true" Class="mb-4" Wrap="Wrap.Wrap">
+            <MudSelect T="long?"
+                       Value="@_selectedCycleId"
+                       ValueChanged="OnCycleChanged"
+                       Label="Cycle"
+                       Variant="Variant.Outlined"
+                       Style="max-width: 200px;"
+                       Clearable="true">
+                @foreach (var cycle in _cycles)
+                {
+                    <MudSelectItem Value="@((long?)cycle.Id)">@cycle.Name</MudSelectItem>
+                }
+            </MudSelect>
+        </MudStack>
 
         <MudDataGrid Items="@_evalItems"
                      Loading="@_loading"
@@ -40,12 +57,24 @@
                 </TemplateColumn>
                 <TemplateColumn Title="Actions" Sortable="false">
                     <CellTemplate>
-                        <MudButton Variant="Variant.Filled"
-                                   Color="@(context.Item.IsSubmitted ? Color.Info : Color.Primary)"
-                                   Size="Size.Small"
-                                   OnClick="@(() => NavigateToEvalForm(context.Item))">
-                            @(context.Item.IsSubmitted ? "View" : "Fill")
-                        </MudButton>
+                        @if (context.Item.IsSubmitted)
+                        {
+                            <MudTooltip Text="View Appraisal" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                               Color="Color.Info"
+                                               Size="Size.Small"
+                                               OnClick="@(() => NavigateToEvalForm(context.Item))" />
+                            </MudTooltip>
+                        }
+                        else
+                        {
+                            <MudTooltip Text="Fill Appraisal" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.EditNote"
+                                               Color="Color.Primary"
+                                               Size="Size.Small"
+                                               OnClick="@(() => NavigateToEvalForm(context.Item))" />
+                            </MudTooltip>
+                        }
                     </CellTemplate>
                 </TemplateColumn>
             </Columns>
@@ -73,17 +102,45 @@
 @code {
 
     private List<MyEvaluationFormDto> _evalItems = new();
+    private List<MyEvaluationFormDto> _allEvalItems = new();
+    private List<AppraisalCycleDto> _cycles = new();
+    private long? _selectedCycleId;
     private bool _loading = true;
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadCyclesAsync();
         if (NavCache.AppraisalForms != null)
         {
-            _evalItems = NavCache.AppraisalForms;
+            _allEvalItems = NavCache.AppraisalForms;
+            ApplyFilter();
             _loading = false;
             return;
         }
         await LoadDataAsync();
+    }
+
+    private void OnCycleChanged(long? v)
+    {
+        _selectedCycleId = v;
+        ApplyFilter();
+    }
+
+    private void ApplyFilter()
+    {
+        _evalItems = _allEvalItems.Where(x => _selectedCycleId == null || x.CycleId == _selectedCycleId).ToList();
+        StateHasChanged();
+    }
+
+    private async Task LoadCyclesAsync()
+    {
+        try
+        {
+            var response = await AppraisalCycleApiClient.GetAllAsync();
+            if (response.Success && response.Data != null)
+                _cycles = response.Data.ToList();
+        }
+        catch { }
     }
 
     private async Task LoadDataAsync()
@@ -95,8 +152,9 @@
             var response = await EvalResponseApiClient.GetMyAppraisalFormsAsync();
             if (response.Success && response.Data != null)
             {
-                _evalItems = response.Data.ToList();
-                NavCache.AppraisalForms = _evalItems;
+                _allEvalItems = response.Data.ToList();
+                NavCache.AppraisalForms = _allEvalItems;
+                ApplyFilter();
             }
             else
             {

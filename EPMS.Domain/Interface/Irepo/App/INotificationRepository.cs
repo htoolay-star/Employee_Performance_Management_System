@@ -7,4 +7,5 @@ public interface INotificationRepository : IGenericRepository<Notification>
 {
     Task<IEnumerable<Notification>> GetByUserIdAsync(long userId);
     Task<IEnumerable<Notification>> GetUnreadByUserIdAsync(long userId);
+    Task MarkAllAsReadAsync(long userId);
 }

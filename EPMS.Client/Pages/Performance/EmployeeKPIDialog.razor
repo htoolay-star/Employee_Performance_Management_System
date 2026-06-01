@@ -16,7 +16,6 @@
 @inject IEmployeeKPIApiClient EmployeeKPIApiClient
 @inject IKPIMasterApiClient KPIMasterApiClient
 @inject IKPIWeightPriorityApiClient KPIWeightPriorityApiClient
-@inject IAppraisalCycleApiClient AppraisalCycleApiClient
 @inject LookupStateService LookupState
 @inject ISnackbar Snackbar
 
@@ -157,14 +156,14 @@
     protected override async Task OnInitializedAsync()
     {
         var empTask = LookupState.GetEmployeesAsync();
-        var cycleTask = AppraisalCycleApiClient.GetActiveAsync();
+        var cycleTask = LookupState.GetActiveCyclesAsync();
         var kpiTask = KPIMasterApiClient.GetActiveAsync();
         var priorityTask = KPIWeightPriorityApiClient.GetActiveAsync();
 
         await Task.WhenAll(empTask, cycleTask, kpiTask, priorityTask);
 
         _employees = await empTask;
-        _cycles = (await cycleTask).Data?.ToList() ?? new();
+        _cycles = await cycleTask;
         _kpis = (await kpiTask).Data?.ToList() ?? new();
         _priorities = (await priorityTask).Data?.ToList() ?? new();
 

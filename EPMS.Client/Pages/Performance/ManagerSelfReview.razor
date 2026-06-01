@@ -3,6 +3,7 @@
 @using EPMS.Client.Constants
 @using EPMS.Client.Services.Performance
 @using EPMS.Shared.Constants
+@using static EPMS.Shared.Constants.ServiceResponseMessages
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.FormDTOs
 @using MudBlazor
@@ -198,7 +199,7 @@
                 </MudPaper>
             }
 
-            @* Approve Button *@
+            @* Action Buttons *@
             <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
                 <MudButton Variant="Variant.Filled"
                            Color="Color.Primary"
@@ -210,6 +211,17 @@
                         <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
                     }
                     @UIConstants.ManagerSelfReview.ApproveButton
+                </MudButton>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Success"
+                           OnClick="FinalizeSelf"
+                           Visible="@(_model.SelfStatus == AppraisalStatuses.Self.Reviewed)"
+                           Disabled="@(_submitting)">
+                    @if (_submitting)
+                    {
+                        <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
+                    }
+                    @UIConstants.ManagerSelfReview.FinalizeButton
                 </MudButton>
             </MudStack>
 
@@ -291,6 +303,49 @@
             if (response.Success)
             {
                 Snackbar.Add(UIConstants.ManagerSelfReview.Approved, Severity.Success);
+                Navigation.NavigateTo("/performance/manager-self-pending");
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+            }
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? UIConstants.Common.ErrorOccurred, Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _submitting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task FinalizeSelf()
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, "Are you sure you want to finalize this self assessment? This action cannot be undone." },
+            { x => x.Color, Color.Primary }
+        };
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("", parameters, options);
+        var result = await dialog.Result;
+        if (result is { Canceled: true }) return;
+
+        _submitting = true;
+        StateHasChanged();
+        try
+        {
+            var response = await AppraisalApiClient.FinalizeEvaluationAsync(AppraisalId, EvaluatorRoles.Self);
+            if (response.Success)
+            {
+                Snackbar.Add(AppraisalMsg.Finalized, Severity.Success);
                 Navigation.NavigateTo("/performance/manager-self-pending");
             }
             else

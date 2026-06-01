@@ -1,20 +1,32 @@
 @page "/performance/team-appraisals"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @using EPMS.Client.Constants
+@using EPMS.Client.Services.Auth
 @using EPMS.Client.Services.Performance
 @using EPMS.Shared.Constants
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.FormDTOs
 @using EPMS.Shared.DTOs.PerformanceDTOs.AppraisalCycleDTOs
+@using Microsoft.AspNetCore.Components.Authorization
 @using MudBlazor
 @using Refit
 
 @inject IAppraisalApiClient AppraisalApi
-@inject IAppraisalCycleApiClient CycleApi
+@inject LookupStateService LookupState
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthState
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+
+    @if (_error)
+    {
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+            <MudAlert Severity="Severity.Error">@_errorMessage</MudAlert>
+        </MudContainer>
+    }
+    else
+    {
     <MudText Typo="Typo.h4" Class="mb-4">Team Appraisals</MudText>
 
     <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
@@ -49,60 +61,60 @@
                 <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
             </MudStack>
         }
-        else if (!_selectedCycleId.HasValue)
-        {
-            <MudText Typo="Typo.body1" Color="Color.Secondary" Class="py-8" Align="Align.Center">
-                Select an appraisal cycle to view team appraisals.
-            </MudText>
-        }
         else
         {
             <MudAlert Severity="@_alertSeverity" Class="mb-4" Variant="Variant.Filled" Visible="@(!string.IsNullOrEmpty(_message))">
                 @_message
             </MudAlert>
 
-            <MudTable Items="@_appraisals"
-                      Hover="true"
-                      Elevation="0"
-                      Class="mb-4">
-                <ColGroup>
-                    <col />
-                    <col style="width: 160px;" />
-                    <col style="width: 180px;" />
-                    <col style="width: 120px;" />
-                    <col style="width: 120px;" />
-                    <col style="width: 160px;" />
-                </ColGroup>
-                <HeaderContent>
-                    <MudTh>Team</MudTh>
-                    <MudTh>PM</MudTh>
-                    <MudTh>Cycle</MudTh>
-                    <MudTh>Status</MudTh>
-                    <MudTh>KPI Score</MudTh>
-                    <MudTh>Actions</MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTr>
-                        <MudTd DataLabel="Team">@context.EntityName</MudTd>
-                        <MudTd DataLabel="PM">@context.EntityHeadName</MudTd>
-                        <MudTd DataLabel="Cycle">@context.CycleName</MudTd>
-                        <MudTd DataLabel="Status">
-                            <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.KpiStatus)">@context.KpiStatus</MudChip>
-                        </MudTd>
-                        <MudTd DataLabel="Score">
-                            <MudText Typo="Typo.body2" Align="Align.Right">@(context.KpiScore?.ToString("F2") ?? "-")</MudText>
-                        </MudTd>
-                        <MudTd DataLabel="Actions">
-                        <MudButton Variant="Variant.Text"
-                                   Color="Color.Primary"
-                                   Size="Size.Small"
-                                   StartIcon="@Icons.Material.Filled.EditNote"
-                                    OnClick="@(() => Navigation.NavigateTo($"/performance/team-appraisals/{context.Id}/fill"))">
-                            Fill
-                        </MudButton>
-                    </MudTd>
-                    </MudTr>
-                </RowTemplate>
+            <MudDataGrid Items="@_appraisals"
+                         Loading="@_appraisalsLoading"
+                         Hover="true"
+                         Elevation="0"
+                         SortMode="SortMode.None"
+                         Class="mb-4">
+                <Columns>
+                    <TemplateColumn Title="#" Sortable="false" Style="width: 50px;">
+                        <CellTemplate>
+                            <span style="display: block; text-align: left; padding-right: 12px;">@(_appraisals.IndexOf(context.Item) + 1)</span>
+                        </CellTemplate>
+                    </TemplateColumn>
+                    <PropertyColumn Property="x => x.EntityName" Title="Team" />
+                    <PropertyColumn Property="x => x.EntityHeadName" Title="PM" />
+                    <PropertyColumn Property="x => x.CycleName" Title="Cycle" />
+                    <TemplateColumn Title="Status" Sortable="false">
+                        <CellTemplate>
+                            <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Item.KpiStatus)">@context.Item.KpiStatus</MudChip>
+                        </CellTemplate>
+                    </TemplateColumn>
+                    <TemplateColumn Title="KPI Score" Sortable="false">
+                        <CellTemplate>
+                            <MudText Typo="Typo.body2" Align="Align.Right">@(context.Item.KpiScore?.ToString("F2") ?? "-")</MudText>
+                        </CellTemplate>
+                    </TemplateColumn>
+                    <TemplateColumn Title="Actions" Sortable="false">
+                        <CellTemplate>
+                            @if (context.Item.KpiStatus is AppraisalStatuses.Kpi.Draft or null)
+                            {
+                                <MudTooltip Text="Fill KPI" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.EditNote"
+                                                   Color="Color.Primary"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => Navigation.NavigateTo($"/performance/team-appraisals/{context.Item.Id}/fill"))" />
+                                </MudTooltip>
+                            }
+                            else
+                            {
+                                <MudTooltip Text="View KPI" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                                   Color="Color.Info"
+                                                   Size="Size.Small"
+                                                   OnClick="@(() => Navigation.NavigateTo($"/performance/team-appraisals/{context.Item.Id}/fill"))" />
+                                </MudTooltip>
+                            }
+                        </CellTemplate>
+                    </TemplateColumn>
+                </Columns>
                 <NoRecordsContent>
                     <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
                         <MudIcon Icon="@Icons.Material.Outlined.Inbox" Style="font-size: 4rem;" Color="Color.Default" />
@@ -110,15 +122,21 @@
                         <MudText Typo="Typo.body2" Color="Color.Secondary">There are no appraisals for the selected cycle.</MudText>
                     </MudStack>
                 </NoRecordsContent>
-            </MudTable>
-
+                <PagerContent>
+                    <MudDataGridPager T="AppraisalDto" />
+                </PagerContent>
+            </MudDataGrid>
             }
 
-        }
     </MudPaper>
+    }
 </MudContainer>
 
 @code {
+    private bool _isAdmin;
+    private bool _error;
+    private string _errorMessage = string.Empty;
+
     private List<AppraisalCycleDto> _cycles = new();
     private long? _selectedCycleId;
     private bool _cyclesLoading = true;
@@ -133,7 +151,18 @@
 
     protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthState.GetAuthenticationStateAsync();
+        _isAdmin = authState.User.IsInRole("Admin") || authState.User.IsInRole("SystemAdmin");
+
+        if (!_isAdmin)
+        {
+            _error = true;
+            _errorMessage = "You do not have permission to view team appraisals.";
+            return;
+        }
+
         await LoadCyclesAsync();
+        await LoadAppraisalsAsync(null);
     }
 
     private async Task LoadCyclesAsync()
@@ -142,20 +171,7 @@
         StateHasChanged();
         try
         {
-            var response = await CycleApi.GetAllAsync();
-            if (response.Success && response.Data != null)
-            {
-                _cycles = response.Data.ToList();
-            }
-            else
-            {
-                Snackbar.Add(response.Message ?? "Failed to load cycles.", Severity.Error);
-            }
-        }
-        catch (ApiException ex)
-        {
-            var error = await ex.GetContentAsAsync<SuccessResponse>();
-            Snackbar.Add(error?.Message ?? "Failed to load cycles.", Severity.Error);
+            _cycles = await LookupState.GetCyclesAsync();
         }
         catch (Exception ex)
         {
@@ -172,24 +188,22 @@
     {
         _selectedCycleId = cycleId;
         _message = string.Empty;
-        if (cycleId.HasValue)
-        {
-            await LoadAppraisalsAsync(cycleId.Value);
-        }
-        else
-        {
-            _appraisals = new();
-        }
+        await LoadAppraisalsAsync(cycleId);
     }
 
-    private async Task LoadAppraisalsAsync(long cycleId)
+    private async Task LoadAppraisalsAsync(long? cycleId)
     {
         _appraisalsLoading = true;
         _message = string.Empty;
         StateHasChanged();
         try
         {
-            var response = await AppraisalApi.GetByEntityTypeAndCycleAsync(EntityType, cycleId);
+            SuccessResponse<IEnumerable<AppraisalDto>> response;
+            if (cycleId.HasValue)
+                response = await AppraisalApi.GetByEntityTypeAndCycleAsync(EntityType, cycleId.Value);
+            else
+                response = await AppraisalApi.GetByEntityTypeAsync(EntityType);
+
             if (response.Success && response.Data != null)
             {
                 _appraisals = response.Data.ToList();

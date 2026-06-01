@@ -141,14 +141,8 @@
                 <MudNavLink Href="performance/question-rating-scales" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.RateReview">Question Rating Scale</MudNavLink>
             </MudTooltip>
         }
-                    @if (_isAdmin)
-        {
-            <MudTooltip Text="Position PIP Templates" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
-                <MudNavLink Href="performance/position-pip-templates" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Assignment">Position PIP Templates</MudNavLink>
-            </MudTooltip>
-        }
-                    @if (_isAdmin)
-        {
+            @if (_isAdmin)
+            {
             <MudTooltip Text="Performance Improvement Plans" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
                 <MudNavLink Href="performance/pips" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.TrendingUp">PIPs</MudNavLink>
             </MudTooltip>
@@ -167,6 +161,21 @@
         <MudTooltip Text="My 360 Forms" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
             <MudNavLink Href="performance/my-forms/360" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Groups">360 Forms</MudNavLink>
         </MudTooltip>
+        <MudTooltip Text="My 360 Feedback" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+            <MudNavLink Href="performance/my-360-feedback" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Feedback">My 360 Feedback</MudNavLink>
+        </MudTooltip>
+        <MudTooltip Text="Received Feedback" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+            <MudNavLink Href="performance/my-received-feedback" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Inbox">Received Feedback</MudNavLink>
+        </MudTooltip>
+        @if (_isAdmin || _isManager)
+        {
+        <MudTooltip Text="Given Feedback" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+            <MudNavLink Href="performance/my-given-feedback" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Outbox">Given Feedback</MudNavLink>
+        </MudTooltip>
+        }
+        <MudTooltip Text="My PIPs" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+            <MudNavLink Href="performance/my-pips" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.TrendingUp">My PIPs</MudNavLink>
+        </MudTooltip>
     </MudNavGroup>
     </MudTooltip>
     @if (_isAdmin || _isManager)
@@ -179,29 +188,45 @@
         <MudTooltip Text="Appraisal Forms" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
             <MudNavLink Href="performance/my-forms/appraisal" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.RateReview">Appraisal Forms</MudNavLink>
         </MudTooltip>
+        @if (_isAdmin)
+        {
         <MudTooltip Text="Department KPIs" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
             <MudNavLink Href="performance/department-appraisals" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Assessment">Department KPIs</MudNavLink>
         </MudTooltip>
         <MudTooltip Text="Team KPIs" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
             <MudNavLink Href="performance/team-appraisals" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Assessment">Team KPIs</MudNavLink>
         </MudTooltip>
+        }
     </MudNavGroup>
     </MudTooltip>
     }
-    @if (_isAdmin || _isManager)
-    {
-    <MudTooltip Text="Continuous Feedback" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
-        <MudNavLink Href="performance/continuous-feedbacks" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Feedback">Continuous Feedback</MudNavLink>
-    </MudTooltip>
     <MudTooltip Text="One-on-One Meetings" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
         <MudNavLink Href="performance/one-on-one-meetings" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PersonSearch">One-on-One Meetings</MudNavLink>
+    </MudTooltip>
+    @if (_isAdmin || _isManager)
+    {
+    <MudTooltip Text="Reports & Analytics" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+    <MudNavGroup Title="Reports & Analytics" Icon="@Icons.Material.Filled.Analytics" Expanded="false">
+        <MudTooltip Text="Employee Summary" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+            <MudNavLink Href="performance/reports/employee-summary" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Summarize">Employee Summary</MudNavLink>
+        </MudTooltip>
+        <MudTooltip Text="Department Comparison" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+            <MudNavLink Href="performance/reports/department-comparison" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Compare">Department Comparison</MudNavLink>
+        </MudTooltip>
+        <MudTooltip Text="High & Low Performers" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+            <MudNavLink Href="performance/reports/high-low-performers" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Leaderboard">High & Low Performers</MudNavLink>
+        </MudTooltip>
+        <MudTooltip Text="Promotion Recommendations" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
+            <MudNavLink Href="performance/reports/promotion-recommendations" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Recommend">Promotion Recommendations</MudNavLink>
+        </MudTooltip>
+    </MudNavGroup>
     </MudTooltip>
     }
     @if (_isAdmin || _isManager)
     {
     <MudTooltip Text="Pending Forms" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
     <MudNavGroup Title="Pending Forms" Icon="@Icons.Material.Filled.PendingActions" Expanded="false">
-        @if (_isManager)
+        @if (_isAdmin || _isManager)
         {
         <MudTooltip Text="Pending Self Reviews" Placement="Placement.Right" Disabled="@(!DrawerCollapsed)">
             <MudNavLink Href="performance/manager-self-pending" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.RateReview">Pending Self Reviews</MudNavLink>

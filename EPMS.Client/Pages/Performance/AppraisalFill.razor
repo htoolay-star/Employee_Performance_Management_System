@@ -3,6 +3,7 @@
 @implements IDisposable
 @using EPMS.Client.Constants
 @using EPMS.Client.Models.Performance
+@using EPMS.Client.Services.App
 @using EPMS.Client.Services.Performance
 @using EPMS.Shared.Constants
 @using EPMS.Shared.DTOs.Common
@@ -15,7 +16,7 @@
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
-
+@inject NavigationCacheService NavCache
 <PageTitle>@UIConstants.AppraisalFill.PageTitle</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
@@ -46,7 +47,7 @@
                         <tbody>
                             <tr>
                                 <td style="width: 48px;">
-                                    <BackButton Href="/performance/my-evaluations" />
+                                    <BackButton Href="@_backUrl" />
                                 </td>
                                 <td style="text-align: center;">
                                     <MudText Typo="Typo.h5">@UIConstants.AppraisalFill.PageTitle</MudText>
@@ -180,6 +181,9 @@
                     </MudStack>
                 </MudPaper>
 
+                @* Feedback History *@
+                <FeedbackHistoryPanel EmployeeId="@_model.EmployeeId" />
+
                 @* Submit Button *@
                 <MudStack Row="true" Justify="Justify.FlexEnd" Class="mt-4">
                     <MudButton Variant="Variant.Filled"
@@ -202,9 +206,11 @@
 @code {
 
     [Parameter] public long AppraisalId { get; set; }
+    [SupplyParameterFromQuery] public string? From { get; set; }
 
     private MudForm? _form;
     private AppraisalFillFormModel _model = new();
+    private string _backUrl = "/performance/my-evaluations";
     private bool _loading = true;
     private bool _error;
     private string _errorMessage = string.Empty;
@@ -219,6 +225,11 @@
     protected override async Task OnInitializedAsync()
     {
         _cts = new CancellationTokenSource();
+        _backUrl = From switch
+        {
+            "forms" => "/performance/appraisals",
+            _ => "/performance/my-evaluations"
+        };
         await LoadAsync();
     }
 
@@ -312,7 +323,8 @@
             if (response.Success)
             {
                 Snackbar.Add(UIConstants.AppraisalFill.SubmitSuccess, Severity.Success);
-                Navigation.NavigateTo("/performance/my-evaluations");
+                NavCache.KpiForms = null;
+                Navigation.NavigateTo(_backUrl);
             }
             else
             {
@@ -380,4 +392,5 @@
     {
         return v < 0 ? UIConstants.AppraisalFill.NegativeValueError : null;
     }
+
 }

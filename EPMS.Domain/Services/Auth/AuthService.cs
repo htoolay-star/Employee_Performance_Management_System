@@ -22,7 +22,6 @@ namespace EPMS.Domain.Services.Auth
         private readonly ISystemSettingsService _settingsService;
         private readonly ICacheService _cacheService;
         private readonly IEmailService _emailService;
-        private readonly INotificationService _notificationService;
         private readonly TimeProvider _timeProvider;
         private readonly JwtSettings _jwtSettings;
         private readonly LockoutSettings _lockoutSettings;
@@ -40,7 +39,6 @@ namespace EPMS.Domain.Services.Auth
             ISystemSettingsService settingsService,
             ICacheService cacheService,
             IEmailService emailService,
-            INotificationService notificationService,
             IOptions<JwtSettings> jwtOptions,
             IOptions<LockoutSettings> lockoutOptions,
             TimeProvider timeProvider,
@@ -52,7 +50,6 @@ namespace EPMS.Domain.Services.Auth
             _settingsService = settingsService;
             _cacheService = cacheService;
             _emailService = emailService;
-            _notificationService = notificationService;
             _timeProvider = timeProvider;
             _jwtSettings = jwtOptions.Value;
             _lockoutSettings = lockoutOptions.Value;
@@ -511,18 +508,6 @@ namespace EPMS.Domain.Services.Auth
 
             await InvalidateUserCacheAsync(user.Id, user.Email);
 
-            if (user.Profile != null)
-            {
-                await _notificationService.CreateAsync(new EPMS.Shared.DTOs.AppDTOs.CreateNotificationDto
-                {
-                    ToUserId = user.Id,
-                    Title = "Password Reset Approved",
-                    Message = "Your password reset request has been approved by an administrator. Please log in with your new password.",
-                    Type = "INFO",
-                    RedirectUrl = "/login"
-                });
-            }
-
             return SuccessResponse.Ok(AuthMsg.ResetRequestApproved);
         }
 
@@ -542,18 +527,6 @@ namespace EPMS.Domain.Services.Auth
             resetRequest.Reject(adminUserId, reason);
 
             await _unitOfWork.CompleteAsync();
-
-            if (resetRequest.User?.Profile != null)
-            {
-                await _notificationService.CreateAsync(new EPMS.Shared.DTOs.AppDTOs.CreateNotificationDto
-                {
-                    ToUserId = resetRequest.UserId,
-                    Title = "Password Reset Rejected",
-                    Message = reason ?? "Your password reset request has been rejected by an administrator.",
-                    Type = "WARNING",
-                    RedirectUrl = "/login"
-                });
-            }
 
             return SuccessResponse.Ok(AuthMsg.ResetRequestRejected);
         }

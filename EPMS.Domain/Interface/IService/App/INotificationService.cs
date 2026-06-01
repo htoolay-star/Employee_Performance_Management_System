@@ -10,5 +10,6 @@ public interface INotificationService
     Task<SuccessResponse<NotificationDto>> GetByIdAsync(long id);
     Task<SuccessResponse<long>> CreateAsync(CreateNotificationDto dto);
     Task<SuccessResponse> MarkAsReadAsync(long id);
+    Task<SuccessResponse> MarkAllAsReadAsync(long userId);
     Task<SuccessResponse> DeleteAsync(long id);
 }

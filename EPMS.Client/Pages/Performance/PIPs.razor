@@ -577,14 +577,11 @@
         try
         {
             var authState = await AuthState.GetAuthenticationStateAsync();
-            var userIdClaim = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
             var allTask = PIPApiClient.GetAllAsync();
             var activeTask = PIPApiClient.GetActiveAsync();
             var employeesTask = EmployeeApiClient.GetLookupAsync();
-            var profileTask = !string.IsNullOrEmpty(userIdClaim) && long.TryParse(userIdClaim, out var uid)
-                ? EmployeeApiClient.GetByUserIdAsync(uid)
-                : Task.FromResult<SuccessResponse<EmployeeProfileDto>>(null!);
+            var profileTask = EmployeeApiClient.GetMyProfileAsync();
 
             await Task.WhenAll(allTask, activeTask, employeesTask, profileTask);
 

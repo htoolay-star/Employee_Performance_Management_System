@@ -298,6 +298,20 @@ public class EmployeeProfileService : IEmployeeProfileService
         return SuccessResponse<EmployeeProfileDto>.Ok(dto, EmployeeProfileMsg.Retrieved);
     }
 
+    public async Task<SuccessResponse<EmployeeProfileDto>> GetMyProfileAsync()
+    {
+        var employeeId = await _currentEmployee.GetEmployeeIdAsync();
+        if (!employeeId.HasValue)
+            return SuccessResponse<EmployeeProfileDto>.Fail(EmployeeProfileMsg.NotFound(0), ErrorType.NotFound);
+
+        var profile = await _uow.Info.EmployeeProfiles.GetByIdAsync(employeeId.Value);
+        if (profile == null)
+            return SuccessResponse<EmployeeProfileDto>.Fail(EmployeeProfileMsg.NotFound(0), ErrorType.NotFound);
+
+        var dto = profile.Adapt<EmployeeProfileDto>();
+        return SuccessResponse<EmployeeProfileDto>.Ok(dto, EmployeeProfileMsg.Retrieved);
+    }
+
     public async Task<SuccessResponse<IEnumerable<EmployeeLookupDto>>> GetLookupAsync()
     {
         var dtos = await _cacheService.GetOrCreateAsync(
@@ -311,6 +325,29 @@ public class EmployeeProfileService : IEmployeeProfileService
             TimeSpan.FromHours(1)
         );
         return SuccessResponse<IEnumerable<EmployeeLookupDto>>.Ok(dtos ?? [], EmployeeProfileMsg.RetrievedAll);
+    }
+
+    public async Task<SuccessResponse<IEnumerable<EmployeeLookupDto>>> GetDirectReportsLookupAsync()
+    {
+        var currentEmployeeId = await _currentEmployee.GetEmployeeIdAsync();
+        if (!currentEmployeeId.HasValue)
+            return SuccessResponse<IEnumerable<EmployeeLookupDto>>.Ok([], EmployeeProfileMsg.RetrievedAll);
+
+        var directReports = await _uow.Info.EmployeeEmployments
+            .FindAllAsync(e => e.DirectManagerId == currentEmployeeId.Value && !e.IsDeleted);
+        var directReportIds = directReports.Select(e => e.EmployeeId).ToHashSet();
+
+        if (directReportIds.Count == 0)
+            return SuccessResponse<IEnumerable<EmployeeLookupDto>>.Ok([], EmployeeProfileMsg.RetrievedAll);
+
+        var allLookups = await _uow.Info.EmployeeProfiles.GetLookupDtoAsync();
+        var saIds = await GetSystemAdminEmployeeIdsAsync();
+
+        var result = allLookups
+            .Where(d => directReportIds.Contains(d.Id) && !saIds.Contains(d.Id))
+            .ToList();
+
+        return SuccessResponse<IEnumerable<EmployeeLookupDto>>.Ok(result, EmployeeProfileMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<PaginatedResponse<EmployeeProfileGridItemDto>>> GetPagedAsync(EPMS.Shared.Features.EmployeeProfiles.EmployeeProfileQueryParameters parameters)

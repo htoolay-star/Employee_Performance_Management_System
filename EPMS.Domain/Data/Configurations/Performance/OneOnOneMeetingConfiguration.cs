@@ -1,4 +1,5 @@
 using EPMS.Domain.Entities.Performance;
+using EPMS.Shared.Constants;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -16,12 +17,13 @@ namespace EPMS.Domain.Data.Configurations.Performance
 
             builder.Property(e => e.Title).HasMaxLength(200).IsRequired();
             builder.Property(e => e.ScheduledDate).IsRequired();
+            builder.Property(e => e.ScheduledEndTime).IsRequired();
             builder.Property(e => e.ActualDate);
             builder.Property(e => e.Summary).HasMaxLength(500);
             builder.Property(e => e.DiscussionNotes).HasMaxLength(2000);
             builder.Property(e => e.PrivateNotes).HasMaxLength(2000);
             builder.Property(e => e.ActionItems).HasMaxLength(1000);
-            builder.Property(e => e.Status).HasMaxLength(20).HasDefaultValue("Scheduled");
+            builder.Property(e => e.Status).HasMaxLength(30).HasDefaultValue(MeetingStatuses.PendingEmployee);
 
             builder.Property(e => e.IsAcknowledgedByEmployee).HasDefaultValue(false);
             builder.Property(e => e.AcknowledgedAt);

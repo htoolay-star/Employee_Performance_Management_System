@@ -4,6 +4,7 @@ using EPMS.Client.Services.Performance;
 using EPMS.Client.Services.Shared;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
+using EPMS.Shared.DTOs.PerformanceDTOs.AppraisalCycleDTOs;
 using EPMS.Shared.DTOs.PerformanceDTOs.QuestionRatingScaleDTOs;
 
 namespace EPMS.Client.Services.Auth
@@ -19,6 +20,7 @@ namespace EPMS.Client.Services.Auth
         private readonly IKPIMasterApiClient _kpiMasterApi;
         private readonly IQuestionRatingScaleApiClient _ratingScaleApi;
         private readonly IFormTemplateApiClient _formTemplateApi;
+        private readonly IAppraisalCycleApiClient _cycleApi;
 
         private List<LookUpDto>? _departments;
         private List<LookUpDto>? _teams;
@@ -29,8 +31,9 @@ namespace EPMS.Client.Services.Auth
         private List<LookUpDto>? _ratingScales;
         private List<LookUpDto>? _formTemplates;
         private List<EmployeeLookupDto>? _employees;
+        private List<AppraisalCycleDto>? _cycles;
 
-        public LookupStateService(IDepartmentApiClient deptApi, ITeamApiClient teamApi, IPositionApiClient posApi, ILevelApiClient levelApi, ICategoryApiClient categoryApi, IEmployeeProfileApiClient employeeApi, IKPIMasterApiClient kpiMasterApi, IQuestionRatingScaleApiClient ratingScaleApi, IFormTemplateApiClient formTemplateApi)
+        public LookupStateService(IDepartmentApiClient deptApi, ITeamApiClient teamApi, IPositionApiClient posApi, ILevelApiClient levelApi, ICategoryApiClient categoryApi, IEmployeeProfileApiClient employeeApi, IKPIMasterApiClient kpiMasterApi, IQuestionRatingScaleApiClient ratingScaleApi, IFormTemplateApiClient formTemplateApi, IAppraisalCycleApiClient cycleApi)
         {
             _deptApi = deptApi;
             _teamApi = teamApi;
@@ -41,6 +44,7 @@ namespace EPMS.Client.Services.Auth
             _kpiMasterApi = kpiMasterApi;
             _ratingScaleApi = ratingScaleApi;
             _formTemplateApi = formTemplateApi;
+            _cycleApi = cycleApi;
         }
 
         public async Task<List<LookUpDto>> GetDepartmentsAsync()
@@ -133,6 +137,22 @@ namespace EPMS.Client.Services.Auth
             return _employees;
         }
 
+        public async Task<List<AppraisalCycleDto>> GetCyclesAsync()
+        {
+            if (_cycles == null)
+            {
+                var response = await _cycleApi.GetAllAsync();
+                _cycles = response.Data?.ToList() ?? new List<AppraisalCycleDto>();
+            }
+            return _cycles;
+        }
+
+        public async Task<List<AppraisalCycleDto>> GetActiveCyclesAsync()
+        {
+            var all = await GetCyclesAsync();
+            return all.Where(c => c.IsActive).ToList();
+        }
+
         public void ClearDepartmentCache() => _departments = null;
         public void ClearTeamCache() => _teams = null;
         public void ClearPositionCache() => _positions = null;
@@ -142,5 +162,6 @@ namespace EPMS.Client.Services.Auth
         public void ClearRatingScaleCache() => _ratingScales = null;
         public void ClearFormTemplateCache() => _formTemplates = null;
         public void ClearEmployeeCache() => _employees = null;
+        public void ClearCycleCache() => _cycles = null;
     }
 }

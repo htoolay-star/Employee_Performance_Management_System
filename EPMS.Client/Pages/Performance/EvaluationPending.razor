@@ -34,12 +34,12 @@
                 <PropertyColumn Property="x => x.CycleName" Title="Cycle" Sortable="true" />
                 <TemplateColumn Title="Actions" Sortable="false">
                     <CellTemplate>
-                        <MudButton Variant="Variant.Filled"
-                                   Color="Color.Info"
-                                   Size="Size.Small"
-                                    OnClick="@(() => NavigateToView(context.Item))">
-                            View
-                        </MudButton>
+                        <MudTooltip Text="View Evaluation" Placement="Placement.Top">
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                           Color="Color.Info"
+                                           Size="Size.Small"
+                                           OnClick="@(() => NavigateToView(context.Item))" />
+                        </MudTooltip>
                     </CellTemplate>
                 </TemplateColumn>
             </Columns>

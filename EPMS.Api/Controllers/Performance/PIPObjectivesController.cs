@@ -54,6 +54,13 @@ public class PIPObjectivesController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HttpPost("{id}/complete")]
+    public async Task<ActionResult<SuccessResponse>> MarkComplete(long id)
+    {
+        var result = await _pipObjectiveService.MarkCompleteAsync(id);
+        return HandleResult(result);
+    }
+
     [HttpDelete("{id}")]
     public async Task<ActionResult<SuccessResponse>> Delete(long id)
     {

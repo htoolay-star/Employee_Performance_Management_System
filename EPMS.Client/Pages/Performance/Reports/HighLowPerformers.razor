@@ -1,0 +1,331 @@
+@page "/performance/reports/high-low-performers"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using EPMS.Client.Services.Performance
+@using EPMS.Shared.DTOs.Common
+@using EPMS.Shared.DTOs.ReportDTOs
+@using EPMS.Shared.DTOs.PerformanceDTOs.AppraisalCycleDTOs
+@using MudBlazor
+@using Refit
+@using Microsoft.JSInterop
+@inject IPerformanceReportsApiClient ReportApiClient
+@inject IAppraisalCycleApiClient AppraisalCycleApiClient
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+
+<PageTitle>High & Low Performers</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">High & Low Performers</MudText>
+
+    <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center" Class="mb-4" Wrap="Wrap.Wrap">
+            <MudSelect T="long?"
+                       @bind-Value="_selectedCycleId"
+                       Label="Appraisal Cycle"
+                       Variant="Variant.Outlined"
+                       Style="max-width: 250px;"
+                       Clearable="true"
+                       @bind-Value:after="LoadDataAsync">
+                @foreach (var cycle in _cycles)
+                {
+                    <MudSelectItem Value="@((long?)cycle.Id)">@cycle.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="int"
+                       @bind-Value="_topCount"
+                       Label="Top N"
+                       Variant="Variant.Outlined"
+                       Style="max-width: 120px;"
+                       @bind-Value:after="LoadDataAsync">
+                <MudSelectItem Value="5">5</MudSelectItem>
+                <MudSelectItem Value="10">10</MudSelectItem>
+                <MudSelectItem Value="20">20</MudSelectItem>
+                <MudSelectItem Value="50">50</MudSelectItem>
+            </MudSelect>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">Leave cycle empty for latest</MudText>
+            <MudSpacer />
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.FileDownload"
+                       OnClick="ExportToExcelAsync"
+                       Disabled="_loadingHigh || _loadingLow">
+                Export to Excel
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Error"
+                       StartIcon="@Icons.Material.Filled.PictureAsPdf"
+                       OnClick="ExportToPdfAsync"
+                       Disabled="_loadingHigh || _loadingLow">
+                Export to PDF
+            </MudButton>
+        </MudStack>
+
+        <MudTabs @bind-ActivePanelIndex="_activeTab" Class="mb-4" Elevation="0" Outlined="true" Rounded="true">
+            <MudTabPanel Text="High Performers" Icon="@Icons.Material.Filled.ArrowUpward">
+                <MudDataGrid Items="@_highPerformers"
+                             Loading="@_loadingHigh"
+                             Hover="true"
+                             Elevation="0"
+                             SortMode="SortMode.None">
+                    <Columns>
+                        <TemplateColumn Title="#" Sortable="false" Style="width: 50px;">
+                            <CellTemplate>
+                                @context.Item.Rank
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <PropertyColumn Property="x => x.StaffNo" Title="Staff No" Sortable="true" />
+                        <PropertyColumn Property="x => x.StaffName" Title="Name" Sortable="true" />
+                        <PropertyColumn Property="x => x.DepartmentName" Title="Department" Sortable="true" />
+                        <PropertyColumn Property="x => x.PositionName" Title="Position" Sortable="true" />
+                        <TemplateColumn Title="Total Score" Sortable="true" SortBy="@(x => x.TotalScore)">
+                            <CellTemplate>
+                                <MudChip Size="Size.Small" Color="@GetScoreColor(context.Item.TotalScore)">
+                                    @(context.Item.TotalScore?.ToString("F1") ?? "-")
+                                </MudChip>
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <TemplateColumn Title="Rating" Sortable="true" SortBy="@(x => x.RatingLabel)">
+                            <CellTemplate>
+                                <MudChip Size="Size.Small">@(context.Item.RatingLabel ?? "-")</MudChip>
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <TemplateColumn Title="PIP Status" Sortable="true" SortBy="@(x => x.PIPStatus)">
+                            <CellTemplate>
+                                @if (!string.IsNullOrEmpty(context.Item.PIPStatus))
+                                {
+                                    <MudChip Size="Size.Small" Color="Color.Error">@context.Item.PIPStatus</MudChip>
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">-</MudText>
+                                }
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <PropertyColumn Property="x => x.CycleName" Title="Cycle" Sortable="true" />
+                    </Columns>
+                    <NoRecordsContent>
+                        <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
+                            <MudIcon Icon="@Icons.Material.Outlined.Inbox" Style="font-size: 4rem;" Color="Color.Default" />
+                            <MudText Typo="Typo.h6" Color="Color.Default">No data</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">No high performers found for the selected cycle.</MudText>
+                        </MudStack>
+                    </NoRecordsContent>
+                    <LoadingContent>
+                        <MudStack Spacing="3" Class="w-100">
+                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                        </MudStack>
+                    </LoadingContent>
+                    <PagerContent>
+                        <MudDataGridPager T="HighLowPerformerDto" />
+                    </PagerContent>
+                </MudDataGrid>
+            </MudTabPanel>
+            <MudTabPanel Text="Low Performers" Icon="@Icons.Material.Filled.ArrowDownward">
+                <MudDataGrid Items="@_lowPerformers"
+                             Loading="@_loadingLow"
+                             Hover="true"
+                             Elevation="0"
+                             SortMode="SortMode.None">
+                    <Columns>
+                        <TemplateColumn Title="#" Sortable="false" Style="width: 50px;">
+                            <CellTemplate>
+                                @context.Item.Rank
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <PropertyColumn Property="x => x.StaffNo" Title="Staff No" Sortable="true" />
+                        <PropertyColumn Property="x => x.StaffName" Title="Name" Sortable="true" />
+                        <PropertyColumn Property="x => x.DepartmentName" Title="Department" Sortable="true" />
+                        <PropertyColumn Property="x => x.PositionName" Title="Position" Sortable="true" />
+                        <TemplateColumn Title="Total Score" Sortable="true" SortBy="@(x => x.TotalScore)">
+                            <CellTemplate>
+                                <MudChip Size="Size.Small" Color="@GetScoreColor(context.Item.TotalScore)">
+                                    @(context.Item.TotalScore?.ToString("F1") ?? "-")
+                                </MudChip>
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <TemplateColumn Title="Rating" Sortable="true" SortBy="@(x => x.RatingLabel)">
+                            <CellTemplate>
+                                <MudChip Size="Size.Small">@(context.Item.RatingLabel ?? "-")</MudChip>
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <TemplateColumn Title="PIP Status" Sortable="true" SortBy="@(x => x.PIPStatus)">
+                            <CellTemplate>
+                                @if (!string.IsNullOrEmpty(context.Item.PIPStatus))
+                                {
+                                    <MudChip Size="Size.Small" Color="Color.Error">@context.Item.PIPStatus</MudChip>
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">-</MudText>
+                                }
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <PropertyColumn Property="x => x.CycleName" Title="Cycle" Sortable="true" />
+                    </Columns>
+                    <NoRecordsContent>
+                        <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
+                            <MudIcon Icon="@Icons.Material.Outlined.Inbox" Style="font-size: 4rem;" Color="Color.Default" />
+                            <MudText Typo="Typo.h6" Color="Color.Default">No data</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">No low performers found for the selected cycle.</MudText>
+                        </MudStack>
+                    </NoRecordsContent>
+                    <LoadingContent>
+                        <MudStack Spacing="3" Class="w-100">
+                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                        </MudStack>
+                    </LoadingContent>
+                    <PagerContent>
+                        <MudDataGridPager T="HighLowPerformerDto" />
+                    </PagerContent>
+                </MudDataGrid>
+            </MudTabPanel>
+        </MudTabs>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private long? _selectedCycleId;
+    private int _topCount = 10;
+    private int _activeTab;
+    private List<HighLowPerformerDto> _highPerformers = new();
+    private List<HighLowPerformerDto> _lowPerformers = new();
+    private List<AppraisalCycleDto> _cycles = new();
+    private bool _loadingHigh;
+    private bool _loadingLow;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCyclesAsync();
+        await LoadDataAsync();
+    }
+
+    private async Task LoadCyclesAsync()
+    {
+        try
+        {
+            var response = await AppraisalCycleApiClient.GetAllAsync();
+            if (response.Success && response.Data != null)
+                _cycles = response.Data.ToList();
+        }
+        catch { }
+    }
+
+    private async Task LoadDataAsync()
+    {
+        await Task.WhenAll(LoadHighAsync(), LoadLowAsync());
+    }
+
+    private async Task LoadHighAsync()
+    {
+        _loadingHigh = true;
+        StateHasChanged();
+        try
+        {
+            var response = await ReportApiClient.GetHighLowPerformersAsync(_selectedCycleId, _topCount, true);
+            if (response.Success && response.Data != null)
+                _highPerformers = response.Data;
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Failed to load high performers.", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loadingHigh = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadLowAsync()
+    {
+        _loadingLow = true;
+        StateHasChanged();
+        try
+        {
+            var response = await ReportApiClient.GetHighLowPerformersAsync(_selectedCycleId, _topCount, false);
+            if (response.Success && response.Data != null)
+                _lowPerformers = response.Data;
+        }
+        catch (ApiException ex)
+        {
+            var error = await ex.GetContentAsAsync<SuccessResponse>();
+            Snackbar.Add(error?.Message ?? "Failed to load low performers.", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loadingLow = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ExportToExcelAsync()
+    {
+        try
+        {
+            var isHigh = _activeTab == 0;
+            var response = await ReportApiClient.GetHighLowPerformersExcelAsync(_selectedCycleId, _topCount, isHigh);
+            if (response.IsSuccessStatusCode)
+            {
+                var bytes = await response.Content.ReadAsByteArrayAsync();
+                var base64 = Convert.ToBase64String(bytes);
+                var prefix = isHigh ? "HighPerformers" : "LowPerformers";
+                await JS.InvokeVoidAsync("downloadFile", $"{prefix}_{DateTime.Now:yyyyMMdd}.xlsx", base64);
+                Snackbar.Add("Export completed.", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Export failed.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Export error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ExportToPdfAsync()
+    {
+        try
+        {
+            var isHigh = _activeTab == 0;
+            var response = await ReportApiClient.GetHighLowPerformersPdfAsync(_selectedCycleId, _topCount, isHigh);
+            if (response.IsSuccessStatusCode)
+            {
+                var bytes = await response.Content.ReadAsByteArrayAsync();
+                var base64 = Convert.ToBase64String(bytes);
+                var prefix = isHigh ? "HighPerformers" : "LowPerformers";
+                await JS.InvokeVoidAsync("downloadFile", $"{prefix}_{DateTime.Now:yyyyMMdd}.pdf", base64);
+                Snackbar.Add("PDF export completed.", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("PDF export failed.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"PDF error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private static Color GetScoreColor(decimal? score) => score switch
+    {
+        >= 80 => Color.Success,
+        >= 60 => Color.Warning,
+        >= 0 => Color.Error,
+        _ => Color.Default
+    };
+}

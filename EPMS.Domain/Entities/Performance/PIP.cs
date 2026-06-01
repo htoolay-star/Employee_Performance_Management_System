@@ -62,6 +62,16 @@ namespace EPMS.Domain.Entities.Performance
             FinalOutcomeNotes = notes?.Trim();
         }
 
+        public void EditPIP(DateOnly startDate, DateOnly endDate, string reason)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(reason);
+            if (startDate >= endDate) throw new ArgumentException("Start date must be before end date.");
+
+            StartDate = startDate;
+            EndDate = endDate;
+            Reason = reason.Trim();
+        }
+
         public void ExtendPIP(DateOnly newEndDate, string reasonExtension)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(reasonExtension);

@@ -9,6 +9,9 @@ public interface IPIPApiClient
     [Get("/api/performance/pips")]
     Task<SuccessResponse<IEnumerable<PIPDto>>> GetAllAsync();
 
+    [Get("/api/performance/pips/my")]
+    Task<SuccessResponse<IEnumerable<PIPDto>>> GetMyPIPsAsync();
+
     [Get("/api/performance/pips/active")]
     Task<SuccessResponse<IEnumerable<PIPDto>>> GetActiveAsync();
 

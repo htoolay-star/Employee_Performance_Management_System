@@ -1,16 +1,13 @@
 @inherits LayoutComponentBase
-@using Microsoft.AspNetCore.Components.Authorization
 @using MudBlazor
 @using EPMS.Client.Constants
 @using EPMS.Client.Services.App
 @using EPMS.Client.Themes
 @using EPMS.Shared.DTOs.AppDTOs
-@using System.Security.Claims
 @implements IDisposable
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
 @inject IDialogService DialogService
-@inject AuthenticationStateProvider AuthState
 @inject INotificationApiClient NotifClient
 @inject ISnackbar Snackbar
 
@@ -20,25 +17,30 @@
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="ToggleDrawer" />
         <MudSpacer />
-        <div style="position: relative;">
-            <MudBadge Content="@_unreadCount.ToString()"
-                      Color="Color.Error"
-                      Max="99"
-                      Placement="Placement.Top"
-                      Visible="@(_unreadCount > 0)">
-                <MudIconButton Icon="@Icons.Material.Filled.Notifications"
-                               Color="Color.Inherit"
-                               OnClick="ToggleNotifDropdown"
-                               title="@UIConstants.Notifications.DropdownTitle" />
-            </MudBadge>
+        <div style="position: relative; display: flex; align-items: center;">
+            <MudIconButton Color="Color.Inherit" OnClick="ToggleNotifDropdown" title="@UIConstants.Notifications.DropdownTitle">
+                <MudBadge Content="@_unreadCount.ToString()"
+                          Color="Color.Error"
+                          Overlap="true"
+                          Visible="@(_unreadCount > 0)">
+                    <MudIcon Icon="@Icons.Material.Filled.Notifications" />
+                </MudBadge>
+            </MudIconButton>
             @if (_notifDropdownOpen)
             {
                 <MudOverlay Visible="@_notifDropdownOpen" OnClick="CloseNotifDropdown" Absolute="true" />
                 <MudPaper Elevation="8" Class="notif-dropdown">
-                    <MudText Typo="Typo.subtitle1" Class="pa-4 pb-2 notif-dropdown-header">
-                        <MudIcon Icon="@Icons.Material.Filled.Notifications" Size="Size.Small" Class="mr-1" />
-                        @UIConstants.Notifications.DropdownTitle
-                    </MudText>
+                    <div class="notif-dropdown-header pa-4 pb-2">
+                        <MudText Typo="Typo.subtitle1" Class="d-flex align-center" Style="flex: 1;">
+                            <MudIcon Icon="@Icons.Material.Filled.Notifications" Size="Size.Small" Class="mr-1" />
+                            @UIConstants.Notifications.DropdownTitle
+                        </MudText>
+                        <MudIconButton Icon="@Icons.Material.Filled.Close"
+                                       Size="Size.Small"
+                                       Color="Color.Inherit"
+                                       OnClick="CloseNotifDropdown"
+                                       title="@UIConstants.Notifications.Close" />
+                    </div>
                     <MudDivider />
                     @if (_unreadNotifications.Any())
                     {
@@ -52,6 +54,16 @@
                                     <div class="notif-item-time">@TimeAgo(notif.CreatedAt)</div>
                                 </div>
                             }
+                        </div>
+                        <div class="pa-2 pt-0">
+                            <MudButton Variant="Variant.Text"
+                                       Color="Color.Error"
+                                       FullWidth="true"
+                                       OnClick="MarkAllNotificationsAsRead"
+                                       disabled="@(!_unreadNotifications.Any())">
+                                <MudIcon Icon="@Icons.Material.Filled.DoneAll" Size="Size.Small" Class="mr-1" />
+                                @UIConstants.Notifications.MarkAllAsRead
+                            </MudButton>
                         </div>
                     }
                     else
@@ -141,7 +153,6 @@
             _isDarkMode = false;
         }
 
-        await LoadUserIdAsync();
         await LoadUnreadCountAsync();
         StartPolling();
     }
@@ -173,13 +184,6 @@
             Navigation.NavigateTo("logout");
     }
 
-    private async Task LoadUserIdAsync()
-    {
-        var authState = await AuthState.GetAuthenticationStateAsync();
-        var idClaim = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        _userId = long.TryParse(idClaim, out var id) ? id : 0;
-    }
-
     private void StartPolling()
     {
         _pollCts?.Cancel();
@@ -206,10 +210,9 @@
 
     private async Task LoadUnreadCountAsync()
     {
-        if (_userId == 0) return;
         try
         {
-            var result = await NotifClient.GetUnreadAsync(_userId);
+            var result = await NotifClient.GetMyUnreadAsync();
             if (result.Success)
             {
                 _unreadNotifications = result.Data?.ToList() ?? new();
@@ -224,10 +227,9 @@
 
     private async Task LoadDropdownNotificationsAsync()
     {
-        if (_userId == 0) return;
         try
         {
-            var result = await NotifClient.GetUnreadAsync(_userId);
+            var result = await NotifClient.GetMyUnreadAsync();
             if (result.Success)
             {
                 _unreadNotifications = result.Data?.ToList() ?? new();
@@ -273,6 +275,22 @@
 
         if (!string.IsNullOrEmpty(notif.RedirectUrl))
             Navigation.NavigateTo(notif.RedirectUrl);
+    }
+
+    private async Task MarkAllNotificationsAsRead()
+    {
+        try
+        {
+            await NotifClient.MarkAllAsReadAsync();
+            _unreadCount = 0;
+            _unreadNotifications.Clear();
+            _notifDropdownOpen = false;
+            Snackbar.Add(UIConstants.Notifications.MarkedAllAsRead, Severity.Success);
+            StateHasChanged();
+        }
+        catch
+        {
+        }
     }
 
     private void NavigateToNotifications()

@@ -14,7 +14,9 @@ public interface IEmployeeProfileService
     Task<SuccessResponse> DeleteAsync(long id);
     Task<SuccessResponse<EmployeeProfileDto>> GetByStaffNoAsync(string staffNo);
     Task<SuccessResponse<EmployeeProfileDto>> GetByUserIdAsync(long userId);
+    Task<SuccessResponse<EmployeeProfileDto>> GetMyProfileAsync();
     Task<SuccessResponse<IEnumerable<EmployeeLookupDto>>> GetLookupAsync();
+    Task<SuccessResponse<IEnumerable<EmployeeLookupDto>>> GetDirectReportsLookupAsync();
     Task<SuccessResponse<PaginatedResponse<EmployeeProfileGridItemDto>>> GetPagedAsync(EPMS.Shared.Features.EmployeeProfiles.EmployeeProfileQueryParameters parameters);
 
     Task<SuccessResponse<IEnumerable<EmployeeFullImportRow>>> GetFullExportAsync();

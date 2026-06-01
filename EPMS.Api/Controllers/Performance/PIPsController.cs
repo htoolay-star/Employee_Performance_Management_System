@@ -24,6 +24,13 @@ namespace EPMS.Api.Controllers.Performance
             return HandleResult(result);
         }
 
+        [HttpGet("my")]
+        public async Task<ActionResult<SuccessResponse<IEnumerable<PIPDto>>>> GetMyPIPs()
+        {
+            var result = await _pipService.GetMyPIPsAsync();
+            return HandleResult(result);
+        }
+
         [HttpGet("active")]
         public async Task<ActionResult<SuccessResponse<IEnumerable<PIPDto>>>> GetActive()
         {

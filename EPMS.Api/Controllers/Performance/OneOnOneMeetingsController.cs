@@ -93,5 +93,33 @@ namespace EPMS.Api.Controllers.Performance
             var result = await _meetingService.AcknowledgeAsync(id);
             return HandleResult(result);
         }
+
+        [HttpPost("{id:long}/confirm")]
+        public async Task<ActionResult<SuccessResponse>> Confirm(long id)
+        {
+            var result = await _meetingService.ConfirmAsync(id);
+            return HandleResult(result);
+        }
+
+        [HttpPost("{id:long}/reschedule")]
+        public async Task<ActionResult<SuccessResponse>> Reschedule(long id, [FromBody] RescheduleMeetingDto dto)
+        {
+            var result = await _meetingService.RescheduleByEmployeeAsync(id, dto);
+            return HandleResult(result);
+        }
+
+        [HttpPost("{id:long}/accept-reschedule")]
+        public async Task<ActionResult<SuccessResponse>> AcceptReschedule(long id)
+        {
+            var result = await _meetingService.AcceptRescheduleAsync(id);
+            return HandleResult(result);
+        }
+
+        [HttpPost("{id:long}/counter-reschedule")]
+        public async Task<ActionResult<SuccessResponse>> CounterReschedule(long id, [FromBody] RescheduleMeetingDto dto)
+        {
+            var result = await _meetingService.RescheduleByManagerAsync(id, dto);
+            return HandleResult(result);
+        }
     }
 }

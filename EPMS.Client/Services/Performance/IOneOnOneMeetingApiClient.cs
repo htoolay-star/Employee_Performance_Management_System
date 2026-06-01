@@ -38,4 +38,16 @@ public interface IOneOnOneMeetingApiClient
 
     [Post("/api/performance/one-on-one-meetings/{id}/acknowledge")]
     Task<SuccessResponse> AcknowledgeAsync(long id);
+
+    [Post("/api/performance/one-on-one-meetings/{id}/confirm")]
+    Task<SuccessResponse> ConfirmAsync(long id);
+
+    [Post("/api/performance/one-on-one-meetings/{id}/reschedule")]
+    Task<SuccessResponse> RescheduleByEmployeeAsync(long id, [Body] RescheduleMeetingDto dto);
+
+    [Post("/api/performance/one-on-one-meetings/{id}/accept-reschedule")]
+    Task<SuccessResponse> AcceptRescheduleAsync(long id);
+
+    [Post("/api/performance/one-on-one-meetings/{id}/counter-reschedule")]
+    Task<SuccessResponse> CounterRescheduleAsync(long id, [Body] RescheduleMeetingDto dto);
 }
