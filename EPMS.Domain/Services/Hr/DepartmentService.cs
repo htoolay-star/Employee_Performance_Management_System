@@ -113,7 +113,7 @@ public class DepartmentService : IDepartmentService
     }
     public async Task<SuccessResponse> RestoreAsync(long id)
     {
-        var entity = await _uow.HR.Departments.GetByIdAsync(id);
+        var entity = await _uow.HR.Departments.GetByIdDeletedAsync(id);
         if (entity == null)
             return SuccessResponse.Fail(DepartmentMsg.NotFound(id), ErrorType.NotFound);
         if (!entity.IsDeleted)

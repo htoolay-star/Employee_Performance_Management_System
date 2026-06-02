@@ -13,14 +13,12 @@ namespace EPMS.Domain.Services.Performance;
 public class AppraisalCycleService : IAppraisalCycleService
 {
     private readonly IUnitOfWork _uow;
-    private readonly ICacheService _cache;
-    private const string CacheKeyAll = "cycles:all";
-    private const string CacheKeyActive = "cycles:active";
+    private readonly ICacheService _cacheService;
 
-    public AppraisalCycleService(IUnitOfWork uow, ICacheService cache)
+    public AppraisalCycleService(IUnitOfWork uow, ICacheService cacheService)
     {
         _uow = uow;
-        _cache = cache;
+        _cacheService = cacheService;
     }
 
     public async Task<SuccessResponse<IEnumerable<AppraisalCycleDto>>> GetAllAsync()
@@ -371,7 +369,7 @@ public class AppraisalCycleService : IAppraisalCycleService
 
     public async Task<SuccessResponse> RestoreAsync(long id)
     {
-        var entity = await _uow.Perf.AppraisalCycles.GetByIdAsync(id);
+        var entity = await _uow.Perf.AppraisalCycles.GetByIdDeletedAsync(id);
         if (entity == null)
             return SuccessResponse.Fail(AppraisalCycleMsg.NotFound(id), ErrorType.NotFound);
         if (!entity.IsDeleted)
@@ -382,8 +380,8 @@ public class AppraisalCycleService : IAppraisalCycleService
         _uow.Perf.AppraisalCycles.Update(entity);
         await _uow.CompleteAsync();
 
-        await _cache.RemoveAsync(CacheKeyAll);
-        await _cache.RemoveAsync(CacheKeyActive);
+        await _cacheService.RemoveAsync(CacheKeys.Performance.AppraisalCycleAll());
+        await _cacheService.RemoveAsync(CacheKeys.Performance.AppraisalCycleActive());
 
         return SuccessResponse.Ok(AppraisalCycleMsg.Updated);
     }

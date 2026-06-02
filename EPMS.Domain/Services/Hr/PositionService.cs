@@ -189,7 +189,7 @@ public class PositionService : IPositionService
     }
         public async Task<SuccessResponse> RestoreAsync(long id)
         {
-            var entity = await _uow.HR.Positions.GetByIdAsync(id);
+            var entity = await _uow.HR.Positions.GetByIdDeletedAsync(id);
             if (entity == null)
                 return SuccessResponse.Fail(PositionMsg.NotFound(id), ErrorType.NotFound);
             if (!entity.IsDeleted)

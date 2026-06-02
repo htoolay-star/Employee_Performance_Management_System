@@ -132,7 +132,7 @@ public class RatingScaleService : IRatingScaleService
 
     public async Task<SuccessResponse> RestoreAsync(long id)
     {
-        var entity = await _uow.Perf.RatingScales.GetByIdAsync(id);
+        var entity = await _uow.Perf.RatingScales.GetByIdDeletedAsync(id);
         if (entity == null)
             return SuccessResponse.Fail(RatingScaleMsg.NotFound(id), ErrorType.NotFound);
         if (!entity.IsDeleted)

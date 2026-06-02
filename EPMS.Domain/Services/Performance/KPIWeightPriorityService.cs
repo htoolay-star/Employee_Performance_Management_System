@@ -133,7 +133,7 @@ public class KPIWeightPriorityService : IKPIWeightPriorityService
     }
     public async Task<SuccessResponse> RestoreAsync(long id)
     {
-        var entity = await _uow.Perf.KPIWeightPriorities.GetByIdAsync(id);
+        var entity = await _uow.Perf.KPIWeightPriorities.GetByIdDeletedAsync(id);
         if (entity == null)
             return SuccessResponse.Fail(KPIWeightPriorityMsg.NotFound(id), ErrorType.NotFound);
         if (!entity.IsDeleted)

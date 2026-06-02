@@ -153,7 +153,7 @@ public class TeamService : ITeamService
     }
     public async Task<SuccessResponse> RestoreAsync(long id)
     {
-        var entity = await _uow.HR.Teams.GetByIdAsync(id);
+        var entity = await _uow.HR.Teams.GetByIdDeletedAsync(id);
         if (entity == null)
             return SuccessResponse.Fail(TeamMsg.NotFound(id), ErrorType.NotFound);
         if (!entity.IsDeleted)

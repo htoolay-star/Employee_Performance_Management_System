@@ -1,6 +1,7 @@
 @using EPMS.Client.Extensions
 @using EPMS.Client.Models.Info
 @using EPMS.Client.Services.Info
+@using EPMS.Client.Services.Auth
 @using EPMS.Shared.Constants
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.EmployeeInfoDTOs
@@ -11,6 +12,7 @@
 
 @inject IEmployeeEmploymentApiClient EmploymentApiClient
 @inject ISnackbar Snackbar
+@inject LookupStateService LookupState
 
 @if (_loading)
 {
@@ -191,8 +193,32 @@ else
                     }
                 </MudItem>
                 <MudItem xs="12" sm="6">
-                    <MudText Typo="Typo.caption" Class="mud-text-secondary">Direct Manager</MudText>
-                    <MudText Typo="Typo.body1">@(_employment.DirectManagerName ?? "-")</MudText>
+                    @if (!_editMode)
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary">Direct Manager</MudText>
+                        <MudText Typo="Typo.body1">@(_employment.DirectManagerName ?? "-")</MudText>
+                    }
+                    else
+                    {
+                        <MudAutocomplete T="long?"
+                            @bind-Value="_model.DirectManagerId"
+                            Label="Direct Manager"
+                            Variant="Variant.Outlined"
+                            For="@(() => _model.DirectManagerId)"
+                            Clearable="true"
+                            SearchFunc="SearchManagers"
+                            ToStringFunc="GetManagerDisplay"
+                            ResetValueOnEmptyText="true"
+                            OpenIcon="@Icons.Material.Filled.ArrowDropDown">
+                            <ItemTemplate Context="empId">
+                                @{ var emp = empId.HasValue ? _employees.FirstOrDefault(x => x.Id == empId.Value) : null; }
+                                @if (emp != null)
+                                {
+                                    <MudText>@emp.StaffNo - @emp.StaffName</MudText>
+                                }
+                            </ItemTemplate>
+                        </MudAutocomplete>
+                    }
                 </MudItem>
 
                 @* ── Action Buttons ── *@
@@ -237,10 +263,12 @@ else
     private Dictionary<string, string> _serverErrors = new();
 
     private readonly UpdateEmployeeEmploymentValidator _validator = new();
+    private List<EmployeeLookupDto> _employees = new();
 
     protected override async Task OnInitializedAsync()
     {
         await LoadDataAsync();
+        _employees = await LookupState.GetEmployeesAsync();
     }
 
     private async Task LoadDataAsync()
@@ -332,5 +360,22 @@ else
         {
             _saving = false;
         }
+    }
+
+    private Task<IEnumerable<long?>> SearchManagers(string value, CancellationToken token)
+    {
+        var query = _employees.AsEnumerable();
+        if (!string.IsNullOrWhiteSpace(value))
+            query = query.Where(e => e.StaffName.Contains(value, StringComparison.OrdinalIgnoreCase)
+                                   || e.StaffNo.Contains(value, StringComparison.OrdinalIgnoreCase));
+
+        return Task.FromResult(query.Select(e => (long?)e.Id));
+    }
+
+    private string GetManagerDisplay(long? id)
+    {
+        if (id == null) return string.Empty;
+        var emp = _employees.FirstOrDefault(x => x.Id == id.Value);
+        return emp != null ? $"{emp.StaffNo} - {emp.StaffName}" : string.Empty;
     }
 }

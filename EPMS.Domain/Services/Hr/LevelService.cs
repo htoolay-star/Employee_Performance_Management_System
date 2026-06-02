@@ -105,7 +105,7 @@ public class LevelService : ILevelService
     }
     public async Task<SuccessResponse> RestoreAsync(long id)
     {
-        var entity = await _uow.HR.Levels.GetByIdAsync(id);
+        var entity = await _uow.HR.Levels.GetByIdDeletedAsync(id);
         if (entity == null)
             return SuccessResponse.Fail(LevelMsg.NotFound(id), ErrorType.NotFound);
         if (!entity.IsDeleted)

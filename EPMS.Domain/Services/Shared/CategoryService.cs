@@ -138,7 +138,7 @@ public class CategoryService : ICategoryService
     }
     public async Task<SuccessResponse> RestoreCategoryAsync(long id)
     {
-        var entity = await _unitOfWork.Shared.Categories.GetByIdAsync(id);
+        var entity = await _unitOfWork.Shared.Categories.GetByIdDeletedAsync(id);
         if (entity == null)
             return SuccessResponse.Fail(CategoryMsg.NotFound(id), ErrorType.NotFound);
         if (!entity.IsDeleted)

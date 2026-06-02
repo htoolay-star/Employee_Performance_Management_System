@@ -158,7 +158,7 @@ namespace EPMS.Domain.Services.Performance
 
         public async Task<SuccessResponse> RestoreAsync(long id)
         {
-            var entity = await _uow.Perf.EmployeeKPIs.GetByIdAsync(id);
+            var entity = await _uow.Perf.EmployeeKPIs.GetByIdDeletedAsync(id);
             if (entity == null)
                 return SuccessResponse.Fail(EmployeeKPIMsg.NotFound(id), ErrorType.NotFound);
             if (!entity.IsDeleted)
