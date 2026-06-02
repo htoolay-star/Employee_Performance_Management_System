@@ -1,17 +1,14 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Hr;
-using EPMS.Domain.Interface.Irepo.Hr;
 using EPMS.Domain.Interface.IService.App;
 using EPMS.Domain.Interface.IService.Hr;
 using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
-using static EPMS.Shared.Constants.ServiceResponseMessages;
 using EPMS.Shared.DTOs.DepartmentDTOs;
-using EPMS.Shared.DTOs.TeamDTOs;
 using EPMS.Shared.Enums;
 using Mapster;
+using static EPMS.Shared.Constants.ServiceResponseMessages;
 using DeptMsg = EPMS.Shared.Constants.ServiceResponseMessages.DepartmentMsg;
-using TeamMsg = EPMS.Shared.Constants.ServiceResponseMessages.TeamMsg;
 
 namespace EPMS.Domain.Services.Hr;
 
@@ -90,7 +87,7 @@ public class DepartmentService : IDepartmentService
         department.Rename(dto.Name);
         department.SetDescription(dto.Description);
         department.SetDeptHead(dto.DeptHeadId);
-        
+
         if (dto.IsActive) department.Reactivate();
         else department.Deactivate();
 

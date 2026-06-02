@@ -1,13 +1,8 @@
 using EPMS.Domain.Contracts;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Shared
 {
-    public class Category : AuditableEntity , ISoftDeletable
+    public class Category : AuditableEntity, ISoftDeletable
     {
         private Category() { }
 

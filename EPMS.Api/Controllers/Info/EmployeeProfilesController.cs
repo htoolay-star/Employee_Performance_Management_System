@@ -50,6 +50,13 @@ public class EmployeeProfilesController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HttpGet("direct-reports/lookup")]
+    public async Task<ActionResult<SuccessResponse<IEnumerable<EmployeeLookupDto>>>> GetDirectReportsLookup()
+    {
+        var result = await _profileService.GetDirectReportsLookupAsync();
+        return HandleResult(result);
+    }
+
     [HttpGet("paged")]
     public async Task<ActionResult<SuccessResponse<PaginatedResponse<EmployeeProfileGridItemDto>>>> GetPaged([FromQuery] EPMS.Shared.Features.EmployeeProfiles.EmployeeProfileQueryParameters parameters)
     {
@@ -82,6 +89,13 @@ public class EmployeeProfilesController : ApiControllerBase
     public async Task<ActionResult<SuccessResponse<EmployeeProfileDto>>> GetByUserId(long userId)
     {
         var result = await _profileService.GetByUserIdAsync(userId);
+        return HandleResult(result);
+    }
+
+    [HttpGet("my-profile")]
+    public async Task<ActionResult<SuccessResponse<EmployeeProfileDto>>> GetMyProfile()
+    {
+        var result = await _profileService.GetMyProfileAsync();
         return HandleResult(result);
     }
 

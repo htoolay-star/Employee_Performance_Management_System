@@ -1,12 +1,6 @@
-using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Domain.Entities.Hr;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EPMS.Domain.Data.Configurations.Hr
 {

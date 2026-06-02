@@ -3,11 +3,6 @@ using EPMS.Domain.Entities.App;
 using EPMS.Domain.Interface.Irepo.App;
 using EPMS.Domain.Repository.Base;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EPMS.Domain.Repository.App
 {

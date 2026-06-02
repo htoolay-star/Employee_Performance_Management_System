@@ -1,15 +1,10 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Shared.Constants;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class PIP : AuditableEntity , ISoftDeletable
+    public class PIP : AuditableEntity, ISoftDeletable
     {
         private PIP() { }
 
@@ -65,6 +60,16 @@ namespace EPMS.Domain.Entities.Performance
 
             Status = isSuccessful ? PIPStatuses.Successful : PIPStatuses.Failed;
             FinalOutcomeNotes = notes?.Trim();
+        }
+
+        public void EditPIP(DateOnly startDate, DateOnly endDate, string reason)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(reason);
+            if (startDate >= endDate) throw new ArgumentException("Start date must be before end date.");
+
+            StartDate = startDate;
+            EndDate = endDate;
+            Reason = reason.Trim();
         }
 
         public void ExtendPIP(DateOnly newEndDate, string reasonExtension)

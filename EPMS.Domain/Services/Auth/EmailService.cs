@@ -1,8 +1,8 @@
 using EPMS.Domain.Interface.IService.Auth;
 using EPMS.Shared.Models;
 using MailKit.Net.Smtp;
-using MimeKit;
 using Microsoft.Extensions.Options;
+using MimeKit;
 
 namespace EPMS.Domain.Services.Auth;
 

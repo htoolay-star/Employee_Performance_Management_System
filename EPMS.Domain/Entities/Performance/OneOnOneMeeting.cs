@@ -13,7 +13,7 @@ namespace EPMS.Domain.Entities.Performance
     {
         private OneOnOneMeeting() { }
 
-        public OneOnOneMeeting(long employeeId, long managerId, string title, DateTimeOffset scheduledDate)
+        public OneOnOneMeeting(long employeeId, long managerId, string title, DateTimeOffset scheduledDate, DateTimeOffset scheduledEndTime)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(title);
 
@@ -23,6 +23,7 @@ namespace EPMS.Domain.Entities.Performance
             Title = title.Trim();
 
             ScheduledDate = scheduledDate;
+            ScheduledEndTime = scheduledEndTime;
             Status = MeetingStatuses.Scheduled;
         }
 
@@ -30,6 +31,7 @@ namespace EPMS.Domain.Entities.Performance
         public long ManagerId { get; private set; }
 
         public DateTimeOffset ScheduledDate { get; private set; }
+        public DateTimeOffset ScheduledEndTime { get; private set; }
         public DateTimeOffset? ActualDate { get; private set; }
 
         public string Title { get; private set; } = string.Empty;
@@ -55,11 +57,44 @@ namespace EPMS.Domain.Entities.Performance
         public virtual EmployeeProfile Employee { get; private set; } = null!;
         public virtual EmployeeProfile Manager { get; private set; } = null!;
 
-        public void Update(string title, DateTimeOffset scheduledDate)
+        public void Update(string title, DateTimeOffset scheduledDate, DateTimeOffset scheduledEndTime)
         {
             ArgumentException.ThrowIfNullOrWhiteSpace(title);
             Title = title.Trim();
             ScheduledDate = scheduledDate;
+            ScheduledEndTime = scheduledEndTime;
+        }
+
+        public void ConfirmByEmployee()
+        {
+            if (Status != MeetingStatuses.PendingEmployee && Status != MeetingStatuses.Scheduled)
+                throw new InvalidOperationException("Only meetings pending employee confirmation can be confirmed.");
+            Status = MeetingStatuses.Confirmed;
+        }
+
+        public void RescheduleByEmployee(DateTimeOffset newDate, DateTimeOffset newEndTime)
+        {
+            if (Status != MeetingStatuses.PendingEmployee && Status != MeetingStatuses.Scheduled)
+                throw new InvalidOperationException("Only meetings pending employee confirmation can be rescheduled.");
+            ScheduledDate = newDate;
+            ScheduledEndTime = newEndTime;
+            Status = MeetingStatuses.PendingManager;
+        }
+
+        public void AcceptRescheduleByManager()
+        {
+            if (Status != MeetingStatuses.PendingManager)
+                throw new InvalidOperationException("Only meetings pending manager confirmation can be accepted.");
+            Status = MeetingStatuses.Confirmed;
+        }
+
+        public void RescheduleByManager(DateTimeOffset newDate, DateTimeOffset newEndTime)
+        {
+            if (Status != MeetingStatuses.PendingManager)
+                throw new InvalidOperationException("Only meetings pending manager confirmation can be re-rescheduled.");
+            ScheduledDate = newDate;
+            ScheduledEndTime = newEndTime;
+            Status = MeetingStatuses.PendingEmployee;
         }
 
         public void CompleteMeeting(string? summary, string? sharedNotes, string? privateNotes, string? actionItems, TimeProvider timeProvider)
@@ -87,6 +122,8 @@ namespace EPMS.Domain.Entities.Performance
             if (Status == MeetingStatuses.Cancelled) throw new InvalidOperationException("Meeting is already cancelled.");
             Status = MeetingStatuses.Cancelled;
         }
+
+        public bool CanBeCancelled => Status != MeetingStatuses.Completed && Status != MeetingStatuses.Cancelled;
 
         public void LinkToPIP(long pipId)
         {

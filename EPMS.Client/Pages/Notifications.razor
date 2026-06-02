@@ -1,0 +1,255 @@
+@page "/notifications"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using EPMS.Client.Constants
+@using EPMS.Client.Services.App
+@using EPMS.Shared.DTOs.AppDTOs
+@using MudBlazor
+@inject INotificationApiClient NotifClient
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>@UIConstants.Notifications.PageTitle</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.Notifications.PageTitle</MudText>
+
+    <MudTabs @bind-ActivePanelIndex="_activeTab" Class="mb-4" Elevation="0" Outlined="true" Rounded="true">
+        <MudTabPanel Text="@UIConstants.Notifications.TabAll" Icon="@Icons.Material.Filled.Notifications">
+            <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+                <MudDataGrid Items="@_notifications"
+                             Loading="@_loading"
+                             Hover="true"
+                             Elevation="0"
+                             SortMode="SortMode.None">
+                    <Columns>
+                        <TemplateColumn Title="@UIConstants.Common.ColumnNo" Sortable="false">
+                            <CellTemplate>
+                                <span>@(_notifications.IndexOf(context.Item) + 1)</span>
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <PropertyColumn Property="x => x.Title" Title="@UIConstants.Notifications.ColumnTitle" />
+                        <PropertyColumn Property="x => x.Message" Title="@UIConstants.Notifications.ColumnMessage" />
+                        <TemplateColumn Title="@UIConstants.Notifications.ColumnType">
+                            <CellTemplate>
+                                <MudChip T="string" Size="Size.Small" Color="@GetTypeColor(context.Item.Type)">
+                                    @context.Item.Type
+                                </MudChip>
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <TemplateColumn Title="@UIConstants.Notifications.ColumnDate">
+                            <CellTemplate>
+                                @context.Item.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <TemplateColumn Title="@UIConstants.Notifications.ColumnStatus">
+                            <CellTemplate>
+                                @if (context.Item.IsRead)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Default">@UIConstants.Notifications.Read</MudChip>
+                                }
+                                else
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Info">@UIConstants.Notifications.Unread</MudChip>
+                                }
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <TemplateColumn Title="@UIConstants.Common.Actions" Sortable="false">
+                            <CellTemplate>
+                                <MudStack Row="true" Spacing="0">
+                                    @if (!context.Item.IsRead)
+                                    {
+                                        <MudIconButton Icon="@Icons.Material.Filled.MarkEmailRead"
+                                                       Color="Color.Primary"
+                                                       Size="Size.Small"
+                                                       title="@UIConstants.Notifications.MarkAsRead"
+                                                       OnClick="@(() => MarkAsRead(context.Item))" />
+                                    }
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   Color="Color.Error"
+                                                   Size="Size.Small"
+                                                   title="@UIConstants.Common.Delete"
+                                                   OnClick="@(() => DeleteNotification(context.Item))" />
+                                </MudStack>
+                            </CellTemplate>
+                        </TemplateColumn>
+                    </Columns>
+                    <NoRecordsContent>
+                        <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
+                            <MudIcon Icon="@Icons.Material.Outlined.NotificationsOff" Style="font-size: 4rem;" Color="Color.Default" />
+                            <MudText Typo="Typo.h6" Color="Color.Default">@UIConstants.Notifications.NoDataFound</MudText>
+                        </MudStack>
+                    </NoRecordsContent>
+                    <LoadingContent>
+                        <MudStack Spacing="3" Class="w-100">
+                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                        </MudStack>
+                    </LoadingContent>
+                </MudDataGrid>
+            </MudPaper>
+        </MudTabPanel>
+        <MudTabPanel Text="@UIConstants.Notifications.TabUnread" Icon="@Icons.Material.Filled.Markunread">
+            <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
+                <MudDataGrid Items="@_unreadNotifications"
+                             Loading="@_loading"
+                             Hover="true"
+                             Elevation="0"
+                             SortMode="SortMode.None">
+                    <Columns>
+                        <TemplateColumn Title="@UIConstants.Common.ColumnNo" Sortable="false">
+                            <CellTemplate>
+                                <span>@(_unreadNotifications.IndexOf(context.Item) + 1)</span>
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <PropertyColumn Property="x => x.Title" Title="@UIConstants.Notifications.ColumnTitle" />
+                        <PropertyColumn Property="x => x.Message" Title="@UIConstants.Notifications.ColumnMessage" />
+                        <TemplateColumn Title="@UIConstants.Notifications.ColumnType">
+                            <CellTemplate>
+                                <MudChip T="string" Size="Size.Small" Color="@GetTypeColor(context.Item.Type)">
+                                    @context.Item.Type
+                                </MudChip>
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <TemplateColumn Title="@UIConstants.Notifications.ColumnDate">
+                            <CellTemplate>
+                                @context.Item.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                            </CellTemplate>
+                        </TemplateColumn>
+                        <TemplateColumn Title="@UIConstants.Common.Actions" Sortable="false">
+                            <CellTemplate>
+                                <MudStack Row="true" Spacing="0">
+                                    <MudIconButton Icon="@Icons.Material.Filled.MarkEmailRead"
+                                                   Color="Color.Primary"
+                                                   Size="Size.Small"
+                                                   title="@UIConstants.Notifications.MarkAsRead"
+                                                   OnClick="@(() => MarkAsRead(context.Item))" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                   Color="Color.Error"
+                                                   Size="Size.Small"
+                                                   title="@UIConstants.Common.Delete"
+                                                   OnClick="@(() => DeleteNotification(context.Item))" />
+                                </MudStack>
+                            </CellTemplate>
+                        </TemplateColumn>
+                    </Columns>
+                    <NoRecordsContent>
+                        <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
+                            <MudIcon Icon="@Icons.Material.Outlined.NotificationsOff" Style="font-size: 4rem;" Color="Color.Default" />
+                            <MudText Typo="Typo.h6" Color="Color.Default">@UIConstants.Notifications.NoUnread</MudText>
+                        </MudStack>
+                    </NoRecordsContent>
+                    <LoadingContent>
+                        <MudStack Spacing="3" Class="w-100">
+                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="40px" Animation="Animation.Wave" />
+                        </MudStack>
+                    </LoadingContent>
+                </MudDataGrid>
+            </MudPaper>
+        </MudTabPanel>
+    </MudTabs>
+</MudContainer>
+
+@code {
+    private List<NotificationDto> _notifications = new();
+    private List<NotificationDto> _unreadNotifications = new();
+    private bool _loading;
+    private int _activeTab;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _loading = true;
+        StateHasChanged();
+
+        try
+        {
+            var allTask = NotifClient.GetMyNotificationsAsync();
+            var unreadTask = NotifClient.GetMyUnreadAsync();
+            await Task.WhenAll(allTask, unreadTask);
+
+            var allResult = await allTask;
+            var unreadResult = await unreadTask;
+
+            if (allResult.Success) _notifications = allResult.Data?.ToList() ?? new();
+            if (unreadResult.Success) _unreadNotifications = unreadResult.Data?.ToList() ?? new();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task MarkAsRead(NotificationDto notif)
+    {
+        try
+        {
+            var result = await NotifClient.MarkAsReadAsync(notif.Id);
+            if (result.Success)
+            {
+                notif.IsRead = true;
+                _unreadNotifications.Remove(notif);
+                Snackbar.Add(UIConstants.Notifications.MarkedAsRead, Severity.Success);
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+    }
+
+    private async Task DeleteNotification(NotificationDto notif)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, string.Format(UIConstants.Notifications.DeleteConfirmFormat, notif.Title) },
+            { x => x.ButtonText, UIConstants.Common.Delete },
+            { x => x.Color, Color.Error }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>(
+            UIConstants.Common.Delete, parameters);
+
+        if (await dialog.Result is { Canceled: false })
+        {
+            try
+            {
+                var result = await NotifClient.DeleteAsync(notif.Id);
+                if (result.Success)
+                {
+                    _notifications.Remove(notif);
+                    _unreadNotifications.Remove(notif);
+                    Snackbar.Add(UIConstants.Notifications.Deleted, Severity.Success);
+                    StateHasChanged();
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+            }
+        }
+    }
+
+    private Color GetTypeColor(string type)
+    {
+        return type switch
+        {
+            "Info" => Color.Info,
+            "Success" => Color.Success,
+            "Warning" => Color.Warning,
+            "Error" => Color.Error,
+            _ => Color.Default
+        };
+    }
+}

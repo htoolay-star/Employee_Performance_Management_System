@@ -89,18 +89,18 @@ public class AppraisalController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HttpGet("entity/{entityType}")]
+    public async Task<ActionResult<SuccessResponse>> GetByEntityType(string entityType)
+    {
+        var result = await _service.GetByEntityTypeAsync(entityType);
+        return HandleResult(result);
+    }
+
     [HttpPut("{id:long}/details")]
     public async Task<ActionResult<SuccessResponse>> UpdateDetailActualValues(long id, [FromBody] List<AppraisalDetailDto> details)
     {
         var result = await _service.UpdateDetailActualValuesAsync(id, details);
         return HandleResult(result);
-    }
-
-    [HttpPost("generate/{cycleId:long}")]
-    public async Task<ActionResult<SuccessResponse>> GenerateForCycle(long cycleId)
-    {
-        await _service.AutoGenerateForCycleAsync(cycleId);
-        return Ok(SuccessResponse.Ok("Appraisals generated successfully."));
     }
 
     [HttpPost]
@@ -156,6 +156,20 @@ public class AppraisalController : ApiControllerBase
         return HandleResult(result);
     }
 
+    [HttpGet("{id:long}/forms")]
+    public async Task<ActionResult<SuccessResponse>> GetEmployeeForms(long id)
+    {
+        var result = await _service.GetEmployeeFormsOverviewAsync(id);
+        return HandleResult(result);
+    }
+
+    [HttpGet("{id:long}/my-360-feedback")]
+    public async Task<ActionResult<SuccessResponse>> GetMy360Feedback(long id)
+    {
+        var result = await _service.GetMy360FeedbackAsync(id);
+        return HandleResult(result);
+    }
+
     [Authorize]
     [HttpGet("manager-self-pending")]
     public async Task<ActionResult<SuccessResponse>> GetManagerSelfPending()
@@ -168,6 +182,27 @@ public class AppraisalController : ApiControllerBase
     public async Task<ActionResult<SuccessResponse>> UnlockRole(long id, [FromBody] UnlockRoleRequestDto dto)
     {
         var result = await _service.UnlockRoleAsync(id, dto.Role);
+        return HandleResult(result);
+    }
+
+    [HttpPost("{id:long}/request-kpi-unlock")]
+    public async Task<ActionResult<SuccessResponse>> RequestKpiUnlock(long id)
+    {
+        var result = await _service.RequestKpiUnlockAsync(id);
+        return HandleResult(result);
+    }
+
+    [HttpPost("{id:long}/unlock-kpi")]
+    public async Task<ActionResult<SuccessResponse>> UnlockKpi(long id)
+    {
+        var result = await _service.UnlockRoleAsync(id, "KPI");
+        return HandleResult(result);
+    }
+
+    [HttpPost("{id:long}/decline-kpi-unlock")]
+    public async Task<ActionResult<SuccessResponse>> DeclineKpiUnlock(long id)
+    {
+        var result = await _service.DeclineKpiUnlockAsync(id);
         return HandleResult(result);
     }
 }

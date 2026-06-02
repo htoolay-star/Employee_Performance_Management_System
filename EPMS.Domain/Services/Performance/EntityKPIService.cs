@@ -1,11 +1,10 @@
-using Mapster;
 using EPMS.Domain.Contracts;
-using EPMS.Domain.Entities.Hr;
 using EPMS.Domain.Entities.Performance;
 using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.Performance.EntityKPI;
 using EPMS.Shared.Enums;
+using Mapster;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 namespace EPMS.Domain.Services.Performance
@@ -195,6 +194,7 @@ namespace EPMS.Domain.Services.Performance
             var entity = new EntityKPI(dto.EntityType, dto.EntityId, dto.KPIId, priority, dto.Weightage, dto.TargetValue, dto.TargetUnit);
 
             _uow.Perf.EntityKPIs.Add(entity);
+            await _uow.CompleteAsync();
 
             if (dto.EntityType == AppraisalConstants.EntityTypes.Position)
             {
@@ -202,9 +202,8 @@ namespace EPMS.Domain.Services.Performance
                     entity.Id, entity.KPIId, entity.PriorityId, entity.Weightage,
                     entity.TargetValue, entity.TargetUnit, dto.EntityId,
                     PropagationAction.Create);
+                await _uow.CompleteAsync();
             }
-
-            await _uow.CompleteAsync();
 
             var newTotal = currentTotal + dto.Weightage;
             var message = newTotal == 100 ? EntityKPIMsg.Created : EntityKPIMsg.WeightNotComplete(newTotal);

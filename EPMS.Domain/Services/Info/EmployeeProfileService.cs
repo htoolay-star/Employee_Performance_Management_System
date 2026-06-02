@@ -97,7 +97,7 @@ public class EmployeeProfileService : IEmployeeProfileService
         }
 
         var profile = new EmployeeProfile(dto.UserId, dto.StaffNo, dto.StaffName, dto.EmailAddress);
-        
+
         // Set additional properties using entity methods
         if (!string.IsNullOrEmpty(dto.OtherName)) profile.UpdateOtherName(dto.OtherName);
         if (!string.IsNullOrEmpty(dto.NRCNo)) profile.UpdateNRCNo(dto.NRCNo);
@@ -127,7 +127,7 @@ public class EmployeeProfileService : IEmployeeProfileService
             profile.LinkUser(newUser.Id);
             await _uow.CompleteAsync();
         }
-        
+
         return SuccessResponse<long>.Ok(profile.Id, EmployeeProfileMsg.Created);
     }
 
@@ -222,9 +222,9 @@ public class EmployeeProfileService : IEmployeeProfileService
 
         profile.UpdateStaffName(dto.StaffName);
         if (dto.OtherName != null) profile.UpdateOtherName(dto.OtherName);
-        
+
         profile.UpdateDemographics(dto.Gender, dto.DateOfBirth, dto.Nationality);
-        
+
         // Check for duplicate EmailAddress (excluding current profile)
         if (dto.EmailAddress != null && dto.EmailAddress != profile.EmailAddress)
         {
@@ -234,7 +234,7 @@ public class EmployeeProfileService : IEmployeeProfileService
         }
 
         if (dto.EmailAddress != null) profile.UpdateEmail(dto.EmailAddress);
-        
+
         // Sync email change to linked User account
         if (dto.EmailAddress != null && profile.UserId != null)
         {
@@ -251,10 +251,10 @@ public class EmployeeProfileService : IEmployeeProfileService
 
         if (!string.IsNullOrEmpty(dto.WorkPermitNo))
             profile.UpdateWorkPermit(dto.WorkPermitNo, dto.WorkPermitValidDate, dto.WorkPermitExpireDate);
-        
+
         if (!string.IsNullOrEmpty(dto.ProfilePictureUrl))
             profile.UpdateProfilePicture(dto.ProfilePictureUrl, dto.ProfileThumbnailUrl);
-        
+
         if (!string.IsNullOrEmpty(dto.AdditionalData))
             profile.UpdateAdditionalData(dto.AdditionalData);
 
@@ -298,6 +298,20 @@ public class EmployeeProfileService : IEmployeeProfileService
         return SuccessResponse<EmployeeProfileDto>.Ok(dto, EmployeeProfileMsg.Retrieved);
     }
 
+    public async Task<SuccessResponse<EmployeeProfileDto>> GetMyProfileAsync()
+    {
+        var employeeId = await _currentEmployee.GetEmployeeIdAsync();
+        if (!employeeId.HasValue)
+            return SuccessResponse<EmployeeProfileDto>.Fail(EmployeeProfileMsg.NotFound(0), ErrorType.NotFound);
+
+        var profile = await _uow.Info.EmployeeProfiles.GetByIdAsync(employeeId.Value);
+        if (profile == null)
+            return SuccessResponse<EmployeeProfileDto>.Fail(EmployeeProfileMsg.NotFound(0), ErrorType.NotFound);
+
+        var dto = profile.Adapt<EmployeeProfileDto>();
+        return SuccessResponse<EmployeeProfileDto>.Ok(dto, EmployeeProfileMsg.Retrieved);
+    }
+
     public async Task<SuccessResponse<IEnumerable<EmployeeLookupDto>>> GetLookupAsync()
     {
         var dtos = await _cacheService.GetOrCreateAsync(
@@ -311,6 +325,29 @@ public class EmployeeProfileService : IEmployeeProfileService
             TimeSpan.FromHours(1)
         );
         return SuccessResponse<IEnumerable<EmployeeLookupDto>>.Ok(dtos ?? [], EmployeeProfileMsg.RetrievedAll);
+    }
+
+    public async Task<SuccessResponse<IEnumerable<EmployeeLookupDto>>> GetDirectReportsLookupAsync()
+    {
+        var currentEmployeeId = await _currentEmployee.GetEmployeeIdAsync();
+        if (!currentEmployeeId.HasValue)
+            return SuccessResponse<IEnumerable<EmployeeLookupDto>>.Ok([], EmployeeProfileMsg.RetrievedAll);
+
+        var directReports = await _uow.Info.EmployeeEmployments
+            .FindAllAsync(e => e.DirectManagerId == currentEmployeeId.Value && !e.IsDeleted);
+        var directReportIds = directReports.Select(e => e.EmployeeId).ToHashSet();
+
+        if (directReportIds.Count == 0)
+            return SuccessResponse<IEnumerable<EmployeeLookupDto>>.Ok([], EmployeeProfileMsg.RetrievedAll);
+
+        var allLookups = await _uow.Info.EmployeeProfiles.GetLookupDtoAsync();
+        var saIds = await GetSystemAdminEmployeeIdsAsync();
+
+        var result = allLookups
+            .Where(d => directReportIds.Contains(d.Id) && !saIds.Contains(d.Id))
+            .ToList();
+
+        return SuccessResponse<IEnumerable<EmployeeLookupDto>>.Ok(result, EmployeeProfileMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<PaginatedResponse<EmployeeProfileGridItemDto>>> GetPagedAsync(EPMS.Shared.Features.EmployeeProfiles.EmployeeProfileQueryParameters parameters)
@@ -467,7 +504,7 @@ public class EmployeeProfileService : IEmployeeProfileService
 
         var departments = (await _uow.HR.Departments.GetAllAsync()).ToDictionary(d => d.Name, StringComparer.OrdinalIgnoreCase);
         var positions = (await _uow.HR.Positions.GetAllAsync()).ToDictionary(p => p.Name, StringComparer.OrdinalIgnoreCase);
-        var teams = (await _uow.HR.Teams.GetAllAsync()).ToDictionary(t => t.Name, StringComparer.OrdinalIgnoreCase);
+        var teams = (await _uow.HR.Teams.GetAllAsync()).ToDictionary(t => (t.DepartmentId, t.Name), t => t);
 
         var allProfiles = (await _uow.Info.EmployeeProfiles.GetAllAsync()).ToList();
         var existingStaffNos = new HashSet<string>(allProfiles.Select(p => p.StaffNo), StringComparer.OrdinalIgnoreCase);
@@ -482,7 +519,7 @@ public class EmployeeProfileService : IEmployeeProfileService
             try
             {
                 var rowErrors = new List<string>();
-            var rowNum = rows.IndexOf(row) + 1;
+                var rowNum = rows.IndexOf(row) + 1;
 
                 if (string.IsNullOrWhiteSpace(row.StaffNo))
                 { rowErrors.Add($"Row {rowNum}: StaffNo is required."); }
@@ -509,8 +546,11 @@ public class EmployeeProfileService : IEmployeeProfileService
 
                 if (!string.IsNullOrWhiteSpace(row.TeamName))
                 {
-                    if (!teams.TryGetValue(row.TeamName, out var team))
-                        rowErrors.Add($"Row {rowNum}: Team '{row.TeamName}' not found.");
+                    var teamDeptId = departments.GetValueOrDefault(row.DepartmentName ?? "")?.Id ?? 0;
+                    if (teamDeptId == 0)
+                        rowErrors.Add($"Row {rowNum}: Department must be specified for team '{row.TeamName}'.");
+                    else if (!teams.TryGetValue((teamDeptId, row.TeamName), out _))
+                        rowErrors.Add($"Row {rowNum}: Team '{row.TeamName}' not found in department '{row.DepartmentName}'.");
                 }
 
                 if (rowErrors.Count > 0)
@@ -525,7 +565,9 @@ public class EmployeeProfileService : IEmployeeProfileService
                     parentDeptId = parentDept.Id;
 
                 var posId = positions.GetValueOrDefault(row.PositionName ?? "")?.Id ?? 0;
-                var teamId = teams.GetValueOrDefault(row.TeamName ?? "")?.Id;
+                var teamId = !string.IsNullOrWhiteSpace(row.TeamName) && deptId > 0
+                    ? teams.GetValueOrDefault((deptId, row.TeamName))?.Id
+                    : null;
 
                 long? managerId = null;
                 if (!string.IsNullOrWhiteSpace(row.DirectManagerStaffNo) &&
@@ -640,7 +682,7 @@ public class EmployeeProfileService : IEmployeeProfileService
         var positions = (await _uow.HR.Positions.GetAllAsync())
             .ToDictionary(p => p.Name, StringComparer.OrdinalIgnoreCase);
         var teams = (await _uow.HR.Teams.GetAllAsync())
-            .ToDictionary(t => t.Name, StringComparer.OrdinalIgnoreCase);
+            .ToDictionary(t => (t.DepartmentId, t.Name), t => t);
 
         var allProfiles = (await _uow.Info.EmployeeProfiles.GetAllAsync()).ToList();
         var existingStaffNos = new HashSet<string>(allProfiles.Select(p => p.StaffNo), StringComparer.OrdinalIgnoreCase);
@@ -682,9 +724,14 @@ public class EmployeeProfileService : IEmployeeProfileService
                 !positions.ContainsKey(row.PositionName))
                 rowErrors.Add($"Position '{row.PositionName}' not found.");
 
-            if (!string.IsNullOrWhiteSpace(row.TeamName) &&
-                !teams.ContainsKey(row.TeamName))
-                rowErrors.Add($"Team '{row.TeamName}' not found.");
+            if (!string.IsNullOrWhiteSpace(row.TeamName))
+            {
+                var deptId = departments.GetValueOrDefault(row.DepartmentName ?? "")?.Id ?? 0;
+                if (deptId == 0)
+                    rowErrors.Add($"Department must be specified for team '{row.TeamName}'.");
+                else if (!teams.ContainsKey((deptId, row.TeamName)))
+                    rowErrors.Add($"Team '{row.TeamName}' not found in department '{row.DepartmentName}'.");
+            }
 
             previewRows.Add(new ImportPreviewRow
             {

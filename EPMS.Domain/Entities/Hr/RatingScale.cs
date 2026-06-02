@@ -1,13 +1,8 @@
 using EPMS.Domain.Contracts;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.Hr
 {
-    public class RatingScale : AuditableEntity , ISoftDeletable
+    public class RatingScale : AuditableEntity, ISoftDeletable
     {
         private RatingScale() { }
 

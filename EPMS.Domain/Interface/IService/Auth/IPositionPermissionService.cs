@@ -1,4 +1,3 @@
-using EPMS.Shared.DTOs.AuthDTOs.PositionPermissionDTOs;
 using EPMS.Shared.DTOs.Common;
 
 namespace EPMS.Domain.Interface.IService.Auth;

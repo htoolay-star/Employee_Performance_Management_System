@@ -1,5 +1,6 @@
 @page "/performance/appraisal-cycles"
 @using EPMS.Client.Constants
+@using EPMS.Client.Services.Auth
 @using EPMS.Client.Services.Performance
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.PerformanceDTOs.AppraisalCycleDTOs
@@ -8,7 +9,8 @@
 @using static EPMS.Shared.Constants.ServiceResponseMessages
 
 @inject IAppraisalCycleApiClient AppraisalCycleApiClient
-@inject IAppraisalApiClient AppraisalApi
+@inject LookupStateService LookupState
+
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 
@@ -85,12 +87,6 @@
 
                             @if (isActive && !isLocked)
                             {
-                                <MudTooltip Text="Generate Appraisals" Placement="Placement.Top">
-                                    <MudIconButton Icon="@Icons.Material.Filled.RocketLaunch"
-                                                   Color="Color.Success"
-                                                   Size="Size.Small"
-                                                   OnClick="@(() => GenerateAppraisals(context.Item))" />
-                                </MudTooltip>
                                 <MudTooltip Text="Deactivate Cycle" Placement="Placement.Top">
                                     <MudIconButton Icon="@Icons.Material.Filled.Cancel"
                                                    Color="Color.Default"
@@ -178,6 +174,7 @@
 
     private async Task LoadCyclesAsync()
     {
+        LookupState.ClearCycleCache();
         _loading = true;
         StateHasChanged();
         try
@@ -294,27 +291,6 @@
 
         if (await dialog.Result is { Canceled: false })
             await PerformAction(cycle.Id, id => AppraisalCycleApiClient.DeleteAsync(id), AppraisalCycleMsg.Deleted);
-    }
-
-    private async Task GenerateAppraisals(AppraisalCycleDto cycle)
-    {
-        try
-        {
-            var response = await AppraisalApi.GenerateForCycleAsync(cycle.Id);
-            if (response.Success)
-                Snackbar.Add($"Appraisals generated for cycle '{cycle.Name}'.", Severity.Success);
-            else
-                Snackbar.Add(response.Message ?? "Failed to generate appraisals.", Severity.Error);
-        }
-        catch (Refit.ApiException ex)
-        {
-            var error = await ex.GetContentAsAsync<SuccessResponse>();
-            Snackbar.Add(error?.Message ?? "Error generating appraisals.", Severity.Error);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
-        }
     }
 
     private async Task OpenDeactivateDialog(AppraisalCycleDto cycle)

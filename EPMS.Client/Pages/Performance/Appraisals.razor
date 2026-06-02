@@ -4,9 +4,12 @@
 @using EPMS.Shared.Constants
 @using EPMS.Shared.DTOs.Common
 @using EPMS.Shared.DTOs.FormDTOs
+@using EPMS.Shared.DTOs.PerformanceDTOs.AppraisalCycleDTOs
 @using MudBlazor
 @using Refit
 @inject IAppraisalApiClient AppraisalApiClient
+@inject IAppraisalCycleApiClient AppraisalCycleApiClient
+@inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 
 <PageTitle>@UIConstants.AppraisalList.PageTitle</PageTitle>
@@ -33,9 +36,20 @@
                            Variant="Variant.Outlined"
                            Style="max-width: 150px;"
                            Clearable="true">
-                    <MudSelectItem Value="@AppraisalStatuses.Kpi.Draft">Draft</MudSelectItem>
-                    <MudSelectItem Value="@AppraisalStatuses.Kpi.Reviewed">Reviewed</MudSelectItem>
-                    <MudSelectItem Value="@AppraisalStatuses.Kpi.Finalized">Finalized</MudSelectItem>
+                    <MudSelectItem Value="@AppraisalStatuses.Draft">Draft</MudSelectItem>
+                    <MudSelectItem Value="@AppraisalStatuses.Finalized">Finalized</MudSelectItem>
+                </MudSelect>
+                <MudSelect T="long?"
+                           Value="@_selectedCycleId"
+                           ValueChanged="OnCycleChanged"
+                           Label="Cycle"
+                           Variant="Variant.Outlined"
+                           Style="max-width: 200px;"
+                           Clearable="true">
+                    @foreach (var cycle in _cycles)
+                    {
+                        <MudSelectItem Value="@((long?)cycle.Id)">@cycle.Name</MudSelectItem>
+                    }
                 </MudSelect>
             </MudStack>
         </MudStack>
@@ -52,11 +66,23 @@
                         <span style="display: block; text-align: left; padding-right: 12px;">@_rowNumbers.GetValueOrDefault(context.Item.Id)</span>
                     </CellTemplate>
                 </TemplateColumn>
-                <PropertyColumn Property="x => x.EmployeeName" Title="@UIConstants.AppraisalList.ColumnEmployee" Sortable="true" />
+                <TemplateColumn Title="@UIConstants.AppraisalList.ColumnEmployee"
+                                 Sortable="true"
+                                 SortBy="@(x => x.EmployeeName ?? x.EntityName ?? "")">
+                    <CellTemplate>
+                        <MudText>
+                            @(context.Item.EmployeeName ?? context.Item.EntityName ?? context.Item.EntityType ?? "")
+                        </MudText>
+                        @if (!string.IsNullOrEmpty(context.Item.EntityName) && string.IsNullOrEmpty(context.Item.EmployeeName))
+                        {
+                            <MudChip Size="Size.Small" Color="Color.Primary">@context.Item.EntityType</MudChip>
+                        }
+                    </CellTemplate>
+                </TemplateColumn>
                 <PropertyColumn Property="x => x.CycleName" Title="@UIConstants.AppraisalList.ColumnCycle" Sortable="true" />
                 <TemplateColumn Title="@UIConstants.AppraisalList.ColumnStatus" Sortable="false">
                     <CellTemplate>
-                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Item.KpiStatus)">@context.Item.KpiStatus</MudChip>
+                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.Item.Status)">@context.Item.Status</MudChip>
                     </CellTemplate>
                 </TemplateColumn>
                 <TemplateColumn Title="Rating" Sortable="true">
@@ -69,6 +95,16 @@
                         <MudIcon Icon="@(context.Item.IsLocked ? Icons.Material.Filled.Lock : Icons.Material.Filled.LockOpen)"
                                  Color="@(context.Item.IsLocked ? Color.Error : Color.Default)"
                                  Size="Size.Small" />
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="Actions" Sortable="false" Style="width: 80px;">
+                    <CellTemplate>
+                        <MudTooltip Text="All Forms" Placement="Placement.Top">
+                            <MudIconButton Icon="@Icons.Material.Filled.Description"
+                                           Color="Color.Default"
+                                           Size="Size.Small"
+                                           OnClick="@(() => Navigation.NavigateTo($"/performance/appraisals/{context.Item.Id}/forms"))" />
+                        </MudTooltip>
                     </CellTemplate>
                 </TemplateColumn>
 
@@ -99,18 +135,38 @@
 
     private string? _searchString;
     private string? _selectedStatusFilter;
+    private long? _selectedCycleId;
+    private List<AppraisalDto> _allItems = new();
     private List<AppraisalDto> _items = new();
+    private List<AppraisalCycleDto> _cycles = new();
     private Dictionary<long, int> _rowNumbers = new();
     private bool _loading = true;
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadCyclesAsync();
         await LoadDataAsync();
     }
 
     private void OnStatusFilterChanged(string? v)
     {
         _selectedStatusFilter = v;
+    }
+
+    private void OnCycleChanged(long? v)
+    {
+        _selectedCycleId = v;
+    }
+
+    private async Task LoadCyclesAsync()
+    {
+        try
+        {
+            var response = await AppraisalCycleApiClient.GetAllAsync();
+            if (response.Success && response.Data != null)
+                _cycles = response.Data.ToList();
+        }
+        catch { }
     }
 
     private async Task LoadDataAsync()
@@ -122,7 +178,8 @@
             var response = await AppraisalApiClient.GetAllAsync();
             if (response.Success && response.Data != null)
             {
-                _items = response.Data.ToList();
+                _allItems = response.Data.ToList();
+                _items = _allItems;
                 _rowNumbers = _items.Select((x, i) => (x.Id, Index: i + 1)).ToDictionary(x => x.Id, x => x.Index);
             }
             else
@@ -151,26 +208,30 @@
         if (!string.IsNullOrWhiteSpace(_searchString))
         {
             var search = _searchString.Trim();
-            if (string.IsNullOrWhiteSpace(x.EmployeeName) ||
-                !x.EmployeeName.Contains(search, StringComparison.OrdinalIgnoreCase))
+            var nameMatch = (!string.IsNullOrWhiteSpace(x.EmployeeName) &&
+                             x.EmployeeName.Contains(search, StringComparison.OrdinalIgnoreCase))
+                         || (!string.IsNullOrWhiteSpace(x.EntityName) &&
+                             x.EntityName.Contains(search, StringComparison.OrdinalIgnoreCase));
+            if (!nameMatch)
                 return false;
         }
 
         if (!string.IsNullOrWhiteSpace(_selectedStatusFilter))
         {
-            if (!string.Equals(x.KpiStatus, _selectedStatusFilter, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(x.Status, _selectedStatusFilter, StringComparison.OrdinalIgnoreCase))
                 return false;
         }
+
+        if (_selectedCycleId.HasValue && x.CycleId != _selectedCycleId.Value)
+            return false;
 
         return true;
     }
 
     private static Color GetStatusColor(string status) => status switch
     {
-        AppraisalStatuses.Kpi.Draft => Color.Warning,
-        AppraisalStatuses.Kpi.Reviewed => Color.Primary,
-        AppraisalStatuses.Kpi.Finalized => Color.Success,
-        AppraisalStatuses.Self.InProgress => Color.Info,
+        AppraisalStatuses.Draft => Color.Warning,
+        AppraisalStatuses.Finalized => Color.Success,
         _ => Color.Default
     };
 }

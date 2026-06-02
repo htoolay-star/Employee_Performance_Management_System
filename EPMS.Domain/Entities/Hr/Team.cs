@@ -1,12 +1,9 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.EmployeeInfo;
-using EPMS.Domain.Entities.Performance;
-using System;
-using System.Collections.Generic;
 
 namespace EPMS.Domain.Entities.Hr
 {
-    public class Team : AuditableEntity , ISoftDeletable
+    public class Team : AuditableEntity, ISoftDeletable
     {
 
         private Team() { }

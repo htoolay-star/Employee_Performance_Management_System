@@ -3,7 +3,7 @@ using EPMS.Domain.Entities.Shared;
 
 namespace EPMS.Domain.Entities.Performance
 {
-    public class FormQuestion : AuditableEntity , ISoftDeletable
+    public class FormQuestion : AuditableEntity, ISoftDeletable
     {
         private FormQuestion() { }
 

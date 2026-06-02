@@ -291,12 +291,15 @@ public static class ServiceResponseMessages
         public const string Completed = "Meeting completed successfully.";
         public const string Cancelled = "Meeting cancelled successfully.";
         public const string Acknowledged = "Meeting acknowledged successfully.";
+        public const string Confirmed = "Meeting confirmed successfully.";
+        public const string Rescheduled = "Meeting rescheduled successfully.";
         public const string Retrieved = "Meeting retrieved successfully.";
         public const string RetrievedAll = "Meetings retrieved successfully.";
         public const string RetrievedUpcoming = "Upcoming meetings retrieved successfully.";
         public static string NotFound(long id) => $"Meeting with ID '{id}' was not found.";
-public static string AlreadyCompleted = "Meeting is already completed.";
+        public static string AlreadyCompleted = "Meeting is already completed.";
         public static string AlreadyCancelled = "Meeting is already cancelled.";
+        public const string Unauthorized = "You are not authorized to perform this action.";
     }
 
     public static class EntityKPIMsg
@@ -351,6 +354,7 @@ public static string AlreadyCompleted = "Meeting is already completed.";
         public const string Updated = "Notification updated successfully.";
         public const string Deleted = "Notification deleted successfully.";
         public const string MarkedAsRead = "Notification marked as read.";
+        public const string MarkedAllAsRead = "All notifications marked as read.";
         public const string Retrieved = "Notification retrieved successfully.";
         public const string RetrievedAll = "Notifications retrieved successfully.";
         public static string NotFound(long id) => $"Notification with ID '{id}' was not found.";

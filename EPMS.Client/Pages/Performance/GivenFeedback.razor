@@ -1,4 +1,4 @@
-@page "/performance/continuous-feedbacks"
+@page "/performance/my-given-feedback"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize]
 @using EPMS.Client.Constants
 @using EPMS.Client.Services.Info
@@ -10,21 +10,20 @@
 @using MudBlazor
 @using Refit
 @using Microsoft.AspNetCore.Components.Authorization
-@using System.Security.Claims
 @inject IContinuousFeedbackApiClient FeedbackApiClient
 @inject IEmployeeProfileApiClient EmployeeApiClient
 @inject ISnackbar Snackbar
 @inject AuthenticationStateProvider AuthState
 
-<PageTitle>@UIConstants.ContinuousFeedback.PageTitle</PageTitle>
+<PageTitle>@UIConstants.GivenFeedback.PageTitle</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
-    <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.ContinuousFeedback.PageTitle</MudText>
+    <MudText Typo="Typo.h4" Class="mb-4">@UIConstants.GivenFeedback.PageTitle</MudText>
 
     <MudPaper Elevation="0" Outlined="true" Class="pa-6 rounded-lg">
         <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
             <MudTextField @bind-Value="_searchString"
-                          Placeholder="@UIConstants.ContinuousFeedback.SearchPlaceholder"
+                          Placeholder="@UIConstants.GivenFeedback.SearchPlaceholder"
                           Adornment="Adornment.Start"
                           AdornmentIcon="@Icons.Material.Filled.Search"
                           IconSize="Size.Medium"
@@ -37,7 +36,7 @@
                        Color="Color.Primary"
                        StartIcon="@Icons.Material.Filled.Add"
                        OnClick="OpenCreateDialog">
-                @UIConstants.ContinuousFeedback.AddButton
+                @UIConstants.GivenFeedback.AddButton
             </MudButton>
         </MudStack>
 
@@ -50,33 +49,32 @@
             <Columns>
                 <TemplateColumn Title="@UIConstants.Common.ColumnNo" Sortable="false">
                     <CellTemplate>
-                        <span>@_rowNumbers.GetValueOrDefault(context.Item.Id)</span>
+                        <span>@(_feedbacks.IndexOf(context.Item) + 1)</span>
                     </CellTemplate>
                 </TemplateColumn>
-                <PropertyColumn Property="x => x.EmployeeName" Title="@UIConstants.ContinuousFeedback.ColumnEmployee" />
-                <PropertyColumn Property="x => x.GivenByName" Title="@UIConstants.ContinuousFeedback.ColumnGivenBy" />
-                <TemplateColumn Title="@UIConstants.ContinuousFeedback.ColumnFeedbackType">
+                <PropertyColumn Property="x => x.EmployeeName" Title="@UIConstants.GivenFeedback.ColumnEmployee" Sortable="true" />
+                <TemplateColumn Title="@UIConstants.GivenFeedback.ColumnFeedbackType">
                     <CellTemplate>
                         <MudChip Size="Size.Small" Color="@GetTypeColor(context.Item.FeedbackType)">
-                            @context.Item.FeedbackType
+                            @FormatType(context.Item.FeedbackType)
                         </MudChip>
                     </CellTemplate>
                 </TemplateColumn>
-                <TemplateColumn Title="@UIConstants.ContinuousFeedback.ColumnContent">
+                <TemplateColumn Title="@UIConstants.GivenFeedback.ColumnContent">
                     <CellTemplate>
-                        @Truncate(context.Item.Content, 80)
+                        @Truncate(context.Item.Content, 100)
                     </CellTemplate>
                 </TemplateColumn>
-                <TemplateColumn Title="@UIConstants.ContinuousFeedback.ColumnVisibility">
+                <TemplateColumn Title="@UIConstants.GivenFeedback.ColumnVisibility">
                     <CellTemplate>
                         <MudChip Size="Size.Small" Color="@GetVisibilityColor(context.Item.Visibility)">
                             @context.Item.Visibility
                         </MudChip>
                     </CellTemplate>
                 </TemplateColumn>
-                <TemplateColumn Title="@UIConstants.ContinuousFeedback.ColumnFeedbackDate">
+                <TemplateColumn Title="@UIConstants.GivenFeedback.ColumnDate" Sortable="true">
                     <CellTemplate>
-                        @context.Item.FeedbackDate.ToOffset(TimeSpan.FromHours(6.5)).ToString("dd/MM/yyyy HH:mm")
+                        @context.Item.FeedbackDate.ToOffset(TimeSpan.FromHours(6.5)).ToString("dd/MM/yyyy hh:mm tt")
                     </CellTemplate>
                 </TemplateColumn>
                 <TemplateColumn Title="@UIConstants.Common.Actions" Sortable="false">
@@ -100,9 +98,8 @@
             </Columns>
             <NoRecordsContent>
                 <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-8">
-                    <MudIcon Icon="@Icons.Material.Outlined.Inbox" Style="font-size: 4rem;" Color="Color.Default" />
-                    <MudText Typo="Typo.h6" Color="Color.Default">@UIConstants.Common.NoRecords</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">@UIConstants.ContinuousFeedback.NoDataFound</MudText>
+                    <MudIcon Icon="@Icons.Material.Outlined.Send" Style="font-size: 4rem;" Color="Color.Default" />
+                    <MudText Typo="Typo.h6" Color="Color.Default">@UIConstants.GivenFeedback.NoData</MudText>
                 </MudStack>
             </NoRecordsContent>
             <LoadingContent>
@@ -121,10 +118,10 @@
 
 <MudDialog @bind-Visible="_showCreateDialog" Options="@_dialogOptions">
     <DialogContent>
-        <MudText Typo="Typo.h6" Class="mb-4">@UIConstants.ContinuousFeedback.CreateDialogTitle</MudText>
+        <MudText Typo="Typo.h6" Class="mb-4">@UIConstants.GivenFeedback.CreateDialogTitle</MudText>
         <MudForm @ref="_createForm" @bind-IsValid="_createFormValid" @bind-Errors="_createFormErrors">
             <MudSelect T="long?"
-                       Label="@UIConstants.ContinuousFeedback.EmployeeLabel"
+                       Label="@UIConstants.GivenFeedback.EmployeeLabel"
                        @bind-Value="_selectedEmployeeId"
                        Variant="Variant.Outlined"
                        Class="mb-4"
@@ -132,7 +129,7 @@
                        RequiredError="Employee is required">
                 @if (_selectedEmployeeId == null)
                 {
-                    <MudSelectItem Value="@((long?)null)" Disabled="true">@UIConstants.ContinuousFeedback.SelectEmployee</MudSelectItem>
+                    <MudSelectItem Value="@((long?)null)" Disabled="true">@UIConstants.GivenFeedback.SelectEmployee</MudSelectItem>
                 }
                 @foreach (var emp in _employees)
                 {
@@ -140,7 +137,7 @@
                 }
             </MudSelect>
             <MudSelect T="string"
-                       Label="@UIConstants.ContinuousFeedback.FeedbackTypeLabel"
+                       Label="@UIConstants.GivenFeedback.FeedbackTypeLabel"
                        @bind-Value="_createDto.FeedbackType"
                        Variant="Variant.Outlined"
                        Class="mb-4"
@@ -152,7 +149,7 @@
                 }
             </MudSelect>
             <MudSelect T="string"
-                       Label="@UIConstants.ContinuousFeedback.VisibilityLabel"
+                       Label="@UIConstants.GivenFeedback.VisibilityLabel"
                        @bind-Value="_createDto.Visibility"
                        Variant="Variant.Outlined"
                        Class="mb-4"
@@ -170,7 +167,7 @@
                 }
             </MudSelect>
             <MudTextField T="string"
-                          Label="@UIConstants.ContinuousFeedback.ContentLabel"
+                          Label="@UIConstants.GivenFeedback.ContentLabel"
                           @bind-Value="_createDto.Content"
                           Variant="Variant.Outlined"
                           Lines="5"
@@ -195,10 +192,10 @@
 
 <MudDialog @bind-Visible="_showEditDialog" Options="@_dialogOptions">
     <DialogContent>
-        <MudText Typo="Typo.h6" Class="mb-4">@UIConstants.ContinuousFeedback.EditDialogTitle</MudText>
+        <MudText Typo="Typo.h6" Class="mb-4">@UIConstants.GivenFeedback.EditDialogTitle</MudText>
         <MudForm @ref="_editForm" @bind-IsValid="_editFormValid" @bind-Errors="_editFormErrors">
             <MudTextField T="string"
-                          Label="@UIConstants.ContinuousFeedback.ContentLabel"
+                          Label="@UIConstants.GivenFeedback.ContentLabel"
                           @bind-Value="_editContent"
                           Variant="Variant.Outlined"
                           Lines="5"
@@ -206,7 +203,7 @@
                           Required="true"
                           RequiredError="Content is required" />
             <MudSelect T="string"
-                       Label="@UIConstants.ContinuousFeedback.VisibilityLabel"
+                       Label="@UIConstants.GivenFeedback.VisibilityLabel"
                        @bind-Value="_editVisibility"
                        Variant="Variant.Outlined"
                        Required="true"
@@ -233,9 +230,9 @@
 
 <MudDialog @bind-Visible="_showDeleteDialog">
     <DialogContent>
-        <MudText Typo="Typo.h6" Class="mb-4">@UIConstants.ContinuousFeedback.DeleteDialogTitle</MudText>
+        <MudText Typo="Typo.h6" Class="mb-4">@UIConstants.GivenFeedback.DeleteDialogTitle</MudText>
         <MudText Typo="Typo.body2">
-            Are you sure you want to delete this feedback from <strong>@_selectedFeedback?.GivenByName</strong> to <strong>@_selectedFeedback?.EmployeeName</strong>?
+            Are you sure you want to delete this feedback to <strong>@_selectedFeedback?.EmployeeName</strong>?
         </MudText>
     </DialogContent>
     <DialogActions>
@@ -255,10 +252,8 @@
 @code {
     private bool _loading = true;
     private List<ContinuousFeedbackDto> _feedbacks = new();
-    private Dictionary<long, int> _rowNumbers = new();
     private string _searchString = string.Empty;
     private List<EmployeeLookupDto> _employees = new();
-    private long _currentEmployeeId;
     private long? _selectedEmployeeId;
     private bool _isAdmin;
     private bool _isManager;
@@ -299,41 +294,18 @@
         try
         {
             var authState = await AuthState.GetAuthenticationStateAsync();
-            var userIdClaim = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             _isAdmin = authState.User.IsInRole("Admin") || authState.User.IsInRole("SystemAdmin");
             _isManager = !_isAdmin;
 
-            var feedbacksTask = FeedbackApiClient.GetAllAsync();
-            var employeesTask = EmployeeApiClient.GetLookupAsync();
-            var profileTask = !string.IsNullOrEmpty(userIdClaim) && long.TryParse(userIdClaim, out var uid)
-                ? EmployeeApiClient.GetByUserIdAsync(uid)
-                : Task.FromResult<SuccessResponse<EmployeeProfileDto>>(null!);
+            var response = await FeedbackApiClient.GetGivenAsync();
 
-            await Task.WhenAll(feedbacksTask, employeesTask, profileTask);
-
-            var feedbacksResponse = await feedbacksTask;
-            if (feedbacksResponse.Success && feedbacksResponse.Data != null)
+            if (response.Success && response.Data != null)
             {
-                _feedbacks = feedbacksResponse.Data.ToList();
-                _rowNumbers = _feedbacks
-                    .Select((x, i) => (x.Id, Index: i + 1))
-                    .ToDictionary(x => x.Id, x => x.Index);
+                _feedbacks = response.Data.ToList();
             }
             else
             {
-                Snackbar.Add(feedbacksResponse?.Message ?? UIConstants.Common.LoadFailed, Severity.Error);
-            }
-
-            var employeesResponse = await employeesTask;
-            if (employeesResponse.Success && employeesResponse.Data != null)
-            {
-                _employees = employeesResponse.Data.ToList();
-            }
-
-            var profileResponse = await profileTask;
-            if (profileResponse?.Success == true && profileResponse.Data != null)
-            {
-                _currentEmployeeId = profileResponse.Data.Id;
+                Snackbar.Add(response?.Message ?? UIConstants.Common.LoadFailed, Severity.Error);
             }
         }
         catch (ApiException ex)
@@ -352,13 +324,37 @@
         }
     }
 
+    private async Task LoadEmployeesAsync()
+    {
+        try
+        {
+            SuccessResponse<IEnumerable<EmployeeLookupDto>> response;
+            if (_isAdmin)
+            {
+                response = await EmployeeApiClient.GetLookupAsync();
+            }
+            else
+            {
+                response = await EmployeeApiClient.GetDirectReportsLookupAsync();
+            }
+
+            if (response.Success && response.Data != null)
+            {
+                _employees = response.Data.ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(string.Format(UIConstants.Common.ErrorFormat, ex.Message), Severity.Error);
+        }
+    }
+
     private bool QuickFilter(ContinuousFeedbackDto x)
     {
         if (string.IsNullOrWhiteSpace(_searchString))
             return true;
 
         return x.EmployeeName.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
-            || x.GivenByName.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
             || x.Content.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
             || x.FeedbackType.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
     }
@@ -383,6 +379,7 @@
         FeedbackVisibility.Public => Color.Success,
         FeedbackVisibility.Private => Color.Error,
         FeedbackVisibility.ManagerOnly => Color.Warning,
+        FeedbackVisibility.AdminOnly => Color.Secondary,
         _ => Color.Default
     };
 
@@ -395,12 +392,13 @@
         _ => type
     };
 
-    private void OpenCreateDialog()
+    private async void OpenCreateDialog()
     {
         _selectedEmployeeId = null;
         _createDto.FeedbackType = ContinuousFeedbackTypes.All[0];
         _createDto.Content = "";
         _createDto.Visibility = FeedbackVisibility.Public;
+        await LoadEmployeesAsync();
         _showCreateDialog = true;
     }
 
@@ -424,12 +422,11 @@
         try
         {
             _createDto.EmployeeId = _selectedEmployeeId.Value;
-            _createDto.GivenById = _currentEmployeeId;
 
             var result = await FeedbackApiClient.CreateAsync(_createDto);
             if (result.Success)
             {
-                Snackbar.Add(UIConstants.ContinuousFeedback.Created, Severity.Success);
+                Snackbar.Add(UIConstants.GivenFeedback.Created, Severity.Success);
                 _showCreateDialog = false;
                 await LoadDataAsync();
             }
@@ -485,7 +482,7 @@
             var result = await FeedbackApiClient.UpdateAsync(_selectedFeedback.Id, dto);
             if (result.Success)
             {
-                Snackbar.Add(UIConstants.ContinuousFeedback.Updated, Severity.Success);
+                Snackbar.Add(UIConstants.GivenFeedback.Updated, Severity.Success);
                 _showEditDialog = false;
                 _selectedFeedback = null;
                 await LoadDataAsync();
@@ -532,7 +529,7 @@
             var result = await FeedbackApiClient.DeleteAsync(_selectedFeedback.Id);
             if (result.Success)
             {
-                Snackbar.Add(UIConstants.ContinuousFeedback.Deleted, Severity.Success);
+                Snackbar.Add(UIConstants.GivenFeedback.Deleted, Severity.Success);
                 _showDeleteDialog = false;
                 _selectedFeedback = null;
                 await LoadDataAsync();

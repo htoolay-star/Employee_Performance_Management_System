@@ -1,18 +1,16 @@
 using EPMS.Domain.Contracts;
-using EPMS.Domain.Entities.Auth;
 using EPMS.Domain.Interface.IService.Auth;
 using EPMS.Shared.DTOs.AuthDTOs.PermissionDTOS;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.Enums;
-using static EPMS.Shared.Constants.ServiceResponseMessages;
-
 using Mapster;
+using static EPMS.Shared.Constants.ServiceResponseMessages;
 namespace EPMS.Domain.Services.Auth
 {
     public class PermissionService : IPermissionService
     {
         private readonly IUnitOfWork _uow;
-        
+
         public PermissionService(IUnitOfWork uow)
         {
             _uow = uow;

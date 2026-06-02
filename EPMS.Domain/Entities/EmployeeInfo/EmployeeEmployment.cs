@@ -1,15 +1,10 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Hr;
 using EPMS.Shared.Constants;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EPMS.Domain.Entities.EmployeeInfo
 {
-    public class EmployeeEmployment : AuditableEntity , ISoftDeletable
+    public class EmployeeEmployment : AuditableEntity, ISoftDeletable
     {
         private EmployeeEmployment() { }
 

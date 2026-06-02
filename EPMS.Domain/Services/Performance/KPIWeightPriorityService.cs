@@ -4,15 +4,14 @@ using EPMS.Domain.Interface.IService.Performance;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.PerformanceDTOs.KPIWeightPriorityDTOs;
 using EPMS.Shared.Enums;
-using static EPMS.Shared.Constants.ServiceResponseMessages;
-
 using Mapster;
+using static EPMS.Shared.Constants.ServiceResponseMessages;
 namespace EPMS.Domain.Services.Performance;
 
 public class KPIWeightPriorityService : IKPIWeightPriorityService
 {
     private readonly IUnitOfWork _uow;
-    
+
     public KPIWeightPriorityService(IUnitOfWork uow)
     {
         _uow = uow;

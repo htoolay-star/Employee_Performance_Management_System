@@ -4,10 +4,10 @@ using EPMS.Domain.Interface.IService.App;
 using EPMS.Domain.Interface.IService.Hr;
 using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
-using static EPMS.Shared.Constants.ServiceResponseMessages;
 using EPMS.Shared.DTOs.LevelDTOs;
 using EPMS.Shared.Enums;
 using Mapster;
+using static EPMS.Shared.Constants.ServiceResponseMessages;
 
 namespace EPMS.Domain.Services.Hr;
 

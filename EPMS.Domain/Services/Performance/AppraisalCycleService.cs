@@ -6,9 +6,8 @@ using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.PerformanceDTOs.AppraisalCycleDTOs;
 using EPMS.Shared.Enums;
-using static EPMS.Shared.Constants.ServiceResponseMessages;
-
 using Mapster;
+using static EPMS.Shared.Constants.ServiceResponseMessages;
 namespace EPMS.Domain.Services.Performance;
 
 public class AppraisalCycleService : IAppraisalCycleService
@@ -24,16 +23,22 @@ public class AppraisalCycleService : IAppraisalCycleService
 
     public async Task<SuccessResponse<IEnumerable<AppraisalCycleDto>>> GetAllAsync()
     {
-        var cycles = await _uow.Perf.AppraisalCycles.GetAllAsync();
-        var dtos = cycles.Adapt<IEnumerable<AppraisalCycleDto>>();
-        return SuccessResponse<IEnumerable<AppraisalCycleDto>>.Ok(dtos, AppraisalCycleMsg.RetrievedAll);
+        var dtos = await _cache.GetOrCreateAsync(CacheKeyAll, async () =>
+        {
+            var cycles = await _uow.Perf.AppraisalCycles.GetAllAsync();
+            return cycles.Adapt<IEnumerable<AppraisalCycleDto>>();
+        });
+        return SuccessResponse<IEnumerable<AppraisalCycleDto>>.Ok(dtos ?? [], AppraisalCycleMsg.RetrievedAll);
     }
 
     public async Task<SuccessResponse<IEnumerable<AppraisalCycleDto>>> GetActiveCyclesAsync()
     {
-        var cycles = await _uow.Perf.AppraisalCycles.GetActiveCyclesAsync();
-        var dtos = cycles.Adapt<IEnumerable<AppraisalCycleDto>>();
-        return SuccessResponse<IEnumerable<AppraisalCycleDto>>.Ok(dtos, AppraisalCycleMsg.RetrievedActive);
+        var dtos = await _cache.GetOrCreateAsync(CacheKeyActive, async () =>
+        {
+            var cycles = await _uow.Perf.AppraisalCycles.GetActiveCyclesAsync();
+            return cycles.Adapt<IEnumerable<AppraisalCycleDto>>();
+        });
+        return SuccessResponse<IEnumerable<AppraisalCycleDto>>.Ok(dtos ?? [], AppraisalCycleMsg.RetrievedActive);
     }
 
     public async Task<SuccessResponse<AppraisalCycleDto>> GetByIdAsync(long id)
@@ -157,6 +162,9 @@ public class AppraisalCycleService : IAppraisalCycleService
 
         _uow.Perf.AppraisalCycles.Add(cycle);
         await _uow.CompleteAsync();
+
+        await _cache.RemoveAsync(CacheKeyAll);
+        await _cache.RemoveAsync(CacheKeyActive);
 
         return SuccessResponse<long>.Ok(cycle.Id, AppraisalCycleMsg.Created);
     }
@@ -331,6 +339,9 @@ public class AppraisalCycleService : IAppraisalCycleService
             await _uow.CompleteAsync();
         }
 
+        await _cache.RemoveAsync(CacheKeyAll);
+        await _cache.RemoveAsync(CacheKeyActive);
+
         return SuccessResponse.Ok(AppraisalCycleMsg.Updated);
     }
 
@@ -349,6 +360,9 @@ public class AppraisalCycleService : IAppraisalCycleService
 
         _uow.Perf.AppraisalCycles.Delete(cycle);
         await _uow.CompleteAsync();
+
+        await _cache.RemoveAsync(CacheKeyAll);
+        await _cache.RemoveAsync(CacheKeyActive);
 
         return SuccessResponse.Ok(AppraisalCycleMsg.Deleted);
     }

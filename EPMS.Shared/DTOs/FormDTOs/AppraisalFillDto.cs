@@ -14,9 +14,12 @@ public class AppraisalFillDto
     public string? CycleName { get; set; }
     public long ManagerReviewerId { get; set; }
     public string? ManagerReviewerName { get; set; }
+    public long? DirectManagerId { get; set; }
     public string Status { get; set; } = string.Empty;
     public bool IsLocked { get; set; }
     public bool KpiLocked { get; set; }
+    public bool KpiLockIsDeadline { get; set; }
+    public bool KpiUnlockRequested { get; set; }
     public string KpiStatus { get; set; } = string.Empty;
     public string SelfStatus { get; set; } = string.Empty;
     public string ManagerStatus { get; set; } = string.Empty;

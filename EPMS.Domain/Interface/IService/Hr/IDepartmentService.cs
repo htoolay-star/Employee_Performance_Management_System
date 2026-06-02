@@ -1,6 +1,5 @@
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.DepartmentDTOs;
-using EPMS.Shared.DTOs.TeamDTOs;
 
 namespace EPMS.Domain.Interface.IService.Hr;
 
@@ -13,5 +12,5 @@ public interface IDepartmentService
     Task<SuccessResponse<long>> CreateAsync(CreateDepartmentDto dto);
     Task<SuccessResponse> UpdateAsync(long id, UpdateDepartmentDto dto);
     Task<SuccessResponse> RestoreAsync(long id);
-        Task<SuccessResponse> DeleteAsync(long id);
+    Task<SuccessResponse> DeleteAsync(long id);
 }

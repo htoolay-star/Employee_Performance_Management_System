@@ -1,22 +1,19 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Performance;
 using EPMS.Domain.Interface.IService.App;
-using EPMS.Domain.Interface.IService.Auth;
 using EPMS.Domain.Interface.IService.Performance;
-using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.PerformanceDTOs.PIPDTOs;
 using EPMS.Shared.Enums;
-using static EPMS.Shared.Constants.ServiceResponseMessages;
-using static EPMS.Shared.Constants.PIPStatuses;
-
 using Mapster;
+using static EPMS.Shared.Constants.PIPStatuses;
+using static EPMS.Shared.Constants.ServiceResponseMessages;
 namespace EPMS.Domain.Services.Performance
 {
     public class PIPService : IPIPService
     {
         private readonly IUnitOfWork _uow;
-                private readonly ICurrentEmployeeContextService _currentEmployee;
+        private readonly ICurrentEmployeeContextService _currentEmployee;
 
         public PIPService(
             IUnitOfWork uow,
@@ -54,6 +51,32 @@ namespace EPMS.Domain.Services.Performance
             return SuccessResponse<IEnumerable<PIPDto>>.Ok(dtos, PIPMsg.RetrievedAll);
         }
 
+        public async Task<SuccessResponse<IEnumerable<PIPDto>>> GetMyPIPsAsync()
+        {
+            var employeeId = await _currentEmployee.GetEmployeeIdAsync();
+            if (!employeeId.HasValue)
+                return SuccessResponse<IEnumerable<PIPDto>>.Fail("User identity not found.", ErrorType.Forbidden);
+
+            var asEmployee = await _uow.Perf.PIPs.GetByEmployeeIdAsync(employeeId.Value);
+            var asManager = await _uow.Perf.PIPs.GetByManagerIdAsync(employeeId.Value);
+
+            var all = asEmployee.Concat(asManager)
+                .DistinctBy(p => p.Id)
+                .OrderByDescending(p => p.StartDate)
+                .ToList();
+
+            var dtos = all.Adapt<IEnumerable<PIPDto>>().ToList();
+            foreach (var dto in dtos)
+            {
+                dto.IsCurrentUserEmployee = dto.EmployeeId == employeeId.Value;
+                var objectives = (await _uow.Perf.PIPObjectives.GetByPIPIdAsync(dto.Id)).ToList();
+                dto.TotalObjectives = objectives.Count;
+                dto.CompletedObjectives = objectives.Count(o => o.Status == EPMS.Shared.Constants.ObjectiveStatuses.Completed);
+            }
+
+            return SuccessResponse<IEnumerable<PIPDto>>.Ok(dtos, PIPMsg.RetrievedAll);
+        }
+
         public async Task<SuccessResponse<PIPDto>> GetByIdAsync(long id)
         {
             var pip = await _uow.Perf.PIPs.GetByIdAsync(id);
@@ -67,12 +90,22 @@ namespace EPMS.Domain.Services.Performance
 
         public async Task<SuccessResponse<long>> CreateAsync(CreatePIPDto dto)
         {
-            var positionId = await _currentEmployee.GetPositionIdAsync();
-            if (!positionId.HasValue)
-                return SuccessResponse<long>.Fail("User position is required.", ErrorType.Forbidden);
-
-
             var pip = new PIP(dto.EmployeeId, dto.ManagerId, dto.StartDate, dto.EndDate, dto.Reason, dto.AppraisalId);
+
+            var employee = await _uow.Info.EmployeeProfiles
+                .FindAsync(e => e.Id == dto.EmployeeId, includes: e => e.Employment);
+
+            if (employee?.Employment?.PositionId != null)
+            {
+                var templates = await _uow.Perf.PositionPIPTemplates
+                    .GetActiveByPositionIdAsync(employee.Employment.PositionId);
+
+                foreach (var t in templates)
+                {
+                    pip.AddObjective(new PIPObjective(
+                        pip.Id, t.Title, t.SuccessCriteria, t.Description));
+                }
+            }
 
             _uow.Perf.PIPs.Add(pip);
             await _uow.CompleteAsync();
@@ -90,7 +123,7 @@ namespace EPMS.Domain.Services.Performance
             if (pip.Status == Successful || pip.Status == Failed)
                 return SuccessResponse.Fail(PIPMsg.AlreadyConcluded, ErrorType.Validation);
 
-            pip.ExtendPIP(dto.EndDate, dto.Reason);
+            pip.EditPIP(dto.StartDate, dto.EndDate, dto.Reason);
 
             _uow.Perf.PIPs.Update(pip);
             await _uow.CompleteAsync();

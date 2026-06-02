@@ -33,6 +33,9 @@ public interface IAppraisalApiClient
     [Get("/api/performance/appraisals/entity/{entityType}/cycle/{cycleId}")]
     Task<SuccessResponse<IEnumerable<AppraisalDto>>> GetByEntityTypeAndCycleAsync(string entityType, long cycleId);
 
+    [Get("/api/performance/appraisals/entity/{entityType}")]
+    Task<SuccessResponse<IEnumerable<AppraisalDto>>> GetByEntityTypeAsync(string entityType);
+
     [Post("/api/performance/appraisals")]
     Task<SuccessResponse> CreateAsync([Body] CreateAppraisalDto dto);
 
@@ -45,8 +48,14 @@ public interface IAppraisalApiClient
     [Delete("/api/performance/appraisals/{id}")]
     Task<SuccessResponse> DeleteAsync(long id);
 
-    [Post("/api/performance/appraisals/generate/{cycleId}")]
-    Task<SuccessResponse> GenerateForCycleAsync(long cycleId);
+    [Post("/api/performance/appraisals/{id}/request-kpi-unlock")]
+    Task<SuccessResponse> RequestKpiUnlockAsync(long id);
+
+    [Post("/api/performance/appraisals/{id}/unlock-kpi")]
+    Task<SuccessResponse> UnlockKpiAsync(long id);
+
+    [Post("/api/performance/appraisals/{id}/decline-kpi-unlock")]
+    Task<SuccessResponse> DeclineKpiUnlockAsync(long id);
 
     [Post("/api/performance/appraisals/{id}/finalize")]
     Task<SuccessResponse> FinalizeAsync(long id);
@@ -56,6 +65,12 @@ public interface IAppraisalApiClient
 
     [Post("/api/performance/appraisals/{id}/finalize-evaluation")]
     Task<SuccessResponse> FinalizeEvaluationAsync(long id, [Query] string role);
+
+    [Get("/api/performance/appraisals/{appraisalId}/forms")]
+    Task<SuccessResponse<EmployeeFormsOverviewDto>> GetEmployeeFormsAsync(long appraisalId);
+
+    [Get("/api/performance/appraisals/{appraisalId}/my-360-feedback")]
+    Task<SuccessResponse<EmployeeFormsOverviewDto>> GetMy360FeedbackAsync(long appraisalId);
 
     [Get("/api/performance/appraisals/manager-self-pending")]
     Task<SuccessResponse<IEnumerable<AppraisalDto>>> GetManagerSelfPendingAsync();

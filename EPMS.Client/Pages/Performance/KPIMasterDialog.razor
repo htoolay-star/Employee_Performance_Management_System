@@ -142,6 +142,7 @@
                 if (response.Success)
                 {
                     LookupState.ClearCategoryCache();
+                    LookupState.ClearKPIMasterCache();
                     _mudDialog?.Close(DialogResult.Ok(true));
                 }
                 else
@@ -155,6 +156,7 @@
                 if (response.Success)
                 {
                     LookupState.ClearCategoryCache();
+                    LookupState.ClearKPIMasterCache();
                     _mudDialog?.Close(DialogResult.Ok(true));
                 }
                 else

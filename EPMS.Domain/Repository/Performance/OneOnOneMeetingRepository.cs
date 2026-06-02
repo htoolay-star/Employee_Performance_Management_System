@@ -11,6 +11,16 @@ namespace EPMS.Domain.Repository.Performance
     {
         public OneOnOneMeetingRepository(AppDbContext context) : base(context) { }
 
+        public override async Task<IEnumerable<OneOnOneMeeting>> GetAllAsync(CancellationToken cancellationToken = default)
+        {
+            return await _dbSet.AsNoTracking()
+                .Where(x => !x.IsDeleted)
+                .Include(x => x.Employee)
+                .Include(x => x.Manager)
+                .OrderByDescending(x => x.ScheduledDate)
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task<IEnumerable<OneOnOneMeeting>> GetByEmployeeIdAsync(long employeeId)
         {
             return await _dbSet

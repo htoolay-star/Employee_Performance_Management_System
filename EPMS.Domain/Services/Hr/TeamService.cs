@@ -1,8 +1,7 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Hr;
-using EPMS.Domain.Entities.EmployeeInfo;
-using EPMS.Domain.Interface.Irepo.Hr;
 using EPMS.Domain.Interface.IService.App;
+using EPMS.Domain.Interface.IService.Hr;
 using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.TeamDTOs;
@@ -10,7 +9,6 @@ using EPMS.Shared.Enums;
 using EPMS.Shared.Features.Teams;
 using Mapster;
 using static EPMS.Shared.Constants.ServiceResponseMessages;
-using EPMS.Domain.Interface.IService.Hr;
 
 namespace EPMS.Domain.Services.Hr;
 

@@ -93,9 +93,10 @@ public class EvaluationResponsesController : ApiControllerBase
     [HttpGet("appraisal/{appraisalId:long}/view")]
     public async Task<ActionResult<SuccessResponse>> GetEvaluationView(
         long appraisalId,
-        [FromQuery] string role)
+        [FromQuery] string role,
+        [FromQuery] long? evaluatorId = null)
     {
-        var result = await _service.GetEvaluationViewAsync(appraisalId, role);
+        var result = await _service.GetEvaluationViewAsync(appraisalId, role, evaluatorId);
         return HandleResult(result);
     }
 

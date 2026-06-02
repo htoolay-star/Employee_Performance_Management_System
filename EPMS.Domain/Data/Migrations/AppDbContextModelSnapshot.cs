@@ -3157,12 +3157,15 @@ namespace EPMS.Domain.Data.Migrations
                     b.Property<DateTimeOffset>("ScheduledDate")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<DateTimeOffset>("ScheduledEndTime")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .HasDefaultValue("Scheduled");
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
+                        .HasDefaultValue("PENDING_EMPLOYEE_CONFIRMATION");
 
                     b.Property<string>("Summary")
                         .HasMaxLength(500)

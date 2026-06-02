@@ -1,19 +1,17 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Auth;
 using EPMS.Domain.Interface.IService.Auth;
-using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.AuthDTOs.PositionPermissionDTOs;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.Enums;
-using static EPMS.Shared.Constants.ServiceResponseMessages;
-
 using Mapster;
+using static EPMS.Shared.Constants.ServiceResponseMessages;
 namespace EPMS.Domain.Services.Auth;
 
 public class PositionPermissionService : IPositionPermissionService
 {
     private readonly IUnitOfWork _uow;
-    
+
     public PositionPermissionService(IUnitOfWork uow)
     {
         _uow = uow;

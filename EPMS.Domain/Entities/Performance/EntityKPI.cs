@@ -1,5 +1,4 @@
 using EPMS.Domain.Contracts;
-using EPMS.Domain.Entities.Hr;
 
 namespace EPMS.Domain.Entities.Performance
 {

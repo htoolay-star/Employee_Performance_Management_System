@@ -1,10 +1,3 @@
-using EPMS.Domain.Interface.Irepo.App;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace EPMS.Domain.Interface.Irepo.Auth
 {
     public interface IAuthModule
@@ -14,8 +7,8 @@ namespace EPMS.Domain.Interface.Irepo.Auth
         IRoleRepository Roles { get; }
         IPermissionRepository Permissions { get; }
         IPositionPermissionRepository PositionPermissions { get; }
-    IPositionRoleRepository PositionRoles { get; }
-    IPasswordResetOtpRepository PasswordResetOtps { get; }
-    IPasswordResetRequestRepository PasswordResetRequests { get; }
-}
+        IPositionRoleRepository PositionRoles { get; }
+        IPasswordResetOtpRepository PasswordResetOtps { get; }
+        IPasswordResetRequestRepository PasswordResetRequests { get; }
+    }
 }

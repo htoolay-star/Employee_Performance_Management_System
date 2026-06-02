@@ -1,5 +1,4 @@
 using EPMS.Domain.Contracts;
-using EPMS.Domain.Entities.EmployeeInfo;
 using EPMS.Domain.Interface.IService.Info;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.EmployeeInfoDTOs;
@@ -42,7 +41,7 @@ public class EmployeeContactService : IEmployeeContactService
         var employee = await _uow.Info.EmployeeProfiles.GetByPublicIdAsync(employeePublicId);
 
         if (employee == null)
-            return SuccessResponse <EmployeeContactDto>.Fail(EmployeeProfileMsg.NotFound(employeePublicId), ErrorType.NotFound);
+            return SuccessResponse<EmployeeContactDto>.Fail(EmployeeProfileMsg.NotFound(employeePublicId), ErrorType.NotFound);
 
         var contact = await _uow.Info.EmployeeContacts.GetByEmployeeIdAsync(employee.Id);
 
@@ -74,18 +73,18 @@ public class EmployeeContactService : IEmployeeContactService
             contact.UpdatePrimaryContact(dto.PhoneNo, dto.ContactAddress);
         }
 
-        if (!string.IsNullOrWhiteSpace(dto.PhoneNo) || !string.IsNullOrWhiteSpace(dto.PermanentPhoneNo) || 
+        if (!string.IsNullOrWhiteSpace(dto.PhoneNo) || !string.IsNullOrWhiteSpace(dto.PermanentPhoneNo) ||
             !string.IsNullOrWhiteSpace(dto.PresentPhoneNo) || !string.IsNullOrWhiteSpace(dto.InternalPhoneNo))
             contact.UpdatePhones(dto.PhoneNo, dto.PermanentPhoneNo, dto.PresentPhoneNo, dto.InternalPhoneNo);
-        
+
         if (!string.IsNullOrWhiteSpace(dto.EmergencyMobileNo) || !string.IsNullOrWhiteSpace(dto.RelationWithEmergencyContact))
             contact.UpdateEmergencyContact(dto.EmergencyMobileNo, dto.RelationWithEmergencyContact);
-        
+
         if (!string.IsNullOrWhiteSpace(dto.PermanentAddress))
         {
             contact.UpdatePermanentAddress(dto.PermanentAddress);
         }
-        
+
         _uow.Info.EmployeeContacts.Add(contact);
         await _uow.CompleteAsync();
 
