@@ -1,5 +1,6 @@
 using EPMS.Domain.Contracts;
 using EPMS.Domain.Entities.Performance;
+using EPMS.Domain.Interface.IService.App;
 using EPMS.Domain.Interface.IService.Performance;
 using EPMS.Shared.Constants;
 using EPMS.Shared.DTOs.Common;
@@ -13,10 +14,12 @@ namespace EPMS.Domain.Services.Performance;
 public class AppraisalCycleService : IAppraisalCycleService
 {
     private readonly IUnitOfWork _uow;
+    private readonly ICacheService _cacheService;
 
-    public AppraisalCycleService(IUnitOfWork uow)
+    public AppraisalCycleService(IUnitOfWork uow, ICacheService cacheService)
     {
         _uow = uow;
+        _cacheService = cacheService;
     }
 
     public async Task<SuccessResponse<IEnumerable<AppraisalCycleDto>>> GetAllAsync()
@@ -363,8 +366,8 @@ public class AppraisalCycleService : IAppraisalCycleService
         _uow.Perf.AppraisalCycles.Update(entity);
         await _uow.CompleteAsync();
 
-        await _cache.RemoveAsync(CacheKeyAll);
-        await _cache.RemoveAsync(CacheKeyActive);
+        await _cacheService.RemoveAsync(CacheKeys.Performance.AppraisalCycleAll());
+        await _cacheService.RemoveAsync(CacheKeys.Performance.AppraisalCycleActive());
 
         return SuccessResponse.Ok(AppraisalCycleMsg.Updated);
     }
