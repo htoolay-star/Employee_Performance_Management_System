@@ -138,20 +138,20 @@ public class CategoryService : ICategoryService
         await _cacheService.RemoveAsync(CacheKeys.Shared.CategoryLookups());
         return SuccessResponse.Ok(CategoryMsg.Deleted);
     }
-        public async Task<SuccessResponse> RestoreCategoryAsync(long id)
-        {
-            var entity = await _unitOfWork.Shared.Categories.GetByIdAsync(id);
-            if (entity == null)
-                return SuccessResponse.Fail(CategoryMsg.NotFound(id), ErrorType.NotFound);
-            if (!entity.IsDeleted)
-                return SuccessResponse.Fail("Item is not deleted.", ErrorType.Validation);
-            entity.IsDeleted = false;
-            entity.DeletedAt = null;
-            entity.DeletedBy = null;
-            _unitOfWork.Shared.Categories.Update(entity);
-            await _unitOfWork.CompleteAsync();
-            await _cacheService.RemoveAsync(CacheKeys.Shared.CategoryLookups());
-            return SuccessResponse.Ok(CategoryMsg.Updated);
-        }
+    public async Task<SuccessResponse> RestoreCategoryAsync(long id)
+    {
+        var entity = await _unitOfWork.Shared.Categories.GetByIdDeletedAsync(id);
+        if (entity == null)
+            return SuccessResponse.Fail(CategoryMsg.NotFound(id), ErrorType.NotFound);
+        if (!entity.IsDeleted)
+            return SuccessResponse.Fail("Item is not deleted.", ErrorType.Validation);
+        entity.IsDeleted = false;
+        entity.DeletedAt = null;
+        entity.DeletedBy = null;
+        _unitOfWork.Shared.Categories.Update(entity);
+        await _unitOfWork.CompleteAsync();
+        await _cacheService.RemoveAsync(CacheKeys.Shared.CategoryLookups());
+        return SuccessResponse.Ok(CategoryMsg.Updated);
+    }
 
 }

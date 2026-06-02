@@ -132,18 +132,18 @@ public class RatingScaleService : IRatingScaleService
     }
 
     public async Task<SuccessResponse> RestoreAsync(long id)
-        {
-            var entity = await _uow.Perf.RatingScales.GetByIdAsync(id);
-            if (entity == null)
-                return SuccessResponse.Fail(RatingScaleMsg.NotFound(id), ErrorType.NotFound);
-            if (!entity.IsDeleted)
-                return SuccessResponse.Fail("Item is not deleted.", ErrorType.Validation);
-            entity.IsDeleted = false;
-            entity.DeletedAt = null;
-            entity.DeletedBy = null;
-            _uow.Perf.RatingScales.Update(entity);
-            await _uow.CompleteAsync();
-            return SuccessResponse.Ok(RatingScaleMsg.Updated);
-        }
+    {
+        var entity = await _uow.Perf.RatingScales.GetByIdDeletedAsync(id);
+        if (entity == null)
+            return SuccessResponse.Fail(RatingScaleMsg.NotFound(id), ErrorType.NotFound);
+        if (!entity.IsDeleted)
+            return SuccessResponse.Fail("Item is not deleted.", ErrorType.Validation);
+        entity.IsDeleted = false;
+        entity.DeletedAt = null;
+        entity.DeletedBy = null;
+        _uow.Perf.RatingScales.Update(entity);
+        await _uow.CompleteAsync();
+        return SuccessResponse.Ok(RatingScaleMsg.Updated);
+    }
 
 }

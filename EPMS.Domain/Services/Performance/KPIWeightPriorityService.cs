@@ -132,19 +132,19 @@ public class KPIWeightPriorityService : IKPIWeightPriorityService
     {
         return System.Text.RegularExpressions.Regex.IsMatch(colorCode, @"^#[0-9A-Fa-f]{6}$");
     }
-        public async Task<SuccessResponse> RestoreAsync(long id)
-        {
-            var entity = await _uow.Perf.KPIWeightPriorities.GetByIdAsync(id);
-            if (entity == null)
-                return SuccessResponse.Fail(KPIWeightPriorityMsg.NotFound(id), ErrorType.NotFound);
-            if (!entity.IsDeleted)
-                return SuccessResponse.Fail("Item is not deleted.", ErrorType.Validation);
-            entity.IsDeleted = false;
-            entity.DeletedAt = null;
-            entity.DeletedBy = null;
-            _uow.Perf.KPIWeightPriorities.Update(entity);
-            await _uow.CompleteAsync();
-            return SuccessResponse.Ok(KPIWeightPriorityMsg.Updated);
-        }
+    public async Task<SuccessResponse> RestoreAsync(long id)
+    {
+        var entity = await _uow.Perf.KPIWeightPriorities.GetByIdDeletedAsync(id);
+        if (entity == null)
+            return SuccessResponse.Fail(KPIWeightPriorityMsg.NotFound(id), ErrorType.NotFound);
+        if (!entity.IsDeleted)
+            return SuccessResponse.Fail("Item is not deleted.", ErrorType.Validation);
+        entity.IsDeleted = false;
+        entity.DeletedAt = null;
+        entity.DeletedBy = null;
+        _uow.Perf.KPIWeightPriorities.Update(entity);
+        await _uow.CompleteAsync();
+        return SuccessResponse.Ok(KPIWeightPriorityMsg.Updated);
+    }
 
 }

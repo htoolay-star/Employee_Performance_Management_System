@@ -114,20 +114,20 @@ public class DepartmentService : IDepartmentService
         await _cacheService.RemoveAsync(CacheKeys.Hr.DepartmentLookups());
         return SuccessResponse.Ok(DeptMsg.Deleted);
     }
-        public async Task<SuccessResponse> RestoreAsync(long id)
-        {
-            var entity = await _uow.HR.Departments.GetByIdAsync(id);
-            if (entity == null)
-                return SuccessResponse.Fail(DepartmentMsg.NotFound(id), ErrorType.NotFound);
-            if (!entity.IsDeleted)
-                return SuccessResponse.Fail("Item is not deleted.", ErrorType.Validation);
-            entity.IsDeleted = false;
-            entity.DeletedAt = null;
-            entity.DeletedBy = null;
-            _uow.HR.Departments.Update(entity);
-            await _uow.CompleteAsync();
-            await _cacheService.RemoveAsync(CacheKeys.Hr.DepartmentLookups());
-            return SuccessResponse.Ok(DepartmentMsg.Updated);
-        }
+    public async Task<SuccessResponse> RestoreAsync(long id)
+    {
+        var entity = await _uow.HR.Departments.GetByIdDeletedAsync(id);
+        if (entity == null)
+            return SuccessResponse.Fail(DepartmentMsg.NotFound(id), ErrorType.NotFound);
+        if (!entity.IsDeleted)
+            return SuccessResponse.Fail("Item is not deleted.", ErrorType.Validation);
+        entity.IsDeleted = false;
+        entity.DeletedAt = null;
+        entity.DeletedBy = null;
+        _uow.HR.Departments.Update(entity);
+        await _uow.CompleteAsync();
+        await _cacheService.RemoveAsync(CacheKeys.Hr.DepartmentLookups());
+        return SuccessResponse.Ok(DepartmentMsg.Updated);
+    }
 
 }

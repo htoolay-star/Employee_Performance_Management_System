@@ -3,7 +3,9 @@ using EPMS.Domain.Entities.Hr;
 using EPMS.Domain.Entities.Performance;
 using EPMS.Domain.Entities.Shared;
 using EPMS.Domain.Interface.IService.App;
+using EPMS.Domain.Interface.IService.Hr;
 using EPMS.Domain.Interface.IService.Performance;
+using EPMS.Domain.Interface.IService.Shared;
 using EPMS.Shared.DTOs.Common;
 using EPMS.Shared.DTOs.RecycleBin;
 using EPMS.Shared.Enums;
@@ -21,28 +23,34 @@ namespace EPMS.Domain.Services.Shared
     {
         private readonly IUnitOfWork _uow;
         private readonly ICurrentEmployeeContextService _currentEmployee;
-        private readonly IQuestionRatingScaleService _questionRatingScaleService;
         private readonly Dictionary<string, Func<long, Task<SuccessResponse>>> _restoreMap;
 
         public RecycleBinService(
             IUnitOfWork uow,
             ICurrentEmployeeContextService currentEmployee,
-            IQuestionRatingScaleService questionRatingScaleService)
+            ILevelService levelService,
+            IDepartmentService departmentService,
+            ITeamService teamService,
+            IPositionService positionService,
+            IAppraisalCycleService appraisalCycleService,
+            IRatingScaleService ratingScaleService,
+            IKPIWeightPriorityService kpiWeightPriorityService,
+            IQuestionRatingScaleService questionRatingScaleService,
+            ICategoryService categoryService)
         {
             _uow = uow;
             _currentEmployee = currentEmployee;
-            _questionRatingScaleService = questionRatingScaleService;
             _restoreMap = new Dictionary<string, Func<long, Task<SuccessResponse>>>
             {
-                ["APPRAISALCYCLE"] = id => RestoreViaService(_uow.Perf.AppraisalCycles, id),
-                ["RATINGSCALE"] = id => RestoreViaService(_uow.Perf.RatingScales, id),
-                ["KPIWEIGHTPRIORITY"] = id => RestoreViaService(_uow.Perf.KPIWeightPriorities, id),
-                ["QUESTIONRATINGSCALE"] = id => _questionRatingScaleService.RestoreAsync(id),
-                ["LEVEL"] = id => RestoreViaService(_uow.HR.Levels, id),
-                ["DEPARTMENT"] = id => RestoreViaService(_uow.HR.Departments, id),
-                ["POSITION"] = id => RestoreViaService(_uow.HR.Positions, id),
-                ["TEAM"] = id => RestoreViaService(_uow.HR.Teams, id),
-                ["CATEGORY"] = id => RestoreViaService(_uow.Shared.Categories, id),
+                ["APPRAISALCYCLE"] = id => appraisalCycleService.RestoreAsync(id),
+                ["RATINGSCALE"] = id => ratingScaleService.RestoreAsync(id),
+                ["KPIWEIGHTPRIORITY"] = id => kpiWeightPriorityService.RestoreAsync(id),
+                ["QUESTIONRATINGSCALE"] = id => questionRatingScaleService.RestoreAsync(id),
+                ["LEVEL"] = id => levelService.RestoreAsync(id),
+                ["DEPARTMENT"] = id => departmentService.RestoreAsync(id),
+                ["POSITION"] = id => positionService.RestoreAsync(id),
+                ["TEAM"] = id => teamService.RestoreAsync(id),
+                ["CATEGORY"] = id => categoryService.RestoreCategoryAsync(id),
             };
         }
 
@@ -103,21 +111,6 @@ namespace EPMS.Domain.Services.Shared
             return prop != null ? (long)prop.GetValue(e)! : 0;
         }
 
-        private async Task<SuccessResponse> RestoreViaService<T>(IGenericRepository<T> repo, long id)
-            where T : class, ISoftDeletable
-        {
-            var entity = await repo.GetByIdDeletedAsync(id);
-            if (entity == null)
-                return SuccessResponse.Fail("Item not found.", ErrorType.NotFound);
-            if (!entity.IsDeleted)
-                return SuccessResponse.Fail("Item is not deleted.", ErrorType.Validation);
 
-            entity.IsDeleted = false;
-            entity.DeletedAt = null;
-            entity.DeletedBy = null;
-            repo.Update(entity);
-            await _uow.CompleteAsync();
-            return SuccessResponse.Ok("Item restored successfully.");
-        }
     }
 }

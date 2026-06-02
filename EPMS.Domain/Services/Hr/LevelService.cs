@@ -103,20 +103,20 @@ public class LevelService : ILevelService
         await _cacheService.RemoveAsync(CacheKeys.Hr.LevelLookups());
         return SuccessResponse.Ok(ServiceResponseMessages.LevelMsg.Deleted);
     }
-        public async Task<SuccessResponse> RestoreAsync(long id)
-        {
-            var entity = await _uow.HR.Levels.GetByIdAsync(id);
-            if (entity == null)
-                return SuccessResponse.Fail(LevelMsg.NotFound(id), ErrorType.NotFound);
-            if (!entity.IsDeleted)
-                return SuccessResponse.Fail("Item is not deleted.", ErrorType.Validation);
-            entity.IsDeleted = false;
-            entity.DeletedAt = null;
-            entity.DeletedBy = null;
-            _uow.HR.Levels.Update(entity);
-            await _uow.CompleteAsync();
-            await _cacheService.RemoveAsync(CacheKeys.Hr.LevelLookups());
-            return SuccessResponse.Ok(LevelMsg.Updated);
-        }
+    public async Task<SuccessResponse> RestoreAsync(long id)
+    {
+        var entity = await _uow.HR.Levels.GetByIdDeletedAsync(id);
+        if (entity == null)
+            return SuccessResponse.Fail(LevelMsg.NotFound(id), ErrorType.NotFound);
+        if (!entity.IsDeleted)
+            return SuccessResponse.Fail("Item is not deleted.", ErrorType.Validation);
+        entity.IsDeleted = false;
+        entity.DeletedAt = null;
+        entity.DeletedBy = null;
+        _uow.HR.Levels.Update(entity);
+        await _uow.CompleteAsync();
+        await _cacheService.RemoveAsync(CacheKeys.Hr.LevelLookups());
+        return SuccessResponse.Ok(LevelMsg.Updated);
+    }
 
 }
